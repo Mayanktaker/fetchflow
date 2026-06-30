@@ -72,10 +72,18 @@ namespace XDM.GtkUI.Utils
                 return false;
             }
 
+            // Phase6/DBusMenu: register com.canonical.dbusmenu server for KDE right-click menus.
+            // KDE's StatusNotifierHost queries this path for the menu tree instead of calling ContextMenu.
+            var menuServer = new DBusMenuServer(
+                () => onActivate(),   // "Show XDM" → restore window
+                () => onQuit());      // "Quit" → exit app
+            connection.RegisterObjectAsync(menuServer).GetAwaiter().GetResult();
+
             var props = new SniProperties
             {
                 Id = "xdm-app",
                 Title = appName,
+                Menu = new ObjectPath("/MenuBar"),  // point KDE to our DBusMenu server
                 IconName = "xdm-app",     // themed icon (installed into hicolor by the packages)
                 IconPixmap = new[] { PixbufToRgba(icon) },
                 ToolTip = (0, 0, Array.Empty<byte>(), appName, ""),
@@ -93,7 +101,7 @@ namespace XDM.GtkUI.Utils
 
             IsTrayActive = true;
             ActiveKind = TrayKind.StatusNotifierItem;
-            Log.Debug("Tray: registered StatusNotifierItem (org.xdmapp.Tray).");
+            Log.Debug("Tray: registered StatusNotifierItem with DBusMenu (org.xdmapp.Tray).");
             return true;
         }
 
