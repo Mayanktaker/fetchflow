@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <!-- Wayland/Phase3.1: net6.0 (EOL) -> net8.0 LTS -->
+    <TargetFramework>net8.0</TargetFramework>
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>Link</TrimMode>
@@ -27,9 +28,10 @@
 
   <ItemGroup>
     <PackageReference Include="GtkSharp" Version="3.24.24.38" />
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116" />
+    <!-- Tray/Phase5: D-Bus StatusNotifierItem client (KDE/GNOME-AppIndicator/waybar/Sway/Hyprland) -->
+    <PackageReference Include="Tmds.DBus" Version="0.94.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'net3.5' ">
@@ -66,30 +68,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="AtkSharp">
-      <HintPath>D:\gtksharp\GtkSharp-master\BuildOutput\Release\AtkSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="CairoSharp">
-      <HintPath>D:\gtksharp\GtkSharp-master\BuildOutput\Release\CairoSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="GdkSharp">
-      <HintPath>D:\gtksharp\GtkSharp-master\BuildOutput\Release\GdkSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="GioSharp">
-      <HintPath>D:\gtksharp\GtkSharp-master\BuildOutput\Release\GioSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="GLibSharp">
-      <HintPath>D:\gtksharp\GtkSharp-master\BuildOutput\Release\GLibSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="GtkSharp">
-      <HintPath>D:\gtksharp\GtkSharp-master\BuildOutput\Release\GtkSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="GtkSourceSharp">
-      <HintPath>D:\gtksharp\GtkSharp-master\BuildOutput\Release\GtkSourceSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="PangoSharp">
-      <HintPath>D:\gtksharp\GtkSharp-master\BuildOutput\Release\PangoSharp.dll</HintPath>
-    </Reference>
+    <!-- Wayland/Phase3.1: removed hard-coded Windows HintPath references (D:\gtksharp\...);
+         GtkSharp NuGet package restores these assemblies on Linux. -->
   </ItemGroup>
 
   <ItemGroup>

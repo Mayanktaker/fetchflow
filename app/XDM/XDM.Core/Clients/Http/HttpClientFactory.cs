@@ -23,18 +23,14 @@ namespace XDM.Core.Clients.Http
                 }
             }
 
-            if (Environment.Version.Major == 2)
-            {
-                return new WinHttpClient(proxy);
-            }
-            else
-            {
+            // Phase3.4: on .NET 5+ the fully-managed DotNetHttpClient is used on every OS
+            // (replaces the old WinHttp/CLR-version heuristic). The legacy WinHttpClient /
+            // NetFxHttpClient paths are retained for the Windows net4.x builds only.
 #if NET5_0_OR_GREATER
-                return new DotNetHttpClient(proxy);
+            return new DotNetHttpClient(proxy);
 #else
-                return new NetFxHttpClient(proxy);
+            return new NetFxHttpClient(proxy);
 #endif
-            }
         }
     }
 }

@@ -184,7 +184,7 @@ namespace XDM.GtkUI.Dialogs.VideoDownloader
             windowGroup.AddWindow(this);
 
             Title = TextResource.GetText("LBL_VIDEO_DOWNLOAD");
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             Page1.ShowAll();
             Page2.Visible = false;

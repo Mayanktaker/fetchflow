@@ -38,19 +38,33 @@ namespace XDM.Core
             {
                 Log.Debug("Sending to running instance...");
                 var args = Environment.GetCommandLineArgs().Skip(1);
-                var request = WebRequest.Create("http://127.0.0.1:8597/args");
                 var postData = JsonConvert.SerializeObject(args.Count() == 0 ? new string[] { "--restore-window" } : args);
                 Log.Debug("Sending...");
                 var data = Encoding.UTF8.GetBytes(postData);
-                request.Method = "POST";
-                request.ContentType = "application/json";
-                request.ContentLength = data.Length;
-                using (var stream = request.GetRequestStream())
+                // Phase2.3: probe the IPC port range; the running instance may have fallen back
+                for (int p = Config.IpcPort; p < Config.IpcPort + 7; p++)
                 {
-                    stream.Write(data, 0, data.Length);
+                    try
+                    {
+                        var request = WebRequest.Create($"http://127.0.0.1:{p}/args");
+                        request.Method = "POST";
+                        request.ContentType = "application/json";
+                        request.ContentLength = data.Length;
+                        using (var stream = request.GetRequestStream())
+                        {
+                            stream.Write(data, 0, data.Length);
+                        }
+                        request.Timeout = 1500;
+                        var response = request.GetResponse();
+                        Log.Debug($"Sent args to running instance on port {p}...");
+                        return; // success — stop probing
+                    }
+                    catch (Exception pex)
+                    {
+                        Log.Debug($"Port {p} did not respond: {pex.Message}");
+                    }
                 }
-                var response = request.GetResponse();
-                Log.Debug("Sent...");
+                Log.Debug("No running instance responded on the IPC port range.");
             }
             catch (Exception ex)
             {

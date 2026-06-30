@@ -31,7 +31,7 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
             SetDefaultSize(640, 400);
 
             Title = TextResource.GetText("MSG_MEDIA_CAPTURE");
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             GtkHelper.AttachSafeDispose(this);
 

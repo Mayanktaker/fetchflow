@@ -158,7 +158,9 @@ namespace XDM.Core
             var switchName = string.Empty;
             foreach (var arg in args)
             {
-                if (arg.StartsWith("xdm+app://"))
+                // Wayland/Phase1.3: accept both xdm-app:// and xdm+app:// launch schemes
+                if (arg.StartsWith("xdm+app://", StringComparison.OrdinalIgnoreCase) ||
+                    arg.StartsWith("xdm-app://", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }

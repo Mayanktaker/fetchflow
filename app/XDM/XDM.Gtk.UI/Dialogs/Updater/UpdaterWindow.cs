@@ -26,7 +26,7 @@ namespace XDM.GtkUI.Dialogs.Updater
         {
             builder.Autoconnect(this);
             Title = TextResource.GetText("OPT_UPDATE_FFMPEG");
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
             TxtHeading.Text = TextResource.GetText("STAT_DOWNLOADING");

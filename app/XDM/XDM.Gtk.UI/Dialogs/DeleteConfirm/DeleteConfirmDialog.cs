@@ -41,7 +41,7 @@ namespace XDM.GtkUI.Dialogs.DeleteConfirm
 
            
             Modal = true;
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
             this.group = group;
             this.group.AddWindow(this);

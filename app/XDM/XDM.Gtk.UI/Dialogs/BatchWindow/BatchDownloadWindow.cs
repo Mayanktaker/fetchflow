@@ -91,7 +91,7 @@ namespace XDM.GtkUI.Dialogs.BatchWindow
             builder.Autoconnect(this);
             Title = TextResource.GetText("MENU_BATCH_DOWNLOAD");
             SetDefaultSize(600, 500);
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
 
             this.windowGroup = new WindowGroup();

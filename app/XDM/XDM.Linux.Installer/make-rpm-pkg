@@ -1,8 +1,11 @@
 #!/bin/bash
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+# Build an .rpm for Fedora/RHEL (Wayland-aware). Run from XDM.Linux.Installer/.
+# Please place all the published files under ./binary-source directory
 
-#Please place all the published files under ./binary-source directory
+# Single source of truth for the version (Wayland/Phase0.3)
+source ./version.env
 
-VERSION=8.0.25
 SRC_DIR=binary-source
 SOURCE_NAME="xdman_gtk-${VERSION}"
 
@@ -14,12 +17,16 @@ mkdir "${SOURCE_NAME}"
 mkdir -p "${SOURCE_NAME}/opt/xdman"
 mkdir -p "${SOURCE_NAME}/usr/bin"
 mkdir -p "${SOURCE_NAME}/usr/share/applications"
+# Wayland/Phase4: install icon into hicolor theme + mime package for proper DE integration
+mkdir -p "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps"
+mkdir -p "${SOURCE_NAME}/usr/share/mime/packages"
 
 cp -r "${SRC_DIR}/." "${SOURCE_NAME}/opt/xdman"
 
 touch "${SOURCE_NAME}/opt/xdman/xdm-app.desktop"
 touch "${SOURCE_NAME}/usr/bin/xdman"
 
+# Wayland/Phase1.3: register BOTH xdm-app:// and xdm+app:// schemes; use themed Icon=
 cat <<EOF > "${SOURCE_NAME}/opt/xdman/xdm-app.desktop"
 [Desktop Entry]
 Version=1.0
@@ -30,14 +37,15 @@ Terminal=false
 Name=Xtreme Download Manager
 Comment=Xtreme Download Manager
 Categories=Network;
-Icon=/opt/xdman/xdm-logo.svg
-MimeType=application/xdm-app;x-scheme-handler/xdm-app;
+Icon=xdm-app
+MimeType=application/xdm-app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
 StartupNotify=true
 EOF
 
 cat <<EOF > "${SOURCE_NAME}/usr/bin/xdman"
 #!/bin/bash
-export GTK_USE_PORTAL=1 
+# Wayland-friendly launcher wrapper
+export GTK_USE_PORTAL=1
 /opt/xdman/xdm-app \$@
 EOF
 
@@ -46,6 +54,9 @@ xdman_gtk|.rpm
 EOF
 
 cp "${SOURCE_NAME}/opt/xdman/xdm-app.desktop" "${SOURCE_NAME}/usr/share/applications"
+# Wayland/Phase4: themed icon (scalable SVG covers all sizes) + mime package
+cp "${SRC_DIR}/xdm-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/xdm-app.svg" 2>/dev/null || cp "${SOURCE_NAME}/opt/xdman/xdm-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/xdm-app.svg"
+cp xdm-app.xml "${SOURCE_NAME}/usr/share/mime/packages/xdm-app.xml"
 
 chmod 755 "${SOURCE_NAME}/usr/bin/xdman"
 chmod 755 "${SOURCE_NAME}/opt/xdman/xdm-app"
@@ -59,8 +70,11 @@ Version:    	${VERSION}
 Release:    	1%{?dist}
 Summary:    	Xtreme Download Manager
 AutoReqProv: 	no
-Requires:   	gtk3 >= 3.22
+Requires:   	gtk3 >= 3.24
 Requires:   	(ffmpeg-free or ffmpeg)
+Requires:   	dotnet-runtime-8.0
+Recommends: 	xdg-desktop-portal
+Recommends: 	libnotify
 
 Group:      	System Environment/Base
 License:    	GPLv3+
@@ -75,9 +89,22 @@ Open source download accelerator and video downloader.
 %install
 cp -rfa * %{buildroot}
 
+# Wayland/Phase4: refresh desktop/icon/mime caches on install and uninstall
+%post
+update-desktop-database -q /usr/share/applications || :
+gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || :
+update-mime-database -n /usr/share/mime || :
+
+%postun
+update-desktop-database -q /usr/share/applications || :
+gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || :
+update-mime-database -n /usr/share/mime || :
+
 %files
 /usr/bin/*
 /usr/share/applications/*
+/usr/share/icons/hicolor/scalable/apps/xdm-app.svg
+/usr/share/mime/packages/xdm-app.xml
 /opt/xdman/*
 EOF
 

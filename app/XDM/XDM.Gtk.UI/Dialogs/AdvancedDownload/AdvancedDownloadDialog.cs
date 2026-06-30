@@ -74,7 +74,7 @@ namespace XDM.GtkUI.Dialogs.AdvancedDownload
             builder.Autoconnect(this);
             Title = TextResource.GetText("DESC_ADV_TITLE");
             Modal = true;
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
             this.group = group;
             this.group.AddWindow(this);

@@ -45,7 +45,7 @@ namespace XDM.GtkUI.Dialogs.LinkRefresh
         {
             builder.Autoconnect(this);
             SetDefaultSize(400, 200);
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             this.group = new WindowGroup();
             this.group.AddWindow(this);
 

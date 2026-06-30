@@ -68,7 +68,7 @@ namespace XDM.GtkUI.Dialogs.Settings
 
             Modal = true;
             SetDefaultSize(640, 480);
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
             this.group = group;
             this.group.AddWindow(this);
@@ -562,10 +562,11 @@ namespace XDM.GtkUI.Dialogs.Settings
             ChkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
             ChkOverwrite.Active = Config.Instance.FileConflictResolution == FileConflictResolution.Overwrite;
             ChkDarkTheme.Active = Config.Instance.AllowSystemDarkTheme;
-            TxtTempFolder.Text = Config.Instance.TempDir;
+            TxtTempFolder.Text = Config.Instance.TempDir ?? string.Empty;
             GtkHelper.SetSelectedComboBoxValue<int>(CmbMaxParallalDownloads, Config.Instance.MaxParallelDownloads);
             ChkAutoCat.Active = Config.Instance.FolderSelectionMode == FolderSelectionMode.Auto;
-            TxtDownloadFolder.Text = Config.Instance.DefaultDownloadFolder;
+            // Fix: Gtk.Entry.Text must never be null (gtk_entry_set_text asserts) — coalesce fresh-config nulls
+            TxtDownloadFolder.Text = Config.Instance.DefaultDownloadFolder ?? string.Empty;
             CmbDblClickAction.Active = Config.Instance.DoubleClickOpenFile ? 1 : 0;
 
             foreach (var cat in Config.Instance.Categories)
@@ -580,10 +581,12 @@ namespace XDM.GtkUI.Dialogs.Settings
             TxtMaxSpeedLimit.Text = Config.Instance.DefaltDownloadSpeed.ToString();
             ChkEnableSpeedLimit.Active = Config.Instance.EnableSpeedLimit;
             CmbProxyType.Active = (int)(Config.Instance.Proxy?.ProxyType ?? ProxyType.System);
-            TxtProxyHost.Text = Config.Instance.Proxy?.Host;
+            // Fix: Proxy?.Host/UserName/Password are null when no proxy is configured — Gtk.Entry
+            // rejects null text (gtk_entry_set_text assertion), so coalesce to empty string.
+            TxtProxyHost.Text = Config.Instance.Proxy?.Host ?? string.Empty;
             TxtProxyPort.Text = (Config.Instance.Proxy?.Port ?? 0).ToString();
-            TxtProxyUser.Text = Config.Instance.Proxy?.UserName;
-            TxtProxyPassword.Text = Config.Instance.Proxy?.Password;
+            TxtProxyUser.Text = Config.Instance.Proxy?.UserName ?? string.Empty;
+            TxtProxyPassword.Text = Config.Instance.Proxy?.Password ?? string.Empty;
 
             //Password manager
             foreach (var password in Config.Instance.UserCredentials)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Net;
+using System.Net.Sockets;
 using System.Linq;
 using Newtonsoft.Json;
 using XDM.Core.Util;
@@ -19,13 +20,35 @@ namespace XDM.Core.BrowserMonitoring
         private static string[] blockedHeaders = { "accept", "if", "authorization", "proxy", "connection", "expect", "TE",
             "upgrade", "range", "cookie", "transfer-encoding", "content-type", "content-length","content-encoding" };
 
+        // Phase2.3: the port actually bound (the browser extension probes the same range)
+        public static int EffectivePort { get; private set; } = 8597;
+
         public IpcHttpMessageProcessor()
         {
-            server = new NanoServer(IPAddress.Loopback, 8597);
+            EffectivePort = FindFreePort(Config.IpcPort);
+            Log.Debug("IPC HTTP relay binding to 127.0.0.1:" + EffectivePort);
+            server = new NanoServer(IPAddress.Loopback, EffectivePort);
             server.RequestReceived += (sender, args) =>
             {
                 HandleRequest(args.RequestContext);
             };
+        }
+
+        // Phase2.3: probe a small range so startup survives if the preferred port is taken
+        private static int FindFreePort(int preferred)
+        {
+            for (int p = preferred; p < preferred + 7; p++)
+            {
+                try
+                {
+                    var l = new TcpListener(IPAddress.Loopback, p);
+                    l.Start();
+                    l.Stop();
+                    return p;
+                }
+                catch { /* port busy — try next */ }
+            }
+            return preferred; // last resort: let NanoServer.Start throw the real error
         }
 
         public void Run()

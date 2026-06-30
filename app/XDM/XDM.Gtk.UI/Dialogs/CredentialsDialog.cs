@@ -45,7 +45,7 @@ namespace XDM.GtkUI.Dialogs
             SetDefaultSize(400, 200);
 
             Modal = true;
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
             this.group = group;
             this.group.AddWindow(this);

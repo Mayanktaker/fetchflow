@@ -39,6 +39,14 @@ namespace XDM.Core
         public static string DataDir { get; set; }
         public static string AppDir { get; set; }
 
+        // TLS security gate: opt-in insecure validation via XDM_ALLOW_INSECURE_TLS=1 (Wayland/Phase0 hardening)
+        public static bool AllowInsecureTls =>
+            Environment.GetEnvironmentVariable("XDM_ALLOW_INSECURE_TLS") == "1";
+
+        // IPC port for browser-monitoring HTTP relay; env-overridable, default 8597 (Phase2.3)
+        public static int IpcPort =>
+            int.TryParse(Environment.GetEnvironmentVariable("XDM_IPC_PORT"), out var p) && p > 0 ? p : 8597;
+
         public static int DefaultNotificationTimeOut => 30000;
 
         public int NotificationTimeOut { get; set; }
@@ -237,11 +245,22 @@ namespace XDM.Core
             AppDir = path ??
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ".xdm-app-data");
 #else
-
-            DataDir = path ?? Path.Combine(
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".xdm-app-data"), "Data");
-            AppDir = path ?? Path.Combine(
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".xdm-app-data"));
+            // Wayland/Phase1.5: explicit path wins; otherwise honor XDG_CONFIG_HOME /
+            // XDG_DATA_HOME when set (sandbox/relocatable), defaulting to legacy ~/.xdm-app-data.
+            if (path != null)
+            {
+                AppDir = path;
+                DataDir = Path.Combine(path, "Data");
+            }
+            else
+            {
+                var xdgConfig = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+                var xdgData = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+                var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var legacyRoot = Path.Combine(userProfile, ".xdm-app-data");
+                AppDir = !string.IsNullOrEmpty(xdgConfig) ? Path.Combine(xdgConfig, "xdm-app") : legacyRoot;
+                DataDir = !string.IsNullOrEmpty(xdgData) ? Path.Combine(xdgData, "xdm-app") : Path.Combine(legacyRoot, "Data");
+            }
 #endif
             instance = new Config
             {

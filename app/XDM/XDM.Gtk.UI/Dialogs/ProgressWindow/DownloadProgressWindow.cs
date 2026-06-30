@@ -263,7 +263,7 @@ namespace XDM.GtkUI.Dialogs.ProgressWindow
         {
             builder.Autoconnect(this);
             Title = TextResource.GetText("STAT_DOWNLOADING");
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             this.windowGroup = new WindowGroup();
             this.windowGroup.AddWindow(this);

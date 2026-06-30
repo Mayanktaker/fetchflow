@@ -1,0 +1,6 @@
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+#
+# DEPRECATED — Linux native messaging host is NOT shipped.
+# The NativeMessagingHost.csproj targets net4.7.2 + Windows Forms (Windows-only) and is
+# not built for Linux. Linux browser integration uses the xdm-app:// scheme + the loopback
+# HTTP relay (127.0.0.1:8597). See NativeMessaging/DEPRECATED.txt for the full rationale.

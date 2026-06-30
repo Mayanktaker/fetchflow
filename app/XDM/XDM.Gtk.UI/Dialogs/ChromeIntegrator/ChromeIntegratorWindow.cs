@@ -33,7 +33,7 @@ namespace XDM.GtkUI.Dialogs.ChromeIntegrator
         {
             builder.Autoconnect(this);
             this.browser = browser;
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             SetDefaultSize(640, 480);
             windowGroup = new WindowGroup();
             windowGroup.AddWindow(this);

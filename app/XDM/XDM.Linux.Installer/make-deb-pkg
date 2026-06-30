@@ -1,36 +1,45 @@
 #!/bin/bash
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+# Build a .deb for Debian/Ubuntu (Wayland-aware). Run from XDM.Linux.Installer/.
+# Please place all the published files under ./binary-source directory
 
-#Please place all the published files under ./binary-source directory
+# Single source of truth for the version (Wayland/Phase0.3)
+source ./version.env
 
-VERSION=8.0.25
 SRC_DIR=binary-source
 
 rm -rf "xdman_gtk_${VERSION}_amd64"
 rm -f "xdman_gtk_${VERSION}_amd64.deb"
 
-mkdir -p "xdman_gtk_${VERSION}_amd64/DEBIAN"
-mkdir -p "xdman_gtk_${VERSION}_amd64/opt/xdman"
-mkdir -p "xdman_gtk_${VERSION}_amd64/usr/bin"
-mkdir -p "xdman_gtk_${VERSION}_amd64/usr/share/applications"
+PKG="xdman_gtk_${VERSION}_amd64"
 
-cp -r "${SRC_DIR}/." "xdman_gtk_${VERSION}_amd64/opt/xdman"
+mkdir -p "${PKG}/DEBIAN"
+mkdir -p "${PKG}/opt/xdman"
+mkdir -p "${PKG}/usr/bin"
+mkdir -p "${PKG}/usr/share/applications"
+# Wayland/Phase4: themed icon + mime package for proper DE integration
+mkdir -p "${PKG}/usr/share/icons/hicolor/scalable/apps"
+mkdir -p "${PKG}/usr/share/mime/packages"
 
-touch "xdman_gtk_${VERSION}_amd64/DEBIAN/control"
-touch "xdman_gtk_${VERSION}_amd64/opt/xdman/xdm-app.desktop"
-touch "xdman_gtk_${VERSION}_amd64/usr/bin/xdman"
+cp -r "${SRC_DIR}/." "${PKG}/opt/xdman"
 
-cat <<EOF > "xdman_gtk_${VERSION}_amd64/DEBIAN/control"
+touch "${PKG}/DEBIAN/control"
+touch "${PKG}/opt/xdman/xdm-app.desktop"
+touch "${PKG}/usr/bin/xdman"
+
+cat <<EOF > "${PKG}/DEBIAN/control"
 Package: xdman
 Version: ${VERSION}
 Architecture: amd64
-Depends: libgtk-3-0 (>= 3.22.11)
-Recommends: ffmpeg
+Depends: libgtk-3-0 (>= 3.24)
+Recommends: ffmpeg, libnotify-bin, xdg-desktop-portal
 Maintainer: Subhra Das Gupta
 Description: Open source download accelerator and video downloader.
  Open source download accelerator and video downloader.
 EOF
 
-cat <<EOF > "xdman_gtk_${VERSION}_amd64/opt/xdman/xdm-app.desktop"
+# Wayland/Phase1.3: register BOTH xdm-app:// and xdm+app:// schemes; themed Icon=
+cat <<EOF > "${PKG}/opt/xdman/xdm-app.desktop"
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
@@ -40,24 +49,43 @@ Terminal=false
 Name=Xtreme Download Manager
 Comment=Xtreme Download Manager
 Categories=Network;
-Icon=/opt/xdman/xdm-logo.svg
-MimeType=application/xdm-app;x-scheme-handler/xdm-app;
+Icon=xdm-app
+MimeType=application/xdm-app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
 StartupNotify=true
 EOF
 
-cat <<EOF > "xdman_gtk_${VERSION}_amd64/usr/bin/xdman"
+cat <<EOF > "${PKG}/usr/bin/xdman"
 #!/bin/bash
+# Wayland-friendly launcher wrapper
 export GTK_USE_PORTAL=1
 /opt/xdman/xdm-app \$@
 EOF
 
-cat <<EOF > "xdman_gtk_${VERSION}_amd64/opt/xdman/source_pkg.txt"
+cat <<EOF > "${PKG}/opt/xdman/source_pkg.txt"
 xdman_gtk|.deb
 EOF
 
-cp "xdman_gtk_${VERSION}_amd64/opt/xdman/xdm-app.desktop" "xdman_gtk_${VERSION}_amd64/usr/share/applications"
+cp "${PKG}/opt/xdman/xdm-app.desktop" "${PKG}/usr/share/applications"
+# Wayland/Phase4: themed scalable icon + mime package
+cp "${SRC_DIR}/xdm-logo.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/xdm-app.svg" 2>/dev/null || cp "${PKG}/opt/xdman/xdm-logo.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/xdm-app.svg"
+cp xdm-app.xml "${PKG}/usr/share/mime/packages/xdm-app.xml"
 
-chmod 755 "xdman_gtk_${VERSION}_amd64/usr/bin/xdman"
-chmod 755 "xdman_gtk_${VERSION}_amd64/opt/xdman/xdm-app"
+# Wayland/Phase4: postinst/postrm refresh desktop/icon/mime caches
+cat <<EOF > "${PKG}/DEBIAN/postinst"
+#!/bin/bash
+update-desktop-database -q /usr/share/applications || :
+gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || :
+update-mime-database -n /usr/share/mime || :
+EOF
+cat <<EOF > "${PKG}/DEBIAN/postrm"
+#!/bin/bash
+update-desktop-database -q /usr/share/applications || :
+gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || :
+update-mime-database -n /usr/share/mime || :
+EOF
 
-dpkg-deb --build --root-owner-group -Z xz "xdman_gtk_${VERSION}_amd64"
+chmod 755 "${PKG}/usr/bin/xdman"
+chmod 755 "${PKG}/opt/xdman/xdm-app"
+chmod 755 "${PKG}/DEBIAN/postinst" "${PKG}/DEBIAN/postrm"
+
+dpkg-deb --build --root-owner-group -Z xz "${PKG}"

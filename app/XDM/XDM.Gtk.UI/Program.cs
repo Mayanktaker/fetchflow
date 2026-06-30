@@ -35,10 +35,23 @@ namespace XDM.GtkUI
                                     .medium-font{ font-size: 14px; }
                                     ";
 
-            var screen = Gdk.Screen.Default;
-            var provider = new CssProvider();
-            provider.LoadFromData(globalStyleSheet);
-            Gtk.StyleContext.AddProviderForScreen(screen, provider, 800);
+            // Wayland/Phase1: Gdk.Screen.Default can throw MissingIntPtrCtorException under the
+            // GTK3 Wayland backend (GtkSharp binding quirk). The global CSS is cosmetic font
+            // sizing only, so guard it rather than block startup.
+            try
+            {
+                var screen = Gdk.Screen.Default;
+                if (screen != null)
+                {
+                    var provider = new CssProvider();
+                    provider.LoadFromData(globalStyleSheet);
+                    Gtk.StyleContext.AddProviderForScreen(screen, provider, 800);
+                }
+            }
+            catch (Exception cssEx)
+            {
+                Log.Debug("Non-fatal: global CSS provider not applied: " + cssEx.Message);
+            }
             //var screen = Gdk.Screen.Default;
             //var provider = new CssProvider();
             //provider.LoadFromData(@".dark 
@@ -73,7 +86,11 @@ namespace XDM.GtkUI
             //                                  ");
             //Gtk.StyleContext.AddProviderForScreen(screen, provider, 800);
 
-            ServicePointManager.ServerCertificateValidationCallback += (a, b, c, d) => true;
+            // TLS: secure by default; opt-in insecure validation via XDM_ALLOW_INSECURE_TLS=1
+            if (Config.AllowInsecureTls)
+            {
+                ServicePointManager.ServerCertificateValidationCallback += (a, b, c, d) => true;
+            }
             ServicePointManager.DefaultConnectionLimit = 100;
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.SystemDefault;
@@ -87,8 +104,17 @@ namespace XDM.GtkUI
 
             if (Config.Instance.AllowSystemDarkTheme)
             {
-                Gtk.Settings.Default.ThemeName = "Adwaita";
-                Gtk.Settings.Default.ApplicationPreferDarkTheme = true;
+                // Wayland/Phase1: Gtk.Settings.Default can throw MissingIntPtrCtorException under
+                // the GTK3 Wayland backend; dark theme is cosmetic, so guard it.
+                try
+                {
+                    Gtk.Settings.Default.ThemeName = "Adwaita";
+                    Gtk.Settings.Default.ApplicationPreferDarkTheme = true;
+                }
+                catch (Exception settingsEx)
+                {
+                    Log.Debug("Non-fatal: could not apply dark theme: " + settingsEx.Message);
+                }
             }
 
             var core = new ApplicationCore();

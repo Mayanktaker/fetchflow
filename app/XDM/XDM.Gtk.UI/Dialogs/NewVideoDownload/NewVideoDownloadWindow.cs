@@ -68,7 +68,7 @@ namespace XDM.GtkUI.Dialogs.NewVideoDownload
             SetDefaultSize(500, 300);
             KeepAbove = true;
             Title = TextResource.GetText("ND_TITLE");
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             ImgFileIcon!.Pixbuf = GtkHelper.LoadSvg("file-download-line", 48);
 
             windowGroup = new WindowGroup();

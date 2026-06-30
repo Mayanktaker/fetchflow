@@ -27,7 +27,7 @@ namespace XDM.GtkUI.Dialogs.ChromeIntegrator
         private RegisterExtensionWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             SetDefaultSize(400, 200);
             windowGroup = new WindowGroup();
             windowGroup.AddWindow(this);

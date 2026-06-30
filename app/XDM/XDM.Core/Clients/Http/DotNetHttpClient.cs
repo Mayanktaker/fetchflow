@@ -52,9 +52,14 @@ namespace XDM.Core.Clients.Http
                         AutomaticDecompression = DecompressionMethods.All,
                         PreAuthenticate = true,
                         UseDefaultCredentials = true,
-                        MaxConnectionsPerServer = 100,
-                        ServerCertificateCustomValidationCallback = (a, b, c, d) => true
+                        MaxConnectionsPerServer = 100
                     };
+
+                    // Honor opt-in insecure TLS only when explicitly requested (secure by default)
+                    if (Config.AllowInsecureTls)
+                    {
+                        handler.ServerCertificateCustomValidationCallback = (a, b, c, d) => true;
+                    }
 
                     var p = ProxyHelper.GetProxy(this.proxy);
                     if (p != null)

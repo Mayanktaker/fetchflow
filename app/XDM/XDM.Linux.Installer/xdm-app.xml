@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  © Mayanktaker Computers & Web Development | https://mayanktaker.com
+  Freedesktop mime package: registers the application/xdm-app MIME type so
+  update-mime-database can resolve .xdm-app descriptors at install time.
+-->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/xdm-app">
+    <comment>XDM download descriptor</comment>
+    <glob pattern="*.xdm-app"/>
+  </mime-type>
+</mime-info>

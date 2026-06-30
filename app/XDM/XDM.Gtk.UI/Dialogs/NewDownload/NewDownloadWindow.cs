@@ -60,7 +60,7 @@ namespace XDM.GtkUI.Dialogs.NewDownload
             KeepAbove = true;
 
             Title = TextResource.GetText("ND_TITLE");
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             ImgFileIcon!.Pixbuf = GtkHelper.LoadSvg("file-download-line", 48);
 
             windowGroup = new WindowGroup();

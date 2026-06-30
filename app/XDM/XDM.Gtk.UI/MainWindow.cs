@@ -38,7 +38,7 @@ namespace XDM.GtkUI
         private bool isUpdateAvailable;
         private Image helpImage;
         private Label helpLabel;
-        private StatusIcon statusIcon;
+        private TrayIconManager trayManager;
 
         internal WindowGroup GetWindowGroup() => this.windowGroup;
 
@@ -108,7 +108,7 @@ namespace XDM.GtkUI
         public MainWindow() : base("Xtreme Download Manager")
         {
             SetDefaultIconFromFile(IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-logo-512.png"));
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland: compositor places windows; client-side centering is a no-op (Phase1.4)
             DeleteEvent += AppWin1_DeleteEvent;
             this.windowGroup = new WindowGroup();
             this.windowGroup.AddWindow(this);
@@ -129,13 +129,11 @@ namespace XDM.GtkUI
             clipboarMonitor = new PollingClipboardMonitor();
             clipboarMonitor.ClipboardChanged += (_, _) => this.ClipboardChanged?.Invoke(this, EventArgs.Empty);
 
-            statusIcon = new StatusIcon(GtkHelper.LoadSvg("xdm-logo", 128));
-            statusIcon.Activate += StatusIcon_Activate;
-        }
-
-        private void StatusIcon_Activate(object? sender, EventArgs e)
-        {
-            ShowAndActivate();
+            // Tray/Phase5: register a tray icon via the desktop's preferred protocol (SNI on
+            // KDE/GNOME+ext/waybar; legacy StatusIcon on X11-only DEs). Falls back to None
+            // (Wayland with no SNI host). IsTrayActive drives the close-to-tray vs minimize logic.
+            trayManager = new TrayIconManager();
+            trayManager.Init(GtkHelper.LoadSvg("xdm-logo", 22), "Xtreme Download Manager", ShowAndActivate);
         }
 
         private void CreateMenu()
@@ -921,8 +919,31 @@ namespace XDM.GtkUI
 
         private void AppWin1_DeleteEvent(object o, DeleteEventArgs args)
         {
-            args.RetVal = true;
-            this.Hide();
+            // Tray/Phase5: if a tray icon is active, hide to tray (restores the classic behavior —
+            // safe now because there IS a tray to restore from). Otherwise stay Wayland-safe:
+            // never Hide() (would strand the app). With active downloads: minimize to taskbar + notify;
+            // otherwise quit cleanly.
+            if (trayManager != null && trayManager.IsTrayActive)
+            {
+                args.RetVal = true;
+                this.Hide();
+                return;
+            }
+
+            var hasActive = inprogressDownloadsStore != null && inprogressDownloadsStore.GetIterFirst(out _);
+            if (hasActive)
+            {
+                args.RetVal = true;        // prevent default window destroy
+                this.Iconify();           // minimize to taskbar/dock (restorable on Wayland)
+                try
+                {
+                    PlatformHelper.SpawnSubProcess("notify-send",
+                        new[] { "Xtreme Download Manager",
+                                "Downloads in progress — XDM minimized to taskbar." });
+                }
+                catch { /* notify-send is best-effort */ }
+            }
+            // else: allow destroy; main loop quits via the standard Gtk shutdown path
         }
 
         private static Gdk.Pixbuf LoadSvg(string name, int dimension = 16)
@@ -1318,7 +1339,20 @@ namespace XDM.GtkUI
             {
                 this.Show();
             }
+            // Wayland/Phase1.2: focus-stealing from IPC/background is compositor policy.
+            // On Wayland, Present() alone usually only sets an urgency hint; that is the
+            // correct, non-abusive signal. On X11 keep the direct raise+focus behavior.
             this.Present();
+            if (RunningOnWayland)
+            {
+                // Request attention; the compositor flashes the taskbar entry (xdg-activation
+                // is honored by KWin 6.6+/Mutter 49+; urgency hint is the portable fallback).
+                this.UrgencyHint = true;
+            }
         }
+
+        // Wayland/Phase1.2: detect Wayland session to choose activation strategy
+        private static bool RunningOnWayland =>
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
     }
 }

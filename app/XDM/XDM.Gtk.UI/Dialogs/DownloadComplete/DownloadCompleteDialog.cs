@@ -44,7 +44,7 @@ namespace XDM.GtkUI.Dialogs.DownloadComplete
             builder.Autoconnect(this);
             KeepAbove = true;
             Title = TextResource.GetText("CD_TITLE");
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             BtnOpen.Label = TextResource.GetText("CTX_OPEN_FILE");
             BtnOpenFolder.Label = TextResource.GetText("CTX_OPEN_FOLDER");

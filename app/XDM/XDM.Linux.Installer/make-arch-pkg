@@ -1,8 +1,11 @@
 #!/bin/bash
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+# Build an Arch .pkg.tar.* (Wayland-aware). Run from XDM.Linux.Installer/.
+# Please place all the published files under ./binary-source directory
 
-#Please place all the published files under ./binary-source directory
+# Single source of truth for the version (Wayland/Phase0.3)
+source ./version.env
 
-VERSION=8.0.25
 SRC_DIR=binary-source
 SOURCE_NAME="src"
 
@@ -16,6 +19,9 @@ mkdir "${SOURCE_NAME}"
 mkdir -p "${SOURCE_NAME}/opt/xdman"
 mkdir -p "${SOURCE_NAME}/usr/bin"
 mkdir -p "${SOURCE_NAME}/usr/share/applications"
+# Wayland/Phase4: themed icon + mime package for proper DE integration
+mkdir -p "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps"
+mkdir -p "${SOURCE_NAME}/usr/share/mime/packages"
 
 cp -r "${SRC_DIR}/." "${SOURCE_NAME}/opt/xdman"
 
@@ -25,6 +31,7 @@ find "${SOURCE_NAME}/" -type f -print0 | xargs -0 chmod 0644
 touch "${SOURCE_NAME}/opt/xdman/xdm-app.desktop"
 touch "${SOURCE_NAME}/usr/bin/xdman"
 
+# Wayland/Phase1.3: register BOTH xdm-app:// and xdm+app:// schemes; themed Icon=
 cat <<EOF > "${SOURCE_NAME}/opt/xdman/xdm-app.desktop"
 [Desktop Entry]
 Version=1.0
@@ -35,14 +42,15 @@ Terminal=false
 Name=Xtreme Download Manager
 Comment=Xtreme Download Manager
 Categories=Network;
-Icon=/opt/xdman/xdm-logo.svg
-MimeType=application/xdm-app;x-scheme-handler/xdm-app;
+Icon=xdm-app
+MimeType=application/xdm-app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
 StartupNotify=true
 EOF
 
 cat <<EOF > "${SOURCE_NAME}/usr/bin/xdman"
 #!/bin/bash
-export GTK_USE_PORTAL=1 
+# Wayland-friendly launcher wrapper
+export GTK_USE_PORTAL=1
 /opt/xdman/xdm-app \$@
 EOF
 
@@ -51,11 +59,12 @@ xdman_gtk|.pkg.tar.zst;.pkg.tar.xz;.pkg.tar.gz;.pkg.tar.bz2
 EOF
 
 cp "${SOURCE_NAME}/opt/xdman/xdm-app.desktop" "${SOURCE_NAME}/usr/share/applications"
+# Wayland/Phase4: themed scalable icon + mime package
+cp "${SOURCE_NAME}/opt/xdman/xdm-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/xdm-app.svg"
+cp xdm-app.xml "${SOURCE_NAME}/usr/share/mime/packages/xdm-app.xml"
 
 chmod 755 "${SOURCE_NAME}/usr/bin/xdman"
 chmod 755 "${SOURCE_NAME}/opt/xdman/xdm-app"
-
-#tar --create --file "${SOURCE_NAME}.tar.gz" -C "${SOURCE_NAME}" .
 
 cat <<EOF > "PKGBUILD"
 pkgname=xdman_gtk
@@ -65,12 +74,15 @@ pkgdesc="Open source download accelerator and video downloader."
 arch=("x86_64")
 url="https://github.com/subhra74/xdm"
 license=('GPLv3')
-#source=("${SOURCE_NAME}.tar.gz")
-depends=('ffmpeg' 'gtk3>=3.22.0')
-#sha1sums=('SKIP')
+depends=('ffmpeg' 'gtk3>=3.24')
+optdepends=('xdg-desktop-portal: native file choosers under Wayland/sandboxes'
+            'libnotify: desktop notifications')
 
 package() {
 	cp -r * \$pkgdir
+	# Wayland/Phase4: refresh caches after pacman installs the files
+	update-desktop-database -q "\$pkgdir/usr/share/applications" 2>/dev/null || :
+	gtk-update-icon-cache -q -t -f "\$pkgdir/usr/share/icons/hicolor" 2>/dev/null || :
 }
 EOF
 

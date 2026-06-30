@@ -1,0 +1,11 @@
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+#
+# DEPRECATED — Linux native messaging host is NOT shipped.
+#
+# On Linux, XDM integrates with browsers via:
+#   (1) the OS-registered `xdm-app://` / `xdm+app://` URL schemes (see .desktop MimeType), and
+#   (2) a loopback HTTP relay on 127.0.0.1 (port 8597 + fallback range), served by
+#       XDM.Core.BrowserMonitoring.IpcHttpMessageProcessor.
+#
+# This NativeMessaging/ project and its configurers are retained for the Windows build only
+# and are inert on Linux. Do not extend this path for Linux; extend the scheme + HTTP model.

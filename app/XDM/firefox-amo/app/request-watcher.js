@@ -109,23 +109,17 @@ class RequestWatcher {
             if (res.url.indexOf("127.0.0.1") >= 0) {
                 return;
             }
-            console.log("analyzing req: ");
-            console.log(req);
-            console.log(res);
-            console.log(this.callback + " " + this.isMatchingRequest(res) + "" + this.statusCallback())
+            // MV3/Phase2.1: non-blocking observation only. Downloadable files are intercepted
+            // via chrome.downloads.onCreated in app.js; here we only detect streaming media
+            // to notify XDM (returning {cancel:true} is forbidden in Manifest V3).
             if (this.callback && this.isMatchingRequest(res) && this.statusCallback()) {
-                console.log("matching req");
-                let intercept = this.shouldIntercept(res);
                 if (req.tabId !== -1) {
                     chrome.tabs.get(
                         req.tabId,
-                        tab => this.postMediaOrDownload(req, res, tab, intercept)
+                        tab => this.postMediaOrDownload(req, res, tab, false)
                     );
                 } else {
-                    this.postMediaOrDownload(req, res, null, intercept);
-                }
-                if (intercept) {
-                    return { cancel: true };
+                    this.postMediaOrDownload(req, res, null, false);
                 }
             }
         }
@@ -152,7 +146,7 @@ class RequestWatcher {
         chrome.webRequest.onHeadersReceived.addListener(
             this.onHeadersReceivedEventCallback,
             { urls: ["http://*/*", "https://*/*"] },
-            ["blocking", "responseHeaders"]
+            ["extraHeaders", "responseHeaders"]
         );
 
         chrome.webRequest.onErrorOccurred.addListener(
@@ -219,21 +213,8 @@ class RequestWatcher {
         }
     }
 
-    shouldIntercept(res) {
-        let u = new URL(res.url);
-
-        let path = u.pathname;
-        let upath = path.toUpperCase();
-
-        if (this.fileExts.find(e => upath.endsWith("." + e))) {
-            return true;
-        }
-
-        let contentDisposition = res.responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
-        if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
-            return true;
-        }
-    }
+    // MV3/Phase2.1: shouldIntercept() removed — downloadable files are now claimed via
+    // chrome.downloads.onCreated in app.js, not by cancelling the network request.
 
     isInValidStatus(res) {
         return res.statusCode && res.statusCode !== 200 && res.statusCode !== 206;

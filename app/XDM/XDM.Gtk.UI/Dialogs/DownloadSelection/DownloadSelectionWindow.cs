@@ -130,7 +130,7 @@ namespace XDM.GtkUI.Dialogs.DownloadSelection
             windowGroup.AddWindow(this);
 
             Title = TextResource.GetText("BAT_SELECT_ITEMS");
-            SetPosition(WindowPosition.CenterAlways);
+            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             PrepareMenu();
             GtkHelper.AttachSafeDispose(this);
