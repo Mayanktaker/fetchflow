@@ -53,15 +53,17 @@ namespace XDM.GtkUI.Utils
     {
         private readonly SniProperties props;
         private readonly System.Action onActivate;
-        public XdmSniItem(SniProperties props, System.Action onActivate)
+        private readonly Action<int, int> onContextMenu;
+        public XdmSniItem(SniProperties props, System.Action onActivate, Action<int, int> onContextMenu)
         {
             this.props = props;
             this.onActivate = onActivate;
+            this.onContextMenu = onContextMenu;
         }
         public ObjectPath ObjectPath => new("/StatusNotifierItem");
         public Task<SniProperties> GetAllAsync() => Task.FromResult(props);
         public Task ActivateAsync(int x, int y) { onActivate?.Invoke(); return Task.CompletedTask; }
         public Task SecondaryActivateAsync(int x, int y) { onActivate?.Invoke(); return Task.CompletedTask; }
-        public Task ContextMenuAsync(int x, int y) => Task.CompletedTask;
+        public Task ContextMenuAsync(int x, int y) { onContextMenu?.Invoke(x, y); return Task.CompletedTask; }
     }
 }

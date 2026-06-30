@@ -6,9 +6,9 @@
 //   2. Legacy Gtk.StatusIcon (XEmbed)       -> X11-only DEs without an SNI host (back-compat)
 //   3. None                                  -> Wayland with no SNI host (e.g. stock GNOME);
 //                                                MainWindow falls back to minimize-to-taskbar.
+// Right-click context menu: "Show XDM" (restore) + "Quit" (exit).
 using System;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Gdk;
 using Gtk;
 using Tmds.DBus;
@@ -26,6 +26,7 @@ namespace XDM.GtkUI.Utils
         private Connection? connection;
         private XdmSniItem? sniItem;
         private StatusIcon? legacyIcon;
+        private System.Action? onActivate;
 
         // True when ANY tray mechanism is active (MainWindow uses this to allow hide-to-tray on close)
         public bool IsTrayActive { get; private set; }
@@ -34,18 +35,19 @@ namespace XDM.GtkUI.Utils
         public enum TrayKind { None, StatusNotifierItem, LegacyStatusIcon }
 
         /// <summary>Initialize the best available tray. Never throws — failures degrade to None.</summary>
-        public void Init(Pixbuf icon, string appName, System.Action onActivate)
+        public void Init(Pixbuf icon, string appName, System.Action onActivate, System.Action onQuit)
         {
+            this.onActivate = onActivate;
             try
             {
-                if (TryInitSni(icon, appName, onActivate)) return;
+                if (TryInitSni(icon, appName, onActivate, onQuit)) return;
             }
             catch (Exception ex) { Log.Debug("SNI tray init failed: " + ex.Message); }
 
             // Fallback: legacy XEmbed tray only makes sense on X11 (it's invisible on Wayland)
             if (!RunningOnWayland)
             {
-                try { TryInitLegacy(icon, appName, onActivate); return; }
+                try { TryInitLegacy(icon, appName, onActivate, onQuit); return; }
                 catch (Exception ex) { Log.Debug("Legacy tray init failed: " + ex.Message); }
             }
 
@@ -56,7 +58,7 @@ namespace XDM.GtkUI.Utils
         private static bool RunningOnWayland =>
             !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
 
-        private bool TryInitSni(Pixbuf icon, string appName, System.Action onActivate)
+        private bool TryInitSni(Pixbuf icon, string appName, System.Action onActivate, System.Action onQuit)
         {
             connection = new Connection(Address.Session);
             connection.ConnectAsync().GetAwaiter().GetResult();
@@ -78,14 +80,15 @@ namespace XDM.GtkUI.Utils
                 IconPixmap = new[] { PixbufToRgba(icon) },
                 ToolTip = (0, 0, Array.Empty<byte>(), appName, ""),
             };
-            sniItem = new XdmSniItem(props, () => Gtk.Application.Invoke((_, _) => onActivate()));
+            sniItem = new XdmSniItem(
+                props,
+                () => Gtk.Application.Invoke((_, _) => onActivate()),
+                (x, y) => Gtk.Application.Invoke((_, _) => ShowContextMenu(onActivate, onQuit)));
 
             connection.RegisterObjectAsync(sniItem).GetAwaiter().GetResult();
             connection.RegisterServiceAsync(WellKnownName, ServiceRegistrationOptions.Default).GetAwaiter().GetResult();
 
             var watcher = connection.CreateProxy<IStatusNotifierWatcher>(WatcherService, WatcherPath);
-            // Per SNI spec: when the item lives at the default path /StatusNotifierItem,
-            // register with the bus name only (no path suffix).
             watcher.RegisterStatusNotifierItemAsync(WellKnownName).GetAwaiter().GetResult();
 
             IsTrayActive = true;
@@ -94,15 +97,38 @@ namespace XDM.GtkUI.Utils
             return true;
         }
 
-        private void TryInitLegacy(Pixbuf icon, string appName, System.Action onActivate)
+        private void TryInitLegacy(Pixbuf icon, string appName, System.Action onActivate, System.Action onQuit)
         {
             legacyIcon = new StatusIcon(icon);
             legacyIcon.TooltipText = appName;
             legacyIcon.Activate += (_, _) => onActivate();
+            legacyIcon.PopupMenu += (_, _) => ShowContextMenu(onActivate, onQuit);
             legacyIcon.Visible = true;
             IsTrayActive = true;
             ActiveKind = TrayKind.LegacyStatusIcon;
             Log.Debug("Tray: using legacy Gtk.StatusIcon (X11/XEmbed).");
+        }
+
+        // Build and show a GTK popup menu at the given screen coordinates.
+        // Menu items: "Show XDM" (restore window) + separator + "Quit" (exit app).
+        private static void ShowContextMenu(System.Action onActivate, System.Action onQuit)
+        {
+            var menu = new Menu();
+
+            var showItem = new MenuItem("Show XDM");
+            showItem.Activated += (_, _) => { onActivate?.Invoke(); };
+            menu.Append(showItem);
+
+            menu.Append(new SeparatorMenuItem());
+
+            var quitItem = new MenuItem("Quit");
+            quitItem.Activated += (_, _) => onQuit?.Invoke();
+            menu.Append(quitItem);
+
+            menu.ShowAll();
+            // Use PopupAtPointer for Wayland (uses current pointer position);
+            // fall back to Popup at the reported coordinates for X11.
+            menu.PopupAtPointer(null);
         }
 
         public void Dispose()

@@ -133,7 +133,8 @@ namespace XDM.GtkUI
             // KDE/GNOME+ext/waybar; legacy StatusIcon on X11-only DEs). Falls back to None
             // (Wayland with no SNI host). IsTrayActive drives the close-to-tray vs minimize logic.
             trayManager = new TrayIconManager();
-            trayManager.Init(GtkHelper.LoadSvg("xdm-logo", 22), "Xtreme Download Manager", ShowAndActivate);
+            trayManager.Init(GtkHelper.LoadSvg("xdm-logo", 22), "Xtreme Download Manager",
+                             ShowAndActivate, () => Application.Quit());
         }
 
         private void CreateMenu()
