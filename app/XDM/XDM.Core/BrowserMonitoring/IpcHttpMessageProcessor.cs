@@ -23,6 +23,10 @@ namespace XDM.Core.BrowserMonitoring
         // Phase2.3: the port actually bound (the browser extension probes the same range)
         public static int EffectivePort { get; private set; } = 8597;
 
+        // Phase6: all active WebSocket sessions (for push/broadcast to extensions)
+        private readonly List<WebSocketSession> wsSessions = new();
+        private readonly object wsLock = new();
+
         public IpcHttpMessageProcessor()
         {
             EffectivePort = FindFreePort(Config.IpcPort);
@@ -32,6 +36,8 @@ namespace XDM.Core.BrowserMonitoring
             {
                 HandleRequest(args.RequestContext);
             };
+            // Phase6: accept WebSocket upgrades on any path
+            server.WebSocketAccepted += OnWebSocketAccepted;
         }
 
         // Phase2.3: probe a small range so startup survives if the preferred port is taken
@@ -414,6 +420,183 @@ namespace XDM.Core.BrowserMonitoring
                     message.RequestHeaders.Remove(keyName!);
                 }
             }
+        }
+
+        // Phase6: WebSocket support — bidirectional, real-time, no polling.
+        // Extension sends JSON: { "path": "/download", "body": {...} }
+        // XDM responds with the same config JSON as the HTTP /sync response.
+        // This enables push: XDM can push video list updates to the extension instantly.
+
+        private void OnWebSocketAccepted(string path, Dictionary<string, List<string>> headers, WebSocketSession session)
+        {
+            lock (wsLock) { wsSessions.Add(session); }
+            Log.Debug("WebSocket connected: " + path + " (total: " + wsSessions.Count + ")");
+
+            session.OnClosed += s =>
+            {
+                lock (wsLock) { wsSessions.Remove(s); }
+                Log.Debug("WebSocket disconnected (total: " + wsSessions.Count + ")");
+            };
+
+            // Read loop on a background thread
+            new Thread(() =>
+            {
+                try
+                {
+                    string? msg;
+                    while (session.IsConnected && (msg = session.ReadMessage()) != null)
+                    {
+                        HandleWsMessage(session, msg);
+                    }
+                }
+                catch (Exception ex) { Log.Debug("WebSocket read loop error: " + ex.Message); }
+                finally { session.Close(); }
+            }) { IsBackground = true }.Start();
+        }
+
+        // Parse the WebSocket message envelope: { "path": "/download", "body": {...} }
+        // Route to the same handlers as the HTTP path.
+        private void HandleWsMessage(WebSocketSession session, string json)
+        {
+            try
+            {
+                var envelope = JsonConvert.DeserializeObject<WsEnvelope>(json);
+                if (envelope?.Path == null) return;
+
+                var bodyBytes = envelope.Body != null ? Encoding.UTF8.GetBytes(envelope.Body) : null;
+
+                switch (envelope.Path)
+                {
+                    case "/sync":
+                        // Extension requesting config → send config JSON back
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                    case "/download":
+                        if (bodyBytes != null) OnDownloadMessage(bodyBytes);
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                    case "/media":
+                        if (bodyBytes != null) OnMediaMessage(bodyBytes);
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                    case "/tab-update":
+                        if (bodyBytes != null) OnTabUpdateMessage(bodyBytes);
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                    case "/vid":
+                        if (bodyBytes != null) OnVideoDownloadMessage(bodyBytes);
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                    case "/clear":
+                        ApplicationContext.VideoTracker.ClearVideoList();
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                    case "/link":
+                        if (bodyBytes != null) OnBatchMessage(bodyBytes);
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                    default:
+                        Log.Debug("WebSocket: unknown path " + envelope.Path);
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                }
+            }
+            catch (Exception ex) { Log.Debug("WebSocket message error: " + ex.Message); }
+        }
+
+        // Overload handlers that accept raw bytes (for WebSocket path reuse)
+        private void OnDownloadMessage(byte[] body)
+        {
+            var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
+            if (msg == null) return;
+            var dmsg = new Message();
+            dmsg.Url = msg.Url;
+            dmsg.RequestMethod = msg.Method;
+            dmsg.RequestHeaders = msg.RequestHeaders;
+            dmsg.ResponseHeaders = msg.ResponseHeaders;
+            dmsg.Cookies = msg.Cookie;
+            dmsg.File = FileHelper.SanitizeFileName(msg.File)!;
+            dmsg.TabUrl = msg.TabUrl;
+            dmsg.TabId = msg.TabId;
+            RemoveBlockedHeaders(dmsg);
+            ApplicationContext.CoreService.AddDownload(dmsg);
+        }
+
+        private void OnMediaMessage(byte[] body)
+        {
+            var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
+            if (msg == null) return;
+            var dmsg = new Message();
+            dmsg.Url = msg.Url;
+            dmsg.RequestMethod = msg.Method;
+            dmsg.RequestHeaders = msg.RequestHeaders;
+            dmsg.ResponseHeaders = msg.ResponseHeaders;
+            dmsg.Cookies = msg.Cookie;
+            dmsg.File = FileHelper.SanitizeFileName(msg.File)!;
+            dmsg.TabUrl = msg.TabUrl;
+            dmsg.TabId = msg.TabId;
+            RemoveBlockedHeaders(dmsg);
+            VideoUrlHelper.ProcessMediaMessage(dmsg);
+        }
+
+        private void OnTabUpdateMessage(byte[] body)
+        {
+            var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
+            if (msg == null) return;
+            ApplicationContext.VideoTracker.UpdateMediaTitle(msg.TabUrl, msg.TabTitle);
+        }
+
+        private void OnVideoDownloadMessage(byte[] body)
+        {
+            var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
+            if (msg == null) return;
+            ApplicationContext.VideoTracker.AddVideoDownload(msg.Vid);
+        }
+
+        private void OnBatchMessage(byte[] body)
+        {
+            var msgArr = JsonConvert.DeserializeObject<ExtensionData[]>(Encoding.UTF8.GetString(body));
+            if (msgArr == null) return;
+            ApplicationContext.CoreService.AddBatchLinks(msgArr.Select(msg =>
+            {
+                var dmsg = new Message();
+                dmsg.Url = msg.Url;
+                dmsg.RequestMethod = msg.Method;
+                dmsg.RequestHeaders = msg.RequestHeaders;
+                dmsg.ResponseHeaders = msg.ResponseHeaders;
+                dmsg.Cookies = msg.Cookie;
+                dmsg.File = FileHelper.SanitizeFileName(msg.File)!;
+                dmsg.TabUrl = msg.TabUrl;
+                dmsg.TabId = msg.TabId;
+                RemoveBlockedHeaders(dmsg);
+                return dmsg;
+            }).ToList());
+        }
+
+        // Phase6: push the current config to all connected WebSocket clients (call after
+        // video list changes, config changes, etc.).
+        public void BroadcastConfig()
+        {
+            var json = CreateConfigJson();
+            if (json == null) return;
+            lock (wsLock)
+            {
+                for (int i = wsSessions.Count - 1; i >= 0; i--)
+                {
+                    var s = wsSessions[i];
+                    if (s.IsConnected) s.Send(json);
+                    else { wsSessions.RemoveAt(i); s.Dispose(); }
+                }
+            }
+        }
+
+        // Envelope for WebSocket messages: { "path": "/download", "body": "..." }
+        private class WsEnvelope
+        {
+            [JsonProperty("path")]
+            public string? Path { get; set; }
+            [JsonProperty("body")]
+            public string? Body { get; set; }
         }
     }
 }

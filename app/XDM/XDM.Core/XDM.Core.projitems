@@ -51,6 +51,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)HttpServer\RequestContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpServer\RequestContextEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpServer\ResponseStatus.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpServer\WebSocketSession.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MediaParser\Dash\DashUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MediaParser\Dash\MpdParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MediaParser\Dash\Representation.cs" />

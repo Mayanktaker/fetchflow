@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Collections.Generic;
 using TraceLog;
 
 namespace XDM.Core.HttpServer
@@ -10,6 +11,8 @@ namespace XDM.Core.HttpServer
     {
         private readonly TcpListener listener;
         public event EventHandler<RequestContextEventArgs>? RequestReceived;
+        // Phase6: fired when a client requests a WebSocket upgrade (path, headers, session)
+        public event Action<string, Dictionary<string, List<string>>, WebSocketSession>? WebSocketAccepted;
 
         public NanoServer(int port) : this(IPAddress.Any, port) { }
 
@@ -46,6 +49,20 @@ namespace XDM.Core.HttpServer
                     while (true)
                     {
                         var ctx = HttpParser.ParseContext(tcp);
+
+                        // Phase6: detect WebSocket upgrade — if Upgrade: websocket, perform
+                        // handshake and fire WebSocketAccepted instead of the normal HTTP path.
+                        if (IsWebSocketUpgrade(ctx.RequestHeaders))
+                        {
+                            var session = WebSocketSession.Accept(tcp, ctx.RequestHeaders);
+                            if (session != null)
+                            {
+                                Log.Debug("WebSocket upgrade accepted on " + ctx.RequestPath);
+                                WebSocketAccepted?.Invoke(ctx.RequestPath, ctx.RequestHeaders, session);
+                            }
+                            return; // hand off TcpClient lifetime to the WebSocketSession
+                        }
+
                         this.RequestReceived?.Invoke(this, new RequestContextEventArgs(ctx));
                         if (!ctx.KeepAlive)
                         {
@@ -62,6 +79,13 @@ namespace XDM.Core.HttpServer
                     try { tcp.Close(); } catch { }
                 }
             }).Start();
+        }
+
+        private static bool IsWebSocketUpgrade(Dictionary<string, List<string>> headers)
+        {
+            if (!headers.TryGetValue("Upgrade", out var values) || values.Count == 0)
+                return false;
+            return values[0].Equals("websocket", StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }
