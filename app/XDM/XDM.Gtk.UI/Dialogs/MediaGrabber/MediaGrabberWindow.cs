@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -71,6 +72,8 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
             this.Destroyed += MediaGrabberWindow_Destroyed;
             ApplicationContext.VideoTracker.MediaAdded += VideoTracker_MediaAdded;
             ApplicationContext.VideoTracker.MediaUpdated += VideoTracker_MediaUpdated;
+            ApplicationContext.VideoTracker.MediaFetchStarted += VideoTracker_MediaFetchStarted;
+            ApplicationContext.VideoTracker.MediaFetchCompleted += VideoTracker_MediaFetchCompleted;
 
             BtnClear!.Clicked += BtnClear_Clicked;
             BtnDownload!.Clicked += BtnDownload_Clicked;
@@ -119,6 +122,16 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
             Gtk.Application.Invoke((_, _) => { UpdateMedia(e.MediaInfo); });
         }
 
+        private void VideoTracker_MediaFetchStarted(object? sender, string url)
+        {
+            Gtk.Application.Invoke((_, _) => { Title = TextResource.GetText("MSG_MEDIA_CAPTURE") + " (Fetching formats...)"; });
+        }
+
+        private void VideoTracker_MediaFetchCompleted(object? sender, string url)
+        {
+            Gtk.Application.Invoke((_, _) => { Title = TextResource.GetText("MSG_MEDIA_CAPTURE"); });
+        }
+
         private void VideoTracker_MediaAdded(object? sender, Core.BrowserMonitoring.MediaInfoEventArgs e)
         {
             Gtk.Application.Invoke((_, _) => { AddMedia(e.MediaInfo); });
@@ -151,6 +164,8 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
         {
             ApplicationContext.VideoTracker.MediaAdded -= VideoTracker_MediaAdded;
             ApplicationContext.VideoTracker.MediaUpdated -= VideoTracker_MediaUpdated;
+            ApplicationContext.VideoTracker.MediaFetchStarted -= VideoTracker_MediaFetchStarted;
+            ApplicationContext.VideoTracker.MediaFetchCompleted -= VideoTracker_MediaFetchCompleted;
         }
 
         private void LoadTexts()

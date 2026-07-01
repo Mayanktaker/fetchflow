@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using XDM.Core.Downloader.Adaptive.Dash;
 using XDM.Core.Downloader.Adaptive.Hls;
@@ -31,9 +32,13 @@ namespace XDM.Core.BrowserMonitoring
 
         event EventHandler<MediaInfoEventArgs> MediaAdded;
         event EventHandler<MediaInfoEventArgs> MediaUpdated;
+        event EventHandler<string> MediaFetchStarted;
+        event EventHandler<string> MediaFetchCompleted;
         void ClearVideoList();
         void AddVideoDownload(string videoId);
         List<MediaInfo> GetVideoList();
         void UpdateMediaTitle(string tabUrl, string tabTitle);
+        void OnMediaFetchStarted(string url);
+        void OnMediaFetchCompleted(string url);
     }
 }

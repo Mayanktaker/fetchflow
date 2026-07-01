@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -23,6 +24,18 @@ namespace XDM.Core.BrowserMonitoring
 
         public event EventHandler<MediaInfoEventArgs> MediaAdded;
         public event EventHandler<MediaInfoEventArgs> MediaUpdated;
+        public event EventHandler<string> MediaFetchStarted;
+        public event EventHandler<string> MediaFetchCompleted;
+
+        public void OnMediaFetchStarted(string url)
+        {
+            MediaFetchStarted?.Invoke(this, url);
+        }
+
+        public void OnMediaFetchCompleted(string url)
+        {
+            MediaFetchCompleted?.Invoke(this, url);
+        }
 
         public void ClearVideoList()
         {

@@ -33,7 +33,7 @@ Version: ${VERSION}
 Architecture: amd64
 Depends: libgtk-3-0 (>= 3.24)
 Recommends: ffmpeg, libnotify-bin, xdg-desktop-portal
-Maintainer: Subhra Das Gupta
+Maintainer: Mayanktaker | Mayanktaker Computers & Web Development
 Description: Open source download accelerator and video downloader.
  Open source download accelerator and video downloader.
 EOF

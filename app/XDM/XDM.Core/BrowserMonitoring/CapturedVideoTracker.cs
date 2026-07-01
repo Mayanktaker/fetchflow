@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Text;
 using TraceLog;
@@ -31,6 +32,21 @@ namespace XDM.Core.BrowserMonitoring
         public bool IsFFmpegRequiredForDownload(string id)
         {
             return ytVideoList.ContainsKey(id) || dashVideoList.ContainsKey(id) || hlsVideoList.ContainsKey(id);
+        }
+
+        public event EventHandler<MediaInfoEventArgs> MediaAdded;
+        public event EventHandler<MediaInfoEventArgs> MediaUpdated;
+        public event EventHandler<string> MediaFetchStarted;
+        public event EventHandler<string> MediaFetchCompleted;
+
+        public void OnMediaFetchStarted(string url)
+        {
+            MediaFetchStarted?.Invoke(this, url);
+        }
+
+        public void OnMediaFetchCompleted(string url)
+        {
+            MediaFetchCompleted?.Invoke(this, url);
         }
 
         public void StartVideoDownload(string videoId,

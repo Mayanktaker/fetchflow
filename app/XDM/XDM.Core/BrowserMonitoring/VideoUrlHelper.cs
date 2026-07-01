@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,9 @@ using XDM.Core.Downloader.Progressive.DualHttp;
 using XDM.Core.Downloader.Progressive.SingleHttp;
 using XDM.Core.Downloader.Adaptive.Dash;
 using XDM.Core.Downloader.Adaptive.Hls;
+using XDM.Core.Downloader;
+using System.Threading;
+using YDLWrapper;
 
 #if !NET5_0_OR_GREATER
 using XDM.Compatibility;
@@ -23,14 +27,48 @@ namespace XDM.Core.BrowserMonitoring
 {
     static class VideoUrlHelper
     {
+        private static string lastProcessedYtUrl = string.Empty;
         private static object lockObject = new object();
         private static DashInfo lastVid;
         private static List<DashInfo> videoQueue = new();
         private static List<DashInfo> audioQueue = new();
-        private static Dictionary<string, DateTime> referersToSkip = new();  //Skip the video requests whose referer hash is present in below dict
-                                                                             //as they were triggered by HLS or DASH 
+        // referersToSkip has been moved to NetworkHelper
         private static HashSet<string> m3u8MpdTabs = new(); //Keep track of tab id which triggered m3u8 or mpd manifest
+        private static Dictionary<string, (DateTime Timestamp, List<YDLVideoEntry> Result)> ydlCache = new();
+        private static System.Timers.Timer ydlCacheEvictionTimer;
+
+        // Supported streaming domains for yt-dlp multi-site capture
+        private static readonly HashSet<string> SupportedYdlDomains = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "youtube.com", "youtu.be",
+            "vimeo.com",
+            "dailymotion.com",
+            "facebook.com", "fb.watch",
+            "instagram.com",
+            "twitter.com", "x.com",
+            "twitch.tv",
+            "bilibili.com",
+            "tiktok.com",
+            "reddit.com"
+        };
         private static HashSet<string> suspectedMp4Fragments = new();
+
+        static VideoUrlHelper()
+        {
+            // Evict ydlCache entries older than 5 minutes every 10 minutes
+            ydlCacheEvictionTimer = new System.Timers.Timer(10 * 60 * 1000);
+            ydlCacheEvictionTimer.Elapsed += (_, _) =>
+            {
+                lock (ydlCache)
+                {
+                    var expired = ydlCache.Where(kv => (DateTime.Now - kv.Value.Timestamp).TotalMinutes >= 5)
+                                         .Select(kv => kv.Key).ToList();
+                    foreach (var k in expired) ydlCache.Remove(k);
+                }
+            };
+            ydlCacheEvictionTimer.AutoReset = true;
+            ydlCacheEvictionTimer.Start();
+        }
 
         public static void ProcessMediaMessage(Message message)
         {
@@ -188,7 +226,7 @@ namespace XDM.Core.BrowserMonitoring
             {
                 m3u8MpdTabs.Add(message.TabId);
             }
-            AddToSkippedRefererList(message.GetRequestHeaderFirstValue("Referer"));
+            NetworkHelper.AddToSkippedRefererList(message.GetRequestHeaderFirstValue("Referer"));
 
             var manifest = DownloadManifest(message);
             if (manifest == null) { return; }
@@ -338,7 +376,7 @@ namespace XDM.Core.BrowserMonitoring
             {
                 m3u8MpdTabs.Add(message.TabId);
             }
-            AddToSkippedRefererList(message.GetRequestHeaderFirstValue("Referer"));
+            NetworkHelper.AddToSkippedRefererList(message.GetRequestHeaderFirstValue("Referer"));
 
             var manifest = DownloadManifest(message);
             if (manifest != null)
@@ -614,7 +652,7 @@ namespace XDM.Core.BrowserMonitoring
 
         internal static void ProcessNormalVideo(Message message)
         {
-            if (IsMediaFragment(message.GetRequestHeaderFirstValue("Referer")))
+            if (NetworkHelper.IsRefererSkipped(message.GetRequestHeaderFirstValue("Referer")))
             {
                 Log.Debug($"Skipping url:{message.Url} as it seems a media fragment");
                 return;
@@ -870,36 +908,133 @@ namespace XDM.Core.BrowserMonitoring
             return null;
         }
 
-        private static bool IsMediaFragment(string referer)
+        // IsMediaFragment and AddToSkippedRefererList have been moved to NetworkHelper
+
+        // ProcessYoutubeTab has been renamed to ProcessMediaTab for multi-site yt-dlp support
+        public static bool IsYdlSupportedUrl(string url)
         {
-            if (string.IsNullOrEmpty(referer)) return false;
-            var sha1 = ComputeHash(referer);
-            lock (referersToSkip)
+            if (string.IsNullOrEmpty(url)) return false;
+            try
             {
-                if (referersToSkip.ContainsKey(sha1))
+                var host = new Uri(url).Host.TrimStart('w', '.');
+                return SupportedYdlDomains.Any(d => host.EndsWith(d, StringComparison.OrdinalIgnoreCase));
+            }
+            catch { return false; }
+        }
+
+        public static void ProcessMediaTab(string url, string tabId)
+        {
+            if (!IsYdlSupportedUrl(url))
+                return;
+
+            var vIndex = url.IndexOf("v=");
+            string key = url;
+            if (vIndex > 0)
+            {
+                var amp = url.IndexOf('&', vIndex);
+                if (amp > 0) key = url.Substring(0, amp);
+            }
+            if (lastProcessedYtUrl == key) return;
+            lastProcessedYtUrl = key;
+
+            new Thread(() =>
+            {
+                try
                 {
-                    referersToSkip[sha1] = DateTime.Now;
-                    return true;
+                    ApplicationContext.VideoTracker.OnMediaFetchStarted(url);
+
+                    List<YDLVideoEntry>? items = null;
+                    lock (ydlCache)
+                    {
+                        if (ydlCache.TryGetValue(key, out var cached) && (DateTime.Now - cached.Timestamp).TotalMinutes < 5)
+                        {
+                            items = cached.Result;
+                        }
+                    }
+
+                    if (items == null)
+                    {
+                        var ydl = new YDLProcess
+                        {
+                            Uri = new Uri(url),
+                        };
+                        ydl.Start();
+                        items = YDLOutputParser.Parse(ydl.JsonOutputFile);
+
+                        if (items != null && items.Count > 0)
+                        {
+                            lock (ydlCache)
+                            {
+                                ydlCache[key] = (DateTime.Now, items);
+                            }
+                        }
+                    }
+                    if (items != null && items.Count > 0)
+                    {
+                        lock (ApplicationContext.CoreService)
+                        {
+                            var addedQualities = new HashSet<string>();
+                            foreach (var entry in items)
+                            {
+                                foreach (var fmt in entry.Formats)
+                                {
+                                    if (fmt.Height != null)
+                                    {
+                                        var qualityKey = fmt.Height + "p";
+                                        if (!addedQualities.Contains(qualityKey))
+                                        {
+                                            addedQualities.Add(qualityKey);
+                                            
+                                            var displayInfo = new StreamingVideoDisplayInfo
+                                            {
+                                                Quality = $"[{fmt.FileExt?.ToUpperInvariant()}] {qualityKey}",
+                                                CreationTime = DateTime.Now,
+                                                TabId = tabId
+                                            };
+                                            
+                                            var file = FileHelper.SanitizeFileName(entry.Title) + "." + fmt.FileExt;
+                                            
+                                            if (fmt.YDLEntryType == YDLEntryType.Http)
+                                            {
+                                                ApplicationContext.VideoTracker.AddVideoNotification(displayInfo, new SingleSourceHTTPDownloadInfo { Uri = fmt.VideoUrl, File = file });
+                                            }
+                                            else if (fmt.YDLEntryType == YDLEntryType.Dash)
+                                            {
+                                                ApplicationContext.VideoTracker.AddVideoNotification(displayInfo, new DualSourceHTTPDownloadInfo { Uri1 = fmt.VideoUrl, Uri2 = fmt.AudioUrl, File = file });
+                                            }
+                                            else if (fmt.YDLEntryType == YDLEntryType.Hls)
+                                            {
+                                                ApplicationContext.VideoTracker.AddVideoNotification(displayInfo, new MultiSourceHLSDownloadInfo { VideoUri = fmt.VideoUrl, AudioUri = fmt.AudioUrl, File = file });
+                                            }
+                                            else if (fmt.YDLEntryType == YDLEntryType.MpegDash)
+                                            {
+                                                ApplicationContext.VideoTracker.AddVideoNotification(displayInfo, new MultiSourceDASHDownloadInfo
+                                                {
+                                                    VideoSegments = fmt.VideoFragments?.Select(x => new Uri(new Uri(fmt.FragmentBaseUrl), x.Path)).ToList(),
+                                                    AudioSegments = fmt.AudioFragments?.Select(x => new Uri(new Uri(fmt.FragmentBaseUrl), x.Path)).ToList(),
+                                                    AudioFormat = fmt.AudioFormat != null ? "." + fmt.AudioFormat : null,
+                                                    VideoFormat = fmt.VideoFormat != null ? "." + fmt.VideoFormat : null,
+                                                    Url = fmt.VideoUrl,
+                                                    File = file
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ApplicationContext.VideoTracker.OnMediaFetchCompleted(url);
                 }
-            }
-            return false;
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "Failed to parse youtube via ydl on tab update");
+                    ApplicationContext.VideoTracker.OnMediaFetchCompleted(url);
+                }
+            }).Start();
         }
 
-        private static void AddToSkippedRefererList(string? referer)
-        {
-            if (string.IsNullOrEmpty(referer)) return;
-            lock (referersToSkip)
-            {
-                referersToSkip[ComputeHash(referer!)] = DateTime.Now;
-            }
-        }
-
-        private static string ComputeHash(string input)
-        {
-            using var sha1 = new SHA1Managed();
-            var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
-            return string.Concat(hash.Select(b => b.ToString("x2")));
-        }
+        // ComputeHash has been moved to NetworkHelper
 
         public static readonly Dictionary<Int32, string> Itags = new()
         {

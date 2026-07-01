@@ -369,3 +369,13 @@ app/XDM/XDM.Linux.Installer/xdm-helper-chrome/
 app/XDM/XDM.Win.Installer/binary-deps/ffmpeg-x86.exe
 app/XDM/XDM.Win.Installer/binary-deps/yt-dlp_x86.exe
 app/XDM/firefox-amo/xdm-v8-browser-helper.zip
+
+# XDM build & packaging artifacts
+rpmbuild/
+binary-source/
+build-output/
+build_output/
+test-publish/
+xdm-release/
+app/XDM/XDM.Linux.Installer/xdman_gtk-*/
+msg.bin

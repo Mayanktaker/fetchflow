@@ -66,13 +66,17 @@ mv "${SOURCE_NAME}.tar.gz" "rpmbuild/SOURCES"
 
 cat <<EOF > "rpmbuild/SPECS/xdman_gtk.spec"
 Name:       	xdman_gtk
+%define debug_package %{nil}
+%global __strip /bin/true
+%global __brp_strip /bin/true
+%global __brp_strip_comment_note /bin/true
+%global __brp_strip_lto /bin/true
 Version:    	${VERSION}
 Release:    	1%{?dist}
 Summary:    	Xtreme Download Manager
 AutoReqProv: 	no
 Requires:   	gtk3 >= 3.24
-Requires:   	(ffmpeg-free or ffmpeg)
-Requires:   	dotnet-runtime-8.0
+Recommends: 	(ffmpeg-free or ffmpeg)
 Recommends: 	xdg-desktop-portal
 Recommends: 	libnotify
 

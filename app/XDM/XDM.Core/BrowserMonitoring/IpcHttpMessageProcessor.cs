@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
@@ -142,6 +143,10 @@ namespace XDM.Core.BrowserMonitoring
                 return;
             }
             ApplicationContext.VideoTracker.UpdateMediaTitle(msg.TabUrl, msg.TabTitle);
+            if (msg.TabUrl != null && msg.TabId != null)
+            {
+                VideoUrlHelper.ProcessMediaTab(msg.TabUrl, msg.TabId);
+            }
         }
 
         private void OnDownloadMessage(RequestContext context)
@@ -544,6 +549,10 @@ namespace XDM.Core.BrowserMonitoring
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
             if (msg == null) return;
             ApplicationContext.VideoTracker.UpdateMediaTitle(msg.TabUrl, msg.TabTitle);
+            if (msg.TabUrl != null && msg.TabId != null)
+            {
+                VideoUrlHelper.ProcessMediaTab(msg.TabUrl, msg.TabId);
+            }
         }
 
         private void OnVideoDownloadMessage(byte[] body)
