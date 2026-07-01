@@ -1,12 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <!-- Wayland/Phase3.1: net6.0 (EOL) -> net8.0 LTS -->
     <TargetFramework>net8.0</TargetFramework>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>Link</TrimMode>
     <AssemblyName>xdm-app</AssemblyName>
     <RootNamespace>XDM.GtkUI</RootNamespace>
     <!--RuntimeIdentifier>linux-x64</RuntimeIdentifier-->

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Gtk;
 using Application = Gtk.Application;
@@ -12,6 +12,8 @@ using MenuItem = Gtk.MenuItem;
 using XDM.GtkUI.Utils;
 using XDM.GtkUI.Dialogs.DeleteConfirm;
 using XDM.GtkUI.Dialogs.Language;
+using TraceLog;
+
 
 namespace XDM.GtkUI
 {
@@ -1355,5 +1357,12 @@ namespace XDM.GtkUI
         // Wayland/Phase1.2: detect Wayland session to choose activation strategy
         private static bool RunningOnWayland =>
             !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
+
+        // Finalizer to log garbage collection.
+        ~MainWindow()
+        {
+            // Log that MainWindow is being garbage collected.
+            Log.Debug("MainWindow GC'ed!!!");
+        }
     }
 }
