@@ -109,17 +109,18 @@ class RequestWatcher {
             if (res.url.indexOf("127.0.0.1") >= 0) {
                 return;
             }
-            // MV3/Phase2.1: non-blocking observation only. Downloadable files are intercepted
-            // via chrome.downloads.onCreated in app.js; here we only detect streaming media
-            // to notify XDM (returning {cancel:true} is forbidden in Manifest V3).
             if (this.callback && this.isMatchingRequest(res) && this.statusCallback()) {
+                let intercept = this.shouldIntercept(res);
                 if (req.tabId !== -1) {
                     chrome.tabs.get(
                         req.tabId,
-                        tab => this.postMediaOrDownload(req, res, tab, false)
+                        tab => this.postMediaOrDownload(req, res, tab, intercept)
                     );
                 } else {
-                    this.postMediaOrDownload(req, res, null, false);
+                    this.postMediaOrDownload(req, res, null, intercept);
+                }
+                if (intercept) {
+                    return { cancel: true };
                 }
             }
         }
@@ -146,7 +147,7 @@ class RequestWatcher {
         chrome.webRequest.onHeadersReceived.addListener(
             this.onHeadersReceivedEventCallback,
             { urls: ["http://*/*", "https://*/*"] },
-            ["extraHeaders", "responseHeaders"]
+            ["blocking", "responseHeaders"]
         );
 
         chrome.webRequest.onErrorOccurred.addListener(
@@ -161,18 +162,18 @@ class RequestWatcher {
         chrome.webRequest.onErrorOccurred.removeListener(this.onErrorOccurredEventCallback);
     }
 
-    createRequestData(req, res, title, tabUrl, tabId, download) {
-        let data = {
+    createRequestData(req, res, title, tabUrl, tabId, intercept) {
+        var data = {
             url: res.url,
             file: title,
             requestHeaders: {},
             responseHeaders: {},
-            cookie: undefined,
+            cookies: {},
             method: req.method,
             userAgent: navigator.userAgent,
             tabUrl: tabUrl,
             tabId: tabId + "",
-            download: download
+            download: intercept
         };
 
         let cookies = [];
@@ -213,8 +214,22 @@ class RequestWatcher {
         }
     }
 
-    // MV3/Phase2.1: shouldIntercept() removed — downloadable files are now claimed via
-    // chrome.downloads.onCreated in app.js, not by cancelling the network request.
+    shouldIntercept(res) {
+        let u = new URL(res.url);
+
+        let path = u.pathname;
+        let upath = path.toUpperCase();
+
+        if (this.fileExts.find(e => upath.endsWith("." + e))) {
+            return true;
+        }
+
+        let contentDisposition = res.responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
+        if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
+            return true;
+        }
+        return false;
+    }
 
     isInValidStatus(res) {
         return res.statusCode && res.statusCode !== 200 && res.statusCode !== 206;

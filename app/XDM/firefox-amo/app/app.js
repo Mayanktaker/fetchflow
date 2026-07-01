@@ -94,39 +94,11 @@ class App {
             this.onTabUpdateCallback
         );
         chrome.runtime.onMessage.addListener(this.onPopupMessage.bind(this));
-        // MV3/Phase2.1: intercept downloads via the downloads API (replaces blocking webRequest).
-        // Firefox has no onDeterminingFilename; onCreated gives url + (sometimes) filename early
-        // enough to cancel the browser download and hand off to XDM.
-        chrome.downloads.onCreated.addListener(this.onDownloadCreated.bind(this));
+        // In Firefox MV3, webRequestBlocking is still fully supported.
+        // We revert back to request-watcher interception instead of downloads API.
         this.requestWatcher.register();
         this.attachContextMenu();
         chrome.tabs.onActivated.addListener(this.onTabActivated.bind(this));
-    }
-
-    // MV3/Phase2.1: decide whether XDM should take over a started browser download
-    onDownloadCreated(item) {
-        if (!this.isMonitoringEnabled() || !this.connector.isConnected()) {
-            return;
-        }
-        var url = item && item.url ? item.url : "";
-        var file = item && item.filename ? item.filename : "";
-        if (!this.shouldTakeOver(url, file)) {
-            return;
-        }
-        // Cancel the browser's own download and erase the history entry, then hand off to XDM
-        try { chrome.downloads.cancel(item.id); } catch (e) { this.logger.log(e); }
-        try { chrome.downloads.erase({ id: item.id }); } catch (e) { this.logger.log(e); }
-        this.connector.postMessage("/download", {
-            url: url,
-            file: file,
-            requestHeaders: {},
-            responseHeaders: {},
-            method: "GET",
-            userAgent: navigator.userAgent,
-            tabUrl: "",
-            tabId: "-1",
-            download: true
-        });
     }
 
     // MV3/Phase2.1: takeover rule (file-extension based; mirrors chrome-extension/app.js)
