@@ -1,0 +1,4 @@
+#!/bin/bash
+update-desktop-database -q /usr/share/applications || :
+gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || :
+update-mime-database -n /usr/share/mime || :

@@ -13,12 +13,19 @@
         "menus",
         "activeTab",
         "webRequest",
+        "webRequestBlocking",
         "downloads",
         "storage",
         "contextMenus"
     ],
     "background": {
-        "scripts": ["main.js"]
+        "scripts": [
+            "app/logger.js",
+            "app/connector.js",
+            "app/request-watcher.js",
+            "app/app.js",
+            "main.js"
+        ]
     },
     "icons": {
         "16": "icon16.png",

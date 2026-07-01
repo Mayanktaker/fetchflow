@@ -35,6 +35,12 @@ class Connector {
                 this.logger.log("WebSocket connected on port " + port);
                 // Send initial sync
                 this.ws.send(JSON.stringify({ path: "/sync", body: "" }));
+                // Keep alive ping
+                this.pingInterval = setInterval(() => {
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify({ path: "/ping", body: "" }));
+                    }
+                }, 10000);
             };
 
             this.ws.onmessage = (event) => {
@@ -47,6 +53,7 @@ class Connector {
             };
 
             this.ws.onclose = () => {
+                if (this.pingInterval) clearInterval(this.pingInterval);
                 this.logger.log("WebSocket closed");
                 this.useWebSocket = false;
                 this.connected = false;

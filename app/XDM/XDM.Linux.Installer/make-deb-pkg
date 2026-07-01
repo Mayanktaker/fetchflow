@@ -22,6 +22,8 @@ mkdir -p "${PKG}/usr/share/icons/hicolor/scalable/apps"
 mkdir -p "${PKG}/usr/share/mime/packages"
 
 cp -r "${SRC_DIR}/." "${PKG}/opt/xdman"
+cp ../../../xdm-updater.sh "${PKG}/opt/xdman/"
+chmod +x "${PKG}/opt/xdman/xdm-updater.sh"
 
 touch "${PKG}/DEBIAN/control"
 touch "${PKG}/opt/xdman/xdm-app.desktop"

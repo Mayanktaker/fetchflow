@@ -14,7 +14,7 @@ namespace XDM.Core.HttpServer
 {
     public class WebSocketSession : IDisposable
     {
-        private const string WsGuid = "258EAFA5-E914-47DA-95CA-5AB9FDC69B01";
+        private const string WsGuid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
         private readonly TcpClient tcp;
         private readonly NetworkStream stream;
         private bool disposed;
@@ -39,7 +39,7 @@ namespace XDM.Core.HttpServer
             }
             var key = keys[0];
             var acceptKey = Convert.ToBase64String(
-                SHA1.HashData(Encoding.UTF8.GetBytes(key + WsGuid)));
+                SHA1.HashData(Encoding.UTF8.GetBytes(key.Trim() + WsGuid)));
 
             var sb = new StringBuilder();
             sb.Append("HTTP/1.1 101 Switching Protocols\r\n");

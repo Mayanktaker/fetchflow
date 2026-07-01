@@ -1,0 +1,28 @@
+{
+    "name": "XDM v9 Browser Helper",
+    "action": {},
+    "manifest_version": 3,
+    "version": "9.0.0",
+    "description": "Download files with XDM v9",
+    "host_permissions": [
+        "*://*/*"
+    ],
+    "permissions": [
+        "downloads",
+        "cookies",
+        "webRequest",
+        "tabs",
+        "storage",
+        "contextMenus",
+        "alarms"
+    ],
+    "background": {
+        "service_worker": "main.js",
+        "type": "module"
+    },
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    }
+}

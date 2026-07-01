@@ -389,7 +389,7 @@ namespace XDM.Core.BrowserMonitoring
 
                 writer.WritePropertyName("matchingHosts");
                 writer.WriteStartArray();
-                foreach (var ext in new string[] { "googlevideo" })
+                foreach (var ext in new string[] { "googlevideo", "youtube" })
                 {
                     writer.WriteValue(ext);
                 }

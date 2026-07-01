@@ -18,6 +18,12 @@ class App {
 
     start() {
         this.logger.log("starting...");
+        // Load cached config to prevent missing requests on wakeup
+        chrome.storage.local.get("xdmConfig", (res) => {
+            if (res.xdmConfig) {
+                this.updateConfig(res.xdmConfig);
+            }
+        });
         this.starAppConnector();
         this.register();
         this.logger.log("started.");
@@ -30,6 +36,11 @@ class App {
     onMessage(msg) {
         this.logger.log("message from XDM");
         this.logger.log(msg);
+        chrome.storage.local.set({ "xdmConfig": msg });
+        this.updateConfig(msg);
+    }
+
+    updateConfig(msg) {
         this.appEnabled = msg.enabled === true;
         this.fileExts = msg.fileExts;
         this.blockedHosts = msg.blockedHosts;
@@ -53,7 +64,7 @@ class App {
 
     isMonitoringEnabled() {
         this.logger.log(this.appEnabled + " " + this.userDisabled);
-        return this.appEnabled === true && this.userDisabled === false && this.connector.isConnected();
+        return this.appEnabled === true && this.userDisabled === false;
     }
 
     onRequestDataReceived(data) {

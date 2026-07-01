@@ -137,6 +137,48 @@ namespace XDM.GtkUI
             trayManager = new TrayIconManager();
             trayManager.Init(GtkHelper.LoadSvg("xdm-logo", 22), "Xtreme Download Manager",
                              ShowAndActivate, () => Environment.Exit(0));
+            
+            CheckUpdatesInBackground();
+        }
+
+        private async void CheckUpdatesInBackground()
+        {
+            try
+            {
+                string newVersion = await UpdateChecker.CheckForUpdateAsync();
+                if (newVersion != null)
+                {
+                    Application.Invoke(delegate
+                    {
+                        var dialog = new MessageDialog(this, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, 
+                            $"A new version (v{newVersion}) of XDM is available! Would you like to update now?");
+                        dialog.Title = "Update Available";
+                        ResponseType response = (ResponseType)dialog.Run();
+                        dialog.Destroy();
+
+                        if (response == ResponseType.Yes)
+                        {
+                            try
+                            {
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                                {
+                                    FileName = "gnome-terminal",
+                                    Arguments = "-- bash -c \"sudo /opt/xdman/xdm-updater.sh\"",
+                                    UseShellExecute = true
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Could not start updater terminal: " + ex);
+                            }
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error checking updates on startup: " + ex);
+            }
         }
 
         private void CreateMenu()

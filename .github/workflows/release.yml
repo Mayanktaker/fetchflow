@@ -1,0 +1,49 @@
+name: Release XDM
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm zip jq npm
+
+      - name: Run build script
+        env:
+          MOZ_API_KEY: ${{ secrets.MOZ_API_KEY }}
+          MOZ_API_SECRET: ${{ secrets.MOZ_API_SECRET }}
+        run: |
+          chmod +x ./build_all.sh
+          ./build_all.sh
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release_artifacts
+          cp xdm-release/*.rpm release_artifacts/
+          cp xdm-release/*.deb release_artifacts/
+          cp xdm-release/*.tar.gz release_artifacts/
+          cp xdm-release/*.zip release_artifacts/
+          cp xdm-release/*.xpi release_artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release_artifacts/*
+          generate_release_notes: true

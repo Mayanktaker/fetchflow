@@ -1,0 +1,8 @@
+Package: xdman
+Version: 9.0.0
+Architecture: amd64
+Depends: libgtk-3-0 (>= 3.24)
+Recommends: ffmpeg, libnotify-bin, xdg-desktop-portal
+Maintainer: Mayanktaker | Mayanktaker Computers & Web Development
+Description: Open source download accelerator and video downloader.
+ Open source download accelerator and video downloader.
