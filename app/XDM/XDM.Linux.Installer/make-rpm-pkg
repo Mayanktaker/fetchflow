@@ -65,7 +65,7 @@ tar --create --file "${SOURCE_NAME}.tar.gz" "${SOURCE_NAME}"
 mv "${SOURCE_NAME}.tar.gz" "rpmbuild/SOURCES"
 
 cat <<EOF > "rpmbuild/SPECS/xdman_gtk.spec"
-Name:       	xdman_gtk
+Name:       	xdm
 %define debug_package %{nil}
 %global __strip /bin/true
 %global __brp_strip /bin/true
@@ -88,7 +88,7 @@ Source0:    	${SOURCE_NAME}.tar.gz
 Open source download accelerator and video downloader.
 
 %prep
-%setup -q
+%setup -q -n xdman_gtk-%{version}
 
 %install
 cp -rfa * %{buildroot}
