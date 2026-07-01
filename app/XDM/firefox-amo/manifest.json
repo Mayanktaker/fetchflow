@@ -1,8 +1,8 @@
 {
-    "name": "XDM v8+ Browser Helper",
+    "name": "XDM v9 Browser Helper",
     "manifest_version": 3,
     "version": "9.0.0",
-    "description": "Download files with XDM v8+",
+    "description": "Download files with XDM v9",
     "action": {},
     "host_permissions": [
         "*://*/*"

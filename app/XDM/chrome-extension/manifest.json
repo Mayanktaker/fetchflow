@@ -1,9 +1,9 @@
 {
-    "name": "XDM Integration Module",
+    "name": "XDM v9 Browser Helper",
     "action": {},
     "manifest_version": 3,
     "version": "9.0.0",
-    "description": "Download with Xtreme Download Manager.",
+    "description": "Download files with XDM v9",
     "host_permissions": [
         "*://*/*"
     ],
