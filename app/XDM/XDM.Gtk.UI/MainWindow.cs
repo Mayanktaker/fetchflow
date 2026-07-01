@@ -136,7 +136,7 @@ namespace XDM.GtkUI
             // (Wayland with no SNI host). IsTrayActive drives the close-to-tray vs minimize logic.
             trayManager = new TrayIconManager();
             trayManager.Init(GtkHelper.LoadSvg("xdm-logo", 22), "Xtreme Download Manager",
-                             ShowAndActivate, () => Application.Quit());
+                             ShowAndActivate, () => Environment.Exit(0));
         }
 
         private void CreateMenu()
