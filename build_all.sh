@@ -49,7 +49,7 @@ bash make-deb-pkg || echo "make-deb-pkg failed, skipping deb package"
 
 # Copy the packages back to the root xdm-release folder
 cp rpmbuild/RPMS/x86_64/xdm-9.0.0-1.fc44.x86_64.rpm "$OUT_DIR/"
-cp *.deb "$OUT_DIR/"
+cp *.deb "$OUT_DIR/" 2>/dev/null || echo "No .deb packages found to copy"
 
 echo "========================================="
 echo "Build complete! Artifacts are in $OUT_DIR"

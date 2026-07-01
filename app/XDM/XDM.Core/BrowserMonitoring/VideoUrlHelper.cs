@@ -927,13 +927,23 @@ namespace XDM.Core.BrowserMonitoring
             if (!IsYdlSupportedUrl(url))
                 return;
 
-            var vIndex = url.IndexOf("v=");
+            // Build a dedup key — strip query params after the video ID for YouTube,
+            // or strip fragment/trailing-junk for other sites
             string key = url;
+            var vIndex = url.IndexOf("v=");
             if (vIndex > 0)
             {
+                // YouTube: key = everything up to the first & after v=
                 var amp = url.IndexOf('&', vIndex);
                 if (amp > 0) key = url.Substring(0, amp);
             }
+            else
+            {
+                // Non-YouTube: strip fragment and trailing query noise
+                var hashIdx = url.IndexOf('#');
+                if (hashIdx > 0) key = url.Substring(0, hashIdx);
+            }
+
             if (lastProcessedYtUrl == key) return;
             lastProcessedYtUrl = key;
 
@@ -1029,6 +1039,8 @@ namespace XDM.Core.BrowserMonitoring
                 catch (Exception ex)
                 {
                     Log.Debug(ex, "Failed to parse youtube via ydl on tab update");
+                    // Reset dedup key so next visit retries the yt-dlp call
+                    lastProcessedYtUrl = string.Empty;
                     ApplicationContext.VideoTracker.OnMediaFetchCompleted(url);
                 }
             }).Start();

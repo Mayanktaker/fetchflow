@@ -11,6 +11,7 @@
         "downloads",
         "cookies",
         "webRequest",
+        "webNavigation",
         "tabs",
         "storage",
         "contextMenus",

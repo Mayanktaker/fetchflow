@@ -357,7 +357,15 @@ namespace XDM.Core.BrowserMonitoring
 
                 writer.WritePropertyName("tabsWatcher");
                 writer.WriteStartArray();
-                foreach (var ext in new string[] { ".youtube.", "/watch?v=" })
+                // All yt-dlp supported domains — must match SupportedYdlDomains in VideoUrlHelper
+                foreach (var ext in new string[] {
+                    ".youtube.", "youtu.be", "/watch?v=",
+                    ".vimeo.", ".dailymotion.",
+                    ".facebook.", "fb.watch",
+                    ".instagram.",
+                    ".twitter.", ".x.com",
+                    ".twitch.tv",
+                    ".bilibili.", ".tiktok.", ".reddit." })
                 {
                     writer.WriteValue(ext);
                 }

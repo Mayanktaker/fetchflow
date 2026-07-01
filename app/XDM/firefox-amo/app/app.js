@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 "use strict";
 
 class App {
@@ -84,14 +85,24 @@ class App {
         if (!this.isMonitoringEnabled()) {
             return;
         }
-        if (changeInfo.title) {
+        // Trigger on BOTH url and title changes — YouTube SPA uses History API
+        let tabUrl = changeInfo.url || tab.url;
+        let tabTitle = changeInfo.title || tab.title || "";
+        if (changeInfo.url || changeInfo.title) {
             if (this.tabsWatcher &&
-                this.tabsWatcher.find(t => tab.url.indexOf(t) > 0)) {
-                this.logger.log("Tab changed: " + changeInfo.title + " => " + tab.url);
+                this.tabsWatcher.find(t => tabUrl.indexOf(t) > 0)) {
+                // Deduplicate — don't re-send the same URL
+                if (this.lastSentTabUrl === tabUrl && !changeInfo.title) {
+                    return;
+                }
+                this.lastSentTabUrl = tabUrl;
+                this.logger.log("Tab changed: " + tabTitle + " => " + tabUrl);
+                // Send tab URL and ID to native host for media processing
                 try {
                     this.connector.postMessage("/tab-update", {
-                        tabUrl: tab.url,
-                        tabTitle: changeInfo.title
+                        tabUrl: tabUrl,
+                        tabTitle: tabTitle,
+                        tabId: tabId + ""
                     });
                 } catch (ex) {
                     console.log(ex);
@@ -100,10 +111,43 @@ class App {
         }
     }
 
+    // Handle SPA navigation via History API (pushState/replaceState)
+    onHistoryStateUpdated(details) {
+        if (!this.isMonitoringEnabled()) {
+            return;
+        }
+        if (details.frameId !== 0) return; // Only top-level frame
+        let url = details.url;
+        if (this.tabsWatcher &&
+            this.tabsWatcher.find(t => url.indexOf(t) > 0)) {
+            // Deduplicate — don't re-send the same URL
+            if (this.lastSentTabUrl === url) {
+                return;
+            }
+            this.lastSentTabUrl = url;
+            this.logger.log("SPA nav: " + url);
+            try {
+                this.connector.postMessage("/tab-update", {
+                    tabUrl: url,
+                    tabTitle: "",
+                    tabId: details.tabId + ""
+                });
+            } catch (ex) {
+                console.log(ex);
+            }
+        }
+    }
+
     register() {
         chrome.tabs.onUpdated.addListener(
             this.onTabUpdateCallback
         );
+        // SPA navigation detection via History API (YouTube, etc.)
+        if (chrome.webNavigation && chrome.webNavigation.onHistoryStateUpdated) {
+            chrome.webNavigation.onHistoryStateUpdated.addListener(
+                this.onHistoryStateUpdated.bind(this)
+            );
+        }
         chrome.runtime.onMessage.addListener(this.onPopupMessage.bind(this));
         // In Firefox MV3, webRequestBlocking is still fully supported.
         // We revert back to request-watcher interception instead of downloads API.
