@@ -20,6 +20,13 @@
         "service_worker": "main.js",
         "type": "module"
     },
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*"],
+            "js": ["blob-capture.js"],
+            "run_at": "document_start"
+        }
+    ],
     "icons": {
         "16": "icon16.png",
         "48": "icon48.png",

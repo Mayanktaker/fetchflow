@@ -142,12 +142,16 @@ namespace XDM.Core
                 RunOnUiThread(() =>
                 {
                     var download = ApplicationContext.MainWindow.FindInProgressItem(id);
-                    if (download == null) return;
 
+                    // Always add the finished entry to the UI (covers both normal and blob downloads)
                     ApplicationContext.MainWindow.AddToTop(finishedEntry);
-                    ApplicationContext.MainWindow.Delete(download);
 
-                    QueueManager.RemoveFinishedDownload(download.DownloadEntry.Id);
+                    // Only remove from in-progress list if it exists (normal downloads)
+                    if (download != null)
+                    {
+                        ApplicationContext.MainWindow.Delete(download);
+                        QueueManager.RemoveFinishedDownload(download.DownloadEntry.Id);
+                    }
 
                     if (ApplicationContext.CoreService.ActiveDownloadCount == 0 && ApplicationContext.MainWindow.IsInProgressViewSelected)
                     {

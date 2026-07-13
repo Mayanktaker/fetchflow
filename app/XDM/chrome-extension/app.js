@@ -293,13 +293,22 @@ export default class App {
     }
 
     async streamBlobToXdm(base64Data, filename, mime, size, blobUrl) {
-        this.logger.log("Streaming blob to XDM: " + filename + " (" + size + " bytes)");
-        const raw = atob(base64Data);
+        this.logger.log("=== streamBlobToXdm START ===");
+        this.logger.log("Filename: " + filename + " | Size: " + size + " | Base64 len: " + base64Data.length);
+        let raw;
+        try {
+            raw = atob(base64Data);
+        } catch (e) {
+            this.logger.log("ERROR: base64 decode failed: " + e.message);
+            return { error: "base64 decode failed: " + e.message };
+        }
         const bytes = new Uint8Array(raw.length);
         for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+        this.logger.log("Decoded " + bytes.length + " bytes from base64");
 
         const totalChunks = Math.ceil(bytes.length / BLOB_CHUNK_SIZE);
         const transferId = crypto.randomUUID();
+        this.logger.log("Transfer ID: " + transferId + " | Total chunks: " + totalChunks);
 
         // Track active blob transfers for progress badge
         this.activeBlobTransfers = (this.activeBlobTransfers || 0) + 1;
@@ -321,25 +330,28 @@ export default class App {
             };
 
             try {
+                this.logger.log("Posting chunk " + (i + 1) + "/" + totalChunks + " (" + chunk.length + " bytes)");
                 const result = await this.connector.postBlobChunk(headers, chunk);
+                this.logger.log("Chunk " + (i + 1) + " response: " + JSON.stringify(result));
                 if (result && result.error) {
-                    this.logger.log("Blob chunk error: " + result.error);
+                    this.logger.log("ERROR: Blob chunk error: " + result.error);
                     this.activeBlobTransfers = Math.max(0, (this.activeBlobTransfers || 0) - 1);
                     this.updateBlobBadge();
-                    return;
+                    return { error: "chunk error: " + result.error };
                 }
                 // Update progress badge with percentage
                 this.updateBlobProgressBadge(i + 1, totalChunks);
             } catch (e) {
-                this.logger.log("Blob chunk POST failed: " + e.message);
+                this.logger.log("ERROR: Blob chunk POST failed: " + e.message);
                 this.activeBlobTransfers = Math.max(0, (this.activeBlobTransfers || 0) - 1);
                 this.updateBlobBadge();
-                return;
+                return { error: "POST failed: " + e.message };
             }
         }
-        this.logger.log("Blob stream complete: " + transferId);
+        this.logger.log("=== Blob stream COMPLETE: " + transferId + " ===");
         this.activeBlobTransfers = Math.max(0, (this.activeBlobTransfers || 0) - 1);
         this.updateBlobBadge();
+        return { ok: true, transferId, chunks: totalChunks };
     }
 
     // Show blob transfer progress in the action badge
@@ -506,9 +518,35 @@ export default class App {
         }
         else if (request.type === "xdm-blob-download-data") {
             // Page context captured blob data at intent time — stream directly
-            this.logger.log("Blob download data (pre-captured): " + request.filename);
+            this.logger.log("=== Blob download data received ===");
+            this.logger.log("Filename: " + request.filename);
+            this.logger.log("Size: " + request.size);
+            this.logger.log("Base64 length: " + (request.base64 ? request.base64.length : "NONE"));
+            this.logger.log("Mime: " + request.mime);
+            this.logger.log("Connector connected: " + this.connector.isConnected());
+            const tabId = sender.tab?.id || null;
+            if (!this.connector.isConnected()) {
+                this.logger.log("ERROR: Cannot stream blob — XDM is not connected!");
+                sendResponse({ error: "XDM not connected" });
+                return;
+            }
             if (request.base64) {
-                this.streamBlobToXdm(request.base64, request.filename, request.mime, request.size, request.blobUrl);
+                sendResponse({ ok: true, msg: "streaming started" });
+                // Stream and forward result to content script for page-console visibility
+                this.streamBlobToXdm(request.base64, request.filename, request.mime, request.size, request.blobUrl)
+                    .then(result => {
+                        if (tabId) {
+                            chrome.tabs.sendMessage(tabId, {
+                                type: "xdm-stream-result",
+                                success: !result?.error,
+                                error: result?.error || null,
+                                detail: result
+                            });
+                        }
+                    });
+            } else {
+                this.logger.log("ERROR: No base64 data in xdm-blob-download-data message!");
+                sendResponse({ error: "No base64 data" });
             }
         }
         else if (request.type === "xdm-blob-download-intent") {

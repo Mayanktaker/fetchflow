@@ -146,7 +146,10 @@ namespace XDM.Core.BrowserMonitoring
                 };
 
                 AppDB.Instance.Downloads.AddNewDownload(entry);
-                AppDB.Instance.Downloads.UpdateDownloadStatus(entryId, DownloadStatus.Finished);
+
+                // Notify the UI via Application.DownloadFinished — this marks the
+                // download as finished in the DB and adds it to the finished list view
+                ApplicationContext.Application.DownloadFinished(entryId, state.TotalSize, finalPath);
 
                 Log.Debug($"Blob download finalized: {finalPath} (id={entryId})");
             }

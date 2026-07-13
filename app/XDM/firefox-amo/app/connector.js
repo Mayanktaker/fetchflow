@@ -32,7 +32,9 @@ class Connector {
             this.ws.onopen = () => {
                 this.connected = true;
                 this.useWebSocket = true;
-                this.logger.log("WebSocket connected on port " + port);
+                // CRITICAL: update httpBaseUrl so postBlobChunk uses the correct port
+                httpBaseUrl = "http://127.0.0.1:" + port;
+                this.logger.log("WebSocket connected on port " + port + " | httpBaseUrl: " + httpBaseUrl);
                 // Send initial sync
                 this.ws.send(JSON.stringify({ path: "/sync", body: "" }));
                 // Keep alive ping
@@ -126,6 +128,7 @@ class Connector {
     // Blob chunk upload: raw binary POST to /blob-upload (not JSON)
     async postBlobChunk(headers, chunkBytes) {
         const url = httpBaseUrl + "/blob-upload";
+        this.logger.log("[connector] POST " + url + " | chunk bytes: " + chunkBytes.length + " | X-Blob-Transfer-Id: " + headers["X-Blob-Transfer-Id"]);
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -134,6 +137,7 @@ class Connector {
             },
             body: chunkBytes
         });
+        this.logger.log("[connector] Response status: " + response.status + " " + response.statusText);
         if (!response.ok) throw new Error("blob-upload HTTP " + response.status);
         return response.json();
     }

@@ -6,6 +6,7 @@
 // browser's download manager can take over. Communicates with
 // background (app.js) for chunked upload to XDM.
 
+console.log("[XDM] blob-capture.js loaded (content script)");
 const BLOB_TTL_MS = 5 * 60 * 1000;
 const blobRefs = new Map();
 
@@ -101,6 +102,7 @@ function injectCreatorHook() {
     })();`;
     (document.head || document.documentElement).appendChild(script);
     script.remove();
+    console.log("[XDM] Page-context hooks injected");
 }
 
 injectCreatorHook();
@@ -132,30 +134,78 @@ document.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     const filename = link.getAttribute("download") || link.textContent?.trim() || "";
-    sendBlobToBackground(href, filename, "", 0, null);
+    console.log("[XDM] DOM click on blob link:", href, filename);
+
+    // Capture blob data immediately in content script context before URL is revoked
+    fetch(href).then(r => r.blob()).then(blob => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            console.log("[XDM] DOM blob captured:", blob.size, "bytes");
+            sendBlobToBackground(href, filename, blob.type || "application/octet-stream", blob.size, reader.result.split(",")[1]);
+        };
+        reader.readAsDataURL(blob);
+    }).catch(err => {
+        console.log("[XDM] DOM blob fetch failed, sending intent:", err);
+        sendBlobToBackground(href, filename, "", 0, null);
+    });
 }, true);
 
 // --- Handle blob download intent (with or without pre-captured data) ---
 function handleBlobDownloadIntent(data) {
     const { blobUrl, filename, base64, size, mime } = data;
     if (base64) {
+        console.log("[XDM] Blob intent with data:", filename, size, "bytes");
         sendBlobToBackground(blobUrl, filename || deriveFilename(blobUrl, mime), mime, size, base64);
     } else {
+        console.log("[XDM] Blob intent without data, using ref:", blobUrl);
         const ref = blobRefs.get(blobUrl);
         const knownMime = ref?.mime || "application/octet-stream";
         sendBlobToBackground(blobUrl, filename || deriveFilename(blobUrl, knownMime), knownMime, ref?.size || 0, null);
     }
 }
 
+// --- Handle xdm-capture-blob requests from background (fallback re-fetch) ---
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "xdm-capture-blob") {
+        console.log("[XDM] Background requesting blob capture:", message.blobUrl);
+        fetch(message.blobUrl).then(r => r.blob()).then(blob => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                sendResponse({
+                    base64: reader.result.split(",")[1],
+                    size: blob.size,
+                    mime: blob.type || "application/octet-stream"
+                });
+            };
+            reader.readAsDataURL(blob);
+        }).catch(err => {
+            console.log("[XDM] Background blob capture failed:", err);
+            sendResponse({ error: "Failed to capture blob: " + err.message });
+        });
+        return true; // async response
+    }
+    else if (message.type === "xdm-stream-result") {
+        // Background forwarded the streaming result — show in page console
+        if (message.success) {
+            console.log("[XDM] ✅ Stream complete!", message.detail);
+        } else {
+            console.error("[XDM] ❌ Stream FAILED:", message.error, message.detail);
+        }
+    }
+});
+
 // --- Send blob data to background for chunked upload ---
 async function sendBlobToBackground(blobUrl, filename, mime, size, base64) {
     try {
-        chrome.runtime.sendMessage({
-            type: base64 ? "xdm-blob-download-data" : "xdm-blob-download-intent",
+        const msgType = base64 ? "xdm-blob-download-data" : "xdm-blob-download-intent";
+        console.log("[XDM] Sending to background:", msgType, filename, size, "bytes");
+        const reply = await chrome.runtime.sendMessage({
+            type: msgType,
             blobUrl, filename, mime, size, base64
         });
+        console.log("[XDM] Background reply:", reply);
     } catch (e) {
-        console.log("[XDM] blob send error:", e);
+        console.error("[XDM] blob send error:", e.message || e);
     }
 }
 
