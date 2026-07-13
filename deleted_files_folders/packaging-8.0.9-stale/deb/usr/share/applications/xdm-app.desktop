@@ -1,10 +1,11 @@
 [Desktop Entry]
 Version=1.0
-Encoding=UTF-8
 Type=Application
 Terminal=false
-Exec=/opt/xdman/xdm-app -m %U
+Exec=env GTK_USE_PORTAL=1 /opt/xdman/xdm-app -m %U
 Name=Xtreme Download Manager
-Comment=Xtreme Download Manager
+Comment=Download files at maximum speed
 Categories=Network;
-Icon=/opt/xdman/xdm-logo.svg
+Icon=xdm-app
+MimeType=x-scheme-handler/xdm-app;
+StartupNotify=true

@@ -9,7 +9,6 @@
     ],
     "permissions": [
         "downloads",
-        "cookies",
         "webRequest",
         "webNavigation",
         "tabs",

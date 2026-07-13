@@ -79,10 +79,6 @@ function injectCreatorHook() {
 
 injectCreatorHook();
 
-new MutationObserver(() => {
-    if (!document.getElementById("xdm-blob-hook")) injectCreatorHook();
-}).observe(document.documentElement, { childList: true });
-
 // --- Receive events from page context ---
 window.addEventListener("message", (event) => {
     if (event.source !== window) return;

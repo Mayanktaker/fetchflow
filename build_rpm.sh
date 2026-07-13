@@ -54,10 +54,13 @@ mkdir -p $RPM_BUILD_ROOT/opt/xdman
 cp -a %{_sourcedir}/* $RPM_BUILD_ROOT/opt/xdman/
 mkdir -p $RPM_BUILD_ROOT/usr/share/applications
 cp %{_sourcedir}/xdm-app.desktop $RPM_BUILD_ROOT/usr/share/applications/xdm-app.desktop
+mkdir -p $RPM_BUILD_ROOT/usr/share/pixmaps
+cp $RPM_BUILD_ROOT/opt/xdman/xdm-logo-512.png $RPM_BUILD_ROOT/usr/share/pixmaps/xdm-app.png
 
 %files
 /opt/xdman/*
 /usr/share/applications/xdm-app.desktop
+/usr/share/pixmaps/xdm-app.png
 EOF
 
 cd "$RPM_BUILD_DIR"
