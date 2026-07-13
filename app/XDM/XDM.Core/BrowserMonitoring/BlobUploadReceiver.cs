@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using TraceLog;
 using XDM.Core.Util;
 using XDM.Core.Downloader;
+using XDM.Core.HttpServer;
+using XDM.Core.DataAccess;
 
 namespace XDM.Core.BrowserMonitoring
 {

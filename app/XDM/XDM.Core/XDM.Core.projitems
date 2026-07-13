@@ -40,6 +40,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\IpcPipeMessageProcessor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\BrowserMonitor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\IpcHttpMessageProcessor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\BlobUploadReceiver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\JsonMessageParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\NativeMessagingConfigurer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\PipeChannel.cs" />
