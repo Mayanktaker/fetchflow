@@ -72,6 +72,23 @@ function injectCreatorHook() {
             }
             return origOpen.apply(this, arguments);
         };
+
+        // Hook 4: Intercept dispatchEvent('click') on blob: anchors
+        // Many frameworks (React, Vue) use dispatchEvent instead of .click()
+        const origDispatch = EventTarget.prototype.dispatchEvent;
+        EventTarget.prototype.dispatchEvent = function(event) {
+            if (event && (event.type === "click" || event.type === "mousedown") &&
+                this instanceof HTMLAnchorElement && this.href &&
+                this.href.startsWith("blob:")) {
+                window.postMessage({
+                    type: "__xdm_blob_download_intent",
+                    blobUrl: this.href,
+                    filename: this.download || ""
+                }, "*");
+                return true; // suppress native download
+            }
+            return origDispatch.call(this, event);
+        };
     })();`;
     (document.head || document.documentElement).appendChild(script);
     script.remove();
@@ -143,7 +160,7 @@ browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
 });
 
-// --- Re-fetch blob bytes from page context and stream to background ---
+// --- Re-fetch blob bytes from page context and return directly ---
 async function captureBlobFromTab(blobUrl, fallbackFilename) {
     const ref = blobRefs.get(blobUrl);
     const tabId = await getCurrentTabId();
@@ -177,19 +194,11 @@ async function captureBlobFromTab(blobUrl, fallbackFilename) {
         const size = result.size || ref?.size || 0;
         const filename = fallbackFilename || deriveFilename(blobUrl, mime);
 
-        return await sendBlobToBackground(base64, filename, mime, size, blobUrl);
+        // Return data directly — background receives this via sendResponse
+        return { base64, filename, mime, size };
     } catch (e) {
         return { error: "exception: " + e.message };
     }
-}
-
-async function sendBlobToBackground(base64, filename, mime, size, blobUrl) {
-    return new Promise((resolve) => {
-        browser.runtime.sendMessage({
-            type: "xdm-blob-download", blobUrl, filename, mime, size, base64
-        }).then(resolve).catch(() => resolve({ error: "send_failed" }));
-    }
-    );
 }
 
 function deriveFilename(blobUrl, mime) {
