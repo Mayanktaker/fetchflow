@@ -28,6 +28,12 @@ namespace XDM.Core.BrowserMonitoring
         private readonly List<WebSocketSession> wsSessions = new();
         private readonly object wsLock = new();
 
+        // Blob upload receiver for handling chunked binary blob downloads from extensions
+        private readonly BlobUploadReceiver blobReceiver = new();
+
+        // Periodic cleanup timer for stale blob uploads (every 5 minutes)
+        private readonly Timer blobPurgeTimer;
+
         public IpcHttpMessageProcessor()
         {
             EffectivePort = FindFreePort(Config.IpcPort);
@@ -39,6 +45,10 @@ namespace XDM.Core.BrowserMonitoring
             };
             // Phase6: accept WebSocket upgrades on any path
             server.WebSocketAccepted += OnWebSocketAccepted;
+
+            // Start periodic cleanup of abandoned blob transfers (every 5 min)
+            blobPurgeTimer = new Timer(_ => blobReceiver.PurgeStaleTransfers(),
+                null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
         }
 
         // Phase2.3: probe a small range so startup survives if the preferred port is taken
@@ -78,6 +88,13 @@ namespace XDM.Core.BrowserMonitoring
         {
             try
             {
+                // Blob upload: binary POST with custom headers — handle before OnSyncMessage
+                if (context.RequestPath == "/blob-upload")
+                {
+                    blobReceiver.HandleUpload(context);
+                    return;
+                }
+
                 switch (context.RequestPath)
                 {
                     case "/sync":
@@ -403,6 +420,9 @@ namespace XDM.Core.BrowserMonitoring
                 }
                 writer.WriteEndArray();
 
+                writer.WritePropertyName("blobMaxBytes");
+                writer.WriteValue(Config.Instance.BlobMaxBytes);
+
                 writer.WriteEndObject();
                 writer.Close();
                 var str = w.ToString();
@@ -507,6 +527,10 @@ namespace XDM.Core.BrowserMonitoring
                     case "/link":
                         if (bodyBytes != null) OnBatchMessage(bodyBytes);
                         session.Send(CreateConfigJson() ?? "{}");
+                        break;
+                    case "/blob-upload":
+                        Log.Debug("WebSocket: blob-upload not supported over WS; use HTTP POST");
+                        session.Send("{\"error\":\"use HTTP POST for blob-upload\"}");
                         break;
                     default:
                         Log.Debug("WebSocket: unknown path " + envelope.Path);

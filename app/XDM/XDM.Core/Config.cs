@@ -151,6 +151,8 @@ namespace XDM.Core
 
         public bool DoubleClickOpenFile { get; set; } = false;
 
+        public long BlobMaxBytes { get; set; } = 256 * 1024 * 1024; // 256 MiB default cap for blob transfers
+
         public bool RunOnLogon
         {
             get => PlatformHelper.IsAutoStartEnabled();

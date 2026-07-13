@@ -4,6 +4,9 @@ import Logger from './logger.js';
 import RequestWatcher from './request-watcher.js';
 import Connector from './connector.js';
 
+const BLOB_CHUNK_SIZE = 512 * 1024; // 512 KiB per chunk — keeps SW memory bounded
+const DEFAULT_BLOB_MAX_BYTES = 256 * 1024 * 1024; // 256 MiB default cap
+
 export default class App {
     constructor() {
         this.logger = new Logger();
@@ -14,6 +17,7 @@ export default class App {
         this.tabsWatcher = [];
         this.userDisabled = false;
         this.appEnabled = false;
+        this.blobMaxBytes = DEFAULT_BLOB_MAX_BYTES;
         this.onDownloadCreatedCallback = this.onDownloadCreated.bind(this);
         this.onDeterminingFilenameCallback = this.onDeterminingFilename.bind(this);
         this.onTabUpdateCallback = this.onTabUpdate.bind(this);
@@ -51,6 +55,9 @@ export default class App {
         this.blockedHosts = msg.blockedHosts;
         this.tabsWatcher = msg.tabsWatcher;
         this.videoList = msg.videoList;
+        if (msg.blobMaxBytes && msg.blobMaxBytes > 0) {
+            this.blobMaxBytes = msg.blobMaxBytes;
+        }
         this.requestWatcher.updateConfig({
             blockedHosts: msg.blockedHosts,
             fileExts: msg.fileExts,
@@ -87,6 +94,18 @@ export default class App {
         this.logger.log(download);
         let url = download.finalUrl || download.url;
         this.logger.log(url);
+
+        // Blob URL interception: cancel browser DL and stream via blob-capture.js
+        if (this.isBlobUrl(url)) {
+            chrome.downloads.cancel(
+                download.id,
+                () => chrome.downloads.erase({ id: download.id })
+            );
+            const filename = download.filename || this.deriveBlobFilename(url, download.mime);
+            this.startBlobTransfer(url, filename, download.mime, download.tabId);
+            return;
+        }
+
         if (this.isMonitoringEnabled() && this.shouldTakeOver(url, download.filename)) {
             chrome.downloads.cancel(
                 download.id,
@@ -190,6 +209,153 @@ export default class App {
         if (!url) return false;
         let u = new URL(url);
         return u.protocol === 'http:' || u.protocol === 'https:';
+    }
+
+    isBlobUrl(url) {
+        if (!url) return false;
+        try {
+            let u = new URL(url);
+            return u.protocol === 'blob:';
+        } catch { return false; }
+    }
+
+    deriveBlobFilename(blobUrl, mime) {
+        try {
+            let u = new URL(blobUrl);
+            let uuid = u.pathname.replace(/^\//, "");
+            let ext = this.mimeToExt(mime);
+            return (uuid.slice(0, 8) || "blob") + ext;
+        } catch {
+            return "blob-download" + this.mimeToExt(mime);
+        }
+    }
+
+    mimeToExt(mime) {
+        if (!mime) return "";
+        const map = {
+            "image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp",
+            "image/gif": ".gif", "video/mp4": ".mp4", "video/webm": ".webm",
+            "audio/mpeg": ".mp3", "audio/ogg": ".ogg", "audio/wav": ".wav",
+            "application/pdf": ".pdf", "application/zip": ".zip",
+            "application/octet-stream": ".bin"
+        };
+        return map[mime] || "";
+    }
+
+    startBlobTransfer(blobUrl, filename, mime, tabId) {
+        if (!this.connector.isConnected()) {
+            this.logger.log("Cannot transfer blob: not connected to XDM");
+            return;
+        }
+        const size = 0; // unknown from downloads API for blobs; content script will report real size
+        if (this.blobMaxBytes && size > this.blobMaxBytes) {
+            this.promptBlobConfirm(blobUrl, filename, mime, size, tabId);
+            return;
+        }
+        this.captureAndStreamBlob(blobUrl, filename, mime, tabId);
+    }
+
+    promptBlobConfirm(blobUrl, filename, mime, size, tabId) {
+        const params = new URLSearchParams({
+            blobUrl, filename, mime, size: size + "", tabId: (tabId || -1) + ""
+        });
+        chrome.tabs.create({ url: "confirm.html?" + params.toString() });
+    }
+
+    async captureAndStreamBlob(blobUrl, filename, mime, tabId) {
+        this.logger.log("Capturing blob: " + blobUrl);
+        // Ask the content script to re-fetch the blob from the page context
+        const tabIds = tabId ? [parseInt(tabId, 10)] : [];
+        if (tabIds.length === 0) {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab?.id) tabIds.push(tab.id);
+        }
+        if (tabIds.length === 0) {
+            this.logger.log("No active tab for blob capture");
+            return;
+        }
+        try {
+            const response = await chrome.tabs.sendMessage(tabIds[0], {
+                type: "xdm-capture-blob",
+                blobUrl,
+                filename
+            });
+            if (response?.error) {
+                this.logger.log("Blob capture failed: " + response.error);
+                return;
+            }
+            if (response?.base64) {
+                await this.streamBlobToXdm(response.base64, filename, response.mime || mime, response.size || 0, blobUrl);
+            }
+        } catch (e) {
+            this.logger.log("Blob capture message error: " + e.message);
+        }
+    }
+
+    async streamBlobToXdm(base64Data, filename, mime, size, blobUrl) {
+        this.logger.log("Streaming blob to XDM: " + filename + " (" + size + " bytes)");
+        const raw = atob(base64Data);
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
+        const totalChunks = Math.ceil(bytes.length / BLOB_CHUNK_SIZE);
+        const transferId = crypto.randomUUID();
+
+        // Track active blob transfers for progress badge
+        this.activeBlobTransfers = (this.activeBlobTransfers || 0) + 1;
+        this.updateBlobBadge();
+
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * BLOB_CHUNK_SIZE;
+            const end = Math.min(start + BLOB_CHUNK_SIZE, bytes.length);
+            const chunk = bytes.slice(start, end);
+
+            const headers = {
+                "X-Blob-Transfer-Id": transferId,
+                "X-Chunk-Index": i + "",
+                "X-Total-Chunks": totalChunks + "",
+                "X-Filename": filename,
+                "X-Mime": mime || "",
+                "X-Total-Size": size + "",
+                "X-Blob-Url": blobUrl
+            };
+
+            try {
+                const result = await this.connector.postBlobChunk(headers, chunk);
+                if (result && result.error) {
+                    this.logger.log("Blob chunk error: " + result.error);
+                    this.activeBlobTransfers = Math.max(0, (this.activeBlobTransfers || 0) - 1);
+                    this.updateBlobBadge();
+                    return;
+                }
+                // Update progress badge with percentage
+                this.updateBlobProgressBadge(i + 1, totalChunks);
+            } catch (e) {
+                this.logger.log("Blob chunk POST failed: " + e.message);
+                this.activeBlobTransfers = Math.max(0, (this.activeBlobTransfers || 0) - 1);
+                this.updateBlobBadge();
+                return;
+            }
+        }
+        this.logger.log("Blob stream complete: " + transferId);
+        this.activeBlobTransfers = Math.max(0, (this.activeBlobTransfers || 0) - 1);
+        this.updateBlobBadge();
+    }
+
+    // Show blob transfer progress in the action badge
+    updateBlobProgressBadge(chunk, total) {
+        if (!this.activeBlobTransfers) return;
+        const pct = Math.round((chunk / total) * 100);
+        chrome.action.setBadgeText({ text: pct + "%" });
+        chrome.action.setBadgeBackgroundColor({ color: "#ff6b35" });
+    }
+
+    // Restore the normal badge when blob transfers complete
+    updateBlobBadge() {
+        if (!this.activeBlobTransfers) {
+            // Reset to normal badge state
+            this.updateActionIcon();
+        }
     }
 
     shouldTakeOver(url, file) {
@@ -334,6 +500,10 @@ export default class App {
         else if (request.type === "clear") {
             this.connector.postMessage("/clear", {});
         }
+        else if (request.type === "xdm-blob-download-confirmed") {
+            // User approved oversized blob download from confirm.html
+            this.captureAndStreamBlob(request.blobUrl, request.filename, request.mime, request.tabId);
+        }
     }
 
     sendLinkToXDM(info, tab) {
@@ -363,12 +533,28 @@ export default class App {
         this.triggerDownload(url, null, info.pageUrl, null, null);
     }
 
+    sendBlobMediaToXDM(info, tab) {
+        // Try srcUrl (blob), then linkUrl, then pageUrl — capture any blob URL
+        let url = info.srcUrl;
+        if (!this.isBlobUrl(url)) url = info.linkUrl;
+        if (!this.isBlobUrl(url)) {
+            // No blob URL found in context; fall through to normal http path
+            this.sendImageToXDM(info, tab);
+            return;
+        }
+        const filename = info.menuItemId ? undefined : (tab?.title || undefined);
+        this.startBlobTransfer(url, filename || this.deriveBlobFilename(url, ""), undefined, tab?.id);
+    }
+
     onMenuClicked(info, tab) {
         if (info.menuItemId == "download-any-link") {
             this.sendLinkToXDM(info, tab);
         }
         if (info.menuItemId == "download-image-link") {
             this.sendImageToXDM(info, tab);
+        }
+        if (info.menuItemId == "download-blob-media") {
+            this.sendBlobMediaToXDM(info, tab);
         }
     }
 
@@ -383,6 +569,12 @@ export default class App {
             id: 'download-image-link',
             title: "Download Image with XDM",
             contexts: ["image"]
+        });
+
+        chrome.contextMenus.create({
+            id: 'download-blob-media',
+            title: "Download Blob Media with XDM",
+            contexts: ["video", "audio", "image", "link"]
         });
 
         chrome.contextMenus.onClicked.addListener(this.onMenuClicked.bind(this));

@@ -17,7 +17,8 @@
         "webNavigation",
         "downloads",
         "storage",
-        "contextMenus"
+        "contextMenus",
+        "scripting"
     ],
     "background": {
         "scripts": [
@@ -28,6 +29,14 @@
             "main.js"
         ]
     },
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*"],
+            "js": ["app/blob-capture.js"],
+            "run_at": "document_start",
+            "all_frames": true
+        }
+    ],
     "icons": {
         "16": "icon16.png",
         "32": "icon32.png",

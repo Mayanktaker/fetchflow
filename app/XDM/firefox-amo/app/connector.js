@@ -123,6 +123,21 @@ class Connector {
             .catch(err => this.disconnect());
     }
 
+    // Blob chunk upload: raw binary POST to /blob-upload (not JSON)
+    async postBlobChunk(headers, chunkBytes) {
+        const url = httpBaseUrl + "/blob-upload";
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/octet-stream",
+                ...headers
+            },
+            body: chunkBytes
+        });
+        if (!response.ok) throw new Error("blob-upload HTTP " + response.status);
+        return response.json();
+    }
+
     // Wayland/Phase2.4: open the OS-registered xdm-app:// scheme so the desktop launches XDM
     launchApp() {
         try {
