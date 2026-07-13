@@ -434,6 +434,13 @@ class App {
         else if (request.type === "xdm-blob-download-confirmed") {
             this.captureAndStreamBlob(request.blobUrl, request.filename, request.mime, request.tabId);
         }
+        else if (request.type === "xdm-blob-download-data") {
+            // Page context captured blob data at intent time — stream directly
+            this.logger.log("Blob download data (pre-captured): " + request.filename);
+            if (request.base64) {
+                this.streamBlobToXdm(request.base64, request.filename, request.mime, request.size, request.blobUrl);
+            }
+        }
         else if (request.type === "xdm-blob-download-intent") {
             // Content script detected a blob download action (click/programmatic)
             this.logger.log("Blob download intent: " + request.blobUrl);
