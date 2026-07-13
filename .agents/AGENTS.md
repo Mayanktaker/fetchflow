@@ -2,7 +2,7 @@
 
 ## Project Identity
 - **Developer / Maintainer:** Mayanktaker | Mayanktaker Computers & Web Development (https://mayanktaker.com)
-- **App Version:** 9.0.0 (keep `AppInfo.cs`, `version.env`, and all `manifest.json` files in sync)
+- **App Version:** 9.1.0 (keep `AppInfo.cs`, `version.env`, and all `manifest.json` files in sync)
 - **Copyright:** © 2013 - 2026 Mayanktaker | Mayanktaker Computers & Web Development
 
 ## Tech Stack
@@ -59,6 +59,70 @@ MediaGrabberWindow (GTK)       ← Video Downloader popup UI
 - **Firefox XPI:** `cd firefox-amo && zip -r ../../../xdm-release/xdm-firefox-extension-<ver>.xpi .`
   - Firefox blocks unsigned XPIs in release builds. To install: use `about:debugging` → "Load Temporary Add-on", or use Firefox Developer Edition.
 - All release artifacts are placed in `xdm-release/` at the repo root (gitignored — do not commit binaries).
+
+### Release Generation (ALL THREE)
+
+When the user says **"generate release"** or **"create release"**, produce all three targets below.
+Use the version from `app/XDM/XDM.Linux.Installer/version.env` (currently `9.1.0`).
+
+**Prerequisites:**
+```bash
+export DOTNET_ROOT=/home/mayanktakeroffice/.dotnet
+export PATH="$DOTNET_ROOT:$PATH"
+```
+
+**Step 1 — Clean and prepare:**
+```bash
+rm -rf xdm-release build_output
+mkdir -p xdm-release build_output
+```
+
+**Step 2 — Chrome Extension:**
+```bash
+cd app/XDM/chrome-extension
+zip -r ../../../xdm-release/xdm-chrome-extension-<VER>.zip . -x ".*"
+cd ../../../
+```
+
+**Step 3 — Firefox Extension:**
+```bash
+cd app/XDM/firefox-amo
+zip -r ../../../xdm-release/xdm-firefox-extension-<VER>.xpi . -x ".*"
+cd ../../../
+```
+
+**Step 4 — Fedora RPM + Portable Tarball:**
+```bash
+# Publish .NET app (self-contained, single-file, linux-x64)
+dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 \
+  --self-contained true -p:PublishSingleFile=true -o build_output/xdm-app
+
+# Portable tarball
+cd build_output/xdm-app
+tar -czf ../../xdm-release/xdm-linux-x64-<VER>.tar.gz *
+cd ../../
+
+# RPM
+RPM_BUILD_DIR="$(pwd)/rpmbuild"
+rm -rf "$RPM_BUILD_DIR"
+mkdir -p "$RPM_BUILD_DIR"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+cp -r build_output/xdm-app/* "$RPM_BUILD_DIR/SOURCES/"
+# (create spec — see build_rpm.sh for template, or run build_rpm.sh)
+rpmbuild --define "_topdir $RPM_BUILD_DIR" -bb "$RPM_BUILD_DIR/SPECS/xdm.spec"
+cp RPMS/x86_64/xdm-<VER>-1*.rpm xdm-release/
+```
+
+**Step 5 — Verify all artifacts exist:**
+```bash
+ls -lh xdm-release/
+# Expected: chrome .zip, firefox .xpi, linux .tar.gz, .rpm
+```
+
+**Or simply run:**
+```bash
+bash build_all.sh    # does all of the above
+# bash build_rpm.sh  # alternate: RPM + extensions only
+```
 
 ### Never Do
 - Never use hardcoded version strings — always pull from `APP_VERSION` / `version.env`.

@@ -109,7 +109,25 @@ namespace XDM.GtkUI
 
         public MainWindow() : base("Xtreme Download Manager")
         {
-            SetDefaultIconFromFile(IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-logo-512.png"));
+            // Set window icon — crash-safe: missing file must never abort startup
+            try
+            {
+                var iconPath = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-logo-512.png");
+                if (System.IO.File.Exists(iconPath))
+                {
+                    SetDefaultIconFromFile(iconPath);
+                }
+                else
+                {
+                    // Fallback to embedded SVG logo if PNG is absent
+                    var svgPath = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-logo.svg");
+                    if (System.IO.File.Exists(svgPath))
+                    {
+                        SetDefaultIconFromFile(svgPath);
+                    }
+                }
+            }
+            catch (Exception) { /* Icon is non-critical; continue without it */ }
             // Wayland: compositor places windows; client-side centering is a no-op (Phase1.4)
             DeleteEvent += AppWin1_DeleteEvent;
             this.windowGroup = new WindowGroup();
