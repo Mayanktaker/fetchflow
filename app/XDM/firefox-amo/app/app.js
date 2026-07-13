@@ -14,7 +14,6 @@ class App {
         this.appEnabled = false;
         this.blobMaxBytes = 256 * 1024 * 1024; // 256 MiB default cap
         this.onTabUpdateCallback = this.onTabUpdate.bind(this);
-        this.onDeterminingFilenameCallback = this.onDeterminingFilename.bind(this);
         this.activeTabId = -1;
         this.connector = new Connector(this.onMessage.bind(this), this.onDisconnect.bind(this));
     }
@@ -86,27 +85,6 @@ class App {
         }
     }
 
-    onDeterminingFilename(download, suggest) {
-        this.logger.log("onDeterminingFilename");
-        if (!this.isMonitoringEnabled()) {
-            return;
-        }
-        let url = download.finalUrl || download.url;
-
-        // Blob URL interception: cancel browser DL and stream via blob-capture.js
-        if (this.isBlobUrl(url)) {
-            browser.downloads.cancel(
-                download.id,
-                () => { try { browser.downloads.erase({ id: download.id }); } catch (e) {} }
-            );
-            const filename = download.filename || this.deriveBlobFilename(url, download.mime);
-            this.startBlobTransfer(url, filename, download.mime, download.tabId);
-            return;
-        }
-
-        // Non-blob downloads handled by request-watcher blocking interception
-    }
-
     onTabUpdate(tabId, changeInfo, tab) {
         if (!this.isMonitoringEnabled()) {
             return;
@@ -168,12 +146,6 @@ class App {
         chrome.tabs.onUpdated.addListener(
             this.onTabUpdateCallback
         );
-        // Blob URL download interception (parity with Chrome extension)
-        if (browser.downloads && browser.downloads.onDeterminingFilename) {
-            browser.downloads.onDeterminingFilename.addListener(
-                this.onDeterminingFilenameCallback
-            );
-        }
         // SPA navigation detection via History API (YouTube, etc.)
         if (chrome.webNavigation && chrome.webNavigation.onHistoryStateUpdated) {
             chrome.webNavigation.onHistoryStateUpdated.addListener(
@@ -182,7 +154,8 @@ class App {
         }
         chrome.runtime.onMessage.addListener(this.onPopupMessage.bind(this));
         // In Firefox MV3, webRequestBlocking is still fully supported.
-        // We revert back to request-watcher interception instead of downloads API.
+        // HTTP downloads are intercepted via request-watcher (webRequestBlocking).
+        // Blob downloads are intercepted at the DOM level by blob-capture.js content script.
         this.requestWatcher.register();
         this.attachContextMenu();
         chrome.tabs.onActivated.addListener(this.onTabActivated.bind(this));
