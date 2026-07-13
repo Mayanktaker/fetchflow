@@ -1,25 +1,23 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 "use strict";
 
-// Firefox content script: intercepts blob: URLs via injected page script,
-// communicates with background (app.js) for chunked upload to XDM.
+// Content script: intercepts blob: URLs via injected page script,
+// and intercepts blob DOWNLOAD ACTIONS at the DOM level before the
+// browser's download manager can take over. Communicates with
+// background (app.js) for chunked upload to XDM.
 
 const BLOB_TTL_MS = 5 * 60 * 1000;
-
-// Map<blobUrl, {size, mime, createdAt}>
 const blobRefs = new Map();
 
-// Periodic cleanup of stale blob refs to prevent memory leaks
+// --- Periodic cleanup of stale blob refs ---
 setInterval(() => {
     const now = Date.now();
     for (const [url, ref] of blobRefs) {
-        if (now - ref.createdAt > BLOB_TTL_MS) {
-            blobRefs.delete(url);
-        }
+        if (now - ref.createdAt > BLOB_TTL_MS) blobRefs.delete(url);
     }
 }, 60_000);
 
-// --- Inject page-context script to hook URL.createObjectURL ---
+// --- Inject page-context hooks: URL.createObjectURL + anchor.click + window.open ---
 function injectCreatorHook() {
     if (document.getElementById("xdm-blob-hook")) return;
     const script = document.createElement("script");
@@ -27,6 +25,8 @@ function injectCreatorHook() {
     script.textContent = `(() => {
         if (window.__xdmBlobHooked) return;
         window.__xdmBlobHooked = true;
+
+        // Hook 1: Track blob URL creation
         const origCreate = URL.createObjectURL.bind(URL);
         URL.createObjectURL = function(obj) {
             const url = origCreate(obj);
@@ -42,44 +42,114 @@ function injectCreatorHook() {
             }
             return url;
         };
+
+        // Hook 2: Intercept programmatic anchor.click() on blob: URLs
+        // This catches the common pattern: const a = document.createElement('a');
+        // a.href = blobUrl; a.download = 'file.mp4'; a.click();
+        const origAnchorClick = HTMLAnchorElement.prototype.click;
+        HTMLAnchorElement.prototype.click = function() {
+            if (this.href && this.href.startsWith("blob:")) {
+                window.postMessage({
+                    type: "__xdm_blob_download_intent",
+                    blobUrl: this.href,
+                    filename: this.download || ""
+                }, "*");
+                return; // suppress native browser download
+            }
+            return origAnchorClick.apply(this, arguments);
+        };
+
+        // Hook 3: Intercept window.open(blobUrl)
+        const origOpen = window.open;
+        window.open = function(url) {
+            if (typeof url === "string" && url.startsWith("blob:")) {
+                window.postMessage({
+                    type: "__xdm_blob_download_intent",
+                    blobUrl: url,
+                    filename: ""
+                }, "*");
+                return null;
+            }
+            return origOpen.apply(this, arguments);
+        };
     })();`;
     (document.head || document.documentElement).appendChild(script);
     script.remove();
 }
 
-// Run at document_start (before page scripts execute)
 injectCreatorHook();
 
-// Re-inject after dynamic document rewrites (e.g. SPA navigations)
 new MutationObserver(() => {
     if (!document.getElementById("xdm-blob-hook")) injectCreatorHook();
 }).observe(document.documentElement, { childList: true });
 
-// --- Receive blob-creation events from page context ---
+// --- Receive events from page context ---
 window.addEventListener("message", (event) => {
     if (event.source !== window) return;
     const data = event.data;
-    if (!data || data.type !== "__xdm_blob_created") return;
+    if (!data) return;
 
-    blobRefs.set(data.blobUrl, {
-        size: data.size,
-        mime: data.mime,
-        createdAt: Date.now()
-    });
+    if (data.type === "__xdm_blob_created") {
+        blobRefs.set(data.blobUrl, {
+            size: data.size, mime: data.mime, createdAt: Date.now()
+        });
+    }
+    else if (data.type === "__xdm_blob_download_intent") {
+        // Programmatic blob download detected (anchor.click or window.open)
+        handleBlobDownloadIntent(data.blobUrl, data.filename);
+    }
 });
+
+// --- DOM-level click interceptor: catch user clicks on <a href="blob:..."> ---
+// Uses capture phase so we run BEFORE the page's own click handlers.
+document.addEventListener("click", (e) => {
+    const link = e.target?.closest?.("a[href]");
+    if (!link) return;
+    const href = link.href || link.getAttribute("href");
+    if (!href || !href.startsWith("blob:")) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    const filename = link.getAttribute("download") || link.textContent?.trim() || "";
+    handleBlobDownloadIntent(href, filename);
+}, true);
+
+// --- Handle a blob download intent (from click or programmatic trigger) ---
+function handleBlobDownloadIntent(blobUrl, filename) {
+    const ref = blobRefs.get(blobUrl);
+    if (ref) {
+        // Known blob — send directly to background for XDM transfer
+        sendBlobDownload(blobUrl, filename || deriveFilename(blobUrl, ref.mime), ref.mime, ref.size);
+    } else {
+        // Unknown blob URL — still try to capture (page may have created it
+        // before our hook was injected). The background will re-fetch it.
+        sendBlobDownload(blobUrl, filename || "blob-download.bin", "application/octet-stream", 0);
+    }
+}
+
+// --- Send blob download request to background for chunked upload ---
+async function sendBlobDownload(blobUrl, filename, mime, size) {
+    try {
+        browser.runtime.sendMessage({
+            type: "xdm-blob-download-intent",
+            blobUrl, filename, mime, size
+        });
+    } catch (e) {
+        console.log("[XDM] blob download intent send error:", e);
+    }
+}
 
 // --- Listen for messages from background script ---
 browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === "xdm-capture-blob") {
         captureBlobFromTab(msg.blobUrl, msg.filename).then(sendResponse);
-        return true; // async response
+        return true;
     }
 });
 
+// --- Re-fetch blob bytes from page context and stream to background ---
 async function captureBlobFromTab(blobUrl, fallbackFilename) {
     const ref = blobRefs.get(blobUrl);
-    if (!ref) return { error: "blob_ref_not_found" };
-
     const tabId = await getCurrentTabId();
     if (!tabId) return { error: "no_tab" };
 
@@ -92,10 +162,8 @@ async function captureBlobFromTab(blobUrl, fallbackFilename) {
                     fetch(url).then(r => r.blob()).then(blob => {
                         const reader = new FileReader();
                         reader.onload = () => resolve({
-                            ok: true,
-                            data: reader.result,
-                            size: blob.size,
-                            mime: blob.type
+                            ok: true, data: reader.result,
+                            size: blob.size, mime: blob.type
                         });
                         reader.onerror = () => resolve({ error: "read_failed" });
                         reader.readAsDataURL(blob);
@@ -108,10 +176,9 @@ async function captureBlobFromTab(blobUrl, fallbackFilename) {
         const result = results?.[0]?.result;
         if (!result || result.error) return { error: result?.error || "execute_failed" };
 
-        const dataUrl = result.data;
-        const base64 = dataUrl.split(",")[1];
-        const mime = result.mime || ref.mime || "application/octet-stream";
-        const size = result.size || ref.size;
+        const base64 = result.data.split(",")[1];
+        const mime = result.mime || ref?.mime || "application/octet-stream";
+        const size = result.size || ref?.size || 0;
         const filename = fallbackFilename || deriveFilename(blobUrl, mime);
 
         return await sendBlobToBackground(base64, filename, mime, size, blobUrl);
@@ -123,22 +190,17 @@ async function captureBlobFromTab(blobUrl, fallbackFilename) {
 async function sendBlobToBackground(base64, filename, mime, size, blobUrl) {
     return new Promise((resolve) => {
         browser.runtime.sendMessage({
-            type: "xdm-blob-download",
-            blobUrl,
-            filename,
-            mime,
-            size,
-            base64
+            type: "xdm-blob-download", blobUrl, filename, mime, size, base64
         }).then(resolve).catch(() => resolve({ error: "send_failed" }));
-    });
+    }
+    );
 }
 
 function deriveFilename(blobUrl, mime) {
     try {
         const u = new URL(blobUrl);
         const uuid = u.pathname.replace(/^\//, "");
-        const ext = mimeExtension(mime);
-        return (uuid.slice(0, 8) || "blob") + ext;
+        return (uuid.slice(0, 8) || "blob") + mimeExtension(mime);
     } catch {
         return "blob-download" + mimeExtension(mime);
     }

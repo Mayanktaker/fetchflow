@@ -461,6 +461,12 @@ class App {
         else if (request.type === "xdm-blob-download-confirmed") {
             this.captureAndStreamBlob(request.blobUrl, request.filename, request.mime, request.tabId);
         }
+        else if (request.type === "xdm-blob-download-intent") {
+            // Content script detected a blob download action (click/programmatic)
+            this.logger.log("Blob download intent: " + request.blobUrl);
+            const tabId = sender.tab?.id || null;
+            this.captureAndStreamBlob(request.blobUrl, request.filename, request.mime, tabId);
+        }
     }
 
     sendLinkToXDM(info, tab) {
