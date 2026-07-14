@@ -38,8 +38,9 @@ namespace XDM.Core.HttpServer
                 return null;
             }
             var key = keys[0];
+            using var sha1 = SHA1.Create();
             var acceptKey = Convert.ToBase64String(
-                SHA1.HashData(Encoding.UTF8.GetBytes(key.Trim() + WsGuid)));
+                sha1.ComputeHash(Encoding.UTF8.GetBytes(key.Trim() + WsGuid)));
 
             var sb = new StringBuilder();
             sb.Append("HTTP/1.1 101 Switching Protocols\r\n");
