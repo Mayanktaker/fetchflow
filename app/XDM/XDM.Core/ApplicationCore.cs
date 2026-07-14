@@ -29,7 +29,7 @@ namespace XDM.Core
 {
     public class ApplicationCore : IApplicationCore
     {
-        public Version AppVerion => new(8, 0, 0);
+        public Version AppVerion => new(9, 1, 1);
         public string AppPlatform => PlatformHelper.GetAppPlatform();
 
         private Dictionary<string, KeyValuePair<IBaseDownloader, bool>> liveDownloads = new();
@@ -213,6 +213,12 @@ namespace XDM.Core
             {
                 var url = message.Url;
                 var file = FileHelper.SanitizeFileName(message.File ?? FileHelper.GetFileName(new Uri(message.Url)));
+                // Only resolve category folder upfront when the filename has a known extension;
+                // otherwise defer to the assembler, which resolves the folder after HTTP probing
+                // updates the name from the server (e.g. Content-Disposition) and the correct extension.
+                var targetFolder = Path.HasExtension(file)
+                    ? FileHelper.GetDownloadFolderByFileName(file)
+                    : null;
                 StartDownload(
                     new SingleSourceHTTPDownloadInfo
                     {
@@ -223,7 +229,7 @@ namespace XDM.Core
                     },
                     file,
                     FileNameFetchMode.FileNameAndExtension,
-                    null,
+                    targetFolder,
                     true,
                     null,
                     Config.Instance.Proxy, null, false);

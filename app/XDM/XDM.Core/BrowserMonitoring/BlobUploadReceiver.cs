@@ -109,10 +109,10 @@ namespace XDM.Core.BrowserMonitoring
             try
             {
                 // Resolve a valid, non-empty download directory.
-                // NOTE: ?? only falls through on null, but a saved config can hold an
-                // EMPTY string (e.g. DefaultDownloadFolder == ""), which would break the
-                // chain and pass "" to Directory.CreateDirectory -> ArgumentException.
-                var targetDir = Config.Instance.UserSelectedDownloadFolder;
+                // Category-based folder lookup takes priority over manual/OS defaults.
+                var targetDir = FileHelper.GetDownloadFolderByFileName(state.Filename);
+                if (string.IsNullOrWhiteSpace(targetDir))
+                    targetDir = Config.Instance.UserSelectedDownloadFolder;
                 if (string.IsNullOrWhiteSpace(targetDir))
                     targetDir = Config.Instance.DefaultDownloadFolder;
                 if (string.IsNullOrWhiteSpace(targetDir))

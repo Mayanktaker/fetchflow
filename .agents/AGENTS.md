@@ -2,7 +2,7 @@
 
 ## Project Identity
 - **Developer / Maintainer:** Mayanktaker | Mayanktaker Computers & Web Development (https://mayanktaker.com)
-- **App Version:** 9.1.0 (keep `AppInfo.cs`, `version.env`, and all `manifest.json` files in sync)
+- **App Version:** 9.1.1 (keep `AppInfo.cs`, `version.env`, and all `manifest.json` files in sync)
 - **Copyright:** © 2013 - 2026 Mayanktaker | Mayanktaker Computers & Web Development
 
 ## Tech Stack
@@ -63,7 +63,7 @@ MediaGrabberWindow (GTK)       ← Video Downloader popup UI
 ### Release Generation (ALL THREE)
 
 When the user says **"generate release"** or **"create release"**, produce all three targets below.
-Use the version from `app/XDM/XDM.Linux.Installer/version.env` (currently `9.1.0`).
+Use the version from `app/XDM/XDM.Linux.Installer/version.env` (currently `9.1.1`).
 
 **Prerequisites:**
 ```bash

@@ -1,16 +1,30 @@
+<!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-
+    <!-- Match XDM.Core's TFM so shared sources compile cleanly -->
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <!-- MSTest framework for YdlParserTests (uses [TestClass]/[TestMethod] + Microsoft.VisualStudio.TestTools.UnitTesting) -->
+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+    <!-- NUnit framework for JsonParsingTest -->
     <PackageReference Include="NUnit" Version="3.13.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageReference Include="coverlet.collector" Version="3.0.2" />
+    <!-- Newtonsoft.Json required by YDLOutputParser -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <!-- Surgical include: only the YDLWrapper sources needed by YdlParserTests,
+       avoiding the cost/fragility of importing the entire XDM.Core shared project -->
+  <ItemGroup>
+    <Compile Include="..\XDM.Core\YDLWrapper\YDLOutputParser.cs" Link="YDLWrapper\YDLOutputParser.cs" />
+    <Compile Include="..\XDM.Core\YDLWrapper\Structs.cs" Link="YDLWrapper\Structs.cs" />
   </ItemGroup>
 
 </Project>

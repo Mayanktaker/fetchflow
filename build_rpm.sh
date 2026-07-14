@@ -35,7 +35,7 @@ cp deleted_files_folders/packaging-8.0.9-stale/deb/usr/share/applications/xdm-ap
 
 cat << 'EOF' > "$RPM_BUILD_DIR/SPECS/xdm.spec"
 Name:           xdm
-Version:        9.1.0
+Version:        9.1.1
 Release:        1%{?dist}
 Summary:        Xtreme Download Manager
 License:        GPLv2
@@ -65,6 +65,6 @@ EOF
 
 cd "$RPM_BUILD_DIR"
 rpmbuild --define "_topdir $RPM_BUILD_DIR" -bb SPECS/xdm.spec
-cp RPMS/x86_64/xdm-9.1.0-1*.rpm "$OUT_DIR/"
+cp RPMS/x86_64/xdm-9.1.1-1*.rpm "$OUT_DIR/"
 
 echo "Done! Artifacts are in $OUT_DIR"

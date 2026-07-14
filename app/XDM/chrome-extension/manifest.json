@@ -2,7 +2,7 @@
     "name": "XDM v9 Browser Helper",
     "action": {},
     "manifest_version": 3,
-    "version": "9.1.0",
+    "version": "9.1.1",
     "description": "Download files with XDM v9",
     "host_permissions": [
         "*://*/*"

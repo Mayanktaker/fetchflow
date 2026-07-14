@@ -370,9 +370,10 @@ namespace XDM.Core.BrowserMonitoring
             {
                 if (Config.Instance.StartDownloadAutomatically && IsFFmpegOK(videoId))
                 {
+                    var targetFolder = FileHelper.GetDownloadFolderByFileName(name);
                     StartVideoDownload(
                         videoId, FileHelper.SanitizeFileName(name),
-                        null, true, null, Config.Instance.Proxy,
+                        targetFolder, true, null, Config.Instance.Proxy,
                     Helpers.GetSpeedLimit(), null);
                 }
                 else
