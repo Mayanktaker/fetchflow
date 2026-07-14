@@ -141,22 +141,33 @@ namespace XDM.Core
 
                 RunOnUiThread(() =>
                 {
-                    var download = ApplicationContext.MainWindow.FindInProgressItem(id);
-
-                    // Always add the finished entry to the UI (covers both normal and blob downloads)
-                    ApplicationContext.MainWindow.AddToTop(finishedEntry);
-
-                    // Only remove from in-progress list if it exists (normal downloads)
-                    if (download != null)
+                    try
                     {
-                        ApplicationContext.MainWindow.Delete(download);
-                        QueueManager.RemoveFinishedDownload(download.DownloadEntry.Id);
+                        var download = ApplicationContext.MainWindow.FindInProgressItem(id);
+                        Log.Debug($"[BLOB] FindInProgressItem done, download null={download is null}");
+
+                        // Always add the finished entry to the UI (covers both normal and blob downloads)
+                        ApplicationContext.MainWindow.AddToTop(finishedEntry);
+                        Log.Debug("[BLOB] AddToTop(FinishedDownloadItem) OK");
+
+                        // Only remove from in-progress list if it exists (normal downloads)
+                        if (download != null)
+                        {
+                            ApplicationContext.MainWindow.Delete(download);
+                            QueueManager.RemoveFinishedDownload(download.DownloadEntry.Id);
+                        }
+
+                        if (ApplicationContext.CoreService.ActiveDownloadCount == 0 && ApplicationContext.MainWindow.IsInProgressViewSelected)
+                        {
+                            Log.Debug("switching to finished listview");
+                            ApplicationContext.MainWindow.SwitchToFinishedView();
+                        }
+                        Log.Debug("[BLOB] DownloadFinished UI callback completed");
                     }
-
-                    if (ApplicationContext.CoreService.ActiveDownloadCount == 0 && ApplicationContext.MainWindow.IsInProgressViewSelected)
+                    catch (Exception ex)
                     {
-                        Log.Debug("switching to finished listview");
-                        ApplicationContext.MainWindow.SwitchToFinishedView();
+                        // A throw here would otherwise abort the whole UI thread; log instead.
+                        Log.Debug($"[BLOB] UI callback exception: {ex}");
                     }
                 });
             }

@@ -108,10 +108,20 @@ namespace XDM.Core.BrowserMonitoring
         {
             try
             {
-                // Determine target download directory
-                var targetDir = Config.Instance.UserSelectedDownloadFolder
-                                ?? Config.Instance.DefaultDownloadFolder
-                                ?? PlatformHelper.GetOsDefaultDownloadFolder();
+                // Resolve a valid, non-empty download directory.
+                // NOTE: ?? only falls through on null, but a saved config can hold an
+                // EMPTY string (e.g. DefaultDownloadFolder == ""), which would break the
+                // chain and pass "" to Directory.CreateDirectory -> ArgumentException.
+                var targetDir = Config.Instance.UserSelectedDownloadFolder;
+                if (string.IsNullOrWhiteSpace(targetDir))
+                    targetDir = Config.Instance.DefaultDownloadFolder;
+                if (string.IsNullOrWhiteSpace(targetDir))
+                    targetDir = PlatformHelper.GetOsDefaultDownloadFolder();
+                if (string.IsNullOrWhiteSpace(targetDir))
+                {
+                    var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    targetDir = string.IsNullOrWhiteSpace(home) ? "/tmp" : Path.Combine(home, "Downloads");
+                }
                 Directory.CreateDirectory(targetDir);
 
                 var finalPath = Path.Combine(targetDir, state.Filename);
