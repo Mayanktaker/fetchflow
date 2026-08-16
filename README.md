@@ -1,82 +1,175 @@
-<p id="downloads" align="center">
-	<img src="https://i.stack.imgur.com/TOfqL.png" height="120px"/>
-	<h1 align="center">Xtreme Download Manager - Wayland</h1>
+<!-- © 2026 Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+
+<h1 align="center">Xtreme Download Manager — Wayland Edition</h1>
+
+<p align="center">
+  <b>XDM v9</b> — a powerful download manager with native Wayland support,
+  system tray integration, and seamless browser integration.
 </p>
 
 <p align="center">
-	<a href="https://github.com/subhra74/xdm/workflows/Java%20CI/badge.svg?branch=master"><img src="https://github.com/subhra74/xdm/workflows/Java%20CI/badge.svg?branch=master" alt="Java CI" /></a>
-	<a href="https://camo.githubusercontent.com/278e057571a0481121b2d60490ff656fb8736a20/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f646f776e6c6f6164732f73756268726137342f78646d2f746f74616c2e737667"><img src="https://img.shields.io/github/downloads/subhra74/xdm/total.svg" alt="Github All Releases" /></a>
+  Based on the original <b>Xtreme Download Manager</b> by
+  <a href="https://github.com/subhra74/xdm">Subhra Sankha Sarkar (subhra74)</a>.
 </p>
 
-### [XDM Homepage](https://github.com/Mayanktaker/xdm/ "XDM Wayland Homepage") ###
+---
 
-[New Experimental Beta version is out](https://github.com/subhra74/xdm-experimental-binaries/tags)
+## Highlights
 
-[News about new version](https://github.com/subhra74/xdm/discussions/768)
+- **Wayland-native** — runs on modern Wayland sessions (KDE Plasma, GNOME, Sway/Hyprland/COSMIC) as well as X11
+- **System tray icon** with a right-click menu (Show / Quit) on KDE, GNOME + AppIndicator extension, waybar and other SNI hosts
+- **Close-to-tray** — closing the window never quits the app; it keeps running in the background
+- **Android-safe file names** — downloaded files keep only `A-Z a-z 0-9 . _ -` and space; everything else becomes `-`, so files copy cleanly to Android phones via USB/MTP
+- **Browser integration** for Chrome, Firefox, Edge, Opera, Vivaldi and other Chromium/Firefox-based browsers
+- **Video saving** from YouTube, Vimeo, Facebook, Instagram, Dailymotion and many more streaming sites
+- **Faster downloads** with multi-connection acceleration and resume of broken/dead downloads
+- **Modern packaging** — `.deb`, `.rpm`, Arch `.pkg.tar.zst`, portable `.tar.gz` and a Flatpak manifest
 
-**X**treme **D**ownload **M**anager - Wayland (XDM) is a powerful tool to increase download speeds up to 500%, save videos from popular video streaming websites, resume broken/dead downloads, schedule and convert downloads.<br>
-Based on the original XDM by [subhra74](https://github.com/subhra74/xdm).<br>
-XDM seamlessly integrates with Google Chrome, Mozilla Firefox Quantum, Opera, Vivaldi, Edge and other Chroumium and Firefox based browsers, to take over downloads and saving streaming videos from web. XDM has a built in video converter which lets you convert your downloaded videos to different formats so that you can watch them on your mobile or TV (100+ devices are supported)
+## What's New in v9
 
-[![name](https://subhra74.github.io/xdm/download.png)](https://github.com/Mayanktaker/xdm)
+- Runs natively on **Wayland** (no XWayland quirks for window placement, dialogs or the tray icon).
+- **System tray icon** on Wayland desktops via the StatusNotifier protocol, with a proper right-click menu on KDE Plasma 6.
+- Closing the window now **hides the app to the tray** (or minimizes it) — XDM always keeps running in the background. To fully quit, use the tray menu or the ☰ menu → Exit.
+- **Blob downloads** (files generated in-page, e.g. streamed documents) are now captured by the browser extensions and transferred to XDM.
+- The **Firefox extension is faster and more reliable** — download takeovers no longer block pages, and right-click "Download with XDM" works even when XDM is closed (the extension launches XDM and queues the download).
+- **Downloaded file names are cleaned automatically** — brackets, quotes, `%`, `^` and other characters that break copying to Android phones are replaced with `-`.
+- **Video capture improved** for multi-site support with a loading indicator and smarter caching.
+- Brand-new packaging pipeline: one command builds every distribution package.
+
+## Features
+
+- Increase download speeds by downloading file segments in parallel
+- Resume broken or interrupted downloads
+- Save videos from popular streaming websites
+- Download web content directly from the browser with the right-click menu:
+  - **Download with XDM** — any link
+  - **Download Image with XDM** — images
+  - **Download Blob Media with XDM** — in-page media
+- Schedule downloads, group them in queues, and limit download speed
+- Categories with automatic folder assignment (documents, music, videos, programs, archives)
+- Video conversion support via the built-in video downloader (yt-dlp based)
+- Multi-language UI including Hindi, English and many more
 
 ## Screenshots
 
-| ![xdm_1][01] | ![xdm_5][05] | ![xdm_3][03] |
-| --- | --- | --- |
-| ![xdm_7][07] | ![xdm_6][06] | ![xdm_9][09] |
-| ![xdm_4][04] | ![xdm_2][02] |  |
+Main window:
 
+![XDM main window](docs/panel.png)
 
-## Features
-- Download files at maximum possible speed (5-6 times faster than conventional downloaders).
-- XDM can save video from numerous video streaming sites.
-- Works with all modern browsers on Windows, Linux and Mac OS X. XDM supports [Google Chrome][18], [Chromium][18], [Firefox Quantum][19], [Vivaldi][20], [Edge][21] and many other popular browsers.
-- XDM has built in video converter, which lets you convert downloaded video to MP3 and MP4 formats.
-- Supports `HTTP`, `HTTPS`, `FTP` as well as video streaming protocols like `MPEG-DASH`, `Apple HLS`, and `Adobe HDS`.
-- XDM also supports authentication, proxy servers, cookies, redirection etc.
-- Video download, clipboard monitoring, automatic antivirus checking, scheduler, system shutdown on download completion.
-- Resumes broken / dead downloads caused by connection problem, power failure or session expiration.
-- Works with Windows ISA, auto proxy scripts, proxy servers, NTLM, Kerberos authentication.
+## Installation
 
-## Building from source
-<pre>
-This is a standard maven project.
-If you have configured Java and Maven use: <b>mvn clean install</b> to build the project.
-The jar will be created in target directory.
-</pre>
+### Debian / Ubuntu (and derivatives)
 
-## Submitting translations
-If you want to translate XDM to your language, feel free to submit a translation file.<br>
-Steps are mentioned in: https://github.com/subhra74/xdm/wiki/Submitting-translations-for-XDM
+```bash
+sudo apt install ./xdman_gtk_9.1.3_amd64.deb
+```
 
+### Fedora / RHEL (and derivatives)
 
-[//]: #ImageLinks
-[01]: https://i.stack.imgur.com/s7ViA.jpg
-[02]: https://i.stack.imgur.com/90TQO.jpg
-[03]: https://i.stack.imgur.com/V5XF3.jpg
-[04]: https://i.stack.imgur.com/aFyH5.png
-[05]: https://i.stack.imgur.com/lmAr6.png
-[06]: https://i.stack.imgur.com/H4yMj.png
-[07]: https://i.stack.imgur.com/8ulBq.png
-[08]: https://i.stack.imgur.com/Gfgae.jpg
-[09]: https://i.stack.imgur.com/GlVDC.png
+```bash
+sudo dnf install ./xdm-9.1.3-1.x86_64.rpm
+```
 
-[//]: #DownloadLinks
-[10]: https://github.com/subhra74/xdm/releases/download/7.2.10/xdmsetup.msi
-[11]: https://github.com/subhra74/xdm/releases/download/7.2.10/xdm-setup-7.2.10.tar.xz
-[12]: #
-[13]: https://github.com/subhra74/xdm/releases/download/7.2.10/xdman.jar
-[14]: https://sourceforge.net/projects/xdman/files/xdmsetup-2018.msi/download
-[15]: https://sourceforge.net/projects/xdman/files/xdm-2018-x64.tar.xz/download
-[16]: https://sourceforge.net/projects/xdman/files/XDMSetup.dmg/download
-[17]: http://xdman.sourceforge.net/xdman.jar
-[100]: https://github.com/subhra74/xdm/releases/download/7.2.11/xdm-setup.msi
-[101]: https://github.com/subhra74/xdm/releases/download/7.2.11/xdm-setup-7.2.11.tar.xz
-[102]: https://github.com/subhra74/xdm/releases/download/7.2.11/xdman.jar
+### Arch Linux / Manjaro / EndeavourOS
 
-[//]: #AddonLinks
-[18]: https://chrome.google.com/webstore/detail/xtreme-download-manager/dkckaoghoiffdbomfbbodbbgmhjblecj
-[19]: https://addons.mozilla.org/en-US/firefox/addon/xdm-browser-monitor/
-[20]: #
-[21]: https://sourceforge.net/p/xdman/blog/2018/01/xdm-integration-with-microsoft-edge/
+Build from the included `PKGBUILD` or install the prebuilt package:
+
+```bash
+makepkg -si   # from the XDM.Linux.Installer directory
+# or
+sudo pacman -U xdm-9.1.3-1-x86_64.pkg.tar.zst
+```
+
+### Portable (any modern x64 Linux)
+
+```bash
+tar -xzf xdm-linux-x64-9.1.3.tar.gz -C /opt
+/opt/xdman/xdm-app
+```
+
+### Flatpak
+
+A Flatpak manifest (`io.github.subhra74.xdm.yml`) is included for building your own Flatpak bundle.
+
+> The app is installed under `/opt/xdman` and registers the `xdm-app://` URL scheme, the desktop entry and the tray icon automatically.
+
+## Browser Integration
+
+XDM ships browser extensions for Chrome/Chromium and Firefox (MV3):
+
+| Browser | Package | What it does |
+|---|---|---|
+| Chrome / Edge / Opera / Vivaldi | `xdm-chrome-extension-9.1.3.zip` | Takes over downloads, saves videos, adds context-menu items |
+| Firefox | `xdm-firefox-extension-9.1.3.xpi` | Same features, tuned for Firefox's MV3 support |
+
+The extension and the app talk over a **loopback relay** (`127.0.0.1:8597`, WebSocket first, HTTP fallback), and the OS-registered `xdm-app://` scheme launches XDM on demand — no native messaging host needed on Linux.
+
+To install:
+
+1. Install the extension from the Chrome Web Store / Firefox Add-ons, or load the packaged file manually (Firefox: `about:debugging` → Load Temporary Add-on; Chrome: `chrome://extensions` → Developer mode → Load unpacked).
+2. Start XDM once — it registers the URL scheme and browser monitoring automatically (first run shows the integration dialog).
+3. Enable monitoring with the browser-monitor toggle in the main window.
+
+Right-click any link and choose **Download with XDM**.
+
+## System Tray & Window Close
+
+- Closing the window **hides XDM to the tray** when a tray icon is available; otherwise the window minimizes and XDM keeps running.
+- Tray detection retries in the background for ~2 minutes at startup, so a tray host that starts after XDM (e.g. plasmashell at login) is picked up automatically.
+- **Quit** is only available from the tray icon's right-click menu or the ☰ menu → Exit. If downloads are in progress, XDM asks for confirmation first.
+
+See [`app/XDM/XDM.Linux.Installer/WAYLAND.md`](app/XDM/XDM.Linux.Installer/WAYLAND.md) for detailed Wayland notes.
+
+## File Naming (Android / MTP safe)
+
+Downloaded files keep only letters, digits, `.`, `_`, `-` and spaces. All other characters (`( ) [ ] { } % ^ # " ' : ? * < > |` etc.) are replaced with `-` automatically, and repeated dashes are collapsed — so `My [file] (1)^.mp4` becomes `My -file- 1.mp4`. This applies to all new downloads and keeps files copying to Android phones, TVs and NAS devices without errors.
+
+## Building from Source
+
+### Requirements
+
+- .NET SDK 8 (the build script expects it under `~/.dotnet8` or on `PATH`)
+- Linux x64 host with GTK3 development libraries
+- `zip` for packaging the browser extensions
+
+### Build everything
+
+```bash
+bash build_all.sh
+```
+
+All artifacts land in `xdm-release/`:
+
+| Artifact | Format | Target |
+|---|---|---|
+| `xdm-linux-x64-<ver>.tar.gz` | Portable tarball | Any modern x64 Linux |
+| `xdman_gtk_<ver>_amd64.deb` | DEB | Debian / Ubuntu |
+| `xdm-<ver>-1.x86_64.rpm` | RPM | Fedora / RHEL / openSUSE |
+| `xdm-<ver>-1-x86_64.pkg.tar.zst` | Arch package | Arch / Manjaro / EndeavourOS |
+| `xdm-chrome-extension-<ver>.zip` | Chrome extension | Chrome Web Store |
+| `xdm-firefox-extension-<ver>.xpi` | Firefox extension | Firefox Add-ons (AMO) |
+
+The version is defined once in `app/XDM/XDM.Linux.Installer/version.env` — all packaging scripts source it, so bump it there before a release.
+
+### Run the tests
+
+```bash
+dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj
+```
+
+## Data & Configuration
+
+| Item | Location |
+|---|---|
+| Downloads database, queues, settings | `~/.xdm-app-data/` (`downloads.db`, `queues.db`, `settings.dat`) |
+| Log file (debug mode) | `~/.xdm-app-data/log.txt` |
+| Installed app | `/opt/xdman/` |
+| Auto-start entry | `~/.config/autostart/xdm-app.desktop` |
+
+## Credits & License
+
+**Xtreme Download Manager (XDM) Wayland Edition** is maintained by [Mayanktaker Computers & Web Development](https://mayanktaker.com), © 2026.
+
+The project is a continuation of the original **Xtreme Download Manager**, created by [Subhra Sankha Sarkar (subhra74)](https://github.com/subhra74/xdm) and his contributors. Huge thanks to the original author and the open-source community that built XDM.
+
+This project is licensed under the **GNU General Public License v2** — see [`LICENSE`](LICENSE).

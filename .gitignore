@@ -382,3 +382,13 @@ test-publish/
 xdm-release/
 app/XDM/XDM.Linux.Installer/xdman_gtk-*/
 msg.bin
+
+# Generated packaging trees (make-*-pkg output)
+app/XDM/XDM.Linux.Installer/src/
+app/XDM/XDM.Linux.Installer/PKGBUILD
+app/XDM/XDM.Linux.Installer/xdman_gtk_*_amd64/
+
+# Local clutter
+.kilo/
+Screenshot_*.png
+screenshot_*.png
