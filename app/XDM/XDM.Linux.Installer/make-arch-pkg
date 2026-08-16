@@ -72,7 +72,7 @@ pkgver=${VERSION}
 pkgrel=1
 pkgdesc="Open source download accelerator and video downloader."
 arch=("x86_64")
-url="https://github.com/subhra74/xdm"
+url="https://github.com/Mayanktaker/xdm"
 license=('GPLv3')
 depends=('ffmpeg' 'gtk3>=3.24')
 optdepends=('xdg-desktop-portal: native file choosers under Wayland/sandboxes'
