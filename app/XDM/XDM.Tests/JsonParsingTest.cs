@@ -153,7 +153,21 @@ namespace XDM.Tests
 
         private void Test()
         {
-            var reader = new JsonTextReader(new StreamReader(@"C:\Users\subhro\Desktop\message.json"));
+            // Self-contained sample of a browser-relay message (mirrors what the extensions send)
+            const string sampleJson = @"{
+                ""messageType"": ""download"",
+                ""message"": {
+                    ""url"": ""https://example.com/file.zip"",
+                    ""cookies"": { ""session"": ""abc123"" },
+                    ""requestHeaders"": { ""User-Agent"": [""Mozilla/5.0""] },
+                    ""responseHeaders"": { ""Content-Length"": [""1024""] }
+                },
+                ""messages"": [
+                    { ""url"": ""https://example.com/video.mp4"" },
+                    { ""url"": ""https://example.com/audio.mp3"" }
+                ]
+            }";
+            var reader = new JsonTextReader(new StringReader(sampleJson));
             if (reader.Read() && reader.TokenType == JsonToken.StartObject)
             {
                 while (reader.Read())

@@ -23,10 +23,10 @@ namespace XDM.Tests
         {
         }
 
-        // Split data into fixed-size chunks, mimicking the extension's slicing
+        // Split data into fixed-size chunks, mimicking the extension's slicing (at least 1 chunk)
         private byte[][] ChunkData(byte[] data)
         {
-            int totalChunks = (int)Math.Ceiling((double)data.Length / CHUNK_SIZE);
+            int totalChunks = Math.Max(1, (int)Math.Ceiling((double)data.Length / CHUNK_SIZE));
             var chunks = new byte[totalChunks][];
             for (int i = 0; i < totalChunks; i++)
             {
@@ -79,8 +79,8 @@ namespace XDM.Tests
         [Test]
         public void MultiChunkRoundTrip()
         {
-            // Create 2.5 MB of test data (spans ~5 chunks of 512 KiB)
-            var data = new byte[CHUNK_SIZE * 5 / 2];
+            // Create 2.5 MiB of test data (exactly 5 chunks of 512 KiB)
+            var data = new byte[CHUNK_SIZE * 5];
             new Random(42).NextBytes(data);
 
             var chunks = ChunkData(data);
