@@ -1,5 +1,5 @@
 #!/bin/bash
-# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+# © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
 set -e
 
 export DOTNET_ROOT=/home/mayanktakeroffice/.dotnet
@@ -44,12 +44,14 @@ rm -rf rpmbuild xdm-9.1.1.tar.gz xdm-9.1.1
 rm -rf binary-source/*
 cp -r ../../../build_output/xdm-app/* binary-source/
 
-bash make-rpm-pkg
-bash make-deb-pkg || echo "make-deb-pkg failed, skipping deb package"
+	bash make-rpm-pkg
+	bash make-deb-pkg || echo "make-deb-pkg failed, skipping deb package"
+	bash make-arch-pkg || echo "make-arch-pkg failed, skipping arch package"
 
-# Copy the packages back to the root xdm-release folder
-cp rpmbuild/RPMS/x86_64/xdm-9.1.1-1.fc44.x86_64.rpm "$OUT_DIR/"
-cp *.deb "$OUT_DIR/" 2>/dev/null || echo "No .deb packages found to copy"
+	# Copy the packages back to the root xdm-release folder
+	cp rpmbuild/RPMS/x86_64/*.rpm "$OUT_DIR/"
+	cp *.deb "$OUT_DIR/" 2>/dev/null || echo "No .deb packages found to copy"
+	cp *.pkg.tar.* "$OUT_DIR/" 2>/dev/null || echo "No .pkg.tar.* packages found to copy"
 
 echo "========================================="
 echo "Build complete! Artifacts are in $OUT_DIR"

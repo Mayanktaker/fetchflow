@@ -1,4 +1,4 @@
-// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
 // Minimal RFC 6455 WebSocket implementation for the XDM IPC loopback server.
 // Handles: handshake (SHA-1 accept-key), masked/unmasked text frames, ping/pong,
 // close. No fragmentation (not needed for IPC messages < 64 KB).

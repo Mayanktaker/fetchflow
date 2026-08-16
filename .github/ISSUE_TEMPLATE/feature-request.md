@@ -19,8 +19,8 @@ labels: 'request'
 
 <!--
 Carefully read and work through this check list in order to prevent the most common mistakes and misuse of xdm:
-- First of, make sure you are using the latest version of xdm. Run `XDM menu->Help->About XDM` and ensure your version maches the latest version in https://github.com/subhra74/xdm#downloads. Issues with outdated version will be REJECTED.
-- Search the bugtracker for similar feature requests: https://github.com/subhra74/xdm/issues. DO NOT post duplicates.
+- First of, make sure you are using the latest version of xdm. Run `XDM menu->Help->About XDM` and ensure your version maches the latest version in https://github.com/Mayanktaker/xdm#downloads. Issues with outdated version will be REJECTED.
+- Search the bugtracker for similar feature requests: https://github.com/Mayanktaker/xdm/issues. DO NOT post duplicates.
 - Finally, put x into all relevant boxes (like this [x])
 -->
 

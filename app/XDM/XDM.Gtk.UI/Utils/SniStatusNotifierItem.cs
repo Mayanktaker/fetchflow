@@ -1,4 +1,4 @@
-// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
 // D-Bus StatusNotifierItem (SNI) implementation — the modern tray protocol used by
 // KDE Plasma 6, GNOME (via AppIndicator extension), Sway/Hyprland (waybar), COSMIC, etc.
 // The legacy Gtk.StatusIcon (XEmbed) tray does not work on Wayland, so SNI is the

@@ -1,4 +1,4 @@
-// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
 // TrayIconManager — chooses the best tray mechanism for the current desktop and keeps a
 // backward-compatible fallback chain:
 //   1. StatusNotifierItem (SNI) over D-Bus  -> KDE Plasma 6, GNOME (+AppIndicator ext),

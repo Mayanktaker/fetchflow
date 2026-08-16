@@ -1,4 +1,4 @@
-// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
 using System;
 using System.Net.Http;
 using System.Text.Json;
@@ -9,7 +9,7 @@ namespace XDM.GtkUI
 {
     public static class UpdateChecker
     {
-        private const string RepoUrl = "https://api.github.com/repos/subhra74/xdm/releases/latest";
+        private const string RepoUrl = "https://api.github.com/repos/Mayanktaker/xdm/releases/latest";
 
         /// <summary>
         /// Checks GitHub for a newer version than AppInfo.APP_VERSION.

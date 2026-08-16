@@ -1,4 +1,4 @@
-// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
 // Minimal com.canonical.dbusmenu implementation for KDE Plasma 6 tray menus.
 using System;
 using System.Collections.Generic;

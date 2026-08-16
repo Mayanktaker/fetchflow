@@ -1,10 +1,9 @@
 #!/bin/bash
-# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+# © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
 set -e
 
 # Default repository
-REPO="subhra74/xdm"
-# Update this to your official GitHub repo
+REPO="Mayanktaker/xdm"
 
 echo "Checking for the latest release on GitHub ($REPO)..."
 LATEST_URL=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep "browser_download_url" | grep "xdm-app" | cut -d '"' -f 4)

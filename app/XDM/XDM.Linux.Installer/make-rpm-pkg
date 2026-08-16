@@ -1,6 +1,6 @@
 #!/bin/bash
-# © Mayanktaker Computers & Web Development | https://mayanktaker.com
-# Build an .rpm for Fedora/RHEL (Wayland-aware). Run from XDM.Linux.Installer/.
+# © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
+# Build an .rpm for Fedora/RHEL/openSUSE (Wayland-aware). Run from XDM.Linux.Installer/.
 # Please place all the published files under ./binary-source directory
 
 # Single source of truth for the version (Wayland/Phase0.3)
