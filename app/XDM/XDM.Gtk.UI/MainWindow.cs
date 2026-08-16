@@ -1000,9 +1000,17 @@ namespace XDM.GtkUI
             catch { /* notify-send is best-effort */ }
         }
 
-        // Tray-menu "Quit": remove the icon first so it doesn't linger, then exit cleanly.
+        // Tray-menu "Quit": confirm when downloads are active, remove the icon, then exit cleanly.
         private void QuitFromTray()
         {
+            var active = CountActiveDownloads();
+            if (active > 0 &&
+                !Confirm(this, active == 1
+                    ? "1 download is in progress. Quit XDM anyway?"
+                    : $"{active} downloads are in progress. Quit XDM anyway?"))
+            {
+                return;
+            }
             try
             {
                 trayManager?.Dispose();
@@ -1013,6 +1021,26 @@ namespace XDM.GtkUI
             }
             Application.Quit();
             Environment.Exit(0);
+        }
+
+        // Count downloads that are currently transferring (not queued/paused/finished)
+        private int CountActiveDownloads()
+        {
+            if (inprogressDownloadsStore == null || !inprogressDownloadsStore.GetIterFirst(out var iter))
+            {
+                return 0;
+            }
+            var count = 0;
+            do
+            {
+                var item = (InProgressDownloadItem)inprogressDownloadsStore.GetValue(iter, INPROGRESS_DATA_INDEX);
+                if (item.Status == DownloadStatus.Downloading)
+                {
+                    count++;
+                }
+            }
+            while (inprogressDownloadsStore.IterNext(ref iter));
+            return count;
         }
 
         private static Gdk.Pixbuf LoadSvg(string name, int dimension = 16)
