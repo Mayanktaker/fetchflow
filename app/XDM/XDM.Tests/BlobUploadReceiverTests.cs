@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -49,18 +50,17 @@ namespace XDM.Tests
             return ms.ToArray();
         }
 
-        // Sanitize filename — replicates FileHelper.SanitizeFileName path-traversal guard
+        // Sanitize filename — replicates FileHelper.SanitizeFileName (portable-char filter + traversal guard)
         private string SanitizeFileName(string filename)
         {
             if (string.IsNullOrEmpty(filename)) return "";
-            // Strip directory components — only allow the bare filename
-            var name = Path.GetFileName(filename);
-            // Remove invalid filesystem characters
-            foreach (char c in Path.GetInvalidFileNameChars())
-            {
-                name = name.Replace(c, '_');
-            }
-            return name ?? "";
+            var name = filename.Split('/').Last();
+            name = name.Split('\\').Last();
+            name = Regex.Replace(name, @"[^A-Za-z0-9._ -]", "-");
+            name = Regex.Replace(name, @"-{2,}", "-");
+            name = Regex.Replace(name, @"-+\.", ".");
+            name = name.Trim().TrimEnd('.').Trim('-', ' ');
+            return string.IsNullOrEmpty(name) ? "download" : name;
         }
 
         // Test: single chunk round-trip preserves data
@@ -155,6 +155,16 @@ namespace XDM.Tests
         {
             Assert.AreEqual("image.png", SanitizeFileName("image.png"));
             Assert.AreEqual("blob-video_c248.mp4", SanitizeFileName("blob-video_c248.mp4"));
+        }
+
+        // Test: non-portable chars (break Android/MTP copy) become '-'
+        [Test]
+        public void NonPortableCharsBecomeDash()
+        {
+            Assert.AreEqual("file -1.mp4", SanitizeFileName("file (1)^.mp4"));
+            Assert.AreEqual("quote-removed.txt", SanitizeFileName("quote\"removed\".txt"));
+            Assert.AreEqual("name", SanitizeFileName("[name]"));
+            Assert.AreEqual("download", SanitizeFileName("###"));
         }
 
         // Test: transfer ID uniqueness via GUID generation

@@ -154,7 +154,7 @@ namespace XDM.GtkUI
             // (Wayland with no SNI host). IsTrayActive drives the close-to-tray vs minimize logic.
             trayManager = new TrayIconManager();
             trayManager.Init(GtkHelper.LoadSvg("xdm-logo", 22), "Xtreme Download Manager",
-                             ShowAndActivate, () => Environment.Exit(0));
+                             ShowAndActivate, QuitFromTray);
             
             CheckUpdatesInBackground();
         }
@@ -982,31 +982,37 @@ namespace XDM.GtkUI
 
         private void AppWin1_DeleteEvent(object o, DeleteEventArgs args)
         {
-            // Tray/Phase5: if a tray icon is active, hide to tray (restores the classic behavior —
-            // safe now because there IS a tray to restore from). Otherwise stay Wayland-safe:
-            // never Hide() (would strand the app). With active downloads: minimize to taskbar + notify;
-            // otherwise quit cleanly.
+            // Closing the window never quits XDM: hide to tray when a tray icon is available,
+            // otherwise minimize — full quit is only via the tray menu or ☰ → Exit.
+            args.RetVal = true;
             if (trayManager != null && trayManager.IsTrayActive)
             {
-                args.RetVal = true;
                 this.Hide();
                 return;
             }
-
-            var hasActive = inprogressDownloadsStore != null && inprogressDownloadsStore.GetIterFirst(out _);
-            if (hasActive)
+            this.Iconify();
+            try
             {
-                args.RetVal = true;        // prevent default window destroy
-                this.Iconify();           // minimize to taskbar/dock (restorable on Wayland)
-                try
-                {
-                    PlatformHelper.SpawnSubProcess("notify-send",
-                        new[] { "Xtreme Download Manager",
-                                "Downloads in progress — XDM minimized to taskbar." });
-                }
-                catch { /* notify-send is best-effort */ }
+                PlatformHelper.SpawnSubProcess("notify-send",
+                    new[] { "Xtreme Download Manager",
+                            "XDM is still running in the background — to fully quit, use the tray icon or the ☰ menu → Exit." });
             }
-            // else: allow destroy; main loop quits via the standard Gtk shutdown path
+            catch { /* notify-send is best-effort */ }
+        }
+
+        // Tray-menu "Quit": remove the icon first so it doesn't linger, then exit cleanly.
+        private void QuitFromTray()
+        {
+            try
+            {
+                trayManager?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Tray dispose on quit: " + ex.Message);
+            }
+            Application.Quit();
+            Environment.Exit(0);
         }
 
         private static Gdk.Pixbuf LoadSvg(string name, int dimension = 16)

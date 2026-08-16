@@ -56,10 +56,15 @@ use `Alt+Tab` or the taskbar entry to restore it.
 ## Wayland-Specific Behavior
 
 ### Close Button (X button)
-- **With active downloads:** Minimizes to taskbar + `notify-send` notification.
+Closing the window never quits XDM:
+- **Tray icon available:** Hides to tray. Restore by clicking the tray icon.
+- **No tray icon:** Minimizes to taskbar + `notify-send` notification.
   Restore via taskbar or `Alt+Tab`.
-- **With no active downloads + tray icon active:** Hides to tray (classic behavior).
-- **With no active downloads + no tray icon:** Exits cleanly.
+- **Full quit:** Only via the tray icon's Quit menu item or the in-app
+  ☰ menu → Exit.
+
+Tray detection retries in the background for ~2 minutes at startup, so an
+SNI host that appears after XDM (plasmashell/waybar at login) is picked up.
 
 ### Window Positioning
 XDM does not force center-alignment on Wayland (this causes GTK assertion

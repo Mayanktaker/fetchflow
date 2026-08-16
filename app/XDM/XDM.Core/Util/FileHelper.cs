@@ -12,12 +12,20 @@ namespace XDM.Core.Util
     public static class FileHelper
     {
         public static readonly Regex RxFileWithinQuote = new Regex("\\\"(.*)\\\"");
+        private static readonly Regex RxPortableFileNameChars = new Regex(@"[^A-Za-z0-9._ -]", RegexOptions.Compiled);
+        private static readonly Regex RxDashRun = new Regex(@"-{2,}", RegexOptions.Compiled);
+
         public static string? SanitizeFileName(string fileName)
         {
-            if (fileName == null) return fileName;
+            if (fileName == null) return null;
             var file = fileName.Split('/').Last();
-            file = fileName.Split('\\').Last();
-            return string.Join("_", file.Split(Path.GetInvalidFileNameChars()));
+            file = file.Split('\\').Last();
+            // Keep only chars that copy cleanly to Android/MTP and Windows; rest becomes '-'
+            file = RxPortableFileNameChars.Replace(file, "-");
+            file = RxDashRun.Replace(file, "-");
+            file = Regex.Replace(file, @"-+\.", ".");
+            file = file.Trim().TrimEnd('.').Trim('-', ' ');
+            return string.IsNullOrEmpty(file) ? "download" : file;
         }
 
         public static string GetDownloadFolderByFileName(string file)

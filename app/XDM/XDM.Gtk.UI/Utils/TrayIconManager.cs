@@ -14,6 +14,8 @@ using Gtk;
 using Tmds.DBus;
 using TraceLog;
 using XDM.GtkUI.Utils;
+using GlSource = GLib.Source;
+using GlTimeout = GLib.Timeout;
 
 namespace XDM.GtkUI.Utils
 {
@@ -28,6 +30,11 @@ namespace XDM.GtkUI.Utils
         private DBusMenuServer? dbusMenuServer;
         private StatusIcon? legacyIcon;
         private System.Action? onActivate;
+        private Pixbuf? icon;
+        private string? appName;
+        private uint sniRetryTimerId;
+        private int sniRetryCount;
+        private const int MaxSniRetries = 24; // ~2 minutes at 5s intervals
 
         // True when ANY tray mechanism is active (MainWindow uses this to allow hide-to-tray on close)
         public bool IsTrayActive { get; private set; }
@@ -38,6 +45,8 @@ namespace XDM.GtkUI.Utils
         /// <summary>Initialize the best available tray. Never throws — failures degrade to None.</summary>
         public void Init(Pixbuf icon, string appName, System.Action onActivate, System.Action onQuit)
         {
+            this.icon = icon;
+            this.appName = appName;
             this.onActivate = onActivate;
             try
             {
@@ -52,7 +61,35 @@ namespace XDM.GtkUI.Utils
                 catch (Exception ex) { Log.Debug("Legacy tray init failed: " + ex.Message); }
             }
 
-            Log.Debug("No system tray available; using minimize-to-taskbar fallback.");
+            // The SNI host (plasmashell, waybar, ...) can start after XDM at login — retry in
+            // the background so close-to-tray keeps working instead of silently missing the tray.
+            Log.Debug("No system tray available yet; retrying SNI in the background.");
+            ScheduleSniRetry(onActivate, onQuit);
+        }
+
+        // Re-attempt SNI registration every 5s until a host appears or the retry budget runs out.
+        private void ScheduleSniRetry(System.Action onActivate, System.Action onQuit)
+        {
+            if (sniRetryTimerId != 0 || icon == null || appName == null) return;
+            sniRetryTimerId = GlTimeout.Add(5000, () =>
+            {
+                sniRetryCount++;
+                try
+                {
+                    if (TryInitSni(icon, appName, onActivate, onQuit))
+                    {
+                        sniRetryTimerId = 0;
+                        return false;
+                    }
+                }
+                catch (Exception ex) { Log.Debug("SNI tray retry failed: " + ex.Message); }
+                if (sniRetryCount >= MaxSniRetries)
+                {
+                    sniRetryTimerId = 0;
+                    return false;
+                }
+                return true;
+            });
         }
 
         // Wayland session heuristic (no SNI host + Wayland => no legacy tray either)
@@ -142,6 +179,11 @@ namespace XDM.GtkUI.Utils
         {
             try
             {
+                if (sniRetryTimerId != 0)
+                {
+                    GlSource.Remove(sniRetryTimerId);
+                    sniRetryTimerId = 0;
+                }
                 legacyIcon?.Dispose();
                 legacyIcon = null;
                 if (sniItem != null && connection != null)

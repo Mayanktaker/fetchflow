@@ -23,6 +23,7 @@ export default class App {
         this.onTabUpdateCallback = this.onTabUpdate.bind(this);
         this.activeTabId = -1;
         this.connector = new Connector(this.onMessage.bind(this), this.onDisconnect.bind(this));
+        this.pendingDownloads = [];
     }
 
     start() {
@@ -47,6 +48,17 @@ export default class App {
         this.logger.log(msg);
         chrome.storage.local.set({ "xdmConfig": msg });
         this.updateConfig(msg);
+        this.flushPendingDownloads();
+    }
+
+    // Send downloads that were queued while XDM was offline (called once the relay reconnects)
+    flushPendingDownloads() {
+        if (!this.connector.isConnected() || !this.pendingDownloads || this.pendingDownloads.length === 0) {
+            return;
+        }
+        const queued = this.pendingDownloads;
+        this.pendingDownloads = [];
+        queued.forEach(data => this.connector.postMessage("/download", data));
     }
 
     updateConfig(msg) {
@@ -245,6 +257,7 @@ export default class App {
     startBlobTransfer(blobUrl, filename, mime, tabId) {
         if (!this.connector.isConnected()) {
             this.logger.log("Cannot transfer blob: not connected to XDM");
+            this.connector.launchApp();
             return;
         }
         const size = 0; // unknown from downloads API for blobs; content script will report real size
@@ -442,11 +455,7 @@ export default class App {
     }
 
     triggerDownload(url, file, referer, size, mime) {
-        chrome.cookies.getAll({ "url": url }, cookies => {
-            let cookieStr = undefined;
-            if (cookies) {
-                cookieStr = cookies.map(cookie => cookie.name + "=" + cookie.value).join("; ");
-            }
+        const sendDownload = (cookieStr) => {
             let requestHeaders = { "User-Agent": [navigator.userAgent] };
             if (referer) {
                 requestHeaders["Referer"] = [referer];
@@ -471,8 +480,24 @@ export default class App {
                 mimeType: mime
             };
             this.logger.log(data);
-            this.connector.postMessage("/download", data);
-        });
+            if (this.connector.isConnected()) {
+                this.connector.postMessage("/download", data);
+            } else {
+                // XDM isn't reachable — launch it and hold the download until it connects
+                this.pendingDownloads.push(data);
+                this.connector.launchApp();
+            }
+        };
+        try {
+            chrome.cookies.getAll({ "url": url }, cookies => {
+                let cookieStr = cookies ? cookies.map(cookie => cookie.name + "=" + cookie.value).join("; ") : undefined;
+                sendDownload(cookieStr);
+            });
+        } catch (e) {
+            // cookies API can be unavailable without permission; cookies are optional for downloads
+            this.logger.log("cookies API unavailable: " + e);
+            sendDownload(undefined);
+        }
     }
 
     diconnect() {
