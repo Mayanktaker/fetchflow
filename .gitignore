@@ -370,9 +370,6 @@ app/XDM/XDM.Win.Installer/binary-deps/ffmpeg-x86.exe
 app/XDM/XDM.Win.Installer/binary-deps/yt-dlp_x86.exe
 app/XDM/firefox-amo/xdm-v8-browser-helper.zip
 
-# Agent instructions
-AGENTS.md
-
 # XDM build & packaging artifacts
 rpmbuild/
 binary-source/
@@ -390,5 +387,6 @@ app/XDM/XDM.Linux.Installer/xdman_gtk_*_amd64/
 
 # Local clutter
 .kilo/
+.commandcode/
 Screenshot_*.png
 screenshot_*.png
