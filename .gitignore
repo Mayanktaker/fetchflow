@@ -388,5 +388,8 @@ app/XDM/XDM.Linux.Installer/xdman_gtk_*_amd64/
 # Local clutter
 .kilo/
 .commandcode/
+build_log.txt
+firebase-debug.log
+deleted_files_folders/
 Screenshot_*.png
 screenshot_*.png

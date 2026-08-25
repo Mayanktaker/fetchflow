@@ -5,6 +5,19 @@ set -e
 export DOTNET_ROOT=/home/mayanktakeroffice/.dotnet8
 export PATH=$DOTNET_ROOT:$PATH
 
+# User-local rpmbuild (extracted rpm-build package; see AGENTS.md)
+export PATH="$HOME/.local/rpm-build-root/usr/bin:$PATH"
+
+# Fail fast when required tools are missing instead of producing an incomplete release
+for tool in dotnet zip tar rpmbuild; do
+    command -v "$tool" >/dev/null 2>&1 || { echo "ERROR: required tool '$tool' not found in PATH — install it before generating a release." >&2; exit 1; }
+done
+
+# Optional packagers: warn up front so an incomplete release never surprises us
+for tool in dpkg-deb makepkg; do
+    command -v "$tool" >/dev/null 2>&1 || echo "WARNING: '$tool' not found — DEB/Arch packages will be skipped for this release."
+done
+
 # Single source of truth for the version
 source app/XDM/XDM.Linux.Installer/version.env
 
@@ -47,9 +60,10 @@ rm -rf rpmbuild xdm-${VERSION}.tar.gz xdm-${VERSION}
 rm -rf binary-source/*
 cp -r ../../../build_output/xdm-app/* binary-source/
 
-bash make-rpm-pkg || echo "make-rpm-pkg failed, skipping rpm package"
-bash make-deb-pkg || echo "make-deb-pkg failed, skipping deb package"
-bash make-arch-pkg || echo "make-arch-pkg failed, skipping arch package"
+# RPM is mandatory for every release — a failed RPM build must abort the release
+bash make-rpm-pkg || { echo "ERROR: RPM package build failed — every release MUST include the .rpm artifact." >&2; exit 1; }
+bash make-deb-pkg || echo "WARNING: DEB package skipped (dpkg-deb missing or failed) — this release is incomplete."
+bash make-arch-pkg || echo "WARNING: Arch package skipped (makepkg missing or failed) — this release is incomplete."
 
 # Copy the packages back to the root xdm-release folder
 cp rpmbuild/RPMS/x86_64/*.rpm "$OUT_DIR/" 2>/dev/null || echo "No .rpm packages found to copy"

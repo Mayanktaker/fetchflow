@@ -14,7 +14,7 @@ User-facing details live in [README.md](README.md); this file stays lean.
 | Runtime | .NET SDK 8.0.424 at `~/.dotnet8` (user-local, no sudo) |
 | Browser extensions | Chrome + Firefox (vanilla JS, in `app/XDM/chrome-extension/` and `app/XDM/firefox-amo/`) |
 | Build host | Fedora Linux x64 (bash); packaging tools: `rpmbuild`, `zip`, `tar` |
-| rpmbuild setup | User-local extraction at `~/.local/rpm-build-root`; `~/.rpmmacros` sets `%_rpmconfigdir` there — RPM builds work without sudo |
+| rpmbuild setup | User-local extraction at `~/.local/rpm-build-root`; `~/.rpmmacros` sets `%_rpmconfigdir` there and `build_all.sh` adds it to `PATH` — RPM builds work without sudo |
 | Version source of truth | `app/XDM/XDM.Linux.Installer/version.env` (currently `9.1.3`) |
 
 ## Key paths & commands
@@ -34,8 +34,7 @@ bash build_all.sh        # full release: extensions + tarball + rpm (+ deb/arch 
 
 1. Run releases only when Mayank asks to **"generate release"** / **"build new release"**.
 2. For a *new* release, bump the point version in `version.env` first (e.g. `9.1.2` → `9.1.3`), then run `build_all.sh`.
-3. **Every release MUST include the `.rpm` artifact.** If it is missing from `xdm-release/`, treat the release as failed and fix it — Fedora/RHEL is a first-class target.
-   - Note: `build_all.sh` only *warns* if `make-rpm-pkg` fails; always verify the `.rpm` file exists afterward.
+3. **Every release MUST include the `.rpm` artifact.** A failed or missing RPM build aborts `build_all.sh` with a hard error — do not ship without it (Fedora/RHEL is a first-class target). DEB/Arch failures only warn, with an "incomplete release" notice.
 4. All artifacts land in project-root `xdm-release/`.
 5. DEB and Arch packages additionally need `dpkg-deb` and `makepkg` (installable via `sudo dnf install -y dpkg pacman`).
 
