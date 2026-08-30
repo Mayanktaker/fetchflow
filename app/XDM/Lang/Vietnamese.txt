@@ -47,3 +47,4 @@ SORT_STATUS=Status
 LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video download
 LBL_NEW_DOWNLOAD=New download
+MSG_INSTALL_UPDATE=Cài đặt bản cập nhật

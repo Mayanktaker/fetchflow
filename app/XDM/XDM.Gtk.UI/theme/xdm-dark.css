@@ -38,17 +38,17 @@ separator {
   min-height: 1px;
 }
 
-/* Sidebar + content lists */
+/* Sidebar + content lists (GTK3 paints row states on the treeview node itself) */
 treeview {
   background-color: #232323;
   color: #e4e4e4;
 }
 
-treeview row:hover {
+treeview:hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-treeview row:selected {
+treeview:selected {
   background-color: #3584e4;
   color: #ffffff;
 }
@@ -60,12 +60,12 @@ treeview.dark {
   border-right: 1px solid #0d0d0d;
 }
 
-treeview.dark row:hover {
+treeview.dark:hover {
   background-color: rgba(255, 255, 255, 0.06);
   color: #ffffff;
 }
 
-treeview.dark row:selected {
+treeview.dark:selected {
   background-color: #3584e4;
   color: #ffffff;
 }

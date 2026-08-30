@@ -139,9 +139,12 @@ namespace XDM.GtkUI
             Add(hbMain);
             hbMain.Show();
 
-            categoryTreeStore!.GetIterFirst(out TreeIter iter);
-            categoryTreeStore.IterNext(ref iter);
-            categoryTree!.Selection.SelectIter(iter);
+            // Sidebar default: row 0 "All Unfinished" — matches the main panel's primary
+            // (top-packed, toolbar-rich) view; guard against an empty store
+            if (categoryTreeStore!.GetIterFirst(out TreeIter iter))
+            {
+                categoryTree!.Selection.SelectIter(iter);
+            }
             UpdateBrowserMonitorButton();
             CreateMenu();
             SetDefaultSize(800, 500);
@@ -707,7 +710,6 @@ namespace XDM.GtkUI
 
             sortedStore.SetSortFunc(0, (model, iter1, iter2) =>
             {
-                Console.WriteLine("called");
                 var t1 = (string)model.GetValue(iter1, 0);
                 var t2 = (string)model.GetValue(iter2, 0);
                 if (t1 == null && t2 == null) return 0;

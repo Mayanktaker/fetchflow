@@ -48,3 +48,4 @@ SORT_STATUS=Status
 LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video téléchargé
 LBL_NEW_DOWNLOAD=Nouveau téléchargement
+MSG_INSTALL_UPDATE=Installer la mise à jour

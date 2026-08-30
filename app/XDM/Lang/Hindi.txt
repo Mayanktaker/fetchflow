@@ -204,6 +204,7 @@ MSG_TIME=समय
 STAT_ASSEMBLING=असेंबलिंग
 STAT_WAITING=प्रतीक्षा कर रहा है
 MSG_UPDATE_AVAILABLE=अद्यतन उपलब्ध है
+MSG_INSTALL_UPDATE=अपडेट इंस्टॉल करें
 MSG_RESTORE=विंडो पुनर्स्थापित करें
 MSG_DOUBLE_CLICK_ACTION=डाउनलोड आइटम पर डबल क्लिक करें
 MSG_OPEN_FILE=फ़ाइल खोलें

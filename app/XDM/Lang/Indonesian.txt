@@ -204,6 +204,7 @@ MSG_TIME=Waktu
 STAT_ASSEMBLING=Perakitan
 STAT_WAITING=Menunggu
 MSG_UPDATE_AVAILABLE=Pembaruan tersedia
+MSG_INSTALL_UPDATE=Pasang pembaruan
 MSG_RESTORE=Kembalikan Jendela
 MSG_DOUBLE_CLICK_ACTION=Klik dua kali pada item unduhan
 MSG_OPEN_FILE=Buka berkas
