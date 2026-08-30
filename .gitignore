@@ -387,6 +387,7 @@ app/XDM/XDM.Linux.Installer/xdman_gtk_*_amd64/
 
 # Local clutter
 .superpowers/
+.worktrees/
 .kilo/
 .commandcode/
 build_log.txt
