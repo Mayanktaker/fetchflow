@@ -140,20 +140,20 @@ button:focus {
   outline-offset: -4px;
 }
 
-/* Flat buttons — toolbars, icon/utility buttons */
+/* Flat buttons — ghost chips (toolbars, icon/utility buttons) */
 button.flat {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.06);
   border-color: transparent;
   box-shadow: none;
 }
 
 button.flat:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.10);
   border-color: transparent;
 }
 
 button.flat:active {
-  background-color: rgba(255, 255, 255, 0.14);
+  background-color: rgba(255, 255, 255, 0.15);
   border-color: transparent;
 }
 
@@ -163,7 +163,7 @@ button.flat:checked {
 }
 
 button.flat:disabled {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.06);
   color: #757575;
 }
 
@@ -227,7 +227,7 @@ button.destructive-action:focus {
 
 /* Colored flat buttons — toolbar Start (blue) / Remove+Delete (red) */
 button.flat.suggested-action {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.06);
   border-color: transparent;
   color: #6ea8ec;
   box-shadow: none;
@@ -245,7 +245,7 @@ button.flat.suggested-action:active {
 }
 
 button.flat.destructive-action {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.06);
   border-color: transparent;
   color: #ef6a70;
   box-shadow: none;
@@ -264,7 +264,7 @@ button.flat.destructive-action:active {
 
 button.flat.suggested-action:disabled,
 button.flat.destructive-action:disabled {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.06);
   color: #757575;
 }
 
@@ -538,7 +538,7 @@ button:backdrop:hover {
 }
 
 button.flat:backdrop {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.06);
   border-color: transparent;
   color: #b0b0b0;
 }
@@ -553,10 +553,10 @@ button.destructive-action:backdrop {
   border-color: #931b21;
 }
 
-/* Flat toolbar variants must stay borderless ghosts even in backdrop */
+/* Flat toolbar variants must stay borderless ghost chips even in backdrop */
 button.flat.suggested-action:backdrop,
 button.flat.destructive-action:backdrop {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.06);
   border-color: transparent;
 }
 

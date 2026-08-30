@@ -140,20 +140,20 @@ button:focus {
   outline-offset: -4px;
 }
 
-/* Flat buttons — toolbars, icon/utility buttons */
+/* Flat buttons — ghost chips (toolbars, icon/utility buttons) */
 button.flat {
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.05);
   border-color: transparent;
   box-shadow: none;
 }
 
 button.flat:hover {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: rgba(0, 0, 0, 0.09);
   border-color: transparent;
 }
 
 button.flat:active {
-  background-color: rgba(0, 0, 0, 0.12);
+  background-color: rgba(0, 0, 0, 0.13);
   border-color: transparent;
 }
 
@@ -163,7 +163,7 @@ button.flat:checked {
 }
 
 button.flat:disabled {
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.05);
   color: #9a9a9a;
 }
 
@@ -227,7 +227,7 @@ button.destructive-action:focus {
 
 /* Colored flat buttons — toolbar Start (blue) / Remove+Delete (red) */
 button.flat.suggested-action {
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.05);
   border-color: transparent;
   color: #1e6fd0;
   box-shadow: none;
@@ -245,7 +245,7 @@ button.flat.suggested-action:active {
 }
 
 button.flat.destructive-action {
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.05);
   border-color: transparent;
   color: #c11e25;
   box-shadow: none;
@@ -264,7 +264,7 @@ button.flat.destructive-action:active {
 
 button.flat.suggested-action:disabled,
 button.flat.destructive-action:disabled {
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.05);
   color: #9a9a9a;
 }
 
@@ -538,7 +538,7 @@ button:backdrop:hover {
 }
 
 button.flat:backdrop {
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.05);
   border-color: transparent;
   color: #6a6a6a;
 }
@@ -553,10 +553,10 @@ button.destructive-action:backdrop {
   border-color: #b8454c;
 }
 
-/* Flat toolbar variants must stay borderless ghosts even in backdrop */
+/* Flat toolbar variants must stay borderless ghost chips even in backdrop */
 button.flat.suggested-action:backdrop,
 button.flat.destructive-action:backdrop {
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.05);
   border-color: transparent;
 }
 
