@@ -306,7 +306,9 @@ namespace XDM.GtkUI.Utils
             var hb = new HeaderBar
             {
                 Title = title,
-                ShowCloseButton = true
+                ShowCloseButton = true,
+                // Enforce close-only dialog chrome regardless of system gtk-decoration-layout
+                DecorationLayout = ":close"
             };
             dlg.Titlebar = hb;
         }
