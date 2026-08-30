@@ -181,6 +181,10 @@ namespace XDM.GtkUI
             {
                 sidebarList.SelectRow(defaultRow);
             }
+            // Apply the selected row's UI state explicitly: Browse-mode ListBox may have
+            // auto-selected "unfinished" before the list views existed, so the
+            // selection-changed callback bailed out and never ran (Task 3 fix round 1)
+            OnCategoryChanged(sidebarList, EventArgs.Empty);
             UpdateBrowserMonitorButton();
             CreateMenu();
             SetDefaultSize(800, 500);
