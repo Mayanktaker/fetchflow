@@ -340,18 +340,29 @@ namespace XDM.GtkUI.Utils
             // Fallback: Gdk.Pixbuf.FromSurface, the Pixbuf(Stream) ctor and the
             // WriteToPng(Stream) overload are all absent from this GtkSharp/CairoSharp
             // binding; round-trip the surface through a temp PNG file instead
-            var tmpPng = Path.GetTempFileName();
             try
             {
-                surface.WriteToPng(tmpPng);
-                var tile = new Gdk.Pixbuf(tmpPng);
-                icon.Composite(tile, 5, 5, icon.Width, icon.Height, 5, 5, 1, 1, Gdk.InterpType.Bilinear, 255);
-                iconTileCache[key] = tile;
-                return tile;
+                var tmpPng = Path.GetTempFileName();
+                try
+                {
+                    surface.WriteToPng(tmpPng);
+                    var tile = new Gdk.Pixbuf(tmpPng);
+                    icon.Composite(tile, 5, 5, icon.Width, icon.Height, 5, 5, 1, 1, Gdk.InterpType.Bilinear, 255);
+                    iconTileCache[key] = tile;
+                    return tile;
+                }
+                finally
+                {
+                    // Best-effort cleanup: a delete failure must never invalidate the tile
+                    try { File.Delete(tmpPng); }
+                    catch { /* leave the temp file; never fail rendering over cleanup */ }
+                }
             }
-            finally
+            catch (Exception)
             {
-                File.Delete(tmpPng);
+                // Last-resort degradation (spec §4.4): plain SVG icon when the temp
+                // round-trip fails (e.g. unwritable or unavailable temp directory)
+                return LoadSvg(name, dimension - 6);
             }
         }
 
