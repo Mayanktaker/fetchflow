@@ -561,8 +561,11 @@ namespace XDM.GtkUI
 
         private Widget CreateToolbar()
         {
-            var toolbar = new HBox(false, 5);
+            var toolbar = new HBox(false, 8);
             btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"));
+            // Primary action: filled blue pill instead of flat (spec §4.3)
+            btnNew.StyleContext.RemoveClass("flat");
+            btnNew.StyleContext.AddClass("suggested-action");
             toolbar.PackStart(btnNew, false, false, 0);
             btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"));
             // Immediate destructive trigger — red flat variant, matching queue manager
@@ -581,13 +584,16 @@ namespace XDM.GtkUI
             toolbar.PackEnd(btnMenu, false, false, 0);
 
             var searchEntry = new Entry() { WidthChars = 15, PlaceholderText = TextResource.GetText("LBL_SEARCH") };
+            searchEntry.StyleContext.AddClass("search-pill");
             searchEntry.Activated += (a, b) =>
             {
                 searchKeyword = searchEntry.Text;
                 finishedDownloadFilter.Refilter();
             };
             toolbar.PackEnd(searchEntry, false, false, 0);
-            toolbar.Margin = 5;
+            toolbar.Margin = 8;
+            toolbar.MarginTop = 6;
+            toolbar.MarginBottom = 6;
             toolbar.ShowAll();
 
             btnOpenFile.Visible = false;
