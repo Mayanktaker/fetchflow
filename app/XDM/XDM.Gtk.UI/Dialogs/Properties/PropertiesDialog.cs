@@ -103,7 +103,9 @@ namespace XDM.GtkUI.Dialogs.Properties
         {
             var builder = new Builder();
             builder.AddFromFile(IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "glade", "properties-dialog.glade"));
-            return new PropertiesDialog(builder, parent, group);
+            var dlg = new PropertiesDialog(builder, parent, group);
+            GtkHelper.AttachHeaderBar(dlg, TextResource.GetText("MENU_PROPERTIES"));
+            return dlg;
         }
     }
 }

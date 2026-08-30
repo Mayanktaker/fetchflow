@@ -300,6 +300,17 @@ namespace XDM.GtkUI.Utils
                     AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg"), dimension, dimension, true);
         }
 
+        // Compact close-only headerbar for glade dialogs (spec §5); Window param covers Dialog subclasses too
+        public static void AttachHeaderBar(Window dlg, string title)
+        {
+            var hb = new HeaderBar
+            {
+                Title = title,
+                ShowCloseButton = true
+            };
+            dlg.Titlebar = hb;
+        }
+
         // Rounded icon tiles: SVG icon composited on a tinted rounded square (spec §4.4)
         private static readonly Dictionary<string, Gdk.Pixbuf> iconTileCache = new();
 

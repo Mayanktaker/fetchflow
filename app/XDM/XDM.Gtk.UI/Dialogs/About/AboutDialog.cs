@@ -51,7 +51,9 @@ namespace XDM.GtkUI.Dialogs.About
         {
             var builder = new Builder();
             builder.AddFromFile(IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "glade", "about-dialog.glade"));
-            return new AboutDialog(builder, parent, group);
+            var dlg = new AboutDialog(builder, parent, group);
+            GtkHelper.AttachHeaderBar(dlg, TextResource.GetText("MENU_ABOUT"));
+            return dlg;
         }
     }
 }

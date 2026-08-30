@@ -740,7 +740,9 @@ namespace XDM.GtkUI.Dialogs.Settings
         {
             var builder = new Builder();
             builder.AddFromFile(IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "glade", "settings-dialog.glade"));
-            return new SettingsDialog(builder, parent, group);
+            var dlg = new SettingsDialog(builder, parent, group);
+            GtkHelper.AttachHeaderBar(dlg, TextResource.GetText("TITLE_SETTINGS"));
+            return dlg;
         }
     }
 }

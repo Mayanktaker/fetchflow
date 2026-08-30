@@ -499,7 +499,9 @@ namespace XDM.GtkUI.Dialogs.QueueScheduler
         {
             var builder = new Builder();
             builder.AddFromFile(IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "glade", "queue-manager-dialog.glade"));
-            return new QueueSchedulerDialog(builder, parent, group);
+            var dlg = new QueueSchedulerDialog(builder, parent, group);
+            GtkHelper.AttachHeaderBar(dlg, TextResource.GetText("DESC_Q_TITLE"));
+            return dlg;
         }
 
         private void LoadTexts()

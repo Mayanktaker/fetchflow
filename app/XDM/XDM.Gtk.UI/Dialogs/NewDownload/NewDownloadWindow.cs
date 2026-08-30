@@ -50,7 +50,9 @@ namespace XDM.GtkUI.Dialogs.NewDownload
         {
             var builder = new Builder();
             builder.AddFromFile(IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "glade", "new-download-window.glade"));
-            return new NewDownloadWindow(builder);
+            var dlg = new NewDownloadWindow(builder);
+            GtkHelper.AttachHeaderBar(dlg, TextResource.GetText("ND_TITLE"));
+            return dlg;
         }
 
         private NewDownloadWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))

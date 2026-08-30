@@ -101,7 +101,9 @@ namespace XDM.GtkUI.Dialogs.Language
         {
             var builder = new Builder();
             builder.AddFromFile(IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "glade", "language-dialog.glade"));
-            return new LanguageDialog(builder, parent, group);
+            var dlg = new LanguageDialog(builder, parent, group);
+            GtkHelper.AttachHeaderBar(dlg, TextResource.GetText("MENU_LANG"));
+            return dlg;
         }
     }
 }
