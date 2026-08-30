@@ -31,6 +31,38 @@ namespace XDM.GtkUI
             }
             Log.Debug("Application_Startup");
             Environment.SetEnvironmentVariable("GTK_USE_PORTAL", "1");
+
+            // Bundled Inter font: install user-level so fontconfig/Pango can resolve it (idempotent, crash-safe)
+            try
+            {
+                var fontDir = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".local/share/fonts/XDM");
+                var fontTarget = System.IO.Path.Combine(fontDir, "Inter-Variable.ttf");
+                if (!System.IO.File.Exists(fontTarget))
+                {
+                    // First run (or fresh profile): copy the bundled font, no sudo needed
+                    System.IO.Directory.CreateDirectory(fontDir);
+                    System.IO.File.Copy(
+                        System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fonts", "Inter-Variable.ttf"),
+                        fontTarget);
+                    // Refresh fontconfig cache for that directory only, synchronously with a short timeout
+                    using var fcCache = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "fc-cache",
+                        Arguments = "-f \"" + fontDir + "\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                    fcCache?.WaitForExit(5000);
+                }
+            }
+            catch (Exception fontEx)
+            {
+                // Font is cosmetic — theme CSS falls back to Cantarell; never block startup
+                Log.Debug("Non-fatal: Inter font install skipped: " + fontEx.Message);
+            }
+
             Gtk.Application.Init("xdm-app", ref args);
             GLib.ExceptionManager.UnhandledException += ExceptionManager_UnhandledException;
             var globalStyleSheet = @"

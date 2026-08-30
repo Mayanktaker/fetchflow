@@ -9,6 +9,7 @@
  *   destructive #e01b24 (hover #ef4a52 / active #a5121a)
  *   brand #f97316 (hover #fb923c) · success #4ade80
  *   radius: sm 6 · md 8 · lg 10 · pill 999 · spacing 4/8/12/16/24
+ *   font stack: "Inter" (bundled, user-installed at startup) → "Cantarell" → sans-serif
  */
 
 /* Base surfaces */
@@ -16,6 +17,7 @@ window,
 dialog {
   background-color: #1d1d1d;
   color: #f4f4f4;
+  font-family: "Inter", "Cantarell", sans-serif;
 }
 
 headerbar {
@@ -45,6 +47,7 @@ separator {
 treeview {
   background-color: #232323;
   color: #e4e4e4;
+  font-family: "Inter", "Cantarell", sans-serif;
 }
 
 treeview:hover {
@@ -151,6 +154,7 @@ button.flat:hover {
 
 button.flat:active {
   background-color: rgba(255, 255, 255, 0.14);
+  border-color: transparent;
 }
 
 button.flat:checked {
@@ -231,11 +235,13 @@ button.flat.suggested-action {
 
 button.flat.suggested-action:hover {
   background-color: rgba(53, 132, 228, 0.18);
+  border-color: transparent;
   color: #8fbcf3;
 }
 
 button.flat.suggested-action:active {
   background-color: rgba(53, 132, 228, 0.30);
+  border-color: transparent;
 }
 
 button.flat.destructive-action {
@@ -247,11 +253,13 @@ button.flat.destructive-action {
 
 button.flat.destructive-action:hover {
   background-color: rgba(224, 27, 36, 0.18);
+  border-color: transparent;
   color: #f4888d;
 }
 
 button.flat.destructive-action:active {
   background-color: rgba(224, 27, 36, 0.30);
+  border-color: transparent;
 }
 
 button.flat.suggested-action:disabled,
@@ -459,6 +467,31 @@ treeview row:hover {
   background-color: rgba(255, 255, 255, 0.04);
 }
 
+/* Quiet column headers — flat surface, dim small text, no button chrome */
+treeview header {
+  background-color: transparent;
+  border-style: none;
+}
+
+treeview header button {
+  background-color: transparent;
+  border-style: none;
+  box-shadow: none;
+  color: #8a8a8a;
+  font-size: 10px;
+  font-weight: normal;
+  padding: 4px 8px;
+}
+
+treeview header button:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+treeview header button:backdrop {
+  background-color: transparent;
+  border-style: none;
+}
+
 /* Pill progress with gradient fill (also styles CellRendererProgress) */
 progressbar progress {
   background-image: linear-gradient(to right, #3584e4, #5a9bea);
@@ -506,6 +539,7 @@ button:backdrop:hover {
 
 button.flat:backdrop {
   background-color: transparent;
+  border-color: transparent;
   color: #b0b0b0;
 }
 
@@ -517,6 +551,13 @@ button.suggested-action:backdrop {
 button.destructive-action:backdrop {
   background-color: #b9232a;
   border-color: #931b21;
+}
+
+/* Flat toolbar variants must stay borderless ghosts even in backdrop */
+button.flat.suggested-action:backdrop,
+button.flat.destructive-action:backdrop {
+  background-color: transparent;
+  border-color: transparent;
 }
 
 entry:backdrop {
