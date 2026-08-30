@@ -188,6 +188,8 @@ namespace XDM.GtkUI
             UpdateBrowserMonitorButton();
             CreateMenu();
             SetDefaultSize(800, 500);
+            // Responsive floor: nothing clips below this (spec §4.4)
+            SetSizeRequest(640, 420);
 
             clipboarMonitor = new PollingClipboardMonitor();
             clipboarMonitor.ClipboardChanged += (_, _) => this.ClipboardChanged?.Invoke(this, EventArgs.Empty);
@@ -855,7 +857,8 @@ namespace XDM.GtkUI
                 Reorderable = false,
                 Title = TextResource.GetText("SORT_NAME"),
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 200
+                Expand = true,
+                FixedWidth = 240
             };
 
             var fileIconRenderer = new CellRendererPixbuf { };
@@ -863,9 +866,18 @@ namespace XDM.GtkUI
             fileNameColumn.PackStart(fileIconRenderer, false);
             fileNameColumn.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
+            // Two-line name cell: filename over a dimmed status line
             var fileNameRendererText = new CellRendererText();
             fileNameColumn.PackStart(fileNameRendererText, false);
-            fileNameColumn.SetAttributes(fileNameRendererText, "text", 0);
+            fileNameColumn.SetCellDataFunc(fileNameRendererText, new CellLayoutDataFunc(
+                (_, cell, model, iter) =>
+                {
+                    var name = (string)model.GetValue(iter, 0);
+                    var status = (string)model.GetValue(iter, 4);
+                    ((CellRendererText)cell).Markup =
+                        $"{GLib.Markup.EscapeText(name)}\n" +
+                        $"<span alpha=\"{SecondaryTextAlpha}\" size=\"8500\">{GLib.Markup.EscapeText(status)}</span>";
+                }));
             lvInprogress.AppendColumn(fileNameColumn);
 
             //Last modified column
@@ -912,7 +924,8 @@ namespace XDM.GtkUI
                 Resizable = true,
                 Reorderable = false,
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 80
+                MinWidth = 90,
+                FixedWidth = 110
             };
             progressColumn.SetAttributes(fileRendererProgress, "value", 3);
             lvInprogress.AppendColumn(progressColumn);
@@ -1019,6 +1032,7 @@ namespace XDM.GtkUI
                 Reorderable = false,
                 Title = TextResource.GetText("SORT_NAME"),
                 Sizing = TreeViewColumnSizing.Fixed,
+                Expand = true,
                 FixedWidth = 400
             };
 
@@ -1092,8 +1106,8 @@ namespace XDM.GtkUI
                 CellRenderer cell, ITreeModel tree_model, TreeIter iter)
         {
             var name = (string)tree_model.GetValue(iter, 0);
-            var pix = LoadSvg(IconResource.GetSVGNameForFileType(name), 20);
-            ((CellRendererPixbuf)cell).Pixbuf = pix;
+            ((CellRendererPixbuf)cell).Pixbuf = GtkHelper.LoadIconTile(
+                IconResource.GetSVGNameForFileType(name), 28);
         }
 
         // Pango alpha for secondary list text: 60% opacity on the 0-65535 scale

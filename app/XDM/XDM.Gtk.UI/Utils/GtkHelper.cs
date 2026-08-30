@@ -300,6 +300,61 @@ namespace XDM.GtkUI.Utils
                     AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg"), dimension, dimension, true);
         }
 
+        // Rounded icon tiles: SVG icon composited on a tinted rounded square (spec §4.4)
+        private static readonly Dictionary<string, Gdk.Pixbuf> iconTileCache = new();
+
+        // Drops cached tiles so a theme swap re-tints them for the new mode
+        public static void ClearIconTileCache() => iconTileCache.Clear();
+
+        public static Gdk.Pixbuf LoadIconTile(string name, int dimension = 28, bool? dark = null)
+        {
+            var isDark = dark ?? ThemeManager.IsDark;
+            var key = $"{name}@{dimension}|{(isDark ? "d" : "l")}";
+            if (iconTileCache.TryGetValue(key, out var cached))
+            {
+                return cached;
+            }
+            var icon = LoadSvg(name, dimension - 10);
+            using var surface = new Cairo.ImageSurface(Cairo.Format.Argb32, dimension, dimension);
+            using (var cr = new Cairo.Context(surface))
+            {
+                double r = 8, d = dimension;
+                cr.NewSubPath();
+                cr.Arc(d - r, r, r, -Math.PI / 2, 0);
+                cr.Arc(d - r, d - r, r, 0, Math.PI / 2);
+                cr.Arc(r, d - r, r, Math.PI / 2, Math.PI);
+                cr.Arc(r, r, r, Math.PI, 1.5 * Math.PI);
+                cr.ClosePath();
+                // Neutral tint token: white @6% on dark, black @6% on light
+                if (isDark)
+                {
+                    cr.SetSourceRGBA(1.0, 1.0, 1.0, 0.06);
+                }
+                else
+                {
+                    cr.SetSourceRGBA(0.0, 0.0, 0.0, 0.06);
+                }
+                cr.Fill();
+            }
+            surface.Flush();
+            // Fallback: Gdk.Pixbuf.FromSurface, the Pixbuf(Stream) ctor and the
+            // WriteToPng(Stream) overload are all absent from this GtkSharp/CairoSharp
+            // binding; round-trip the surface through a temp PNG file instead
+            var tmpPng = Path.GetTempFileName();
+            try
+            {
+                surface.WriteToPng(tmpPng);
+                var tile = new Gdk.Pixbuf(tmpPng);
+                icon.Composite(tile, 5, 5, icon.Width, icon.Height, 5, 5, 1, 1, Gdk.InterpType.Bilinear, 255);
+                iconTileCache[key] = tile;
+                return tile;
+            }
+            finally
+            {
+                File.Delete(tmpPng);
+            }
+        }
+
         public static string? SelectFolder(Window parent)
         {
             using var fc = new FileChooserNative("XDM", parent, FileChooserAction.SelectFolder, 

@@ -22,9 +22,13 @@ namespace XDM.GtkUI.Utils
         // Provider currently attached to the default screen (null = none attached yet)
         private static CssProvider? currentThemeProvider;
 
+        // Current theme mode for icon-tile tinting
+        public static bool IsDark { get; private set; } = true;
+
         // Swaps the theme provider on the default screen and applies the GTK dark preference
         public static void ApplyTheme(bool dark)
         {
+            IsDark = dark;
             var cssFile = dark ? DarkThemeCssFile : LightThemeCssFile;
             var cssPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ThemeDir, cssFile);
             try
@@ -51,6 +55,8 @@ namespace XDM.GtkUI.Utils
                     }
                     Gtk.StyleContext.AddProviderForScreen(screen, provider, ThemeProviderPriority);
                     currentThemeProvider = provider;
+                    // Icon tiles are tinted per theme mode; re-tint on a successful swap
+                    GtkHelper.ClearIconTileCache();
                 }
             }
             catch (Exception cssEx)
