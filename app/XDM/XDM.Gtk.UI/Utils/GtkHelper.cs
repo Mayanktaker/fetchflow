@@ -300,6 +300,69 @@ namespace XDM.GtkUI.Utils
                     AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg"), dimension, dimension, true);
         }
 
+        // Tinted SVG pixbufs keyed by (name, size, tint); cleared alongside icon tiles on theme swap
+        private static readonly Dictionary<string, Gdk.Pixbuf> tintedSvgCache = new();
+
+        // Drops cached tinted pixbufs so a theme swap rebuilds them
+        public static void ClearTintedSvgCache()
+        {
+            // Refcount hygiene: release each pixbuf's native handle before clearing
+            foreach (var pixbuf in tintedSvgCache.Values)
+            {
+                pixbuf.Dispose();
+            }
+            tintedSvgCache.Clear();
+        }
+
+        // Cache write that disposes any pixbuf it evicts (mirrors CacheTile)
+        private static void CacheTinted(string key, Gdk.Pixbuf pixbuf)
+        {
+            if (tintedSvgCache.TryGetValue(key, out var evicted))
+            {
+                evicted.Dispose();
+            }
+            tintedSvgCache[key] = pixbuf;
+        }
+
+        // Loads an SVG with every fill/stroke paint attribute re-tinted (white icons on the selected pill)
+        public static Gdk.Pixbuf LoadSvgTinted(string name, int dimension, string hexTint)
+        {
+            try
+            {
+                var key = $"{name}@{dimension}|{hexTint}";
+                if (tintedSvgCache.TryGetValue(key, out var cached))
+                {
+                    return cached;
+                }
+                // Recolor paint attributes only; "none" and fill-*/stroke-* siblings stay untouched
+                var svgPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg");
+                var svg = System.Text.RegularExpressions.Regex.Replace(
+                    File.ReadAllText(svgPath),
+                    "(fill|stroke)=\"(?!none)(#[0-9a-fA-F]{3,8}|[a-zA-Z][a-zA-Z0-9]*)\"",
+                    "$1=\"" + hexTint + "\"");
+                // Round-trip through a temp file: same pattern as the icon-tile PNG path
+                var tmpSvg = Path.GetTempFileName();
+                try
+                {
+                    File.WriteAllText(tmpSvg, svg);
+                    var pixbuf = new Gdk.Pixbuf(tmpSvg, dimension, dimension, true);
+                    CacheTinted(key, pixbuf);
+                    return pixbuf;
+                }
+                finally
+                {
+                    // Best-effort cleanup: a delete failure must never invalidate the pixbuf
+                    try { File.Delete(tmpSvg); }
+                    catch { /* leave the temp file; never fail rendering over cleanup */ }
+                }
+            }
+            catch (Exception)
+            {
+                // Degradation: untinted icon beats no icon (mirrors the tile fallback)
+                return LoadSvg(name, dimension);
+            }
+        }
+
         // Compact close-only headerbar for glade dialogs (spec §5); Window param covers Dialog subclasses too
         public static void AttachHeaderBar(Window dlg, string title)
         {

@@ -33,6 +33,7 @@ namespace XDM.GtkUI
         private ListBox sidebarList;
         private readonly Dictionary<string, ListBoxRow> sidebarRowWidgets = new();
         private readonly Dictionary<string, Label> sidebarBadges = new();
+        private readonly Dictionary<string, (Image img, string icon)> sidebarRowIcons = new();
         private readonly List<SidebarRow> sidebarRows = new();
         private string firstCategoryKey = string.Empty; // header-func anchor
         private ListStore inprogressDownloadsStore, finishedDownloadsStore;
@@ -120,6 +121,9 @@ namespace XDM.GtkUI
         private const int FINISHED_DATA_INDEX = 3;
         private const int INPROGRESS_DATA_INDEX = 5;
 
+        // White tint token for the selected sidebar row's icon (sits on the blue pill)
+        private const string SelectedIconTint = "#ffffff";
+
         private Menu menuInProgress, menuFinished;
         private IPlatformClipboardMonitor clipboarMonitor;
 
@@ -189,7 +193,7 @@ namespace XDM.GtkUI
             OnCategoryChanged(sidebarList, EventArgs.Empty);
             UpdateBrowserMonitorButton();
             CreateMenu();
-            SetDefaultSize(800, 500);
+            SetDefaultSize(960, 500);
             // Responsive floor: nothing clips below this (spec §4.4)
             SetSizeRequest(640, 420);
 
@@ -709,7 +713,8 @@ namespace XDM.GtkUI
         {
             var iconTile = new EventBox { AboveChild = false, VisibleWindow = false };
             iconTile.StyleContext.AddClass("icon-tile");
-            iconTile.Add(new Image(LoadSvg(iconName, 16)));
+            var iconImage = new Image(LoadSvg(iconName, 16));
+            iconTile.Add(iconImage);
 
             var badge = new Label { Text = "0", Visible = false };
             badge.StyleContext.AddClass("sidebar-badge");
@@ -726,6 +731,7 @@ namespace XDM.GtkUI
             sidebarRows.Add(info);
             sidebarRowWidgets[info.Key] = row;
             sidebarBadges[info.Key] = badge;
+            sidebarRowIcons[info.Key] = (iconImage, iconName);
             if (info.Category != null && string.IsNullOrEmpty(firstCategoryKey))
             {
                 firstCategoryKey = info.Key;
@@ -746,6 +752,7 @@ namespace XDM.GtkUI
                 }
                 sidebarRowWidgets.Remove(row.Key);
                 sidebarBadges.Remove(row.Key);
+                sidebarRowIcons.Remove(row.Key);
                 sidebarRows.Remove(row);
             }
             firstCategoryKey = string.Empty;
@@ -773,6 +780,21 @@ namespace XDM.GtkUI
             UpdateSidebarCounts();
         }
 
+        // Swaps sidebar icons: selected row gets the white-tinted pixbuf, all others revert to normal
+        private void ApplySidebarIconTint(string selectedKey)
+        {
+            foreach (var (key, entry) in sidebarRowIcons)
+            {
+                if (entry.img == null || string.IsNullOrEmpty(entry.icon))
+                {
+                    continue;
+                }
+                entry.img.Pixbuf = key == selectedKey
+                    ? GtkHelper.LoadSvgTinted(entry.icon, 16, SelectedIconTint)
+                    : LoadSvg(entry.icon, 16);
+            }
+        }
+
         // Sidebar selection drives main panel + headerbar subtitle (parity map above)
         private void OnCategoryChanged(object? sender, EventArgs e)
         {
@@ -790,6 +812,8 @@ namespace XDM.GtkUI
             {
                 return;
             }
+            // White-tint the selected row's icon (on the blue pill); others revert to normal
+            ApplySidebarIconTint(row.Name);
             headerSubtitle.Text = info.Label;
             if (info.IsUnfinished)
             {

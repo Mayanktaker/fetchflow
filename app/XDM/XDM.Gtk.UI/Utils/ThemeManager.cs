@@ -55,8 +55,9 @@ namespace XDM.GtkUI.Utils
                     }
                     Gtk.StyleContext.AddProviderForScreen(screen, provider, ThemeProviderPriority);
                     currentThemeProvider = provider;
-                    // Icon tiles are tinted per theme mode; re-tint on a successful swap
+                    // Icon tiles + tinted sidebar icons are tinted per theme mode; re-tint on a successful swap
                     GtkHelper.ClearIconTileCache();
+                    GtkHelper.ClearTintedSvgCache();
                 }
             }
             catch (Exception cssEx)

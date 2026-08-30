@@ -43,6 +43,17 @@ separator {
   min-height: 1px;
 }
 
+/* Thin, unobtrusive pane divider */
+paned > separator {
+  min-width: 1px;
+  min-height: 1px;
+  background-color: #0d0d0d;
+}
+
+paned > separator:backdrop {
+  background-color: #0b0b0b;
+}
+
 /* Sidebar + content lists (GTK3 paints row states on the treeview node itself) */
 treeview {
   background-color: #232323;

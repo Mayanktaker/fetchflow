@@ -67,7 +67,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             builder.Autoconnect(this);
 
             Modal = true;
-            SetDefaultSize(640, 480);
+            SetDefaultSize(768, 480);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
             this.group = group;
