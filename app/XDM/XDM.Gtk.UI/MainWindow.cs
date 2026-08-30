@@ -40,6 +40,8 @@ namespace XDM.GtkUI
         private bool isUpdateAvailable;
         private Image helpImage;
         private Label helpLabel;
+        private Label headerSubtitle;
+        private Label brandStatusDot;
         private TrayIconManager trayManager;
 
         internal WindowGroup GetWindowGroup() => this.windowGroup;
@@ -132,6 +134,25 @@ namespace XDM.GtkUI
             DeleteEvent += AppWin1_DeleteEvent;
             this.windowGroup = new WindowGroup();
             this.windowGroup.AddWindow(this);
+
+            // CSD headerbar: brand mark + title + subtitle, themed min/max/close (spec §4.1)
+            var titleBox = new HBox(false, 8);
+            titleBox.PackStart(new Image(GtkHelper.LoadSvg("xdm-mark", 22)), false, false, 0);
+            titleBox.PackStart(new Label { Markup = "<b>XDM</b>" }, false, false, 0);
+            headerSubtitle = new Label { Text = TextResource.GetText("ALL_UNFINISHED") };
+            headerSubtitle.StyleContext.AddClass("dim-label");
+            titleBox.PackStart(headerSubtitle, false, false, 0);
+            brandStatusDot = new Label { Text = "●", TooltipText = TextResource.GetText("SETTINGS_MONITORING") };
+            brandStatusDot.StyleContext.AddClass("status-dot");
+            titleBox.PackStart(brandStatusDot, false, false, 4);
+
+            var headerBar = new HeaderBar
+            {
+                CustomTitle = titleBox,
+                ShowCloseButton = true,
+                DecorationLayout = ":minimize,maximize,close"
+            };
+            Titlebar = headerBar;
 
             var hbMain = new HBox();
             hbMain.PackStart(CreateCategoryTree(), false, true, 0);
@@ -1325,6 +1346,7 @@ namespace XDM.GtkUI
         public void UpdateBrowserMonitorButton()
         {
             btnMonitoring.Active = Config.Instance.IsBrowserMonitoringEnabled;
+            brandStatusDot.Visible = Config.Instance.IsBrowserMonitoringEnabled;
         }
 
         public void ShowUpdateAvailableNotification()
