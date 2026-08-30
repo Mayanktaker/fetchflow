@@ -129,6 +129,8 @@ namespace XDM.GtkUI
             win.LoadConfig();
             win.Run();
             win.Destroy();
+            // Categories may have changed in Settings — rebuild sidebar rows
+            (GetMainWindow() as MainWindow)?.RefreshCategories();
         }
 
         public AuthenticationInfo? PromtForCredentials(string message)

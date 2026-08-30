@@ -1,5 +1,7 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gtk;
 using Application = Gtk.Application;
 using IoPath = System.IO.Path;
@@ -19,8 +21,20 @@ namespace XDM.GtkUI
 {
     public class MainWindow : Window, IApplicationWindow
     {
-        private TreeStore categoryTreeStore;
-        private TreeView categoryTree;
+        // Modern sidebar: ListBox rows keyed by id (spec §4.2)
+        private sealed class SidebarRow
+        {
+            public string Key = string.Empty;      // "unfinished" | "finished" | category name
+            public string Label = string.Empty;
+            public Category? Category;             // null for the two fixed rows
+            public bool IsUnfinished;              // true only for "All Unfinished"
+        }
+
+        private ListBox sidebarList;
+        private readonly Dictionary<string, ListBoxRow> sidebarRowWidgets = new();
+        private readonly Dictionary<string, Label> sidebarBadges = new();
+        private readonly List<SidebarRow> sidebarRows = new();
+        private string firstCategoryKey = string.Empty; // header-func anchor
         private ListStore inprogressDownloadsStore, finishedDownloadsStore;
         private TreeView lvInprogress, lvFinished;
         private ScrolledWindow swInProgress, swFinished;
@@ -154,17 +168,18 @@ namespace XDM.GtkUI
             };
             Titlebar = headerBar;
 
-            var hbMain = new HBox();
-            hbMain.PackStart(CreateCategoryTree(), false, true, 0);
-            hbMain.PackStart(CreateMainPanel(), true, true, 0);
-            Add(hbMain);
-            hbMain.Show();
+            // Resizable sidebar (spec §4.2): drag the pane divider
+            var hpaned = new HPaned();
+            hpaned.Pack1(CreateSidebar(), false, false);
+            hpaned.Pack2(CreateMainPanel(), true, false);
+            Add(hpaned);
+            hpaned.Position = 200;
+            hpaned.Show();
 
-            // Sidebar default: row 0 "All Unfinished" — matches the main panel's primary
-            // (top-packed, toolbar-rich) view; guard against an empty store
-            if (categoryTreeStore!.GetIterFirst(out TreeIter iter))
+            // Sidebar default: "All Unfinished" — the toolbar-rich in-progress view
+            if (sidebarRowWidgets.TryGetValue("unfinished", out var defaultRow))
             {
-                categoryTree!.Selection.SelectIter(iter);
+                sidebarList.SelectRow(defaultRow);
             }
             UpdateBrowserMonitorButton();
             CreateMenu();
@@ -592,120 +607,180 @@ namespace XDM.GtkUI
             OpenMainMenu();
         }
 
-        private Widget CreateCategoryTree()
+        // Icon per category name (existing mapping, unchanged)
+        private static string GetFontIcon(string name)
         {
-            string GetFontIcon(string name)
+            switch (name)
             {
-                switch (name)
-                {
-                    case "CAT_DOCUMENTS":
-                        return "file-text-line";
-                    case "CAT_MUSIC":
-                        return "file-music-line";
-                    case "CAT_VIDEOS":
-                        return "movie-line";
-                    case "CAT_COMPRESSED":
-                        return "file-zip-line";
-                    case "CAT_PROGRAMS":
-                        return "function-line";
-                    default:
-                        return "file-line";
-                }
+                case "CAT_DOCUMENTS": return "file-text-line";
+                case "CAT_MUSIC": return "file-music-line";
+                case "CAT_VIDEOS": return "movie-line";
+                case "CAT_COMPRESSED": return "file-zip-line";
+                case "CAT_PROGRAMS": return "function-line";
+                default: return "file-line";
             }
+        }
 
-            categoryTree = new TreeView()
+        // Builds the modern sidebar: brand header + selectable rows (spec §4.2)
+        private Widget CreateSidebar()
+        {
+            sidebarList = new ListBox
             {
-                HeadersVisible = false,
-                ShowExpanders = false,
-                LevelIndentation = 15
+                SelectionMode = SelectionMode.Browse
             };
-            categoryTree.StyleContext.AddClass("dark");
+            sidebarList.StyleContext.AddClass("sidebar");
+            sidebarList.SelectedRowsChanged += OnCategoryChanged;
 
-            var cols = new TreeViewColumn();
-
-            var cell1 = new CellRendererPixbuf();
-            cell1.SetPadding(3, 5);
-            cols.PackStart(cell1, false);
-            cols.AddAttribute(cell1, "pixbuf", 0);
-
-            var cell2 = new CellRendererText();
-            cell2.SetPadding(0, 5);
-            cols.PackStart(cell2, true);
-            cols.AddAttribute(cell2, "text", 1);
-
-            categoryTreeStore = new TreeStore(typeof(Gdk.Pixbuf), typeof(string), typeof(Category));
-            categoryTreeStore.AppendValues(LoadSvg("arrow-down-line"), TextResource.GetText("ALL_UNFINISHED"));
-            var iter = categoryTreeStore.AppendValues(LoadSvg("check-line"), TextResource.GetText("ALL_FINISHED"));
-
+            AddSidebarRow(new SidebarRow
+            {
+                Key = "unfinished",
+                Label = TextResource.GetText("ALL_UNFINISHED"),
+                IsUnfinished = true
+            }, "arrow-down-line");
+            AddSidebarRow(new SidebarRow
+            {
+                Key = "finished",
+                Label = TextResource.GetText("ALL_FINISHED")
+            }, "check-line");
             foreach (var category in Config.Instance.Categories)
             {
-                categoryTreeStore.AppendValues(iter, LoadSvg(GetFontIcon(category.Name), 20),
-                    category.DisplayName, category);
+                AddSidebarRow(new SidebarRow
+                {
+                    Key = category.Name,
+                    Label = category.DisplayName,
+                    Category = category
+                }, GetFontIcon(category.Name));
             }
 
-            categoryTree.AppendColumn(cols);
-            categoryTree.Model = categoryTreeStore;
-            categoryTree.Selection.Mode = SelectionMode.Browse;
-            categoryTree.ExpandAll();
-            categoryTree.Selection.Changed += OnCategoryChanged;
+            // Section header "Categories" above the first category row (native pattern)
+            sidebarList.HeaderFunc = (row, before) =>
+            {
+                if (row.Name == firstCategoryKey && before != null)
+                {
+                    row.Header = BuildSectionHeader();
+                }
+                else
+                {
+                    row.Header = null;
+                }
+            };
 
             var scrolledWindow = new ScrolledWindow
             {
                 OverlayScrolling = true,
-                Margin = 5,
-                MarginEnd = 0
+                ShadowType = ShadowType.None,
+                HscrollbarPolicy = PolicyType.Never,
+                VscrollbarPolicy = PolicyType.Automatic
             };
-            //scrolledWindow.Margin = 5;
-            scrolledWindow.ShadowType = ShadowType.In;
-            scrolledWindow.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
-            scrolledWindow.Add(categoryTree);
-            scrolledWindow.SetSizeRequest(160, 200);
-
+            scrolledWindow.Add(sidebarList);
+            scrolledWindow.SetSizeRequest(170, 200);
             scrolledWindow.ShowAll();
             return scrolledWindow;
         }
 
+        // "CATEGORIES" dim uppercase label used as ListBox row header
+        private static Widget BuildSectionHeader()
+        {
+            var lbl = new Label { Text = TextResource.GetText("SETTINGS_CAT").ToUpperInvariant() };
+            lbl.StyleContext.AddClass("sidebar-section-label");
+            lbl.Xalign = 0;
+            lbl.Show();
+            return lbl;
+        }
+
+        // One selectable sidebar row: icon tile + label + count badge
+        private void AddSidebarRow(SidebarRow info, string iconName)
+        {
+            var iconTile = new EventBox { AboveChild = false, VisibleWindow = false };
+            iconTile.StyleContext.AddClass("icon-tile");
+            iconTile.Add(new Image(LoadSvg(iconName, 16)));
+
+            var badge = new Label { Text = "0", Visible = false };
+            badge.StyleContext.AddClass("sidebar-badge");
+
+            var hbox = new HBox(false, 9) { MarginStart = 8, MarginEnd = 8 };
+            hbox.PackStart(iconTile, false, false, 0);
+            var label = new Label { Text = info.Label, Halign = Align.Start };
+            hbox.PackStart(label, true, true, 0);
+            hbox.PackStart(badge, false, false, 0);
+
+            var row = new ListBoxRow { Name = info.Key };
+            row.Add(hbox);
+
+            sidebarRows.Add(info);
+            sidebarRowWidgets[info.Key] = row;
+            sidebarBadges[info.Key] = badge;
+            if (info.Category != null && string.IsNullOrEmpty(firstCategoryKey))
+            {
+                firstCategoryKey = info.Key;
+            }
+            sidebarList.Add(row);
+        }
+
+        // Rebuilds category rows after Settings changes categories
+        public void RefreshCategories()
+        {
+            foreach (var row in sidebarRows.Where(r => r.Category != null).ToList())
+            {
+                if (sidebarRowWidgets.TryGetValue(row.Key, out var widget))
+                {
+                    sidebarList.Remove(widget);
+                }
+                sidebarRowWidgets.Remove(row.Key);
+                sidebarBadges.Remove(row.Key);
+                sidebarRows.Remove(row);
+            }
+            firstCategoryKey = string.Empty;
+            foreach (var category in Config.Instance.Categories)
+            {
+                AddSidebarRow(new SidebarRow
+                {
+                    Key = category.Name,
+                    Label = category.DisplayName,
+                    Category = category
+                }, GetFontIcon(category.Name));
+            }
+            sidebarList.ShowAll();
+            if (sidebarList.SelectedRow == null && sidebarRowWidgets.TryGetValue("unfinished", out var first))
+            {
+                sidebarList.SelectRow(first);
+            }
+            UpdateSidebarCounts();
+        }
+
+        // Sidebar selection drives main panel + headerbar subtitle (parity map above)
         private void OnCategoryChanged(object? sender, EventArgs e)
         {
             if (lvInprogress == null || lvFinished == null)
             {
                 return;
             }
-            var paths = categoryTree.Selection.GetSelectedRows();
-            if (paths == null || paths.Length == 0)
+            var row = sidebarList.SelectedRow;
+            if (row == null)
             {
                 return;
             }
-
-            if (paths[0].Depth == 1)
+            var info = sidebarRows.FirstOrDefault(r => r.Key == row.Name);
+            if (info == null)
             {
-                var index = paths[0].Indices[0];
-                if (index == 0)
-                {
-                    swInProgress.ShowAll();
-                    swFinished.Hide();
-                    category = null;
-                    btnOpenFile.Visible = btnOpenFolder.Visible = false;
-                    btnPause.Visible = btnResume.Visible = true;
-                }
-                else
-                {
-                    swFinished.ShowAll();
-                    swInProgress.Hide();
-                    category = null;
-                    btnOpenFile.Visible = btnOpenFolder.Visible = true;
-                    btnPause.Visible = btnResume.Visible = false;
-                    finishedDownloadFilter.Refilter();
-                }
+                return;
+            }
+            headerSubtitle.Text = info.Label;
+            if (info.IsUnfinished)
+            {
+                swInProgress.ShowAll();
+                swFinished.Hide();
+                category = null;
+                btnOpenFile.Visible = btnOpenFolder.Visible = false;
+                btnPause.Visible = btnResume.Visible = true;
             }
             else
             {
                 swFinished.ShowAll();
                 swInProgress.Hide();
-                if (categoryTree.Selection.GetSelected(out ITreeModel model, out TreeIter iter))
-                {
-                    category = (Category)model.GetValue(iter, 2);
-                }
+                category = info.Category;
+                btnOpenFile.Visible = btnOpenFolder.Visible = true;
+                btnPause.Visible = btnResume.Visible = false;
                 finishedDownloadFilter.Refilter();
             }
         }
@@ -1189,6 +1264,7 @@ namespace XDM.GtkUI
             inprogressDownloadsStore.SetValue(iter, 3, entry.Progress);
             inprogressDownloadsStore.SetValue(iter, 4, entry.Status.ToString());
             inprogressDownloadsStore.SetValue(iter, 5, entry);
+            UpdateSidebarCounts();
         }
 
         public void AddToTop(FinishedDownloadItem entry)
@@ -1199,15 +1275,14 @@ namespace XDM.GtkUI
                 FormattingHelper.FormatSize(entry.Size),
                 entry);
             finishedDownloadFilter.Refilter();
-            //finishedDownloadsStoreSorted.AppendValues()
-            //sortedStore.SetSortColumnId(1, SortType.Descending);
+            UpdateSidebarCounts();
         }
 
         public void SwitchToInProgressView()
         {
-            if (this.categoryTreeStore.GetIterFirst(out TreeIter iter))
+            if (sidebarRowWidgets.TryGetValue("unfinished", out var row))
             {
-                this.categoryTree.Selection.SelectIter(iter);
+                sidebarList.SelectRow(row);
             }
         }
 
@@ -1218,10 +1293,9 @@ namespace XDM.GtkUI
 
         public void SwitchToFinishedView()
         {
-            if (this.categoryTreeStore.GetIterFirst(out TreeIter iter) &&
-                this.categoryTreeStore.IterNext(ref iter))
+            if (sidebarRowWidgets.TryGetValue("finished", out var row))
             {
-                this.categoryTree.Selection.SelectIter(iter);
+                sidebarList.SelectRow(row);
             }
         }
 
@@ -1268,6 +1342,7 @@ namespace XDM.GtkUI
             //var iter = GtkHelper.ConvertViewToModel(((InProgressEntryWrapper)row).TreeIter,
             //    inprogressDownloadsStoreSorted, inprogressDownloadFilter);
             //inprogressDownloadsStore.Remove(ref iter);
+            UpdateSidebarCounts();
         }
 
         public void Delete(IFinishedDownloadRow row)
@@ -1281,6 +1356,7 @@ namespace XDM.GtkUI
             }
             //var iter = GtkHelper.ConvertViewToModel(((FinishedEntryWrapper)row).TreeIter,
             //    finishedDownloadsStoreSorted, finishedDownloadFilter);
+            UpdateSidebarCounts();
         }
 
         public void DeleteAllFinishedDownloads()
@@ -1290,6 +1366,7 @@ namespace XDM.GtkUI
                 return;
             }
             finishedDownloadsStore.Clear();
+            UpdateSidebarCounts();
         }
 
         public void Delete(IEnumerable<IInProgressDownloadRow> rows)
@@ -1404,6 +1481,7 @@ namespace XDM.GtkUI
                     FormattingHelper.FormatSize(item.Size),
                     item);
             }
+            UpdateSidebarCounts();
         }
 
         private void SetInProgressDownloads(IEnumerable<InProgressDownloadItem> incompleteDownloads)
@@ -1418,6 +1496,7 @@ namespace XDM.GtkUI
                     Helpers.GenerateStatusText(item),
                     item);
             }
+            UpdateSidebarCounts();
         }
 
         private IList<IInProgressDownloadRow> GetSelectedInProgressDownloads()
@@ -1460,12 +1539,65 @@ namespace XDM.GtkUI
 
         private int GetSelectedCategory()
         {
-            var paths = categoryTree.Selection.GetSelectedRows();
-            if (paths != null && paths.Length > 0 && paths[0].Depth == 1)
+            var row = sidebarList?.SelectedRow;
+            if (row == null)
             {
-                return paths[0].Indices[0];
+                return -1;
             }
-            return -1;
+            return row.Name switch
+            {
+                "unfinished" => 0,
+                "finished" => 1,
+                _ => -1
+            };
+        }
+
+        // Recomputes sidebar count badges from the live stores (no timers — spec §7)
+        public void UpdateSidebarCounts()
+        {
+            int inprog = 0, fin = 0;
+            var perCategory = new Dictionary<string, int>();
+            foreach (var cat in Config.Instance.Categories)
+            {
+                perCategory[cat.Name] = 0;
+            }
+            if (inprogressDownloadsStore != null && inprogressDownloadsStore.GetIterFirst(out var it))
+            {
+                do { inprog++; } while (inprogressDownloadsStore.IterNext(ref it));
+            }
+            if (finishedDownloadsStore != null && finishedDownloadsStore.GetIterFirst(out var ft))
+            {
+                do
+                {
+                    fin++;
+                    var name = (string)finishedDownloadsStore.GetValue(ft, 0);
+                    foreach (var cat in Config.Instance.Categories)
+                    {
+                        if (Helpers.IsOfCategoryOrMatchesKeyword(name, null, cat))
+                        {
+                            perCategory[cat.Name]++;
+                        }
+                    }
+                }
+                while (finishedDownloadsStore.IterNext(ref ft));
+            }
+            SetBadge("unfinished", inprog);
+            SetBadge("finished", fin);
+            foreach (var cat in Config.Instance.Categories)
+            {
+                SetBadge(cat.Name, perCategory[cat.Name]);
+            }
+        }
+
+        // Shows a non-zero count pill on the row matching the key
+        private void SetBadge(string key, int count)
+        {
+            if (!sidebarBadges.TryGetValue(key, out var badge))
+            {
+                return;
+            }
+            badge.Text = count.ToString();
+            badge.Visible = count > 0;
         }
 
         public void ConfirmDelete(string text, out bool approved, out bool deleteFiles)
