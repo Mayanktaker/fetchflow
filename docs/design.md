@@ -15,7 +15,7 @@ properties. Spec: docs/superpowers/specs/2026-08-30-xdm-design-system-modernizat
 | pill | 999px | search entry, progress bars, switches, badges |
 
 ## Spacing
-4 / 8 / 12 / 16 / 24 px — all margins, paddings and gaps derive from this scale.
+4 / 8 / 12 / 16 / 24 px — all margins, paddings and gaps derive from this scale. Deliberate optical exceptions exist (e.g. 9px row gaps, 1–3px hairline paddings) where optical balance beats strict scale adherence.
 
 ## Color
 | Role | Dark | Light |

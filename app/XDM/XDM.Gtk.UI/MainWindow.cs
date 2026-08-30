@@ -734,6 +734,8 @@ namespace XDM.GtkUI
         // Rebuilds category rows after Settings changes categories
         public void RefreshCategories()
         {
+            // Capture selection before removal: row.Name mirrors the sidebar row key
+            var selectedKey = sidebarList.SelectedRow?.Name;
             foreach (var row in sidebarRows.Where(r => r.Category != null).ToList())
             {
                 if (sidebarRowWidgets.TryGetValue(row.Key, out var widget))
@@ -755,7 +757,12 @@ namespace XDM.GtkUI
                 }, GetFontIcon(category.Name));
             }
             sidebarList.ShowAll();
-            if (sidebarList.SelectedRow == null && sidebarRowWidgets.TryGetValue("unfinished", out var first))
+            if (selectedKey != null && sidebarRowWidgets.TryGetValue(selectedKey, out var restored))
+            {
+                // Restore the prior selection; fall back to "unfinished" only if it vanished
+                sidebarList.SelectRow(restored);
+            }
+            else if (sidebarList.SelectedRow == null && sidebarRowWidgets.TryGetValue("unfinished", out var first))
             {
                 sidebarList.SelectRow(first);
             }

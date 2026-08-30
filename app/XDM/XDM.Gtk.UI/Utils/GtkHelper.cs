@@ -319,7 +319,25 @@ namespace XDM.GtkUI.Utils
         private static readonly Dictionary<string, Gdk.Pixbuf> iconTileCache = new();
 
         // Drops cached tiles so a theme swap re-tints them for the new mode
-        public static void ClearIconTileCache() => iconTileCache.Clear();
+        public static void ClearIconTileCache()
+        {
+            // Refcount hygiene: release each pixbuf's native handle before clearing
+            foreach (var pixbuf in iconTileCache.Values)
+            {
+                pixbuf.Dispose();
+            }
+            iconTileCache.Clear();
+        }
+
+        // Cache write that disposes any pixbuf it evicts (defensive: key should never re-enter)
+        private static void CacheTile(string key, Gdk.Pixbuf pixbuf)
+        {
+            if (iconTileCache.TryGetValue(key, out var evicted))
+            {
+                evicted.Dispose();
+            }
+            iconTileCache[key] = pixbuf;
+        }
 
         public static Gdk.Pixbuf LoadIconTile(string name, int dimension = 28, bool? dark = null)
         {
@@ -329,7 +347,8 @@ namespace XDM.GtkUI.Utils
             {
                 return cached;
             }
-            var icon = LoadSvg(name, dimension - 10);
+            // using: the icon pixbuf is exclusively ours; dispose it on every exit path
+            using var icon = LoadSvg(name, dimension - 10);
             using var surface = new Cairo.ImageSurface(Cairo.Format.Argb32, dimension, dimension);
             using (var cr = new Cairo.Context(surface))
             {
@@ -363,7 +382,7 @@ namespace XDM.GtkUI.Utils
                     surface.WriteToPng(tmpPng);
                     var tile = new Gdk.Pixbuf(tmpPng);
                     icon.Composite(tile, 5, 5, icon.Width, icon.Height, 5, 5, 1, 1, Gdk.InterpType.Bilinear, 255);
-                    iconTileCache[key] = tile;
+                    CacheTile(key, tile);
                     return tile;
                 }
                 finally
@@ -376,8 +395,11 @@ namespace XDM.GtkUI.Utils
             catch (Exception)
             {
                 // Last-resort degradation (spec §4.4): plain SVG icon when the temp
-                // round-trip fails (e.g. unwritable or unavailable temp directory)
-                return LoadSvg(name, dimension - 6);
+                // round-trip fails (e.g. unwritable or unavailable temp directory);
+                // cache it or every render repeats the failing round-trip
+                var fallback = LoadSvg(name, dimension - 6);
+                CacheTile(key, fallback);
+                return fallback;
             }
         }
 

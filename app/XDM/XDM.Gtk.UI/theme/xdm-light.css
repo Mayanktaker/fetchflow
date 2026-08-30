@@ -401,7 +401,7 @@ list.sidebar row:selected {
 
 /* Sidebar section header ("Categories") via ListBox header func */
 .sidebar-section-label {
-  color: #8a8a8a;
+  color: #6b6b6b;
   font-size: 10px;
   letter-spacing: 0.08em;
   padding: 8px 12px 4px 12px;
