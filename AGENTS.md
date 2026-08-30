@@ -15,7 +15,7 @@ User-facing details live in [README.md](README.md); this file stays lean.
 | Browser extensions | Chrome + Firefox (vanilla JS, in `app/XDM/chrome-extension/` and `app/XDM/firefox-amo/`) |
 | Build host | Fedora Linux x64 (bash); packaging tools: `rpmbuild`, `zip`, `tar` |
 | rpmbuild setup | User-local extraction at `~/.local/rpm-build-root`; `~/.rpmmacros` sets `%_rpmconfigdir` there and `build_all.sh` adds it to `PATH` — RPM builds work without sudo |
-| Version source of truth | `app/XDM/XDM.Linux.Installer/version.env` (currently `9.1.3`) |
+| Version source of truth | `app/XDM/XDM.Linux.Installer/version.env` (currently `9.1.4`) |
 
 ## Key paths & commands
 
