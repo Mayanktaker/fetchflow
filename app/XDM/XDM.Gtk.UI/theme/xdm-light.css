@@ -432,6 +432,26 @@ list.sidebar row:selected .sidebar-badge {
   color: #ffffff;
 }
 
+/* Rounded selection pills for secondary lists (settings sidebar etc.) */
+list.rounded-selection {
+  background-color: transparent;
+}
+
+list.rounded-selection row {
+  border-radius: 8px;
+  margin: 2px 4px;
+  padding: 4px 0px;
+}
+
+list.rounded-selection row:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+list.rounded-selection row:selected {
+  background-color: #3584e4;
+  color: #ffffff;
+}
+
 /* Rounded icon tile (EventBox wrapper around sidebar icons) */
 .icon-tile {
   border-radius: 8px;
@@ -458,9 +478,10 @@ button.suggested-action {
   padding: 6px 14px;
 }
 
-/* Roomier list rows */
+/* Roomier list rows — rounded hover/selection (best-effort in GTK3 treeviews) */
 treeview row {
   padding: 6px 4px;
+  border-radius: 8px;
 }
 
 treeview row:hover {

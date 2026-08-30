@@ -78,6 +78,9 @@ namespace XDM.GtkUI.Dialogs.Settings
 
             SideList.RowSelected += SideList_RowSelected;
 
+            // Rounded selection pill for the section list (theme: list.rounded-selection)
+            SideList.StyleContext.AddClass("rounded-selection");
+
             Tabs.ShowTabs = false;
 
             Title = TextResource.GetText("TITLE_SETTINGS");
