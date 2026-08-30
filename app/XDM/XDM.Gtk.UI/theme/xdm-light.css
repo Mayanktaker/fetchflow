@@ -264,7 +264,7 @@ button.flat.destructive-action:disabled {
 switch {
   background-color: #e0e0e0;
   border: 1px solid #c9c9c9;
-  border-radius: 14px;
+  border-radius: 999px;
 }
 
 switch:checked {
@@ -274,7 +274,7 @@ switch:checked {
 
 switch slider {
   background-color: #ffffff;
-  border-radius: 12px;
+  border-radius: 999px;
 }
 
 checkbutton check,
@@ -363,12 +363,12 @@ notebook header.top tab:checked {
 /* Progress bars */
 progressbar trough {
   background-color: #e6e6e6;
-  border-radius: 99px;
+  border-radius: 999px;
 }
 
 progressbar progress {
   background-color: #3584e4;
-  border-radius: 99px;
+  border-radius: 999px;
 }
 
 /* ===== Design-system components (docs/design.md) ===== */
