@@ -685,6 +685,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             Config.Instance.FolderSelectionMode = ChkAutoCat.Active ? FolderSelectionMode.Auto : FolderSelectionMode.Manual;
             Config.Instance.DefaultDownloadFolder = TxtDownloadFolder.Text;
             Config.Instance.AllowSystemDarkTheme = ChkDarkTheme.Active;
+            ThemeManager.ApplyTheme(ChkDarkTheme.Active);
             Config.Instance.DoubleClickOpenFile = CmbDblClickAction.Active == 1;
         }
 

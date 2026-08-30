@@ -1,0 +1,452 @@
+/*
+ * XDM light theme layer — Adwaita-aligned refinement + semantic buttons
+ * © Mayanktaker Computers & Web Development | https://mayanktaker.com
+ *
+ * Tokens (GTK3 CSS has no variables — values inlined, grouped here):
+ *   window  #fcfcfc · sidebar #ececec · view #ffffff · entry #ffffff
+ *   elevated #ffffff · border #cacaca · text #222222 · dim #6b6b6b
+ *   accent #3584e4 (hover #5a9bea / active #2767b8)
+ *   destructive #e01b24 (hover #ef4a52 / active #a5121a)
+ */
+
+/* Base surfaces */
+window,
+dialog {
+  background-color: #fcfcfc;
+  color: #222222;
+}
+
+headerbar {
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #d0d0d0;
+  color: #242424;
+}
+
+tooltip {
+  background-color: #3b3b41;
+  border-radius: 4px;
+}
+
+popover {
+  background-color: #ffffff;
+  border: 1px solid #d8d8d8;
+}
+
+separator {
+  background-color: #e2e2e2;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+/* Sidebar + content lists */
+treeview {
+  background-color: #ffffff;
+  color: #242424;
+}
+
+treeview row:hover {
+  background-color: rgba(0, 0, 0, 0.045);
+}
+
+treeview row:selected {
+  background-color: #3584e4;
+  color: #ffffff;
+}
+
+/* Category sidebar (gets .dark class from MainWindow) */
+treeview.dark {
+  background-color: #ececec;
+  color: #3d3d3d;
+  border-right: 1px solid #d8d8d8;
+}
+
+treeview.dark row:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1f1f1f;
+}
+
+treeview.dark row:selected {
+  background-color: #3584e4;
+  color: #ffffff;
+}
+
+/* Text fields */
+entry {
+  background-color: #ffffff;
+  border: 1px solid #c9c9c9;
+  border-radius: 5px;
+  color: #222222;
+}
+
+entry:focus {
+  border-color: #3584e4;
+  box-shadow: inset 0 0 0 1px rgba(53, 132, 228, 0.25);
+}
+
+entry:disabled {
+  background-color: #f4f4f4;
+  border-color: #e4e4e4;
+  color: #9a9a9a;
+}
+
+entry selection {
+  background-color: #3584e4;
+  color: #ffffff;
+}
+
+/* Neutral buttons — subtle elevation instead of flat grey */
+button {
+  background-color: #ffffff;
+  border: 1px solid #cacaca;
+  border-radius: 5px;
+  color: #242424;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
+}
+
+button:hover {
+  background-color: #f3f3f3;
+  border-color: #bdbdbd;
+}
+
+button:active {
+  background-color: #e4e4e4;
+  border-color: #b3b3b3;
+}
+
+button:checked {
+  background-color: #ffffff;
+  border-color: #3584e4;
+  color: #1f5da8;
+}
+
+button:disabled {
+  background-color: #f4f4f4;
+  border-color: #e2e2e2;
+  color: #9a9a9a;
+  box-shadow: none;
+}
+
+/* Keyboard focus ring */
+button:focus {
+  outline-width: 2px;
+  outline-style: solid;
+  outline-color: #3584e4;
+  outline-offset: -4px;
+}
+
+/* Flat buttons — toolbars, icon/utility buttons */
+button.flat {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+button.flat:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-color: transparent;
+}
+
+button.flat:active {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+button.flat:checked {
+  background-color: rgba(53, 132, 228, 0.18);
+  border-color: transparent;
+}
+
+button.flat:disabled {
+  background-color: transparent;
+  color: #9a9a9a;
+}
+
+/* Primary (suggested) — Download/Add/Save/Start/OK */
+button.suggested-action {
+  background-color: #3584e4;
+  border-color: #2a6cb8;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(53, 132, 228, 0.35);
+}
+
+button.suggested-action:hover {
+  background-color: #5a9bea;
+  border-color: #3f7ecb;
+}
+
+button.suggested-action:active {
+  background-color: #2767b8;
+  border-color: #1f56a0;
+}
+
+button.suggested-action:disabled {
+  background-color: rgba(53, 132, 228, 0.45);
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  box-shadow: none;
+}
+
+button.suggested-action:focus {
+  outline-color: #1e4f8f;
+}
+
+/* Destructive — Delete/Remove/Clear */
+button.destructive-action {
+  background-color: #e01b24;
+  border-color: #b0151c;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(224, 27, 36, 0.3);
+}
+
+button.destructive-action:hover {
+  background-color: #ef4a52;
+  border-color: #c71f28;
+}
+
+button.destructive-action:active {
+  background-color: #a5121a;
+  border-color: #8c0f16;
+}
+
+button.destructive-action:disabled {
+  background-color: rgba(224, 27, 36, 0.4);
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  box-shadow: none;
+}
+
+button.destructive-action:focus {
+  outline-color: #8c1016;
+}
+
+/* Colored flat buttons — toolbar Start (blue) / Remove+Delete (red) */
+button.flat.suggested-action {
+  background-color: transparent;
+  border-color: transparent;
+  color: #1e6fd0;
+  box-shadow: none;
+}
+
+button.flat.suggested-action:hover {
+  background-color: rgba(53, 132, 228, 0.14);
+  color: #155a9e;
+}
+
+button.flat.suggested-action:active {
+  background-color: rgba(53, 132, 228, 0.26);
+}
+
+button.flat.destructive-action {
+  background-color: transparent;
+  border-color: transparent;
+  color: #c11e25;
+  box-shadow: none;
+}
+
+button.flat.destructive-action:hover {
+  background-color: rgba(224, 27, 36, 0.12);
+  color: #a3151b;
+}
+
+button.flat.destructive-action:active {
+  background-color: rgba(224, 27, 36, 0.24);
+}
+
+button.flat.suggested-action:disabled,
+button.flat.destructive-action:disabled {
+  background-color: transparent;
+  color: #9a9a9a;
+}
+
+/* Switches, checkboxes, radios */
+switch {
+  background-color: #e0e0e0;
+  border: 1px solid #c9c9c9;
+  border-radius: 14px;
+}
+
+switch:checked {
+  background-color: #3584e4;
+  border-color: #2a6cb8;
+}
+
+switch slider {
+  background-color: #ffffff;
+  border-radius: 12px;
+}
+
+checkbutton check,
+radiobutton radio {
+  background-color: #ffffff;
+  border: 1px solid #b5b5b5;
+}
+
+checkbutton check {
+  border-radius: 4px;
+}
+
+radiobutton radio {
+  border-radius: 100%;
+}
+
+checkbutton check:checked,
+radiobutton radio:checked {
+  background-color: #3584e4;
+  border-color: #3584e4;
+  color: #ffffff;
+}
+
+/* Thin, unobtrusive scrollbars */
+scrollbar {
+  background-color: transparent;
+}
+
+scrollbar slider {
+  background-color: #c4c4c4;
+  border-radius: 4px;
+  margin: 2px;
+  min-width: 8px;
+  min-height: 8px;
+}
+
+scrollbar slider:hover {
+  background-color: #adadad;
+}
+
+scrollbar slider:active {
+  background-color: #9c9c9c;
+}
+
+/* Menus */
+menu {
+  background-color: #ffffff;
+  border: 1px solid #d8d8d8;
+  border-radius: 8px;
+}
+
+menuitem:hover {
+  background-color: #3584e4;
+  color: #ffffff;
+}
+
+menuitem:disabled {
+  color: #9a9a9a;
+}
+
+/* Notebook tabs — active tab gets accent underline */
+notebook header {
+  background-color: #f2f2f2;
+}
+
+notebook header.top {
+  border-bottom: 1px solid #d8d8d8;
+}
+
+notebook tab {
+  color: #6b6b6b;
+}
+
+notebook tab:hover {
+  color: #333333;
+}
+
+notebook tab:checked {
+  color: #1f1f1f;
+}
+
+notebook header.top tab:checked {
+  box-shadow: inset 0 -2px 0 0 #3584e4;
+}
+
+/* Progress bars */
+progressbar trough {
+  background-color: #e6e6e6;
+  border-radius: 99px;
+}
+
+progressbar progress {
+  background-color: #3584e4;
+  border-radius: 99px;
+}
+
+/*
+ * Backdrop (unfocused window) — flatter surfaces + dimmer text, Adwaita-style
+ * Tokens: text #5a5a5a · neutral bg #f7f7f7 · suggested #6f9bd6 · destructive #d2525a
+ */
+window:backdrop,
+dialog:backdrop {
+  color: #5a5a5a;
+}
+
+headerbar:backdrop {
+  background-color: #eaeaea;
+  border-bottom-color: #c8c8c8;
+  color: #6a6a6a;
+}
+
+treeview:backdrop {
+  color: #4a4a4a;
+}
+
+treeview.dark:backdrop {
+  color: #6e6e6e;
+}
+
+button:backdrop {
+  background-color: #f7f7f7;
+  border-color: #d0d0d0;
+  color: #5f5f5f;
+  box-shadow: none;
+}
+
+button:backdrop:hover {
+  background-color: #f0f0f0;
+}
+
+button.flat:backdrop {
+  background-color: transparent;
+  color: #6a6a6a;
+}
+
+button.suggested-action:backdrop {
+  background-color: #6f9bd6;
+  border-color: #5c86c2;
+}
+
+button.destructive-action:backdrop {
+  background-color: #d2525a;
+  border-color: #b8454c;
+}
+
+entry:backdrop {
+  color: #5a5a5a;
+  border-color: #d0d0d0;
+}
+
+notebook tab:backdrop {
+  color: #8a8a8a;
+}
+
+/*
+ * Linked button groups (headerbar pairs in new-download/vid-capture):
+ * seamless inner edges, rounded outer corners only (horizontal groups)
+ */
+.linked > button {
+  border-radius: 0;
+  border-right-width: 0;
+}
+
+.linked > button:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.linked > button:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-right-width: 1px;
+}
+
+.linked > button:only-child {
+  border-radius: 5px;
+  border-right-width: 1px;
+}

@@ -215,6 +215,9 @@
                 <property name="is-focus">True</property>
                 <property name="receives-default">True</property>
                 <property name="margin-start">10</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>

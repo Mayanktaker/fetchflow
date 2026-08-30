@@ -23,6 +23,9 @@
                 <property name="margin-right">5</property>
                 <property name="margin-end">5</property>
                 <property name="margin-bottom">10</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -327,6 +330,9 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="left-attach">2</property>
@@ -338,6 +344,9 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="left-attach">2</property>
@@ -385,6 +394,9 @@
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
                                 <property name="halign">start</property>
+                                <style>
+                                  <class name="flat"/>
+                                </style>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -426,6 +438,9 @@
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
                                 <property name="halign">start</property>
+                                <style>
+                                  <class name="flat"/>
+                                </style>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -467,6 +482,9 @@
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
                                 <property name="halign">start</property>
+                                <style>
+                                  <class name="flat"/>
+                                </style>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -729,6 +747,9 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -781,6 +802,9 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -912,6 +936,9 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -927,6 +954,10 @@
                                     <property name="sensitive">False</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                      <class name="destructive-action"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -942,6 +973,9 @@
                                     <property name="sensitive">False</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -956,6 +990,9 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -1375,6 +1412,10 @@
                             <property name="sensitive">False</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
+                            <style>
+                              <class name="flat"/>
+                              <class name="destructive-action"/>
+                            </style>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1390,6 +1431,9 @@
                             <property name="sensitive">False</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
+                            <style>
+                              <class name="flat"/>
+                            </style>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1404,6 +1448,9 @@
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
+                            <style>
+                              <class name="flat"/>
+                            </style>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1566,6 +1613,9 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -1658,6 +1708,9 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>

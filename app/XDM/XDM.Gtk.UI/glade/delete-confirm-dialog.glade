@@ -23,6 +23,9 @@
                 <property name="valign">end</property>
                 <property name="margin-end">10</property>
                 <property name="margin-bottom">10</property>
+                <style>
+                  <class name="destructive-action"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>

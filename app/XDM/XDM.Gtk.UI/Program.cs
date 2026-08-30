@@ -1,4 +1,6 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+
+using System;
 using System.Net;
 using Gtk;
 using TraceLog;
@@ -9,6 +11,7 @@ using XDMApp = XDM.Core.Application;
 using System.Linq;
 using XDM.Core.BrowserMonitoring;
 using XDM.Core.Util;
+using XDM.GtkUI.Utils;
 
 namespace XDM.GtkUI
 {
@@ -35,9 +38,10 @@ namespace XDM.GtkUI
                                     .medium-font{ font-size: 14px; }
                                     ";
 
+            // XDM theme layer: semantic buttons + surface colors, picked by dark-mode preference
             // Wayland/Phase1: Gdk.Screen.Default can throw MissingIntPtrCtorException under the
-            // GTK3 Wayland backend (GtkSharp binding quirk). The global CSS is cosmetic font
-            // sizing only, so guard it rather than block startup.
+            // GTK3 Wayland backend (GtkSharp binding quirk). The CSS layers are cosmetic font
+            // sizing and theming only, so guard them rather than block startup.
             try
             {
                 var screen = Gdk.Screen.Default;
@@ -47,44 +51,12 @@ namespace XDM.GtkUI
                     provider.LoadFromData(globalStyleSheet);
                     Gtk.StyleContext.AddProviderForScreen(screen, provider, 800);
                 }
+                ThemeManager.ApplyTheme(Config.Instance.AllowSystemDarkTheme);
             }
             catch (Exception cssEx)
             {
                 Log.Debug("Non-fatal: global CSS provider not applied: " + cssEx.Message);
             }
-            //var screen = Gdk.Screen.Default;
-            //var provider = new CssProvider();
-            //provider.LoadFromData(@".dark 
-            //                                    {
-            //                                        color: gray;
-            //                                        background: rgb(36,41,46);
-            //                                    }
-
-            //                                    treeview.view :selected 
-            //                                    {
-            //                                        background-color: rgb(10,106,182);
-            //                                        color: white;
-            //                                    }
-            //.listt
-            //{
-            //font-family: Segoe UI;
-            //}
-            //                                    .dark2
-            //                                    {
-            //                                        color: gray;
-            //                                        background: rgb(35,35,35);
-            //                                        /*background: rgb(36,41,46);*/
-            //                                    }
-            //                                    .toolbar-border-dark
-            //                                    {  
-            //                                        border-bottom: 1px solid rgb(20,20,20);
-            //                                    }
-            //                                    .toolbar-border-light
-            //                                    {  
-            //                                        border-bottom: 2px solid rgb(240,240,240);
-            //                                    }
-            //                                  ");
-            //Gtk.StyleContext.AddProviderForScreen(screen, provider, 800);
 
             // TLS: secure by default; opt-in insecure validation via XDM_ALLOW_INSECURE_TLS=1
             if (Config.AllowInsecureTls)
@@ -101,21 +73,6 @@ namespace XDM.GtkUI
             Log.Debug("Loading languages...");
 
             LoadLanguageTexts();
-
-            if (Config.Instance.AllowSystemDarkTheme)
-            {
-                // Wayland/Phase1: Gtk.Settings.Default can throw MissingIntPtrCtorException under
-                // the GTK3 Wayland backend; dark theme is cosmetic, so guard it.
-                try
-                {
-                    Gtk.Settings.Default.ThemeName = "Adwaita";
-                    Gtk.Settings.Default.ApplicationPreferDarkTheme = true;
-                }
-                catch (Exception settingsEx)
-                {
-                    Log.Debug("Non-fatal: could not apply dark theme: " + settingsEx.Message);
-                }
-            }
 
             var core = new ApplicationCore();
             var app = new XDMApp();

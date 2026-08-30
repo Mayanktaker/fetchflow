@@ -430,6 +430,8 @@ namespace XDM.GtkUI
 
             };
             button.Add(hbox);
+            // Register as flat so the theme's toolbar hover/active states apply
+            button.StyleContext.AddClass("flat");
             return button;
         }
 
@@ -452,7 +454,7 @@ namespace XDM.GtkUI
             //h1.PackStart(new Image(LoadSvg("links-line", 14)), false, false, 0);
             //h1.PackStart(new Label { Text = TextResource.GetText("DESC_Q_TITLE") }, false, false, 10);
 
-            btnScheduler = CreateButtonWithContent("list-settings-fill", TextResource.GetText("DESC_Q_TITLE"));
+            btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"));
             btnScheduler.Clicked += BtnScheduler_Clicked;
             //new Button
             //{
@@ -460,7 +462,7 @@ namespace XDM.GtkUI
             //    MarginBottom = 0,
             //    Relief = ReliefStyle.None,
             //    Valign = Align.Start,
-            //    Image = new Image(LoadSvg("list-settings-fill", 16)),
+            //    Image = new Image(LoadSvg("list-settings-line", 16)),
             //    AlwaysShowImage = true,
 
             //};
@@ -520,6 +522,8 @@ namespace XDM.GtkUI
             btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"));
             toolbar.PackStart(btnNew, false, false, 0);
             btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"));
+            // Immediate destructive trigger — red flat variant, matching queue manager
+            btnDel.StyleContext.AddClass("destructive-action");
             toolbar.PackStart(btnDel, false, false, 0);
             btnOpenFile = CreateButtonWithContent("external-link-line", TextResource.GetText("CTX_OPEN_FILE"));
             toolbar.PackStart(btnOpenFile, false, false, 0);
@@ -758,16 +762,18 @@ namespace XDM.GtkUI
 
             //Last modified column
             var lastModifiedRendererText = new CellRendererText();
-            var lastModifiedColumn = new TreeViewColumn(TextResource.GetText("SORT_DATE"), lastModifiedRendererText, "text", 1)
+            var lastModifiedColumn = new TreeViewColumn
             {
                 Resizable = true,
                 Reorderable = false,
+                Title = TextResource.GetText("SORT_DATE"),
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = 120
             };
+            lastModifiedColumn.PackStart(lastModifiedRendererText, false);
+            SetDimmedTextColumn(lastModifiedColumn, lastModifiedRendererText, lvInprogress, 1);
             lastModifiedColumn.SortColumnId = 1;
             lastModifiedColumn.SortOrder = SortType.Descending;
-            lastModifiedColumn.SetAttributes(lastModifiedRendererText, "text", 1);
             lvInprogress.AppendColumn(lastModifiedColumn);
 
 
@@ -783,7 +789,7 @@ namespace XDM.GtkUI
                 Title = TextResource.GetText("SORT_SIZE"),
             };
             fileSizeColumn.PackStart(fileSizeRendererText, false);
-            fileSizeColumn.SetAttributes(fileSizeRendererText, "text", 2);
+            SetDimmedTextColumn(fileSizeColumn, fileSizeRendererText, lvInprogress, 2);
             lvInprogress.AppendColumn(fileSizeColumn);
 
             //File progress column
@@ -921,14 +927,16 @@ namespace XDM.GtkUI
 
             //Last modified column
             var lastModifiedRendererText = new CellRendererText();
-            var lastModifiedColumn = new TreeViewColumn(TextResource.GetText("SORT_DATE"), lastModifiedRendererText, "text", 1)
+            var lastModifiedColumn = new TreeViewColumn
             {
                 Resizable = true,
                 Reorderable = false,
+                Title = TextResource.GetText("SORT_DATE"),
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = 120
             };
-            lastModifiedColumn.SetAttributes(lastModifiedRendererText, "text", 1);
+            lastModifiedColumn.PackStart(lastModifiedRendererText, false);
+            SetDimmedTextColumn(lastModifiedColumn, lastModifiedRendererText, lvFinished, 1);
             lastModifiedColumn.SortColumnId = 1;
             lvFinished.AppendColumn(lastModifiedColumn);
 
@@ -945,7 +953,7 @@ namespace XDM.GtkUI
                 Title = TextResource.GetText("SORT_SIZE"),
             };
             fileSizeColumn.PackStart(fileSizeRendererText, false);
-            fileSizeColumn.SetAttributes(fileSizeRendererText, "text", 2);
+            SetDimmedTextColumn(fileSizeColumn, fileSizeRendererText, lvFinished, 2);
             fileSizeColumn.SortColumnId = 2;
             lvFinished.AppendColumn(fileSizeColumn);
 
@@ -978,6 +986,32 @@ namespace XDM.GtkUI
             var name = (string)tree_model.GetValue(iter, 0);
             var pix = LoadSvg(IconResource.GetSVGNameForFileType(name), 20);
             ((CellRendererPixbuf)cell).Pixbuf = pix;
+        }
+
+        // Pango alpha for secondary list text: 60% opacity on the 0-65535 scale
+        private const int SecondaryTextAlpha = 39321;
+
+        // Secondary columns (date/size): dimmed markup at render time so the store
+        // keeps raw values for sorting; selected rows render at full opacity
+        private static void SetDimmedTextColumn(TreeViewColumn column, CellRendererText renderer,
+            TreeView view, int modelIndex)
+        {
+            column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
+            {
+                var text = model.GetValue(iter, modelIndex) as string ?? string.Empty;
+                var selected = false;
+                foreach (var path in view.Selection.GetSelectedRows())
+                {
+                    if (path.Compare(model.GetPath(iter)) == 0)
+                    {
+                        selected = true;
+                        break;
+                    }
+                }
+                ((CellRendererText)cell).Markup = selected
+                    ? GLib.Markup.EscapeText(text)
+                    : $"<span alpha=\"{SecondaryTextAlpha}\">{GLib.Markup.EscapeText(text)}</span>";
+            }));
         }
 
         private void AppWin1_DeleteEvent(object o, DeleteEventArgs args)
@@ -1295,7 +1329,7 @@ namespace XDM.GtkUI
         {
             isUpdateAvailable = true;
             helpLabel.Text = TextResource.GetText("MSG_UPDATE_AVAILABLE");
-            helpImage.Pixbuf = LoadSvg("notification-3-fill", 16);
+            helpImage.Pixbuf = LoadSvg("notification-3-line", 16);
             helpImage.ShowAll();
         }
 

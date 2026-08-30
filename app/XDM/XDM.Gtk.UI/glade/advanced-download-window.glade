@@ -361,6 +361,9 @@
                 <property name="receives-default">True</property>
                 <property name="margin-end">10</property>
                 <property name="image-position">right</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>

@@ -201,6 +201,7 @@ MSG_TIME=Time
 STAT_ASSEMBLING=Assembling
 STAT_WAITING=Waiting
 MSG_UPDATE_AVAILABLE=Update(s) available
+MSG_INSTALL_UPDATE=Install Update
 MSG_RESTORE=Restore Window
 MSG_DOUBLE_CLICK_ACTION=Double click on download item
 MSG_OPEN_FILE=Open file

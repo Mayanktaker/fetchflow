@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <!-- Wayland/Phase3.1: net6.0 (EOL) -> net8.0 LTS -->
@@ -52,6 +54,9 @@
 
   <ItemGroup>
     <Content Include="glade\*.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="theme\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="svg-icons\*.*">

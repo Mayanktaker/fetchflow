@@ -1,4 +1,6 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,6 +22,7 @@ namespace XDM.GtkUI.Dialogs.Updater
         [UI] private Label TxtHeading;
         [UI] private ProgressBar Prg;
         [UI] private Button BtnCancel;
+        [UI] private Button BtnInstall;
         private bool active = false;
 
         private UpdaterWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
@@ -29,6 +32,9 @@ namespace XDM.GtkUI.Dialogs.Updater
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
+            // English fallback covers languages until they add MSG_INSTALL_UPDATE
+            BtnInstall.Label = TextResource.GetText("MSG_INSTALL_UPDATE");
+            BtnInstall.Sensitive = false;
             TxtHeading.Text = TextResource.GetText("STAT_DOWNLOADING");
             SetDefaultSize(500, 200);
 
@@ -36,8 +42,28 @@ namespace XDM.GtkUI.Dialogs.Updater
 
             Realized += UpdaterWindow_Realized;
             BtnCancel.Clicked += BtnCancel_Clicked;
+            BtnInstall.Clicked += BtnInstall_Clicked;
             DeleteEvent += UpdaterWindow_DeleteEvent;
-            BtnCancel.Clicked += BtnCancel_Clicked;
+        }
+
+        // Same updater-script flow as MainWindow.CheckUpdatesInBackground (kept local:
+        // shared helper would cross into files outside this change's scope)
+        private void BtnInstall_Clicked(object? sender, EventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = "gnome-terminal",
+                    Arguments = "-- bash -c \"sudo /opt/xdman/xdm-updater.sh\"",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Could not start updater terminal: " + ex);
+            }
+            CloseWindow();
         }
 
         private void UpdaterWindow_DeleteEvent(object o, DeleteEventArgs args)
@@ -105,7 +131,8 @@ namespace XDM.GtkUI.Dialogs.Updater
             Application.Invoke((_, _) =>
             {
                 GtkHelper.ShowMessageBox(this, TextResource.GetText("MSG_UPDATED"));
-                CloseWindow();
+                // Stay open so the user can run the updater via BtnInstall instead of auto-closing
+                BtnInstall.Sensitive = true;
             });
             this.Finished?.Invoke(sender, e);
         }

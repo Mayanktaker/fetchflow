@@ -26,6 +26,7 @@ bash build_all.sh        # full release: extensions + tarball + rpm (+ deb/arch 
 | Path | Purpose |
 |------|---------|
 | `app/XDM/XDM.Gtk.UI/` | Main GTK app (`net8.0`, publishes as self-contained single-file `linux-x64`) |
+| `app/XDM/XDM.Gtk.UI/theme/` | GTK3 CSS theme layer (`xdm-dark.css`/`xdm-light.css`), applied live by `Utils/ThemeManager.cs` |
 | `app/XDM/XDM.Core/` | Core download engine/library |
 | `app/XDM/XDM.Linux.Installer/` | `make-rpm-pkg`, `make-deb-pkg`, `make-arch-pkg`, `version.env` |
 | `xdm-release/` | Output folder for all release artifacts |
