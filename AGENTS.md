@@ -43,3 +43,4 @@ bash build_all.sh        # full release: extensions + tarball + rpm (+ deb/arch 
 
 - File header on all files: `© Mayanktaker Computers & Web Development | https://mayanktaker.com`
 - Keep documentation single-source: detailed docs belong in dedicated `.md` files, linked from here — never duplicated.
+- Design system (tokens, radii, spacing, colors): [docs/design.md](docs/design.md) — all UI changes follow it.
