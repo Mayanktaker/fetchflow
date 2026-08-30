@@ -382,11 +382,13 @@ headerbar {
 /* Sidebar list rows (ListBox; class set by MainWindow) */
 list.sidebar {
   background-color: #161616;
+  padding: 8px 0px;
 }
 
 list.sidebar row {
   border-radius: 8px;
-  margin: 1px 4px;
+  margin: 2px 8px;
+  padding: 8px 0px;
   background-color: transparent;
 }
 
@@ -404,7 +406,8 @@ list.sidebar row:selected {
   color: #8a8a8a;
   font-size: 10px;
   letter-spacing: 0.08em;
-  padding: 8px 12px 4px 12px;
+  padding: 6px 18px;
+  margin-top: 8px;
 }
 
 /* Count badge pill */
@@ -425,7 +428,7 @@ list.sidebar row:selected .sidebar-badge {
 .icon-tile {
   border-radius: 8px;
   background-color: rgba(255, 255, 255, 0.06);
-  padding: 3px;
+  padding: 4px;
 }
 
 /* Pill search entry (class set by MainWindow) */
@@ -444,12 +447,12 @@ button.flat {
 /* Primary pill ("New") — filled, not flat */
 button.suggested-action {
   border-radius: 8px;
-  padding: 5px 14px;
+  padding: 6px 14px;
 }
 
 /* Roomier list rows */
 treeview row {
-  padding: 4px 2px;
+  padding: 6px 4px;
 }
 
 treeview row:hover {

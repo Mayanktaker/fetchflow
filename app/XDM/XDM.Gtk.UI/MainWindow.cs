@@ -485,9 +485,9 @@ namespace XDM.GtkUI
         private Widget CreateBottombar()
         {
             var hbox = new HBox(false, 10);
-            hbox.Margin = 2;
-            hbox.MarginStart = 5;
-            hbox.MarginEnd = 5;
+            hbox.Margin = 4;
+            hbox.MarginStart = 8;
+            hbox.MarginEnd = 8;
             //var lblMonitoring = new Label { Text = TextResource.GetText("SETTINGS_MONITORING"), MarginBottom = 5 };
             //hbox.PackStart(lblMonitoring, false, false, 0);
             btnMonitoring = new CheckButton { MarginStart = 5 };
@@ -595,9 +595,11 @@ namespace XDM.GtkUI
                 finishedDownloadFilter.Refilter();
             };
             toolbar.PackEnd(searchEntry, false, false, 0);
-            toolbar.Margin = 8;
-            toolbar.MarginTop = 6;
-            toolbar.MarginBottom = 6;
+            toolbar.Margin = 10;
+            toolbar.MarginTop = 10;
+            toolbar.MarginBottom = 10;
+            toolbar.MarginStart = 14;
+            toolbar.MarginEnd = 14;
             toolbar.ShowAll();
 
             btnOpenFile.Visible = false;
@@ -712,7 +714,7 @@ namespace XDM.GtkUI
             var badge = new Label { Text = "0", Visible = false };
             badge.StyleContext.AddClass("sidebar-badge");
 
-            var hbox = new HBox(false, 9) { MarginStart = 8, MarginEnd = 8 };
+            var hbox = new HBox(false, 9) { MarginStart = 10, MarginEnd = 10 };
             hbox.PackStart(iconTile, false, false, 0);
             var label = new Label { Text = info.Label, Halign = Align.Start };
             hbox.PackStart(label, true, true, 0);
@@ -762,9 +764,11 @@ namespace XDM.GtkUI
                 // Restore the prior selection; fall back to "unfinished" only if it vanished
                 sidebarList.SelectRow(restored);
             }
-            else if (sidebarList.SelectedRow == null && sidebarRowWidgets.TryGetValue("unfinished", out var first))
+            else if (sidebarRowWidgets.TryGetValue("unfinished", out var fallbackRow))
             {
-                sidebarList.SelectRow(first);
+                // Deterministic fallback: captured selection is gone (Browse mode may have
+                // auto-selected another row during removal), so always land on "unfinished"
+                sidebarList.SelectRow(fallbackRow);
             }
             UpdateSidebarCounts();
         }
@@ -871,7 +875,7 @@ namespace XDM.GtkUI
             };
 
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(5, 5);
+            fileIconRenderer.SetPadding(8, 8);
             fileNameColumn.PackStart(fileIconRenderer, false);
             fileNameColumn.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
@@ -926,7 +930,7 @@ namespace XDM.GtkUI
             {
                 //Text = "Downloading",
             };
-            fileRendererProgress.SetPadding(5, 10);
+            fileRendererProgress.SetPadding(8, 10);
 
             var progressColumn = new TreeViewColumn("%", fileRendererProgress, "value", 3)
             {
@@ -941,7 +945,7 @@ namespace XDM.GtkUI
 
             //Download status column
             var statusRendererText = new CellRendererText();
-            statusRendererText.SetPadding(5, 8);
+            statusRendererText.SetPadding(8, 8);
             var statusColumn = new TreeViewColumn(TextResource.GetText("SORT_STATUS"), statusRendererText, "text", 4)
             {
                 Resizable = true,
@@ -968,7 +972,7 @@ namespace XDM.GtkUI
 
             sortedStore.SetSortColumnId(1, SortType.Descending);
 
-            swInProgress = new ScrolledWindow { OverlayScrolling = true, Margin = 5, MarginBottom = 0, MarginTop = 0, ShadowType = ShadowType.In };
+            swInProgress = new ScrolledWindow { OverlayScrolling = true, Margin = 8, MarginBottom = 4, MarginTop = 4, ShadowType = ShadowType.In };
             swInProgress.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swInProgress.Add(lvInprogress);
             swInProgress.ShowAll();
@@ -1046,7 +1050,7 @@ namespace XDM.GtkUI
             };
 
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(5, 5);
+            fileIconRenderer.SetPadding(8, 8);
             fileNameColumn.PackStart(fileIconRenderer, false);
             fileNameColumn.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
             fileNameColumn.SortColumnId = 0;
@@ -1104,7 +1108,7 @@ namespace XDM.GtkUI
 
             sortedStore.SetSortColumnId(1, SortType.Descending);
 
-            swFinished = new ScrolledWindow { OverlayScrolling = true, Margin = 5, MarginBottom = 0, MarginTop = 0, ShadowType = ShadowType.In };
+            swFinished = new ScrolledWindow { OverlayScrolling = true, Margin = 8, MarginBottom = 4, MarginTop = 4, ShadowType = ShadowType.In };
             swFinished.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swFinished.Add(lvFinished);
             swFinished.ShowAll();
