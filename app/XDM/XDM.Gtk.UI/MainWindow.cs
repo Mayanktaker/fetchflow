@@ -167,6 +167,8 @@ namespace XDM.GtkUI
                 DecorationLayout = ":minimize,maximize,close"
             };
             Titlebar = headerBar;
+            // CSD: gtk_window_set_titlebar does not auto-show the bar; show it or the window maps barless
+            headerBar.ShowAll();
 
             // Resizable sidebar (spec §4.2): drag the pane divider
             var hpaned = new HPaned();

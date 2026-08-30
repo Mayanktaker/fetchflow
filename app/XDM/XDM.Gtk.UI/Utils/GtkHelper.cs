@@ -311,6 +311,8 @@ namespace XDM.GtkUI.Utils
                 DecorationLayout = ":close"
             };
             dlg.Titlebar = hb;
+            // CSD: titlebar is not auto-shown; show it or the dialog maps barless
+            hb.ShowAll();
         }
 
         // Rounded icon tiles: SVG icon composited on a tinted rounded square (spec §4.4)
