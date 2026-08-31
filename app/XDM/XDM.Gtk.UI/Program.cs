@@ -144,7 +144,10 @@ namespace XDM.GtkUI
             Log.Debug("Language loading ...");
             try
             {
-                var indexFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Lang\index.txt");
+                var langDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Lang");
+                var indexFile = System.IO.Path.Combine(langDir, "index.txt");
+                var langFile = System.IO.Path.Combine(langDir, "English.txt");
+
                 if (System.IO.File.Exists(indexFile))
                 {
                     var lines = System.IO.File.ReadAllLines(indexFile);
@@ -153,14 +156,27 @@ namespace XDM.GtkUI
                         var index = line.IndexOf("=");
                         if (index > 0)
                         {
-                            var name = line.Substring(0, index);
-                            var value = line.Substring(index + 1);
-                            if (name == Config.Instance.Language)
+                            var name = line.Substring(0, index).Trim();
+                            var value = line.Substring(index + 1).Trim();
+                            if (string.Equals(name, Config.Instance.Language, StringComparison.OrdinalIgnoreCase))
                             {
-                                TextResource.Load(value);
+                                langFile = System.IO.Path.Combine(langDir, value);
                                 break;
                             }
                         }
+                    }
+                }
+
+                if (System.IO.File.Exists(langFile))
+                {
+                    TextResource.Load(langFile);
+                }
+                else
+                {
+                    var fallback = System.IO.Path.Combine(langDir, "English.txt");
+                    if (System.IO.File.Exists(fallback))
+                    {
+                        TextResource.Load(fallback);
                     }
                 }
                 Log.Debug("Language loaded.");

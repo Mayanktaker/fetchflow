@@ -299,15 +299,22 @@ namespace XDM.GtkUI.Utils
         {
             try
             {
-                var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg");
-                if (File.Exists(path))
+                var candidates = new[]
                 {
-                    return new Gdk.Pixbuf(path, dimension, dimension, true);
-                }
-                var rootSvg = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{name}.svg");
-                if (File.Exists(rootSvg))
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{name}.svg"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "svg-icons", $"{name}.svg"),
+                    Path.Combine(Directory.GetCurrentDirectory(), $"{name}.svg"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "app", "XDM", "XDM.Gtk.UI", "svg-icons", $"{name}.svg"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "build_output", "xdm-app", "svg-icons", $"{name}.svg")
+                };
+
+                foreach (var candidate in candidates)
                 {
-                    return new Gdk.Pixbuf(rootSvg, dimension, dimension, true);
+                    if (File.Exists(candidate))
+                    {
+                        return new Gdk.Pixbuf(candidate, dimension, dimension, true);
+                    }
                 }
             }
             catch { }

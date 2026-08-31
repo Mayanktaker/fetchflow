@@ -45,8 +45,18 @@ cd ../../..
 
 echo "Publishing FetchFlow .NET Application..."
 rm -rf build_output
-mkdir -p build_output
+mkdir -p build_output/xdm-app
 dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o build_output/xdm-app
+
+# Copy all runtime assets into publish directory
+cp -r app/XDM/XDM.Gtk.UI/svg-icons build_output/xdm-app/
+cp -r app/XDM/XDM.Gtk.UI/glade build_output/xdm-app/
+cp -r app/XDM/XDM.Gtk.UI/theme build_output/xdm-app/
+cp -r app/XDM/XDM.Gtk.UI/images build_output/xdm-app/
+cp -r app/XDM/Lang build_output/xdm-app/
+cp app/XDM/fetchflow-logo.svg build_output/xdm-app/ 2>/dev/null || :
+cp app/XDM/XDM.Gtk.UI/fetchflow-logo-512.png build_output/xdm-app/ 2>/dev/null || :
+cp app/XDM/XDM.Gtk.UI/fetchflow-logo.png build_output/xdm-app/ 2>/dev/null || :
 
 echo "Packaging Portable Tarball..."
 cd build_output/xdm-app
