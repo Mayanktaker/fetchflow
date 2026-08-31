@@ -45,6 +45,16 @@ label.update-dot {
   margin-left: 6px;
 }
 
+/* Dot is a flat click target — no button chrome, just the glyph */
+button.flat.update-dot-button {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0 2px;
+  min-height: 0;
+  min-width: 0;
+}
+
 tooltip {
   background-color: #3b3b41;
   border-radius: 4px;

@@ -44,7 +44,7 @@ namespace XDM.GtkUI
         private Label helpLabel;
         private TrayIconManager trayManager;
         private Label subtitleLabel;
-        private Label updateDot;
+        private Button updateDot;
 
         // Dark-tinted sidebar icons for selected rows, keyed by source pixbuf (tint once, reuse)
         private static readonly ConditionalWeakTable<Gdk.Pixbuf, Gdk.Pixbuf> selectedSidebarIcons = new();
@@ -432,9 +432,18 @@ namespace XDM.GtkUI
             };
             subtitleLabel.StyleContext.AddClass("header-title-view");
 
-            // Update-available dot: hidden until ShowUpdateAvailableNotification flips it on
-            updateDot = new Label { Text = UpdateDotGlyph, Visible = false };
-            updateDot.StyleContext.AddClass("update-dot");
+            // Update-available dot: the single update indicator (bottom bar stays a plain
+            // "Help and support"); hidden until an update lands, click opens the updater
+            updateDot = new Button { Visible = false };
+            var dotLabel = new Label { Text = UpdateDotGlyph };
+            dotLabel.StyleContext.AddClass("update-dot");
+            updateDot.Add(dotLabel);
+            updateDot.Relief = ReliefStyle.None;
+            updateDot.Valign = Align.Center;
+            updateDot.TooltipText = TextResource.GetText("MSG_UPDATE_AVAILABLE");
+            updateDot.StyleContext.AddClass("flat");
+            updateDot.StyleContext.AddClass("update-dot-button");
+            updateDot.Clicked += (_, _) => UpdateClicked?.Invoke(this, EventArgs.Empty);
 
             var titleBox = new HBox(false, ButtonContentSpacing) { Hexpand = true, Halign = Align.Start };
             titleBox.PackStart(appLabel, false, false, 0);
@@ -1421,9 +1430,6 @@ namespace XDM.GtkUI
         public void ShowUpdateAvailableNotification()
         {
             isUpdateAvailable = true;
-            helpLabel.Text = TextResource.GetText("MSG_UPDATE_AVAILABLE");
-            helpImage.Pixbuf = LoadSvg("notification-3-line", 16);
-            helpImage.ShowAll();
             if (updateDot != null)
             {
                 updateDot.Visible = true;
@@ -1435,9 +1441,6 @@ namespace XDM.GtkUI
             RunOnUIThread(() =>
             {
                 isUpdateAvailable = false;
-                helpLabel.Text = TextResource.GetText("LBL_SUPPORT_PAGE");
-                helpImage.Pixbuf = LoadSvg("question-line", 16);
-                helpImage.ShowAll();
                 if (updateDot != null)
                 {
                     updateDot.Visible = false;
