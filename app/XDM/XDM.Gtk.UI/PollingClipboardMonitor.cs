@@ -22,24 +22,41 @@ namespace XDM.GtkUI
             timer.Elapsed += Timer_Elapsed;
         }
 
+        // Fired on a ThreadPool thread — marshals to the GTK main loop. Must not throw
+        // out of the GLib invoke, otherwise the timer keeps scheduling doomed callbacks.
         private void Timer_Elapsed(object? sender, ElapsedEventArgs e)
         {
-            Gtk.Application.Invoke(this.CheckGtkClipboardContents);
+            try
+            {
+                Gtk.Application.Invoke(this.CheckGtkClipboardContents);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Clipboard Timer_Elapsed: " + ex.Message);
+            }
         }
 
         private void CheckGtkClipboardContents(object? sender, EventArgs e)
         {
-            if (cb == null)
+            try
             {
-                Log.Debug("Clipboard is null");
-                return;
+                if (cb == null)
+                {
+                    Log.Debug("Clipboard is null");
+                    return;
+                }
+                var text = cb.WaitForText();
+                if (text != lastText)
+                {
+                    Log.Debug("Clipboard changed");
+                    lastText = text;
+                    try { this.ClipboardChanged?.Invoke(this, EventArgs.Empty); }
+                    catch (Exception handlerEx) { Log.Debug(handlerEx, "ClipboardChanged handler: " + handlerEx.Message); }
+                }
             }
-            var text = cb.WaitForText();
-            if (text != lastText)
+            catch (Exception ex)
             {
-                Log.Debug("Clipboard changed");
-                lastText = text;
-                this.ClipboardChanged?.Invoke(this, EventArgs.Empty);
+                Log.Debug(ex, "CheckGtkClipboardContents: " + ex.Message);
             }
         }
 

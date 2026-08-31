@@ -21,16 +21,80 @@ namespace XDM.GtkUI
         private const string DisableCachingName = @"TestSwitch.LocalAppContext.DisableCaching";
         private const string DontEnableSchUseStrongCryptoName = @"Switch.System.Net.DontEnableSchUseStrongCrypto";
 
+        // Always-on crash sink: writes unhandled exceptions, unobserved task exceptions, and
+        // the existing TraceLog stream to a single file. Without this, "app crashed after some
+        // time" leaves zero evidence because the default Log.Debug only prints to a console
+        // that may already be detached (tray/auto-start).
+        private static readonly object CrashLogLock = new();
+        private static readonly string CrashLogPath =
+            System.IO.Path.Combine(Config.AppDir, "crash.log");
+
+        // Keep the persistent crash capture small — trim only at write time (cap 5 MB,
+        // keep the last 3 MB so the most recent context — often Settings or SNI — stays).
+        private const long CrashLogMaxBytes = 5L * 1024 * 1024;
+        private const long CrashLogKeepBytes = 3L * 1024 * 1024;
+
+        private static void RotateCrashLogIfNeeded()
+        {
+            try
+            {
+                var info = new System.IO.FileInfo(CrashLogPath);
+                if (!info.Exists || info.Length <= CrashLogMaxBytes) return;
+                var text = System.IO.File.ReadAllText(CrashLogPath);
+                if (text.Length <= CrashLogKeepBytes) return;
+                var keep = text.Substring(text.Length - (int)CrashLogKeepBytes);
+                var cut = keep.IndexOf('\n');
+                if (cut >= 0) keep = keep.Substring(cut + 1);
+                var header = $"[{DateTime.UtcNow:O}] crash.log rotated (kept last {CrashLogKeepBytes / (1024 * 1024)} MB)\n";
+                System.IO.File.WriteAllText(CrashLogPath, header + keep);
+            }
+            catch
+            {
+                // Rotation is best-effort; a stale oversized log still contains evidence.
+            }
+        }
+
+        private static void WriteCrashLine(string label, object detail)
+        {
+            try
+            {
+                System.IO.Directory.CreateDirectory(Config.AppDir);
+                RotateCrashLogIfNeeded();
+                var line = $"[{DateTime.UtcNow:O}] {label}: {detail}";
+                if (detail is Exception ex) line += Environment.NewLine + ex;
+                line += Environment.NewLine;
+                lock (CrashLogLock)
+                {
+                    System.IO.File.AppendAllText(CrashLogPath, line);
+                }
+            }
+            catch
+            {
+                // Never let the crash sink itself crash the process.
+            }
+        }
+
         static void Main(string[] args)
         {
             Config.LoadConfig();
+            // File logger is always on now so post-mortem analysis is possible. The optional
+            // XDM_DEBUG_MODE flag remains respected for callers that only want it on demand.
             var debugMode = Environment.GetEnvironmentVariable("XDM_DEBUG_MODE");
             if (!string.IsNullOrEmpty(debugMode) && debugMode == "1")
             {
-                var logFile = System.IO.Path.Combine(Config.AppDir, "log.txt");
                 Log.InitFileBasedTrace(System.IO.Path.Combine(Config.AppDir, "log.txt"));
             }
+            // Catch exceptions on background threads and unobserved task faults — the most
+            // common cause of "app silently disappears after some time" in this app.
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                WriteCrashLine("AppDomain.UnhandledException (IsTerminating=" + e.IsTerminating + ")", e.ExceptionObject);
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) =>
+            {
+                WriteCrashLine("TaskScheduler.UnobservedTaskException", e.Exception);
+                e.SetObserved();
+            };
             Log.Debug("Application_Startup");
+            WriteCrashLine("Startup", "pid=" + System.Diagnostics.Process.GetCurrentProcess().Id);
             Environment.SetEnvironmentVariable("GTK_USE_PORTAL", "1");
             Gtk.Application.Init("com.mayanktaker.fetchflow", ref args);
             GLib.Global.ProgramName = "fetchflow";
@@ -136,6 +200,9 @@ namespace XDM.GtkUI
         private static void ExceptionManager_UnhandledException(GLib.UnhandledExceptionArgs args)
         {
             Log.Debug("GLib ExceptionManager_UnhandledException: " + args.ExceptionObject);
+            // GLib gives us ExceptionObject (object); the real System.Exception usually lives
+            // inside it. Persist whatever we can so the next crash is diagnosable.
+            WriteCrashLine("GLib.ExceptionManager.UnhandledException", args.ExceptionObject);
             args.ExitApplication = false;
         }
 

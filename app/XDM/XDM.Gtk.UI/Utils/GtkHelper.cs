@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Translations;
 using XDM.Core;
+using TraceLog;
 
 namespace XDM.GtkUI.Utils
 {
@@ -428,15 +429,29 @@ namespace XDM.GtkUI.Utils
             //}
         }
 
+        // Export/Save path: use SetCurrentFolder (string) rather than SetCurrentFolderFile
+        // (GFile) — the latter throws GLib.GException "Cannot change to folder because it is
+        // not local" when dir is empty, non-existent, or a GIO-unresolvable path, which then
+        // escapes as TargetInvocationException through GLib.SignalClosure (crash in crash.log).
         public static string? SaveFile(Window parent, string? path)
         {
             using var fc = new FileChooserNative("XDM", parent, FileChooserAction.Save,
                 TextResource.GetText("DESC_SAVE_Q"), TextResource.GetText("ND_CANCEL"));
             if (!string.IsNullOrEmpty(path))
             {
-                var dir = Path.GetDirectoryName(path);
-                fc.SetFilename(Path.GetFileName(path));
-                fc.SetCurrentFolderFile(GLib.FileFactory.NewForPath(dir));
+                try
+                {
+                    var dir = Path.GetDirectoryName(path);
+                    fc.SetFilename(Path.GetFileName(path));
+                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        fc.SetCurrentFolder(dir);
+                    else if (!string.IsNullOrEmpty(dir))
+                        Log.Debug($"SaveFile: dir does not exist, skipping SetCurrentFolder: {dir}");
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug("SaveFile SetCurrentFolder: " + ex.Message);
+                }
             }
             if (fc.Run() == (int)ResponseType.Accept)
             {

@@ -159,9 +159,20 @@ dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj
 |---|---|
 | Downloads database, queues, settings | `~/.fetchflow-app-data/` (`downloads.db`, `queues.db`, `settings.dat`) |
 | Legacy fallback migration | `~/.xdm-app-data/` (auto-detected and migrated seamlessly) |
-| Log file (debug mode) | `~/.fetchflow-app-data/log.txt` |
+| Crash log (always on, 5 MB cap with rotation) | `~/.fetchflow-app-data/crash.log` — every `GLib`/`AppDomain`/unobserved-task exception lands here, even when the terminal is detached, so "crashed after some time" is diagnosable; send this file when reporting a crash |
+| Log file (debug mode) | `~/.fetchflow-app-data/log.txt` (only when `XDM_DEBUG_MODE=1`) |
 | Installed app | `/opt/fetchflow/` |
 | Auto-start entry | `~/.config/autostart/fetchflow.desktop` |
+
+### Where data lives (XDG vs legacy)
+
+`XDM.Core/Config.cs` resolves `AppDir`/`DataDir` on Linux as:
+
+1. Explicit `path` arg to `LoadConfig(path)` wins (tests/sandbox).
+2. Otherwise, if `XDG_CONFIG_HOME` is set, `AppDir = $XDG_CONFIG_HOME/fetchflow` and `DataDir = $XDG_DATA_HOME/fetchflow` (or `$XDG_DATA_HOME` is empty → `$rootDir/Data`).
+3. Otherwise, `rootDir` is `~/.fetchflow-app-data` if it exists, else `~/.xdm-app-data` if that exists (auto-migration from the original XDM), else a fresh `~/.fetchflow-app-data` is created.
+
+So on a normal Fedora install `crash.log`, `log.txt`, `downloads.db`, `queues.db` and `settings.dat` all live under `~/.fetchflow-app-data/`; inside Flatpak/sandbox `XDG_CONFIG_HOME`/`XDG_DATA_HOME` relocate them to the container's config/data dirs automatically.
 
 ## Credits & License
 

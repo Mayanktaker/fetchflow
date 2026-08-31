@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Gtk;
 using Application = Gtk.Application;
 using IoPath = System.IO.Path;
@@ -177,23 +178,38 @@ namespace XDM.GtkUI
             trayManager.Init(GtkHelper.LoadSvg("fetchflow-logo", 22), "FetchFlow Download Manager",
                              ShowAndActivate, QuitFromTray);
             
-            CheckUpdatesInBackground();
+            _ = CheckUpdatesInBackgroundAsync();
         }
 
-        private async void CheckUpdatesInBackground()
+        // Fire-and-forget update check. Returns a Task so exceptions are observed; callers
+        // must discard with _ = ... (CS4014) rather than async void, which leaks faults onto
+        // the GTK synchronization context and becomes a native abort after a delay.
+        private Task CheckUpdatesInBackgroundAsync()
         {
-            try
+            return Task.Run(async () =>
             {
-                string newVersion = await UpdateChecker.CheckForUpdateAsync();
-                if (newVersion != null)
+                string? newVersion = null;
+                try
                 {
-                    Application.Invoke(delegate
+                    newVersion = await UpdateChecker.CheckForUpdateAsync();
+                }
+                catch (Exception netEx)
+                {
+                    Log.Debug(netEx, "Error checking updates on startup: " + netEx.Message);
+                    return;
+                }
+
+                if (newVersion == null) return;
+
+                Application.Invoke(delegate
+                {
+                    try
                     {
-                        var dialog = new MessageDialog(this, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, 
+                        if (this.GdkWindow == null || this.IsDestroyed()) return;
+                        using var dialog = new MessageDialog(this, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo,
                             $"A new version (v{newVersion}) of XDM is available! Would you like to update now?");
                         dialog.Title = "Update Available";
                         ResponseType response = (ResponseType)dialog.Run();
-                        dialog.Destroy();
 
                         if (response == ResponseType.Yes)
                         {
@@ -206,18 +222,24 @@ namespace XDM.GtkUI
                                     UseShellExecute = true
                                 });
                             }
-                            catch (Exception ex)
+                            catch (Exception termEx)
                             {
-                                Console.WriteLine("Could not start updater terminal: " + ex);
+                                Log.Debug(termEx, "Could not start updater terminal: " + termEx.Message);
                             }
                         }
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error checking updates on startup: " + ex);
-            }
+                    }
+                    catch (Exception dlgEx)
+                    {
+                        Log.Debug(dlgEx, "Update dialog: " + dlgEx.Message);
+                    }
+                });
+            });
+        }
+
+        // GTK# extension: Window.IsDestroyed is not public; GdkWindow null implies destroyed.
+        private bool IsDestroyed()
+        {
+            try { return this.Handle == IntPtr.Zero; } catch { return true; }
         }
 
         private void CreateMenu()

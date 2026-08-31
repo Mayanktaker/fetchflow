@@ -9,6 +9,7 @@
 // Right-click context menu: "Show XDM" (restore) + "Quit" (exit).
 using System;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Gdk;
 using Gtk;
 using Tmds.DBus;
@@ -68,27 +69,65 @@ namespace XDM.GtkUI.Utils
         }
 
         // Re-attempt SNI registration every 5s until a host appears or the retry budget runs out.
+        // The GLib timeout callback itself never blocks — it launches the D-Bus work on a
+        // ThreadPool thread and marshals the result back, so the GTK main loop is never held
+        // for seconds (which triggers compositor "not responding" and Wayland protocol timeouts).
         private void ScheduleSniRetry(System.Action onActivate, System.Action onQuit)
         {
             if (sniRetryTimerId != 0 || icon == null || appName == null) return;
             sniRetryTimerId = GlTimeout.Add(5000, () =>
             {
-                sniRetryCount++;
                 try
                 {
-                    if (TryInitSni(icon, appName, onActivate, onQuit))
+                    sniRetryCount++;
+                    var currentIcon = icon;
+                    var currentAppName = appName;
+                    _ = System.Threading.Tasks.Task.Run(async () =>
                     {
-                        sniRetryTimerId = 0;
-                        return false;
-                    }
+                        bool ok = false;
+                        try
+                        {
+                            ok = await TryInitSniAsync(currentIcon, currentAppName, onActivate, onQuit)
+                                .ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Debug("SNI tray retry failed: " + ex);
+                            try { connection?.Dispose(); } catch { }
+                            connection = null;
+                        }
+                        if (ok)
+                        {
+                            Gtk.Application.Invoke((_, _) =>
+                            {
+                                if (sniRetryTimerId != 0)
+                                {
+                                    GlSource.Remove(sniRetryTimerId);
+                                    sniRetryTimerId = 0;
+                                }
+                            });
+                        }
+                        else if (sniRetryCount >= MaxSniRetries)
+                        {
+                            Gtk.Application.Invoke((_, _) =>
+                            {
+                                if (sniRetryTimerId != 0)
+                                {
+                                    GlSource.Remove(sniRetryTimerId);
+                                    sniRetryTimerId = 0;
+                                }
+                            });
+                        }
+                    });
+                    // Keep the GLib source alive until the async attempt signals it should stop.
+                    return sniRetryCount < MaxSniRetries;
                 }
-                catch (Exception ex) { Log.Debug("SNI tray retry failed: " + ex.Message); }
-                if (sniRetryCount >= MaxSniRetries)
+                catch (Exception ex)
                 {
-                    sniRetryTimerId = 0;
-                    return false;
+                    // Hard guard: GLib timeout callbacks must not propagate.
+                    Log.Debug("SNI retry outer guard: " + ex);
+                    return sniRetryCount < MaxSniRetries;
                 }
-                return true;
             });
         }
 
@@ -97,15 +136,44 @@ namespace XDM.GtkUI.Utils
             !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
 
         private bool TryInitSni(Pixbuf icon, string appName, System.Action onActivate, System.Action onQuit)
+            => TryInitSniAsync(icon, appName, onActivate, onQuit).GetAwaiter().GetResult();
+
+        // Async core — does the real D-Bus work without blocking the GTK thread. Called from
+        // ScheduleSniRetry's ThreadPool path; the synchronous wrapper above stays for Init().
+        private async Task<bool> TryInitSniAsync(Pixbuf icon, string appName, System.Action onActivate, System.Action onQuit)
         {
+            // Each attempt gets a fresh Connection so a half-open/failed one never leaks
+            // into the retry.
+            try { connection?.Dispose(); } catch { }
             connection = new Connection(Address.Session);
-            connection.ConnectAsync().GetAwaiter().GetResult();
+            try
+            {
+                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                await connection.ConnectAsync().WaitAsync(cts.Token).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("SNI connect failed: " + ex.Message);
+                return false;
+            }
 
             // Detect an SNI host (KDE / GNOME+AppIndicator / waybar provide this service)
-            if (!connection.IsServiceActiveAsync(WatcherService).GetAwaiter().GetResult())
+            bool watcherPresent;
+            try
+            {
+                using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(2));
+                watcherPresent = await connection.IsServiceActiveAsync(WatcherService)
+                    .WaitAsync(cts.Token).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("SNI watcher probe failed: " + ex.Message);
+                return false;
+            }
+            if (!watcherPresent)
             {
                 Log.Debug("No StatusNotifierWatcher on the bus (GNOME without AppIndicator extension, etc.).");
-                connection.Dispose();
+                try { connection.Dispose(); } catch { }
                 connection = null;
                 return false;
             }
@@ -128,12 +196,30 @@ namespace XDM.GtkUI.Utils
 
             dbusMenuServer = new DBusMenuServer(onActivate, onQuit);
 
-            connection.RegisterObjectAsync(dbusMenuServer).GetAwaiter().GetResult();
-            connection.RegisterObjectAsync(sniItem).GetAwaiter().GetResult();
-            connection.RegisterServiceAsync(WellKnownName, ServiceRegistrationOptions.Default).GetAwaiter().GetResult();
+            // Time-box every registration so a wedged bus doesn't lock the caller.
+            try
+            {
+                using var cts1 = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                await connection.RegisterObjectAsync(dbusMenuServer).WaitAsync(cts1.Token).ConfigureAwait(false);
+                using var cts2 = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                await connection.RegisterObjectAsync(sniItem).WaitAsync(cts2.Token).ConfigureAwait(false);
+                using var cts3 = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                await connection.RegisterServiceAsync(WellKnownName, ServiceRegistrationOptions.Default).WaitAsync(cts3.Token).ConfigureAwait(false);
 
-            var watcher = connection.CreateProxy<IStatusNotifierWatcher>(WatcherService, WatcherPath);
-            watcher.RegisterStatusNotifierItemAsync(WellKnownName).GetAwaiter().GetResult();
+                var watcher = connection.CreateProxy<IStatusNotifierWatcher>(WatcherService, WatcherPath);
+                using var cts4 = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                await watcher.RegisterStatusNotifierItemAsync(WellKnownName).WaitAsync(cts4.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                Log.Debug("SNI registration timed out");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("SNI registration failed: " + ex.Message);
+                return false;
+            }
 
             IsTrayActive = true;
             ActiveKind = TrayKind.StatusNotifierItem;
@@ -175,6 +261,9 @@ namespace XDM.GtkUI.Utils
             menu.PopupAtPointer(null);
         }
 
+        // Non-blocking teardown: never block the GTK thread on D-Bus. The synchronous
+        // Dispose() fires the unregister on the ThreadPool and returns immediately;
+        // DisposeAsync() is available for callers that can await.
         public void Dispose()
         {
             try
@@ -186,13 +275,62 @@ namespace XDM.GtkUI.Utils
                 }
                 legacyIcon?.Dispose();
                 legacyIcon = null;
-                if (sniItem != null && connection != null)
-                {
-                    try { connection.UnregisterServiceAsync(WellKnownName).GetAwaiter().GetResult(); } catch { }
-                }
-                connection?.Dispose();
+                // Snapshot connection and clear fields synchronously so state is reset
+                // immediately and double-dispose is harmless.
+                var conn = connection;
+                var hasSni = sniItem != null && conn != null;
                 connection = null;
                 sniItem = null;
+                dbusMenuServer = null;
+                if (hasSni && conn != null)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await conn.UnregisterServiceAsync(WellKnownName)
+                                .WaitAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+                        }
+                        catch (Exception ex) { Log.Debug("Tray unregister on dispose: " + ex.Message); }
+                        finally { try { conn.Dispose(); } catch (Exception ex2) { Log.Debug("Tray connection dispose: " + ex2.Message); } }
+                    });
+                }
+                else if (conn != null)
+                {
+                    try { conn.Dispose(); } catch (Exception ex) { Log.Debug("Tray connection dispose: " + ex.Message); }
+                }
+            }
+            catch (Exception ex) { Log.Debug("TrayIconManager dispose: " + ex.Message); }
+            IsTrayActive = false;
+            ActiveKind = TrayKind.None;
+        }
+
+        // Awaitable variant for future callers that can await shutdown.
+        public async Task DisposeAsync()
+        {
+            try
+            {
+                if (sniRetryTimerId != 0)
+                {
+                    try { GlSource.Remove(sniRetryTimerId); } catch { }
+                    sniRetryTimerId = 0;
+                }
+                legacyIcon?.Dispose();
+                legacyIcon = null;
+                var conn = connection;
+                connection = null;
+                sniItem = null;
+                dbusMenuServer = null;
+                if (conn != null)
+                {
+                    try
+                    {
+                        await conn.UnregisterServiceAsync(WellKnownName)
+                            .WaitAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+                    }
+                    catch (Exception ex) { Log.Debug("Tray unregister on dispose: " + ex.Message); }
+                    finally { try { conn.Dispose(); } catch (Exception ex2) { Log.Debug("Tray connection dispose: " + ex2.Message); } }
+                }
             }
             catch (Exception ex) { Log.Debug("TrayIconManager dispose: " + ex.Message); }
             IsTrayActive = false;

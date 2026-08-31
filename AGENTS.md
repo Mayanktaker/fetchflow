@@ -40,6 +40,11 @@ bash build_all.sh        # full release: extensions + tarball + rpm (+ deb/arch 
 4. All artifacts land in project-root `xdm-release/`.
 5. DEB and Arch packages additionally need `dpkg-deb` and `makepkg` (installable via `sudo dnf install -y dpkg pacman`).
 
+## Diagnostics
+
+- Crash log (always on, capped at 5 MB with rotation): `~/.fetchflow-app-data/crash.log` (or `$XDG_CONFIG_HOME/fetchflow/crash.log` in Flatpak/sandbox). Wired via `Program.cs` to `AppDomain.UnhandledException` + `TaskScheduler.UnobservedTaskException` + `GLib.ExceptionManager.UnhandledException` so every "crashed after some time" leaves a stack.
+- Glade wiring regression: `dotnet test app/XDM/XDM.Tests` → `GladeWiringTests` fails on any `CreateFromGladeFile` dialog whose glade id drifts from its `[UI]` field.
+
 ## Conventions
 
 - File header on all files: `© Mayanktaker Computers & Web Development | https://mayanktaker.com`

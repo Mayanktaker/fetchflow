@@ -33,15 +33,20 @@ namespace XDM.GtkUI.Dialogs.Settings
             Label28, Label29, Label30;
         [UI]
         private LinkButton VideoWikiLink;
-        [UI]
-        Button BtnChrome, BtnFirefox, BtnEdge, BtnOpera, BtnBrave, BtnVivaldi, BtnChromium, BtnYandex, BtnDefault1, BtnDefault2,
+        // Batch/Settings browser buttons: only Chrome/Firefox/Edge/Opera/Brave/Vivaldi exist in
+        // settings-dialog.glade — Chromium/Yandex were removed from the glade but kept as fields
+        // for compat; they stay without [UI] so Autoconnect doesn't fail on missing ids.
+        [UI] Button BtnChrome, BtnFirefox, BtnEdge, BtnOpera, BtnBrave, BtnVivaldi, BtnDefault1, BtnDefault2,
             BtnDefault3, CatAdd, CatEdit, CatDel, CatDef, AddPass, EditPass, DelPass, BtnUserAgentReset,
             BtnCopy1, BtnCopy2, BtnCancel, BtnOK, BtnDownloadFolderBrowse, BtnTempFolderBrowse, BtnBrowse;
+        private Button BtnChromium, BtnYandex;
         [UI]
         private Label LblTheme;
         [UI]
         private ComboBoxText CmbTheme;
-        private CheckButton ChkMonitorClipboard, ChkTimestamp, ChkAutoCat, ChkShowPrg,
+        // Builder.Autoconnect only wires fields marked [UI]; missing annotation leaves the
+        // field null → NRE in LoadTexts when the dialog is opened (crash in crash.log).
+        [UI] private CheckButton ChkMonitorClipboard, ChkTimestamp, ChkAutoCat, ChkShowPrg,
             ChkShowComplete, ChkStartAuto, ChkOverwrite, ChkEnableSpeedLimit, ChkHalt, ChkKeepAwake,
             ChkRunCmd, ChkRunAntivirus, ChkAutoRun;
         [UI]
@@ -503,10 +508,23 @@ namespace XDM.GtkUI.Dialogs.Settings
             Label9.Text = TextResource.GetText("DESC_SITEEXCEPTIONS");
             Label10.Text = TextResource.GetText("LBL_MIN_VIDEO_SIZE");
 
-            BtnDefault1.Label = BtnDefault2.Label = BtnDefault3.Label = TextResource.GetText("DESC_DEF");
+            // Glade autoconnect can silently leave these null if an id drifts. Crash
+            // logger showed this line was the NullReference that made "crash after some time"
+            // fire only when opening Settings (then trapped by GLib.Invoke as a target invoke).
+            if (BtnDefault1 != null && BtnDefault2 != null && BtnDefault3 != null)
+            {
+                var def = TextResource.GetText("DESC_DEF");
+                if (BtnDefault1 != null) BtnDefault1.Label = def;
+                if (BtnDefault2 != null) BtnDefault2.Label = def;
+                if (BtnDefault3 != null) BtnDefault3.Label = def;
+            }
+            else
+            {
+                Log.Debug("Settings LoadTexts: BtnDefault* was null (glade/autoconnect mismatch)");
+            }
 
-            ChkMonitorClipboard.Label = TextResource.GetText("MENU_CLIP_ADD");
-            ChkTimestamp.Label = TextResource.GetText("LBL_GET_TIMESTAMP");
+            if (ChkMonitorClipboard != null) ChkMonitorClipboard.Label = TextResource.GetText("MENU_CLIP_ADD");
+            if (ChkTimestamp != null) ChkTimestamp.Label = TextResource.GetText("LBL_GET_TIMESTAMP");
 
             Label11.StyleContext.AddClass("medium-font");
 

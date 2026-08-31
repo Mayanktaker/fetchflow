@@ -17,6 +17,8 @@
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
     <!-- Newtonsoft.Json required by YDLOutputParser -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <!-- GtkSmokeTests: real Builder/Autoconnect smoke under Xvfb (DISPLAY). Same GtkSharp as XDM.Gtk.UI -->
+    <PackageReference Include="GtkSharp" Version="3.24.24.38" />
   </ItemGroup>
 
   <!-- Surgical include: only the YDLWrapper sources needed by YdlParserTests,
