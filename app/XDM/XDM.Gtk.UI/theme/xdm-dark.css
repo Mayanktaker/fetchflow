@@ -739,3 +739,111 @@ button.flat.bottombar-button:backdrop {
   font-size: 11px;
   color: #8a8a8a;
 }
+
+/* -------------------------------------------------------------
+ * FetchFlow 2026 Next-Gen UI Design Components
+ * ------------------------------------------------------------- */
+
+/* Speed Graph Container */
+.speed-graph-widget {
+  margin: 4px 10px;
+}
+
+/* Card View Container */
+.card-container-scroll {
+  background-color: transparent;
+}
+
+/* Download Card Component */
+.download-card {
+  background-color: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: all 180ms ease;
+}
+
+.download-card:hover {
+  background-color: #242424;
+  border-color: rgba(53, 132, 228, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.card-subtitle {
+  font-size: 11px;
+  color: #9a9a9a;
+}
+
+.card-percent-badge {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background-color: rgba(53, 132, 228, 0.2);
+  color: #6ea8ec;
+  border: 1px solid rgba(53, 132, 228, 0.35);
+}
+
+.card-percent-badge.badge-active {
+  background-color: rgba(53, 132, 228, 0.25);
+  color: #58a6ff;
+  border-color: rgba(53, 132, 228, 0.5);
+}
+
+.card-percent-badge.badge-paused {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.card-percent-badge.badge-complete {
+  background-color: rgba(46, 194, 126, 0.2);
+  color: #2ec27e;
+  border-color: rgba(46, 194, 126, 0.4);
+}
+
+.card-progress progress {
+  background-color: #3584e4;
+  border-radius: 999px;
+  min-height: 5px;
+}
+
+.card-progress trough {
+  background-color: #2a2a2a;
+  border-radius: 999px;
+  min-height: 5px;
+}
+
+.card-metric {
+  font-size: 12px;
+  font-weight: 600;
+  color: #58a6ff;
+}
+
+.card-metric-secondary {
+  font-size: 11px;
+  color: #8a8a8a;
+}
+
+.card-action-button {
+  padding: 4px;
+  border-radius: 6px;
+  background-color: transparent;
+  border: none;
+}
+
+.card-action-button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.empty-state-label {
+  font-size: 13px;
+  color: #7a7a7a;
+  line-height: 1.6;
+}

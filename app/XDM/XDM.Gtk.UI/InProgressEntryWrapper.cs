@@ -1,4 +1,6 @@
-﻿using Gtk;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +9,13 @@ using System.Threading.Tasks;
 using XDM.Core;
 using XDM.Core.UI;
 using XDM.Core.Util;
-using XDM.Core;
 
 namespace XDM.GtkUI
 {
     internal class InProgressEntryWrapper : IInProgressDownloadRow
     {
+        public static event Action<InProgressDownloadItem>? ItemUpdated;
+
         private TreeIter treeIter;
         private ITreeModel store;
 
@@ -66,6 +69,7 @@ namespace XDM.GtkUI
             {
                 this.DownloadEntry.Progress = value;
                 store.SetValue(treeIter, 3, value);
+                ItemUpdated?.Invoke(this.DownloadEntry);
             }
         }
 
@@ -76,6 +80,7 @@ namespace XDM.GtkUI
             {
                 this.DownloadEntry.Status = value;
                 store.SetValue(treeIter, 4, Helpers.GenerateStatusText(this.DownloadEntry));
+                ItemUpdated?.Invoke(this.DownloadEntry);
             }
         }
 
@@ -86,6 +91,7 @@ namespace XDM.GtkUI
             {
                 this.DownloadEntry.DownloadSpeed = value;
                 store.SetValue(treeIter, 4, Helpers.GenerateStatusText(this.DownloadEntry));
+                ItemUpdated?.Invoke(this.DownloadEntry);
             }
         }
 
@@ -96,6 +102,7 @@ namespace XDM.GtkUI
             {
                 this.DownloadEntry.ETA = value;
                 store.SetValue(treeIter, 4, Helpers.GenerateStatusText(this.DownloadEntry));
+                ItemUpdated?.Invoke(this.DownloadEntry);
             }
         }
 

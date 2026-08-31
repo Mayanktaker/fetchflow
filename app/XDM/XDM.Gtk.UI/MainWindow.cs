@@ -14,6 +14,8 @@ using MenuItem = Gtk.MenuItem;
 using XDM.GtkUI.Utils;
 using XDM.GtkUI.Dialogs.DeleteConfirm;
 using XDM.GtkUI.Dialogs.Language;
+using XDM.GtkUI.Controls;
+using System.Linq;
 using TraceLog;
 
 
@@ -21,6 +23,10 @@ namespace XDM.GtkUI
 {
     public class MainWindow : Window, IApplicationWindow
     {
+        private SpeedGraphWidget speedGraphWidget;
+        private DownloadCardContainer cardContainer;
+        private bool isCardView = false;
+        private Button btnToggleView;
         private TreeStore categoryTreeStore;
         private TreeView categoryTree;
         private ListStore inprogressDownloadsStore, finishedDownloadsStore;
@@ -473,11 +479,134 @@ namespace XDM.GtkUI
         {
             var vbMain = new VBox();
             vbMain.PackStart(CreateToolbar(), false, false, 0);
+
+            speedGraphWidget = new SpeedGraphWidget();
+            vbMain.PackStart(speedGraphWidget, false, false, 0);
+
+            cardContainer = new DownloadCardContainer();
+            cardContainer.PauseRequested += (s, item) =>
+            {
+                var row = FindInProgressItem(item.Id);
+                if (row != null)
+                {
+                    SelectInProgressRow(row);
+                    btnPause?.Click();
+                }
+            };
+            cardContainer.ResumeRequested += (s, item) =>
+            {
+                var row = FindInProgressItem(item.Id);
+                if (row != null)
+                {
+                    SelectInProgressRow(row);
+                    btnResume?.Click();
+                }
+            };
+            cardContainer.DeleteRequested += (s, item) =>
+            {
+                var row = FindInProgressItem(item.Id);
+                if (row != null)
+                {
+                    SelectInProgressRow(row);
+                    btnDel?.Click();
+                }
+            };
+            cardContainer.OpenFolderRequested += (s, item) =>
+            {
+                var row = FindInProgressItem(item.Id);
+                if (row != null)
+                {
+                    SelectInProgressRow(row);
+                    btnOpenFolder?.Click();
+                }
+            };
+
             vbMain.PackStart(CreateInProgressListView(), true, true, 0);
+            vbMain.PackStart(cardContainer, true, true, 0);
             vbMain.PackStart(CreateFinishedListView(), true, true, 0);
             vbMain.PackStart(CreateBottombar(), false, false, 0);
+
+            // Default to classic list view until toggled
+            cardContainer.Hide();
+
+            // Connect real-time item update callback
+            InProgressEntryWrapper.ItemUpdated += (item) =>
+            {
+                Application.Invoke(delegate
+                {
+                    cardContainer?.AddOrUpdateCard(item);
+                });
+            };
+
+            // 250ms throughput calculation timer for Cairo waveform graph
+            GLib.Timeout.Add(250, () =>
+            {
+                long totalSpeed = 0;
+                if (inprogressDownloadsStore != null && inprogressDownloadsStore.GetIterFirst(out TreeIter it))
+                {
+                    do
+                    {
+                        if (inprogressDownloadsStore.GetValue(it, INPROGRESS_DATA_INDEX) is InProgressDownloadItem ent)
+                        {
+                            if (ent.Status == DownloadStatus.Downloading && !string.IsNullOrEmpty(ent.DownloadSpeed))
+                            {
+                                totalSpeed += ParseSpeedToBytes(ent.DownloadSpeed);
+                            }
+                        }
+                    } while (inprogressDownloadsStore.IterNext(ref it));
+                }
+                speedGraphWidget?.AddSample(totalSpeed);
+                return true;
+            });
+
             vbMain.Show();
             return vbMain;
+        }
+
+        private void SelectInProgressRow(IInProgressDownloadRow row)
+        {
+            try
+            {
+                if (row is InProgressEntryWrapper wrapper && wrapper.GetStore() is ITreeModel model)
+                {
+                    var iter = wrapper.TreeIter;
+                    var path = model.GetPath(iter);
+                    if (path != null)
+                    {
+                        var sortPath = inprogressDownloadsStoreSorted?.ConvertChildPathToPath(path);
+                        if (sortPath != null)
+                        {
+                            var viewPath = inprogressDownloadFilter?.ConvertChildPathToPath(sortPath);
+                            if (viewPath != null)
+                            {
+                                lvInprogress.Selection.UnselectAll();
+                                lvInprogress.Selection.SelectPath(viewPath);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static long ParseSpeedToBytes(string speedText)
+        {
+            try
+            {
+                var parts = speedText.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 1) return 0;
+                if (!double.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                    return 0;
+                if (parts.Length > 1)
+                {
+                    var unit = parts[1].ToUpperInvariant();
+                    if (unit.StartsWith("GB")) return (long)(val * 1024 * 1024 * 1024);
+                    if (unit.StartsWith("MB")) return (long)(val * 1024 * 1024);
+                    if (unit.StartsWith("KB")) return (long)(val * 1024);
+                }
+                return (long)val;
+            }
+            catch { return 0; }
         }
 
         private Button CreateButtonWithContent(string icon, string? text = null, byte? r = null, byte? g = null, byte? b = null)
@@ -610,6 +739,22 @@ namespace XDM.GtkUI
                 finishedDownloadFilter.Refilter();
             };
             toolbar.PackEnd(searchEntry, false, false, 0);
+
+            btnToggleView = CreateButtonWithContent("function-line", isCardView ? "List View" : "Card View", 99, 102, 241);
+            btnToggleView.TooltipText = "Switch between modern Card View and classic Table View";
+            btnToggleView.Clicked += (s, e) =>
+            {
+                isCardView = !isCardView;
+                var hbox = btnToggleView.Child as HBox;
+                var lbl = hbox?.Children.OfType<Label>().FirstOrDefault();
+                if (lbl != null)
+                {
+                    lbl.Text = isCardView ? "List View" : "Card View";
+                }
+                UpdateViewDisplay();
+            };
+            toolbar.PackEnd(btnToggleView, false, false, 0);
+
             toolbar.Margin = 5;
             toolbar.ShowAll();
 
@@ -627,6 +772,33 @@ namespace XDM.GtkUI
             btnMenu.Clicked += BtnMenu_Clicked;
 
             return toolbar;
+        }
+
+        private void UpdateViewDisplay()
+        {
+            var selCat = GetSelectedCategory();
+            if (selCat == 0) // In-progress / Unfinished
+            {
+                speedGraphWidget?.ShowAll();
+                if (isCardView)
+                {
+                    cardContainer?.ShowAll();
+                    swInProgress?.Hide();
+                }
+                else
+                {
+                    swInProgress?.ShowAll();
+                    cardContainer?.Hide();
+                }
+                swFinished?.Hide();
+            }
+            else // Finished
+            {
+                speedGraphWidget?.Hide();
+                cardContainer?.Hide();
+                swInProgress?.Hide();
+                swFinished?.ShowAll();
+            }
         }
 
         private void BtnMenu_Clicked(object? sender, EventArgs e)
@@ -745,34 +917,34 @@ namespace XDM.GtkUI
                 var index = paths[0].Indices[0];
                 if (index == 0)
                 {
-                    swInProgress.ShowAll();
-                    swFinished.Hide();
                     category = null;
                     btnOpenFile.Visible = btnOpenFolder.Visible = false;
                     btnPause.Visible = btnResume.Visible = true;
+                    if (btnToggleView != null) btnToggleView.Visible = true;
                     SetHeaderSubtitle(TextResource.GetText("ALL_UNFINISHED"));
+                    UpdateViewDisplay();
                 }
                 else
                 {
-                    swFinished.ShowAll();
-                    swInProgress.Hide();
                     category = null;
                     btnOpenFile.Visible = btnOpenFolder.Visible = true;
                     btnPause.Visible = btnResume.Visible = false;
+                    if (btnToggleView != null) btnToggleView.Visible = false;
                     finishedDownloadFilter.Refilter();
                     SetHeaderSubtitle(TextResource.GetText("ALL_FINISHED"));
+                    UpdateViewDisplay();
                 }
             }
             else
             {
-                swFinished.ShowAll();
-                swInProgress.Hide();
+                if (btnToggleView != null) btnToggleView.Visible = false;
                 if (categoryTree.Selection.GetSelected(out ITreeModel model, out TreeIter iter))
                 {
                     category = (Category)model.GetValue(iter, 2);
                     SetHeaderSubtitle(model.GetValue(iter, 1) as string);
                 }
                 finishedDownloadFilter.Refilter();
+                UpdateViewDisplay();
             }
         }
 
@@ -1259,6 +1431,7 @@ namespace XDM.GtkUI
             inprogressDownloadsStore.SetValue(iter, 3, entry.Progress);
             inprogressDownloadsStore.SetValue(iter, 4, entry.Status.ToString());
             inprogressDownloadsStore.SetValue(iter, 5, entry);
+            cardContainer?.AddOrUpdateCard(entry);
         }
 
         public void AddToTop(FinishedDownloadItem entry)
@@ -1334,10 +1507,7 @@ namespace XDM.GtkUI
                 var iter = modelIter.Value;
                 inprogressDownloadsStore.Remove(ref iter);
             }
-
-            //var iter = GtkHelper.ConvertViewToModel(((InProgressEntryWrapper)row).TreeIter,
-            //    inprogressDownloadsStoreSorted, inprogressDownloadFilter);
-            //inprogressDownloadsStore.Remove(ref iter);
+            cardContainer?.RemoveCard(id);
         }
 
         public void Delete(IFinishedDownloadRow row)
@@ -1489,6 +1659,7 @@ namespace XDM.GtkUI
                     Helpers.GenerateStatusText(item),
                     item);
             }
+            cardContainer?.SetDownloads(incompleteDownloads);
         }
 
         private IList<IInProgressDownloadRow> GetSelectedInProgressDownloads()
