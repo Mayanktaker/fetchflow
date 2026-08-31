@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,8 +41,11 @@ namespace XDM.GtkUI.Dialogs
             builder.Autoconnect(this);
             GtkHelper.ConfigurePasswordField(TxtPassword);
 
-            Title = TextResource.GetText("ND_AUTH");
-            SetDefaultSize(400, 200);
+            var titleText = TextResource.GetText("ND_AUTH");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            SetDefaultSize(480, 220);
 
             Modal = true;
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
@@ -52,6 +55,7 @@ namespace XDM.GtkUI.Dialogs
 
             GtkHelper.AttachSafeDispose(this);
 
+            BtnOk.StyleContext.AddClass("suggested-action");
             BtnOk.Clicked += BtnOk_Clicked;
             BtnCancel.Clicked += BtnCancel_Clicked;
         }

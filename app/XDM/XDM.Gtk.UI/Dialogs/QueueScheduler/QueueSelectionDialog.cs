@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -42,8 +42,11 @@ namespace XDM.GtkUI.Dialogs.QueueScheduler
             this.group.AddWindow(this);
 
             GtkHelper.AttachSafeDispose(this);
-            Title = TextResource.GetText("Q_MOVE_TO");
-            SetDefaultSize(400, 300);
+            var titleText = TextResource.GetText("Q_MOVE_TO");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            SetDefaultSize(480, 320);
             LoadTexts();
 
             listStore = new ListStore(typeof(string));

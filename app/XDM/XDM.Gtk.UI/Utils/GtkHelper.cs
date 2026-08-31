@@ -1,4 +1,4 @@
-﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using Gtk;
 using System;
 using System.IO;
@@ -295,17 +295,33 @@ namespace XDM.GtkUI.Utils
             while (comboBox.Model.IterNext(ref iter));
         }
 
-        public static Gdk.Pixbuf LoadSvg(string name, int dimension = 16)
+        public static Gdk.Pixbuf? LoadSvg(string name, int dimension = 16)
         {
-            return new Gdk.Pixbuf(
-                Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg"), dimension, dimension, true);
+            try
+            {
+                var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg");
+                if (File.Exists(path))
+                {
+                    return new Gdk.Pixbuf(path, dimension, dimension, true);
+                }
+                var rootSvg = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{name}.svg");
+                if (File.Exists(rootSvg))
+                {
+                    return new Gdk.Pixbuf(rootSvg, dimension, dimension, true);
+                }
+            }
+            catch { }
+            return null;
         }
 
         // Tinted copy of a monochrome pixbuf: RGB channels replaced with (r,g,b),
         // alpha silhouette preserved — used for selected sidebar row icons
-        public static Gdk.Pixbuf TintPixbuf(Gdk.Pixbuf source, byte r, byte g, byte b)
+        public static Gdk.Pixbuf? TintPixbuf(Gdk.Pixbuf? source, byte r, byte g, byte b)
         {
+            if (source == null)
+            {
+                return null;
+            }
             var copy = source.Copy();
             var rowstride = copy.Rowstride;
             var channels = copy.NChannels;
@@ -496,6 +512,51 @@ namespace XDM.GtkUI.Utils
         {
             var iter1 = sortedModel.ConvertIterToChildIter(iter);
             return filterModel.ConvertIterToChildIter(iter1);
+        }
+
+        // Creates a standard themed CSD dialog HeaderBar with close button, title, and left app icon
+        public static HeaderBar CreateDialogHeaderBar(string title, string? subtitle = null)
+        {
+            var hb = new HeaderBar
+            {
+                ShowCloseButton = true,
+                DecorationLayout = ":close",
+                Title = title
+            };
+            if (!string.IsNullOrEmpty(subtitle))
+            {
+                hb.Subtitle = subtitle;
+            }
+
+            try
+            {
+                var appIcon = new Image
+                {
+                    Pixbuf = LoadSvg("fetchflow-mark", 18) ?? LoadSvg("fetchflow-logo", 18),
+                    MarginStart = 4,
+                    MarginEnd = 2,
+                    Valign = Align.Center
+                };
+                hb.PackStart(appIcon);
+            }
+            catch { }
+
+            return hb;
+        }
+
+        // Applies the FetchFlow app icon to a specific window/dialog
+        public static void SetWindowAppIcon(Window window)
+        {
+            try
+            {
+                window.IconName = "com.mayanktaker.fetchflow";
+                var icon = LoadSvg("fetchflow-logo", 64);
+                if (icon != null)
+                {
+                    window.Icon = icon;
+                }
+            }
+            catch { }
         }
     }
 }

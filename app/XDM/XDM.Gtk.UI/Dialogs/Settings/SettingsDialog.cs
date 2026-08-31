@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +17,7 @@ using XDM.GtkUI.Dialogs.ChromeIntegrator;
 
 namespace XDM.GtkUI.Dialogs.Settings
 {
-    internal class SettingsDialog : Dialog
+    internal class SettingsDialog : Window
     {
         //private int[] minVidSize = new int[] { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
         private WindowGroup group;
@@ -62,25 +62,29 @@ namespace XDM.GtkUI.Dialogs.Settings
 
         private SettingsDialog(Builder builder,
             Window parent,
-            WindowGroup group) : base(builder.GetRawOwnedObject("dialog"))
+            WindowGroup group) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
 
             Modal = true;
-            SetDefaultSize(640, 480);
+            SetDefaultSize(780, 520);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
             this.group = group;
             this.group.AddWindow(this);
             GtkHelper.AttachSafeDispose(this);
+            GtkHelper.SetWindowAppIcon(this);
+
+            var titleText = TextResource.GetText("TITLE_SETTINGS");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
 
             LoadTexts();
 
+            SideList.StyleContext.AddClass("sidebar");
             SideList.RowSelected += SideList_RowSelected;
 
             Tabs.ShowTabs = false;
-
-            Title = TextResource.GetText("TITLE_SETTINGS");
             GtkHelper.PopulateComboBoxGeneric<int>(CmbMinVidSize, new int[] { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 });
             GtkHelper.PopulateComboBoxGeneric<int>(CmbMaxParallalDownloads, Enumerable.Range(1, 50).ToArray());
             GtkHelper.PopulateComboBox(CmbDblClickAction, TextResource.GetText("CTX_OPEN_FOLDER"), TextResource.GetText("MSG_OPEN_FILE"));
@@ -291,7 +295,7 @@ namespace XDM.GtkUI.Dialogs.Settings
 
         private void BtnCancel_Clicked(object? sender, EventArgs e)
         {
-            Dispose();
+            Destroy();
         }
 
         private void BtnOK_Clicked(object? sender, EventArgs e)
@@ -303,7 +307,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             UpdateAdvancedSettingsConfig();
             Config.SaveConfig();
             ApplicationContext.BroadcastConfigChange();
-            Dispose();
+            Destroy();
             Helpers.RunGC();
         }
 

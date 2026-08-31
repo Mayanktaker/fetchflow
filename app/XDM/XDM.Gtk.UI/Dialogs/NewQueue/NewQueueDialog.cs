@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -45,13 +45,16 @@ namespace XDM.GtkUI.Dialogs.NewQueue
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
             this.group = group;
-            this.group.AddWindow(this);
             GtkHelper.AttachSafeDispose(this);
             LoadTexts();
-            Title = TextResource.GetText("LBL_QUEUE_OPT1");
-            SetDefaultSize(640, 480);
+            var titleText = TextResource.GetText("LBL_QUEUE_OPT1");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            SetDefaultSize(768, 480);
             BtnCancel.Clicked += BtnCancel_Clicked;
             BtnOK.Clicked += BtnOK_Clicked;
+            BtnOK.StyleContext.AddClass("suggested-action");
 
             this.listStore = new ListStore(
                 typeof(bool), typeof(string),

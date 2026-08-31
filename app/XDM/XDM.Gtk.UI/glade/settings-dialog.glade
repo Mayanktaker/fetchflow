@@ -2,16 +2,20 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkDialog" id="dialog">
+  <object class="GtkWindow" id="window">
     <property name="can-focus">False</property>
     <property name="type-hint">dialog</property>
-    <child internal-child="vbox">
+    <property name="default-width">780</property>
+    <property name="default-height">520</property>
+    <child>
       <object class="GtkBox">
+        <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox">
+        <property name="spacing">6</property>
+        <child>
+          <object class="GtkButtonBox" id="ActionArea">
+            <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="layout-style">end</property>
             <child>
@@ -66,7 +70,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="label-xalign">0</property>
-                <property name="shadow-type">in</property>
+                <property name="shadow-type">none</property>
                 <child>
                   <object class="GtkAlignment">
                     <property name="visible">True</property>

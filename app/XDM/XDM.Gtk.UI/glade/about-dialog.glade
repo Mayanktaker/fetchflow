@@ -2,96 +2,163 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkDialog" id="dialog">
+  <object class="GtkWindow" id="window">
     <property name="can-focus">False</property>
     <property name="type-hint">dialog</property>
-    <child internal-child="vbox">
+    <property name="border-width">0</property>
+    <property name="resizable">False</property>
+    <child>
       <object class="GtkBox">
+        <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox">
-            <property name="can-focus">False</property>
-            <property name="layout-style">end</property>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
+        <property name="spacing">0</property>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="MainContainer">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="orientation">vertical</property>
+            <property name="spacing">16</property>
+            <property name="margin-start">24</property>
+            <property name="margin-end">24</property>
+            <property name="margin-top">20</property>
+            <property name="margin-bottom">16</property>
+            
+            <!-- Section 1: Logo & Title Header -->
             <child>
-              <object class="GtkImage" id="AppLogo">
+              <object class="GtkBox" id="HeaderBox">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="stock">gtk-missing-image</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">8</property>
+                <property name="halign">center</property>
+                <child>
+                  <object class="GtkBox" id="LogoContainer">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">center</property>
+                    <child>
+                      <object class="GtkImage" id="AppLogo">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="stock">gtk-missing-image</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="TxtAppName">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label">FetchFlow Download Manager</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="TxtAppVersion">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label">Version 9.1.4</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="TxtTagline">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label">High-performance multi-threaded download manager for Linux</property>
+                    <property name="wrap">True</property>
+                    <property name="justify">center</property>
+                  </object>
+                </child>
               </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
             </child>
+
+            <!-- Section 2: Links / Resources Card -->
             <child>
-              <object class="GtkLabel" id="TxtAppVersion">
+              <object class="GtkBox" id="LinksCard">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">label</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkLinkButton" id="BtnAppWebsite">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="label">FetchFlow Official Website</property>
+                    <property name="uri">https://mayanktaker.com/apps/fetchflow</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLinkButton" id="BtnDevWebsite">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="label">Mayanktaker Computers &amp; Web Development</property>
+                    <property name="uri">https://mayanktaker.com</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLinkButton" id="BtnGitHub">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="label">Source Code &amp; Issue Tracker (GitHub)</property>
+                    <property name="uri">https://github.com/Mayanktaker/xdm</property>
+                  </object>
+                </child>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
             </child>
+
+            <!-- Section 3: Credits & Copyright Section -->
             <child>
-              <object class="GtkLabel" id="TxtCopyright">
+              <object class="GtkBox" id="CreditsCard">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-top">10</property>
-                <property name="label" translatable="yes">label</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">4</property>
+                <property name="halign">center</property>
+                <child>
+                  <object class="GtkLabel" id="TxtCopyright">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label">© 2026 Mayanktaker | Mayanktaker Computers &amp; Web Development</property>
+                    <property name="justify">center</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="TxtOriginalCredit">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label">Based on original XDM core created by Subhra Das Gupta</property>
+                    <property name="justify">center</property>
+                  </object>
+                </child>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
             </child>
+
+            <!-- Section 4: Close Button -->
             <child>
-              <object class="GtkLinkButton" id="TxtWebsite">
-                <property name="label" translatable="yes">button</property>
+              <object class="GtkBox" id="ActionBox">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="focus-on-click">False</property>
-                <property name="receives-default">False</property>
-                <property name="valign">start</property>
-                <property name="margin-bottom">40</property>
-                <property name="relief">none</property>
-                <property name="uri">http://glade.gnome.org</property>
+                <property name="halign">end</property>
+                <property name="margin-top">8</property>
+                <child>
+                  <object class="GtkButton" id="BtnClose">
+                    <property name="label" translatable="yes">Close</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                  </object>
+                </child>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">3</property>
-              </packing>
             </child>
+
           </object>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">1</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </object>

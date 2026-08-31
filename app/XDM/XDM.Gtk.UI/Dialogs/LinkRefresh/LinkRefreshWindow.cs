@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,7 +44,11 @@ namespace XDM.GtkUI.Dialogs.LinkRefresh
         private LinkRefreshWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            SetDefaultSize(400, 200);
+            SetDefaultSize(480, 220);
+            var titleText = TextResource.GetText("MENU_REFRESH_LINK");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             this.group = new WindowGroup();
             this.group.AddWindow(this);
@@ -52,9 +56,9 @@ namespace XDM.GtkUI.Dialogs.LinkRefresh
             GtkHelper.AttachSafeDispose(this);
 
             BtnStop.Label = TextResource.GetText("BTN_STOP_PROCESSING");
+            BtnStop.StyleContext.AddClass("destructive-action");
             LblText.Text = TextResource.GetText("REF_WAITING_FOR_LINK");
 
-            Title = TextResource.GetText("MENU_REFRESH_LINK");
             DeleteEvent += LinkRefreshWindow_DeleteEvent;
             BtnStop.Clicked += BtnStop_Clicked;
         }

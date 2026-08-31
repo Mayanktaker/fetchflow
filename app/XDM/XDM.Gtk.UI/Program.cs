@@ -1,6 +1,7 @@
-﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using Gtk;
 using TraceLog;
@@ -31,8 +32,35 @@ namespace XDM.GtkUI
             }
             Log.Debug("Application_Startup");
             Environment.SetEnvironmentVariable("GTK_USE_PORTAL", "1");
-            Gtk.Application.Init("xdm-app", ref args);
+            Gtk.Application.Init("com.mayanktaker.fetchflow", ref args);
+            GLib.Global.ProgramName = "fetchflow";
+            GLib.Global.ApplicationName = "FetchFlow Download Manager";
             GLib.ExceptionManager.UnhandledException += ExceptionManager_UnhandledException;
+
+            try
+            {
+                Gtk.Window.DefaultIconName = "com.mayanktaker.fetchflow";
+                var iconList = new List<Gdk.Pixbuf>();
+                int[] iconSizes = { 16, 32, 48, 64, 128, 256, 512 };
+                foreach (var sz in iconSizes)
+                {
+                    var p = GtkHelper.LoadSvg("fetchflow-logo", sz);
+                    if (p != null) iconList.Add(p);
+                }
+                var png512 = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo-512.png");
+                if (System.IO.File.Exists(png512))
+                {
+                    try { iconList.Add(new Gdk.Pixbuf(png512)); } catch { }
+                }
+                if (iconList.Count > 0)
+                {
+                    Gtk.Window.DefaultIconList = iconList.ToArray();
+                }
+            }
+            catch (Exception iconEx)
+            {
+                Log.Debug("Non-fatal: default icon list setup: " + iconEx.Message);
+            }
             var globalStyleSheet = @"
                                     .large-font{ font-size: 16px; }
                                     .medium-font{ font-size: 14px; }

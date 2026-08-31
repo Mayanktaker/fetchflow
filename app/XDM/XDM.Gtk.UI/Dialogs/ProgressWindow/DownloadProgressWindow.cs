@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -101,7 +101,7 @@ namespace XDM.GtkUI.Dialogs.ProgressWindow
         {
             Application.Invoke((a, b) =>
             {
-                this.SetDefaultSize(450, 280);
+                this.SetDefaultSize(540, 300);
                 this.ShowAll();
             });
             //Dispatcher.Invoke(new Action(() => this.Show()));
@@ -262,7 +262,12 @@ namespace XDM.GtkUI.Dialogs.ProgressWindow
         private DownloadProgressWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            Title = TextResource.GetText("STAT_DOWNLOADING");
+            SetDefaultSize(540, 300);
+            var titleText = TextResource.GetText("STAT_DOWNLOADING");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            GtkHelper.AttachSafeDispose(this);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             this.windowGroup = new WindowGroup();

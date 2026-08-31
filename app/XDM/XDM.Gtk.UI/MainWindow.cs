@@ -32,7 +32,7 @@ namespace XDM.GtkUI
         private TreeModelSort finishedDownloadsStoreSorted;
         private string? searchKeyword;
         private Category? category;
-        private Button btnNew, btnDel, btnOpenFile, btnOpenFolder, btnResume, btnPause, btnMenu, btnHelp, btnScheduler;
+        private Button btnNew, btnDel, btnOpenFile, btnOpenFolder, btnResume, btnPause, btnMenu, btnHelp, btnScheduler, btnSettings;
         private IButton newButton, deleteButton, pauseButton, resumeButton, openFileButton, openFolderButton;
         private IMenuItem[] menuItems;
         private Menu newDownloadMenu;
@@ -167,7 +167,7 @@ namespace XDM.GtkUI
             }
             UpdateBrowserMonitorButton();
             CreateMenu();
-            SetDefaultSize(800, 500);
+            SetDefaultSize(960, 520);
 
             clipboarMonitor = new PollingClipboardMonitor();
             clipboarMonitor.ClipboardChanged += (_, _) => this.ClipboardChanged?.Invoke(this, EventArgs.Empty);
@@ -342,9 +342,8 @@ namespace XDM.GtkUI
 
         private void MenuAbout_Activated(object? sender, EventArgs e)
         {
-            using var win = XDM.GtkUI.Dialogs.About.AboutDialog.CreateFromGladeFile(this, windowGroup);
-            win.Run();
-            win.Destroy();
+            var win = XDM.GtkUI.Dialogs.About.AboutDialog.CreateFromGladeFile(this, windowGroup);
+            win.ShowAll();
         }
 
         private void MenuCheckForUpdate_Activated(object? sender, EventArgs e)
@@ -421,6 +420,13 @@ namespace XDM.GtkUI
             };
             hb.StyleContext.AddClass("main-headerbar");
 
+            var appIcon = new Image
+            {
+                Pixbuf = LoadSvg("fetchflow-mark", 20) ?? LoadSvg("fetchflow-logo", 20),
+                MarginEnd = 4,
+                Valign = Align.Center
+            };
+
             var appLabel = new Label { Text = HeaderAppName };
             appLabel.StyleContext.AddClass("header-title-app");
             subtitleLabel = new Label
@@ -444,6 +450,7 @@ namespace XDM.GtkUI
             updateDot.Clicked += (_, _) => UpdateClicked?.Invoke(this, EventArgs.Empty);
 
             var titleBox = new HBox(false, ButtonContentSpacing) { Hexpand = true, Halign = Align.Start };
+            titleBox.PackStart(appIcon, false, false, 0);
             titleBox.PackStart(appLabel, false, false, 0);
             titleBox.PackStart(subtitleLabel, false, false, 0);
             titleBox.PackStart(updateDot, false, false, 0);
@@ -473,14 +480,19 @@ namespace XDM.GtkUI
             return vbMain;
         }
 
-        private Button CreateButtonWithContent(string icon, string? text = null)
+        private Button CreateButtonWithContent(string icon, string? text = null, byte? r = null, byte? g = null, byte? b = null)
         {
             Label? lbl = null;
             if (!string.IsNullOrEmpty(text))
             {
                 lbl = new Label { Text = text };
             }
-            return CreateButtonWithContent(new Image(LoadSvg(icon, 16)), lbl);
+            var rawPixbuf = LoadSvg(icon, 16);
+            var pixbuf = (r.HasValue && g.HasValue && b.HasValue && rawPixbuf != null)
+                ? GtkHelper.TintPixbuf(rawPixbuf, r.Value, g.Value, b.Value)
+                : rawPixbuf;
+            var image = pixbuf != null ? new Image(pixbuf) : new Image();
+            return CreateButtonWithContent(image, lbl);
         }
 
         private Button CreateButtonWithContent(Image image, Label? label)
@@ -518,8 +530,6 @@ namespace XDM.GtkUI
             hbox.Margin = 2;
             hbox.MarginStart = 5;
             hbox.MarginEnd = 5;
-            //var lblMonitoring = new Label { Text = TextResource.GetText("SETTINGS_MONITORING"), MarginBottom = 5 };
-            //hbox.PackStart(lblMonitoring, false, false, 0);
             btnMonitoring = new CheckButton { MarginStart = 5 };
             btnMonitoring.Clicked += BtnMonitoring_Clicked;
             hbox.PackStart(btnMonitoring, false, false, 0);
@@ -527,67 +537,38 @@ namespace XDM.GtkUI
             var lblMonitoring = new Label { Text = TextResource.GetText("SETTINGS_MONITORING") };
             hbox.PackStart(lblMonitoring, false, false, 0);
 
-            //var h1 = new HBox();
-            //h1.PackStart(new Image(LoadSvg("links-line", 14)), false, false, 0);
-            //h1.PackStart(new Label { Text = TextResource.GetText("DESC_Q_TITLE") }, false, false, 10);
-
-            btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"));
+            btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"), 6, 182, 212);
             btnScheduler.Clicked += BtnScheduler_Clicked;
             btnScheduler.StyleContext.AddClass("bottombar-button");
-            //new Button
-            //{
-            //    Label = TextResource.GetText("DESC_Q_TITLE"),
-            //    MarginBottom = 0,
-            //    Relief = ReliefStyle.None,
-            //    Valign = Align.Start,
-            //    Image = new Image(LoadSvg("list-settings-line", 16)),
-            //    AlwaysShowImage = true,
 
-            //};
-            //btnScheduler.Add(h1);
-            //btnScheduler.Margin = 1;
-            hbox.PackStart(btnScheduler, false, false, 0);
+            btnSettings = CreateButtonWithContent("settings-3-line", TextResource.GetText("TITLE_SETTINGS"), 148, 163, 184);
+            btnSettings.Clicked += BtnSettings_Clicked;
+            btnSettings.StyleContext.AddClass("bottombar-button");
 
-            helpImage = new Image(LoadSvg("question-line", 16));
-            helpLabel = new Label { Text = TextResource.GetText("LBL_SUPPORT_PAGE") };
-            btnHelp = CreateButtonWithContent(helpImage, helpLabel);
+            btnHelp = CreateButtonWithContent("question-line", TextResource.GetText("MENU_HELP"), 148, 163, 184);
             btnHelp.Clicked += BtnHelp_Clicked;
             btnHelp.StyleContext.AddClass("bottombar-button");
-            //btnHelp.Margin = 1;
-            //btnHelp.MarginEnd = 5;
-            //new Button
-            //{
-            //    Label = TextResource.GetText("LBL_SUPPORT_PAGE"),
-            //    MarginBottom = 0,
-            //    Relief = ReliefStyle.None,
-            //    Valign = Align.Start,
-            //    Image = new Image(LoadSvg("question-line", 16)),
-            //    AlwaysShowImage = true,
-            //};
-            hbox.PackEnd(btnHelp, false, false, 0);
 
+            hbox.PackEnd(btnHelp, false, false, 0);
+            hbox.PackEnd(btnSettings, false, false, 0);
+            hbox.PackEnd(btnScheduler, false, false, 0);
             hbox.ShowAll();
             return hbox;
         }
 
         private void BtnHelp_Clicked(object? sender, EventArgs e)
         {
-            if (isUpdateAvailable)
-            {
-                UpdateClicked?.Invoke(sender, e);
-            }
-            else
-            {
-                HelpClicked?.Invoke(sender, e);
-            }
+            OpenMainMenu();
+        }
+
+        private void BtnSettings_Clicked(object? sender, EventArgs e)
+        {
+            SettingsClicked?.Invoke(sender, e);
         }
 
         private void BtnScheduler_Clicked(object? sender, EventArgs e)
         {
-            //using var dlg = QueueSchedulerDialog.CreateFromGladeFile(this, this.windowGroup);
-            //dlg.Run();
-            //dlg.Destroy();
-            this.SchedulerClicked?.Invoke(sender, e);
+            SchedulerClicked?.Invoke(sender, e);
         }
 
         private void BtnMonitoring_Clicked(object? sender, EventArgs e)
@@ -598,25 +579,31 @@ namespace XDM.GtkUI
         private Widget CreateToolbar()
         {
             var toolbar = new HBox(false, 5);
-            btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"));
+            btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"), 53, 132, 228);
             toolbar.PackStart(btnNew, false, false, 0);
-            btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"));
+            btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"), 239, 68, 68);
             // Immediate destructive trigger — red flat variant, matching queue manager
             btnDel.StyleContext.AddClass("destructive-action");
             toolbar.PackStart(btnDel, false, false, 0);
-            btnOpenFile = CreateButtonWithContent("external-link-line", TextResource.GetText("CTX_OPEN_FILE"));
+            btnOpenFile = CreateButtonWithContent("external-link-line", TextResource.GetText("CTX_OPEN_FILE"), 46, 194, 126);
             toolbar.PackStart(btnOpenFile, false, false, 0);
-            btnOpenFolder = CreateButtonWithContent("folder-shared-line", TextResource.GetText("CTX_OPEN_FOLDER"));
+            btnOpenFolder = CreateButtonWithContent("folder-shared-line", TextResource.GetText("CTX_OPEN_FOLDER"), 245, 158, 11);
             toolbar.PackStart(btnOpenFolder, false, false, 0);
-            btnResume = CreateButtonWithContent("play-line", TextResource.GetText("MENU_RESUME"));
+            btnResume = CreateButtonWithContent("play-line", TextResource.GetText("MENU_RESUME"), 34, 197, 94);
             toolbar.PackStart(btnResume, false, false, 0);
-            btnPause = CreateButtonWithContent("pause-line", TextResource.GetText("MENU_PAUSE"));
+            btnPause = CreateButtonWithContent("pause-line", TextResource.GetText("MENU_PAUSE"), 249, 115, 22);
             toolbar.PackStart(btnPause, false, false, 0);
 
             btnMenu = CreateButtonWithContent("menu-line");
             toolbar.PackEnd(btnMenu, false, false, 0);
 
-            var searchEntry = new Entry() { WidthChars = 15, PlaceholderText = TextResource.GetText("LBL_SEARCH") };
+            var searchEntry = new Entry()
+            {
+                WidthChars = 15,
+                PlaceholderText = TextResource.GetText("LBL_SEARCH"),
+                Valign = Align.Center
+            };
+            searchEntry.StyleContext.AddClass("toolbar-search-entry");
             searchEntry.Activated += (a, b) =>
             {
                 searchKeyword = searchEntry.Text;
@@ -649,22 +636,22 @@ namespace XDM.GtkUI
 
         private Widget CreateCategoryTree()
         {
-            string GetFontIcon(string name)
+            (string iconName, byte r, byte g, byte b) GetCategoryIconConfig(string name)
             {
                 switch (name)
                 {
                     case "CAT_DOCUMENTS":
-                        return "file-text-line";
+                        return ("file-text-line", 245, 158, 11);    // Amber / Orange
                     case "CAT_MUSIC":
-                        return "file-music-line";
+                        return ("file-music-line", 168, 85, 247);   // Purple / Violet
                     case "CAT_VIDEOS":
-                        return "movie-line";
+                        return ("movie-line", 239, 68, 68);         // Coral / Red
                     case "CAT_COMPRESSED":
-                        return "file-zip-line";
+                        return ("file-zip-line", 20, 184, 166);     // Teal / Cyan
                     case "CAT_PROGRAMS":
-                        return "function-line";
+                        return ("function-line", 99, 102, 241);     // Indigo / Blue
                     default:
-                        return "file-line";
+                        return ("file-line", 56, 189, 248);         // Sky Blue
                 }
             }
 
@@ -682,7 +669,7 @@ namespace XDM.GtkUI
             cell1.SetPadding(3, 5);
             cols.PackStart(cell1, false);
             cols.AddAttribute(cell1, "pixbuf", 0);
-            // Selected rows swap to a dark-tinted pixbuf so icons read on the blue accent
+            // Selected rows swap to crisp pure white icon, unselected show vibrant category color
             cols.SetCellDataFunc(cell1, new CellLayoutDataFunc(RenderCategoryIcon));
 
             var cell2 = new CellRendererText();
@@ -691,13 +678,20 @@ namespace XDM.GtkUI
             cols.AddAttribute(cell2, "text", 1);
 
             categoryTreeStore = new TreeStore(typeof(Gdk.Pixbuf), typeof(string), typeof(Category));
-            categoryTreeStore.AppendValues(LoadSvg("arrow-down-line"), TextResource.GetText("ALL_UNFINISHED"));
-            var iter = categoryTreeStore.AppendValues(LoadSvg("check-line"), TextResource.GetText("ALL_FINISHED"));
+            var rawActive = LoadSvg("arrow-down-line", 20);
+            var rawFinished = LoadSvg("check-line", 20);
+            var activeIcon = rawActive != null ? GtkHelper.TintPixbuf(rawActive, 53, 132, 228) : null;
+            var finishedIcon = rawFinished != null ? GtkHelper.TintPixbuf(rawFinished, 46, 194, 126) : null;
+
+            categoryTreeStore.AppendValues(activeIcon, TextResource.GetText("ALL_UNFINISHED"));
+            var iter = categoryTreeStore.AppendValues(finishedIcon, TextResource.GetText("ALL_FINISHED"));
 
             foreach (var category in Config.Instance.Categories)
             {
-                categoryTreeStore.AppendValues(iter, LoadSvg(GetFontIcon(category.Name), 20),
-                    category.DisplayName, category);
+                var (iconName, r, g, b) = GetCategoryIconConfig(category.Name);
+                var rawIcon = LoadSvg(iconName, 20);
+                var coloredIcon = rawIcon != null ? GtkHelper.TintPixbuf(rawIcon, r, g, b) : null;
+                categoryTreeStore.AppendValues(iter, coloredIcon, category.DisplayName, category);
             }
 
             categoryTree.AppendColumn(cols);
@@ -712,17 +706,17 @@ namespace XDM.GtkUI
                 Margin = 5,
                 MarginEnd = 0
             };
-            //scrolledWindow.Margin = 5;
+            scrolledWindow.StyleContext.AddClass("sidebar-scroll");
             scrolledWindow.ShadowType = ShadowType.In;
             scrolledWindow.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             scrolledWindow.Add(categoryTree);
-            scrolledWindow.SetSizeRequest(160, 200);
+            scrolledWindow.SetSizeRequest(192, 200);
 
             scrolledWindow.ShowAll();
             return scrolledWindow;
         }
 
-        // Sidebar icon cell: selected rows get the cached dark-tinted variant (text stays white)
+        // Sidebar icon cell: selected rows get crisp pure white icon, unselected get vibrant category color
         private void RenderCategoryIcon(ICellLayout cellLayout, CellRenderer cell, ITreeModel treeModel, TreeIter iter)
         {
             if (treeModel.GetValue(iter, 0) is not Gdk.Pixbuf icon)
@@ -730,8 +724,7 @@ namespace XDM.GtkUI
                 return;
             }
             ((CellRendererPixbuf)cell).Pixbuf = categoryTree.Selection.PathIsSelected(treeModel.GetPath(iter))
-                ? selectedSidebarIcons.GetValue(icon, p =>
-                    GtkHelper.TintPixbuf(p, SidebarSelectedIconTint, SidebarSelectedIconTint, SidebarSelectedIconTint))
+                ? selectedSidebarIcons.GetValue(icon, p => GtkHelper.TintPixbuf(p, 255, 255, 255))
                 : icon;
         }
 

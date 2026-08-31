@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,11 +28,16 @@ namespace XDM.GtkUI.Dialogs.ChromeIntegrator
         {
             builder.Autoconnect(this);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
-            SetDefaultSize(400, 200);
+            SetDefaultSize(480, 220);
             windowGroup = new WindowGroup();
             windowGroup.AddWindow(this);
             GtkHelper.AttachSafeDispose(this);
             this.LoadTexts();
+            var titleText = TextResource.GetText("MENU_REGISTER_EXT");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            BtnOK!.StyleContext.AddClass("suggested-action");
             BtnOK!.Clicked += RegisterExtensionWindow_Clicked;
             BtnCancel!.Clicked += BtnClose_Clicked;
         }

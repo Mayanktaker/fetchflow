@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -39,6 +39,10 @@ namespace XDM.GtkUI.Dialogs.Settings
             this.group.AddWindow(this);
 
             GtkHelper.AttachSafeDispose(this);
+            var titleText = TextResource.GetText("DESC_PASS");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
 
             Label1.Text = TextResource.GetText("DESC_HOST");
             Label2.Text = TextResource.GetText("DESC_USER");
@@ -46,12 +50,12 @@ namespace XDM.GtkUI.Dialogs.Settings
 
             BtnOk.Clicked += BtnOk_Clicked;
             BtnCancel.Clicked += BtnCancel_Clicked;
+            BtnOk.StyleContext.AddClass("suggested-action");
 
             BtnOk.Label = TextResource.GetText("MSG_OK");
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
 
-            Title = TextResource.GetText("DESC_PASS");
-            SetDefaultSize(400, 300);
+            SetDefaultSize(480, 320);
         }
 
         public void SetPassword(PasswordEntry password)

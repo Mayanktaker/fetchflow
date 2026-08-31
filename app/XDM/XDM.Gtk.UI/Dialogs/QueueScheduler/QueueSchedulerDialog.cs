@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -80,8 +80,11 @@ namespace XDM.GtkUI.Dialogs.QueueScheduler
             this.group.AddWindow(this);
 
             GtkHelper.AttachSafeDispose(this);
-            Title = TextResource.GetText("DESC_Q_TITLE");
-            SetDefaultSize(700, 500);
+            var titleText = TextResource.GetText("DESC_Q_TITLE");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            SetDefaultSize(840, 520);
             LoadTexts();
             queueListStore = new ListStore(typeof(string), typeof(DownloadQueue));
             LbQueues.Model = queueListStore;

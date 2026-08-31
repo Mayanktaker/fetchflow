@@ -29,11 +29,12 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
         private MediaGrabberWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            SetDefaultSize(640, 400);
+            SetDefaultSize(768, 440);
 
-            Title = TextResource.GetText("MSG_MEDIA_CAPTURE");
-            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
-
+            var titleText = TextResource.GetText("MSG_MEDIA_CAPTURE");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
             GtkHelper.AttachSafeDispose(this);
 
             store = new ListStore(typeof(string), typeof(string), typeof(string));

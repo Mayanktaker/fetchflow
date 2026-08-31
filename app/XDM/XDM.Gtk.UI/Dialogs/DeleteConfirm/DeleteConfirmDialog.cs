@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -47,17 +47,21 @@ namespace XDM.GtkUI.Dialogs.DeleteConfirm
             this.group.AddWindow(this);
 
             GtkHelper.AttachSafeDispose(this);
+            var titleText = TextResource.GetText("MENU_DELETE_DWN");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
 
             BtnDelete.Clicked += BtnDelete_Clicked;
             BtnCancel.Clicked += BtnCancel_Clicked;
+            BtnDelete.StyleContext.AddClass("destructive-action");
 
             BtnDelete.Label = TextResource.GetText("DESC_DEL");
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
             ChkDiskDel.Label = TextResource.GetText("LBL_DELETE_FILE");
             TxtLabel.Text = TextResource.GetText("DEL_SEL_TEXT");
 
-            Title = TextResource.GetText("MENU_DELETE_DWN");
-            SetDefaultSize(400, 200);
+            SetDefaultSize(480, 220);
         }
 
         private void BtnCancel_Clicked(object? sender, EventArgs e)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -56,10 +56,14 @@ namespace XDM.GtkUI.Dialogs.NewDownload
         private NewDownloadWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            SetDefaultSize(500, 300);
+            SetDefaultSize(600, 320);
             KeepAbove = true;
 
-            Title = TextResource.GetText("ND_TITLE");
+            var titleText = TextResource.GetText("ND_TITLE");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            GtkHelper.AttachSafeDispose(this);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             ImgFileIcon!.Pixbuf = GtkHelper.LoadSvg("file-download-line", 48);
 

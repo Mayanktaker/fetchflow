@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -39,6 +39,10 @@ namespace XDM.GtkUI.Dialogs.Settings
             this.group.AddWindow(this);
 
             GtkHelper.AttachSafeDispose(this);
+            var titleText = TextResource.GetText("MSG_CATEGORY");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
 
             Label1.Text = TextResource.GetText("SORT_NAME");
             Label2.Text = TextResource.GetText("SETTINGS_CAT_TYPES");
@@ -46,13 +50,13 @@ namespace XDM.GtkUI.Dialogs.Settings
 
             BtnOk.Clicked += BtnOk_Clicked;
             BtnCancel.Clicked += BtnCancel_Clicked;
+            BtnOk.StyleContext.AddClass("suggested-action");
             Browse.Clicked += Browse_Clicked;
 
             BtnOk.Label = TextResource.GetText("MSG_OK");
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
 
-            Title = TextResource.GetText("MSG_CATEGORY");
-            SetDefaultSize(400, 200);
+            SetDefaultSize(480, 220);
         }
 
         private void Browse_Clicked(object? sender, EventArgs e)

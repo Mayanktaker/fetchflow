@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,11 +34,14 @@ namespace XDM.GtkUI.Dialogs.ChromeIntegrator
             builder.Autoconnect(this);
             this.browser = browser;
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
-            SetDefaultSize(640, 480);
+            SetDefaultSize(768, 480);
             windowGroup = new WindowGroup();
             windowGroup.AddWindow(this);
             KeepAbove = true;
             GtkHelper.AttachSafeDispose(this);
+            Title = "Browser Integration";
+            Titlebar = GtkHelper.CreateDialogHeaderBar("Browser Integration");
+            GtkHelper.SetWindowAppIcon(this);
             ApplicationContext.ApplicationEvent += ApplicationContext_ApplicationEvent;
             this.Destroyed += ChromeIntegratorWindow_Destroyed;
             BtnNext.Clicked += BtnNext_Clicked;

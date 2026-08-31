@@ -1,4 +1,4 @@
-﻿using Gtk;
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,9 +30,12 @@ namespace XDM.GtkUI.Dialogs.SpeedLimiter
 
         public SpeedLimiterWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
-            SetDefaultSize(400, 250);
+            SetDefaultSize(480, 260);
             builder.Autoconnect(this);
-            Title = TextResource.GetText("DESC_ADV_TITLE");
+            var titleText = TextResource.GetText("DESC_ADV_TITLE");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
             Modal = true;
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
@@ -41,6 +44,7 @@ namespace XDM.GtkUI.Dialogs.SpeedLimiter
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
             btnOk.Clicked += BtnOK_Click;
             btnCancel.Clicked += BtnCancel_Click;
+            btnOk.StyleContext.AddClass("suggested-action");
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 
             LoadTexts();

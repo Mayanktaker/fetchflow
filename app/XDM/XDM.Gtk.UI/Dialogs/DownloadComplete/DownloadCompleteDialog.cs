@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -53,10 +53,12 @@ namespace XDM.GtkUI.Dialogs.DownloadComplete
             TxtFileName.Ellipsize = Pango.EllipsizeMode.End;
             ImgFileIcon.Pixbuf = GtkHelper.LoadSvg("file-download-line", 64);
 
-            BtnOpen.Clicked += BtnOpen_Click;
-            BtnOpenFolder.Clicked += BtnOpenFolder_Click;
-            TxtDontShowCompleteDialog.ActivateLink += TxtDontShowCompleteDialog_ActivateLink;
-            SetDefaultSize(400, 200);
+            var titleText = TextResource.GetText("MSG_DOWNLOAD_COMPLETE");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            BtnOpen.StyleContext.AddClass("suggested-action");
+            SetDefaultSize(480, 240);
 
             GtkHelper.AttachSafeDispose(this);
         }
@@ -79,7 +81,7 @@ namespace XDM.GtkUI.Dialogs.DownloadComplete
 
         public void ShowDownloadCompleteDialog()
         {
-            SetDefaultSize(400, 200);
+            SetDefaultSize(480, 240);
             this.Show();
         }
 

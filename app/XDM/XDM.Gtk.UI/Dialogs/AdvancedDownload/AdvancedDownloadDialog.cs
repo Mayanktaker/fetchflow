@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -70,9 +70,13 @@ namespace XDM.GtkUI.Dialogs.AdvancedDownload
 
         public AdvancedDownloadDialog(Builder builder, Window parent, WindowGroup group) : base(builder.GetRawOwnedObject("dialog"))// base(TextResource.GetText("DESC_ADV_TITLE"), parent, DialogFlags.Modal)
         {
-            SetDefaultSize(550, 450);
+            SetDefaultSize(660, 460);
             builder.Autoconnect(this);
-            Title = TextResource.GetText("DESC_ADV_TITLE");
+            var titleText = TextResource.GetText("DESC_ADV_TITLE");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            GtkHelper.AttachSafeDispose(this);
             Modal = true;
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;

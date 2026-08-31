@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -43,8 +43,11 @@ namespace XDM.GtkUI.Dialogs.Properties
             TransientFor = parent;
             group.AddWindow(this);
             GtkHelper.AttachSafeDispose(this);
-            Title = TextResource.GetText("MENU_PROPERTIES");
-            SetDefaultSize(400, 200);
+            var titleText = TextResource.GetText("MENU_PROPERTIES");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            SetDefaultSize(480, 240);
             LoadTexts();
         }
 

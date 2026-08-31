@@ -1,4 +1,4 @@
-﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
 using System;
 using System.Collections.Generic;
@@ -28,15 +28,19 @@ namespace XDM.GtkUI.Dialogs.Updater
         private UpdaterWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            Title = TextResource.GetText("OPT_UPDATE_FFMPEG");
+            var titleText = TextResource.GetText("OPT_UPDATE_FFMPEG");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
             // English fallback covers languages until they add MSG_INSTALL_UPDATE
             BtnInstall.Label = TextResource.GetText("MSG_INSTALL_UPDATE");
+            BtnInstall.StyleContext.AddClass("suggested-action");
             BtnInstall.Sensitive = false;
             TxtHeading.Text = TextResource.GetText("STAT_DOWNLOADING");
-            SetDefaultSize(500, 200);
+            SetDefaultSize(600, 220);
 
             GtkHelper.AttachSafeDispose(this);
 

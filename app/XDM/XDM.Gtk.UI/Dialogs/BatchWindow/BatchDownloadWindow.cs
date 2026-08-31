@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -89,8 +89,11 @@ namespace XDM.GtkUI.Dialogs.BatchWindow
         private BatchDownloadWindow(Builder builder, Window parent) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            Title = TextResource.GetText("MENU_BATCH_DOWNLOAD");
-            SetDefaultSize(600, 500);
+            var titleText = TextResource.GetText("MENU_BATCH_DOWNLOAD");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            SetDefaultSize(720, 500);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
 

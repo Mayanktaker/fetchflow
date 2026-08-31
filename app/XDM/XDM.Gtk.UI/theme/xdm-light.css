@@ -8,6 +8,7 @@
  *   text #222222 · dim #6b6b6b · update-dot #26a269
  *   accent #3584e4 (hover #5a9bea / active #2767b8)
  *   destructive #e01b24 (hover #ef4a52 / active #a5121a)
+ *   radius-sm 6px · radius-md 8px · radius-lg 10px · radius-badge 24px · radius-pill 999px
  */
 
 /* Base surfaces */
@@ -21,6 +22,8 @@ headerbar {
   background-color: #f0f0f0;
   border-bottom: 1px solid #d0d0d0;
   color: #242424;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 }
 
 /* Compact padding scoped to the main window headerbar so dialog headerbars keep stock metrics */
@@ -57,12 +60,15 @@ button.flat.update-dot-button {
 
 tooltip {
   background-color: #3b3b41;
-  border-radius: 4px;
+  border-radius: 6px;
+  color: #ffffff;
 }
 
 popover {
   background-color: #ffffff;
   border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  padding: 6px;
 }
 
 separator {
@@ -71,14 +77,23 @@ separator {
   min-height: 1px;
 }
 
-/* Sidebar + content lists (GTK3 paints row states on the treeview node itself) */
+/* ScrolledWindow rounded frame for sidebars */
+scrolledwindow {
+  border-radius: 8px;
+}
+
+scrolledwindow.sidebar-scroll {
+  border-radius: 8px;
+  background-color: #ececec;
+}
+
+/* Sidebar + content lists */
 treeview {
   background-color: #ffffff;
   color: #242424;
+  border-radius: 8px;
 }
 
-/* Per-view list surfaces: only the base tint differs; the :hover/:selected rules
- * below come later in source order so both classes keep identical interaction colors */
 treeview.unfinished {
   background-color: #ffffff;
 }
@@ -96,27 +111,83 @@ treeview:selected {
   color: #ffffff;
 }
 
-/* Category sidebar (gets .dark class from MainWindow) */
+/* Category sidebar */
 treeview.dark {
   background-color: #ececec;
-  color: #3d3d3d;
-  border-right: 1px solid #d8d8d8;
+  color: #333333;
+  border-right: 1px solid #dddddd;
+  border-radius: 8px;
 }
 
 treeview.dark:hover {
   background-color: rgba(0, 0, 0, 0.05);
-  color: #1f1f1f;
+  color: #111111;
 }
 
 treeview.dark:selected {
   background-color: #3584e4;
   color: #ffffff;
+  border-radius: 8px;
 }
 
-/* Column headers (Name/Date/Size) — softer strip matching the headerbar surface */
+/* Frames */
+frame > border {
+  border: 1px solid #dedede;
+  border-radius: 10px;
+}
+
+/* ListBox & Sidebar List with Rounded Active Selection Pills */
+list,
+listbox,
+list.sidebar {
+  background-color: #ececec;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+row,
+list > row,
+list.sidebar > row,
+list row,
+list.sidebar row {
+  border-radius: 8px;
+  margin: 2px 4px;
+  padding: 8px 12px;
+  background-color: transparent;
+  transition: all 150ms ease;
+}
+
+row:hover,
+list > row:hover,
+list.sidebar > row:hover,
+list row:hover,
+list.sidebar row:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+}
+
+row:selected,
+list > row:selected,
+list.sidebar > row:selected,
+list row:selected,
+list.sidebar row:selected {
+  background-color: #3584e4;
+  color: #ffffff;
+  border-radius: 8px;
+  outline: none;
+}
+
+row:focus,
+row:selected:focus,
+list row:focus,
+list.sidebar row:focus {
+  outline: none;
+}
+
+/* Column headers (Name/Date/Size) */
 treeview header {
   background-color: #f0f0f0;
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid #d0d0d0;
 }
 
 treeview header button {
@@ -129,13 +200,13 @@ treeview header button {
 }
 
 treeview header button:hover {
-  background-color: #e8e8e8;
-  color: #242424;
+  background-color: #e6e6e6;
+  color: #222222;
 }
 
 treeview header button:active {
-  background-color: #e0e0e0;
-  color: #1f1f1f;
+  background-color: #dedede;
+  color: #111111;
 }
 
 treeview header button:focus {
@@ -146,20 +217,29 @@ treeview header button:focus {
 /* Text fields */
 entry {
   background-color: #ffffff;
-  border: 1px solid #c9c9c9;
-  border-radius: 5px;
+  border: 1px solid #c8c8c8;
+  border-radius: 8px;
   color: #222222;
+  padding: 6px 8px;
+}
+
+entry.toolbar-search-entry {
+  min-height: 24px;
+  padding: 2px 8px;
+  margin: 0;
+  border-radius: 8px;
+  font-size: 13px;
 }
 
 entry:focus {
   border-color: #3584e4;
-  box-shadow: inset 0 0 0 1px rgba(53, 132, 228, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(53, 132, 228, 0.55);
 }
 
 entry:disabled {
   background-color: #f4f4f4;
-  border-color: #e4e4e4;
-  color: #9a9a9a;
+  border-color: #dedede;
+  color: #9e9e9e;
 }
 
 entry selection {
@@ -167,35 +247,45 @@ entry selection {
   color: #ffffff;
 }
 
-/* Neutral buttons — subtle elevation instead of flat grey */
+/* ComboBox */
+combobox button {
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+/* Neutral buttons */
 button {
   background-color: #ffffff;
   border: 1px solid #cacaca;
-  border-radius: 5px;
+  border-radius: 8px;
   color: #242424;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  padding: 6px 12px;
 }
 
 button:hover {
-  background-color: #f3f3f3;
-  border-color: #bdbdbd;
+  background-color: #f4f4f4;
+  border-color: #b8b8b8;
+  border-radius: 8px;
 }
 
 button:active {
-  background-color: #e4e4e4;
-  border-color: #b3b3b3;
+  background-color: #ebebeb;
+  border-color: #adadad;
+  border-radius: 8px;
 }
 
 button:checked {
-  background-color: #ffffff;
+  background-color: #e5effd;
   border-color: #3584e4;
-  color: #1f5da8;
+  color: #1b5bb5;
+  border-radius: 8px;
 }
 
 button:disabled {
-  background-color: #f4f4f4;
+  background-color: #fafafa;
   border-color: #e2e2e2;
-  color: #9a9a9a;
+  color: #a0a0a0;
   box-shadow: none;
 }
 
@@ -207,59 +297,66 @@ button:focus {
   outline-offset: -4px;
 }
 
-/* Flat buttons — toolbars, icon/utility buttons */
+/* Flat buttons */
 button.flat {
   background-color: transparent;
   border-color: transparent;
   box-shadow: none;
+  border-radius: 8px;
 }
 
 button.flat:hover {
   background-color: rgba(0, 0, 0, 0.06);
   border-color: transparent;
+  border-radius: 8px;
 }
 
 button.flat:active {
   background-color: rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
 }
 
 button.flat:checked {
-  background-color: rgba(53, 132, 228, 0.18);
+  background-color: rgba(53, 132, 228, 0.15);
   border-color: transparent;
+  border-radius: 8px;
 }
 
 button.flat:disabled {
   background-color: transparent;
-  color: #9a9a9a;
+  color: #a0a0a0;
 }
 
 /* Primary (suggested) — Download/Add/Save/Start/OK */
 button.suggested-action {
   background-color: #3584e4;
-  border-color: #2a6cb8;
+  border-color: #2267b8;
   color: #ffffff;
-  box-shadow: 0 1px 2px rgba(53, 132, 228, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 
 button.suggested-action:hover {
-  background-color: #5a9bea;
-  border-color: #3f7ecb;
+  background-color: #4a91eb;
+  border-color: #1f5ca5;
+  border-radius: 8px;
 }
 
 button.suggested-action:active {
   background-color: #2767b8;
-  border-color: #1f56a0;
+  border-color: #184b87;
+  border-radius: 8px;
 }
 
 button.suggested-action:disabled {
-  background-color: rgba(53, 132, 228, 0.45);
+  background-color: rgba(53, 132, 228, 0.50);
   border-color: transparent;
   color: rgba(255, 255, 255, 0.75);
   box-shadow: none;
 }
 
 button.suggested-action:focus {
-  outline-color: #1e4f8f;
+  outline-color: #9cc3f2;
 }
 
 /* Destructive — Delete/Remove/Clear */
@@ -267,94 +364,104 @@ button.destructive-action {
   background-color: #e01b24;
   border-color: #b0151c;
   color: #ffffff;
-  box-shadow: 0 1px 2px rgba(224, 27, 36, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 
 button.destructive-action:hover {
-  background-color: #ef4a52;
-  border-color: #c71f28;
+  background-color: #ea3840;
+  border-color: #9c1319;
+  border-radius: 8px;
 }
 
 button.destructive-action:active {
   background-color: #a5121a;
-  border-color: #8c0f16;
+  border-color: #7b0d13;
+  border-radius: 8px;
 }
 
 button.destructive-action:disabled {
-  background-color: rgba(224, 27, 36, 0.4);
+  background-color: rgba(224, 27, 36, 0.50);
   border-color: transparent;
   color: rgba(255, 255, 255, 0.75);
   box-shadow: none;
 }
 
 button.destructive-action:focus {
-  outline-color: #8c1016;
+  outline-color: #f5a3a7;
 }
 
-/* Colored flat buttons — toolbar Start (blue) / Remove+Delete (red) */
+/* Colored flat buttons */
 button.flat.suggested-action {
   background-color: transparent;
   border-color: transparent;
-  color: #1e6fd0;
+  color: #1f6acc;
+  border-radius: 8px;
   box-shadow: none;
 }
 
 button.flat.suggested-action:hover {
-  background-color: rgba(53, 132, 228, 0.14);
-  color: #155a9e;
+  background-color: rgba(53, 132, 228, 0.12);
+  color: #1855a4;
+  border-radius: 8px;
 }
 
 button.flat.suggested-action:active {
-  background-color: rgba(53, 132, 228, 0.26);
+  background-color: rgba(53, 132, 228, 0.22);
+  border-radius: 8px;
 }
 
 button.flat.destructive-action {
   background-color: transparent;
   border-color: transparent;
-  color: #c11e25;
+  color: #c7161e;
+  border-radius: 8px;
   box-shadow: none;
 }
 
 button.flat.destructive-action:hover {
   background-color: rgba(224, 27, 36, 0.12);
-  color: #a3151b;
+  color: #a81219;
+  border-radius: 8px;
 }
 
 button.flat.destructive-action:active {
-  background-color: rgba(224, 27, 36, 0.24);
+  background-color: rgba(224, 27, 36, 0.22);
+  border-radius: 8px;
 }
 
 button.flat.suggested-action:disabled,
 button.flat.destructive-action:disabled {
   background-color: transparent;
-  color: #9a9a9a;
+  color: #a0a0a0;
 }
 
 /* Switches, checkboxes, radios */
 switch {
   background-color: #e0e0e0;
-  border: 1px solid #c9c9c9;
+  border: 1px solid #cacaca;
   border-radius: 14px;
 }
 
 switch:checked {
   background-color: #3584e4;
-  border-color: #2a6cb8;
+  border-color: #2267b8;
 }
 
 switch slider {
   background-color: #ffffff;
   border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 checkbutton check,
 radiobutton radio {
   background-color: #ffffff;
-  border: 1px solid #b5b5b5;
+  border: 1px solid #b8b8b8;
 }
 
 checkbutton check {
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 radiobutton radio {
@@ -374,52 +481,63 @@ scrollbar {
 }
 
 scrollbar slider {
-  background-color: #c4c4c4;
-  border-radius: 4px;
+  background-color: #bcbcbc;
+  border-radius: 6px;
   margin: 2px;
   min-width: 8px;
   min-height: 8px;
 }
 
 scrollbar slider:hover {
-  background-color: #adadad;
+  background-color: #9e9e9e;
 }
 
 scrollbar slider:active {
-  background-color: #9c9c9c;
+  background-color: #808080;
 }
 
 /* Menus */
 menu {
   background-color: #ffffff;
   border: 1px solid #d8d8d8;
-  border-radius: 8px;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+menuitem {
+  border-radius: 6px;
+  margin: 1px 4px;
+  padding: 6px 10px;
 }
 
 menuitem:hover {
   background-color: #3584e4;
   color: #ffffff;
+  border-radius: 6px;
 }
 
 menuitem:disabled {
-  color: #9a9a9a;
+  color: #a0a0a0;
 }
 
-/* Notebook tabs — active tab gets accent underline */
+/* Notebook tabs */
 notebook header {
-  background-color: #f2f2f2;
+  background-color: #f0f0f0;
+  border-radius: 8px 8px 0 0;
 }
 
 notebook header.top {
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid #d0d0d0;
 }
 
 notebook tab {
   color: #6b6b6b;
+  border-radius: 6px 6px 0 0;
+  padding: 6px 12px;
 }
 
 notebook tab:hover {
-  color: #333333;
+  color: #1f1f1f;
 }
 
 notebook tab:checked {
@@ -432,50 +550,61 @@ notebook header.top tab:checked {
 
 /* Progress bars */
 progressbar trough {
-  background-color: #e6e6e6;
-  border-radius: 99px;
+  background-color: #e4e4e4;
+  border-radius: 999px;
 }
 
 progressbar progress {
   background-color: #3584e4;
-  border-radius: 99px;
+  border-radius: 999px;
 }
 
-/*
- * Backdrop (unfocused window) — flatter surfaces + dimmer text, Adwaita-style
- * Tokens: text #5a5a5a · neutral bg #f7f7f7 · suggested #6f9bd6 · destructive #d2525a
- */
+/* Backdrop (unfocused window) */
 window:backdrop,
 dialog:backdrop {
-  color: #5a5a5a;
+  color: #6b6b6b;
 }
 
 headerbar:backdrop {
-  background-color: #eaeaea;
-  border-bottom-color: #c8c8c8;
-  color: #6a6a6a;
+  background-color: #f5f5f5;
+  border-bottom-color: #dbdbdb;
+  color: #7a7a7a;
 }
 
 headerbar:backdrop label.header-title-app {
-  color: #5a5a5a;
+  color: #555555;
 }
 
 headerbar:backdrop label.header-title-view {
-  color: #8a8a8a;
+  color: #888888;
 }
 
 treeview:backdrop {
-  color: #4a4a4a;
+  color: #6b6b6b;
 }
 
 treeview.dark:backdrop {
-  color: #6e6e6e;
+  color: #555555;
+}
+
+/* Ensure active/selected items retain crisp white text even in backdrop/unfocused window state */
+treeview:selected:backdrop,
+treeview.dark:selected:backdrop,
+treeview.unfinished:selected:backdrop,
+treeview.finished:selected:backdrop,
+list > row:selected:backdrop,
+list.sidebar > row:selected:backdrop,
+list row:selected:backdrop,
+list.sidebar row:selected:backdrop,
+row:selected:backdrop {
+  background-color: #4a8cdb;
+  color: #ffffff;
 }
 
 button:backdrop {
-  background-color: #f7f7f7;
-  border-color: #d0d0d0;
-  color: #5f5f5f;
+  background-color: #fafafa;
+  border-color: #dcdcdc;
+  color: #7a7a7a;
   box-shadow: none;
 }
 
@@ -485,66 +614,130 @@ button:backdrop:hover {
 
 button.flat:backdrop {
   background-color: transparent;
-  color: #6a6a6a;
+  color: #7a7a7a;
 }
 
 button.suggested-action:backdrop {
-  background-color: #6f9bd6;
-  border-color: #5c86c2;
+  background-color: #5a9bea;
+  border-color: #4a8cdb;
 }
 
 button.destructive-action:backdrop {
-  background-color: #d2525a;
-  border-color: #b8454c;
+  background-color: #ef4a52;
+  border-color: #db3d45;
 }
 
 entry:backdrop {
-  color: #5a5a5a;
-  border-color: #d0d0d0;
+  color: #7a7a7a;
+  border-color: #dcdcdc;
 }
 
 notebook tab:backdrop {
   color: #8a8a8a;
 }
 
-/* Bottombar utility buttons (Queue and scheduler / Help and support) — compact + dim */
+/* Bottombar utility buttons */
 button.flat.bottombar-button {
   font-size: 12px;
   padding: 2px 8px;
   min-height: 22px;
   min-width: 0;
   color: #6b6b6b;
+  border-radius: 6px;
 }
 
 button.flat.bottombar-button:hover {
-  color: #2e2e2e;
+  color: #1f1f1f;
+  border-radius: 6px;
 }
 
 button.flat.bottombar-button:backdrop {
   color: #8a8a8a;
 }
 
-/*
- * Linked button groups (headerbar pairs in new-download/vid-capture):
- * seamless inner edges, rounded outer corners only (horizontal groups)
- */
+/* Linked button groups */
 .linked > button {
   border-radius: 0;
   border-right-width: 0;
 }
 
 .linked > button:first-child {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 
 .linked > button:last-child {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
   border-right-width: 1px;
 }
 
 .linked > button:only-child {
-  border-radius: 5px;
+  border-radius: 8px;
   border-right-width: 1px;
+}
+
+/* About Dialog Custom Theme Layer */
+.about-logo-badge {
+  background: linear-gradient(145deg, #ffffff, #f0f2f5);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 24px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+}
+
+.about-title {
+  font-size: 17px;
+  font-weight: bold;
+  color: #1f1f1f;
+}
+
+.about-version-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2767b8;
+  background-color: rgba(53, 132, 228, 0.12);
+  border: 1px solid rgba(53, 132, 228, 0.28);
+  border-radius: 999px;
+  padding: 3px 14px;
+}
+
+.about-tagline {
+  font-size: 13px;
+  color: #666666;
+}
+
+.about-section-card {
+  background-color: #f7f7f8;
+  border: 1px solid #dedede;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.about-section-card linkbutton {
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: #2767b8;
+}
+
+.about-section-card linkbutton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1b5bb5;
+}
+
+.about-credits-card {
+  background-color: #f0f0f2;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.about-copyright-text {
+  font-size: 12px;
+  color: #444444;
+}
+
+.about-credit-text {
+  font-size: 11px;
+  color: #777777;
 }

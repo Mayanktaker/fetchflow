@@ -1,4 +1,4 @@
-﻿using Gtk;
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -124,11 +124,10 @@ namespace XDM.GtkUI
 
         public void ShowSettingsDialog(int page = 0)
         {
-            using var win = SettingsDialog.CreateFromGladeFile(GetMainWindow(), GetWindowGroup());
+            var win = SettingsDialog.CreateFromGladeFile(GetMainWindow(), GetWindowGroup());
             win.SetActivePage(page);
             win.LoadConfig();
-            win.Run();
-            win.Destroy();
+            win.ShowAll();
         }
 
         public AuthenticationInfo? PromtForCredentials(string message)

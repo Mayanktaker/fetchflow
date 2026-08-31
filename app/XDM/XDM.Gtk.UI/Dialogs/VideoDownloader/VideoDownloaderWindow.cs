@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -178,12 +178,16 @@ namespace XDM.GtkUI.Dialogs.VideoDownloader
         private VideoDownloaderWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            SetDefaultSize(600, 500);
+            SetDefaultSize(720, 500);
 
             windowGroup = new WindowGroup();
             windowGroup.AddWindow(this);
 
-            Title = TextResource.GetText("LBL_VIDEO_DOWNLOAD");
+            var titleText = TextResource.GetText("LBL_VIDEO_DOWNLOAD");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
+            GtkHelper.AttachSafeDispose(this);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             Page1.ShowAll();

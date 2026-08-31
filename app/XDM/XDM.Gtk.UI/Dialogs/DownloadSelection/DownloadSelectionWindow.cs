@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -124,12 +124,15 @@ namespace XDM.GtkUI.Dialogs.DownloadSelection
         private DownloadSelectionWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
             builder.Autoconnect(this);
-            SetDefaultSize(600, 500);
+            SetDefaultSize(720, 500);
 
             windowGroup = new WindowGroup();
             windowGroup.AddWindow(this);
 
-            Title = TextResource.GetText("BAT_SELECT_ITEMS");
+            var titleText = TextResource.GetText("BAT_SELECT_ITEMS");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
 
             PrepareMenu();

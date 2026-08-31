@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,18 +35,22 @@ namespace XDM.GtkUI.Dialogs.Language
             this.group.AddWindow(this);
 
             GtkHelper.AttachSafeDispose(this);
+            var titleText = TextResource.GetText("MENU_LANG");
+            Title = titleText;
+            Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
+            GtkHelper.SetWindowAppIcon(this);
 
             Label1.Text = TextResource.GetText("MSG_LANG1");
             Label2.Text = TextResource.GetText("MSG_LANG2");
 
             BtnOk.Clicked += BtnOk_Clicked;
             BtnCancel.Clicked += BtnCancel_Clicked;
+            BtnOk.StyleContext.AddClass("suggested-action");
 
             BtnOk.Label = TextResource.GetText("MSG_OK");
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
 
-            Title = TextResource.GetText("MENU_LANG");
-            SetDefaultSize(400, 200);
+            SetDefaultSize(480, 240);
 
             var indexFile = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Lang\index.txt");
             var items = new List<string>();
