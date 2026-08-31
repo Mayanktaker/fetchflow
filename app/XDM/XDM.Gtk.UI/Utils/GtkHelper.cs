@@ -1,8 +1,10 @@
-﻿using Gtk;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using Gtk;
 using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Translations;
@@ -298,6 +300,34 @@ namespace XDM.GtkUI.Utils
             return new Gdk.Pixbuf(
                 Path.Combine(
                     AppDomain.CurrentDomain.BaseDirectory, "svg-icons", $"{name}.svg"), dimension, dimension, true);
+        }
+
+        // Tinted copy of a monochrome pixbuf: RGB channels replaced with (r,g,b),
+        // alpha silhouette preserved — used for selected sidebar row icons
+        public static Gdk.Pixbuf TintPixbuf(Gdk.Pixbuf source, byte r, byte g, byte b)
+        {
+            var copy = source.Copy();
+            var rowstride = copy.Rowstride;
+            var channels = copy.NChannels;
+            var hasAlpha = copy.HasAlpha;
+            var pixels = new byte[rowstride * copy.Height];
+            Marshal.Copy(copy.Pixels, pixels, 0, pixels.Length);
+            for (var y = 0; y < copy.Height; y++)
+            {
+                var rowOffset = y * rowstride;
+                for (var x = 0; x < copy.Width; x++)
+                {
+                    var offset = rowOffset + x * channels;
+                    if (!hasAlpha || pixels[offset + 3] != 0)
+                    {
+                        pixels[offset] = r;
+                        pixels[offset + 1] = g;
+                        pixels[offset + 2] = b;
+                    }
+                }
+            }
+            Marshal.Copy(pixels, 0, copy.Pixels, pixels.Length);
+            return copy;
         }
 
         public static string? SelectFolder(Window parent)

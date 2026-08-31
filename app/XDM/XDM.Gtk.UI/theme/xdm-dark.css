@@ -3,8 +3,9 @@
  * © Mayanktaker Computers & Web Development | https://mayanktaker.com
  *
  * Tokens (GTK3 CSS has no variables — values inlined, grouped here):
- *   window  #1d1d1d · sidebar #161616 · view #232323 · entry #282828
- *   elevated #2e2e2e · border #404040 · text #f4f4f4 · dim #b4b4b4
+ *   window  #1d1d1d · sidebar #161616 · view #232323 · view-finished #2a2a2a
+ *   headerbar #1a1a1a · entry #282828 · elevated #2e2e2e · border #404040
+ *   text #f4f4f4 · dim #b4b4b4 · header-title-view #9a9a9a · update-dot #33d17a
  *   accent #3584e4 (hover #5a9bea / active #2767b8)
  *   destructive #e01b24 (hover #ef4a52 / active #a5121a)
  */
@@ -20,6 +21,28 @@ headerbar {
   background-color: #1a1a1a;
   border-bottom: 1px solid #0e0e0e;
   color: #e8e8e8;
+}
+
+/* Compact padding scoped to the main window headerbar so dialog headerbars keep stock metrics */
+headerbar.main-headerbar {
+  padding: 2px 6px;
+}
+
+/* Left-aligned headerbar custom title: bold app name + dim view subtitle */
+label.header-title-app {
+  font-weight: bold;
+  color: #f4f4f4;
+}
+
+label.header-title-view {
+  color: #9a9a9a;
+}
+
+/* Update-available dot after the title group (green pops on both surface tones) */
+label.update-dot {
+  color: #33d17a;
+  font-size: 10px;
+  margin-left: 6px;
 }
 
 tooltip {
@@ -42,6 +65,16 @@ separator {
 treeview {
   background-color: #232323;
   color: #e4e4e4;
+}
+
+/* Per-view list surfaces: only the base tint differs; the :hover/:selected rules
+ * below come later in source order so both classes keep identical interaction colors */
+treeview.unfinished {
+  background-color: #232323;
+}
+
+treeview.finished {
+  background-color: #2a2a2a;
 }
 
 treeview:hover {
@@ -68,6 +101,36 @@ treeview.dark:hover {
 treeview.dark:selected {
   background-color: #3584e4;
   color: #ffffff;
+}
+
+/* Column headers (Name/Date/Size) — darker strip matching the headerbar surface */
+treeview header {
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #0e0e0e;
+}
+
+treeview header button {
+  background-color: #1a1a1a;
+  color: #b4b4b4;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 6px;
+}
+
+treeview header button:hover {
+  background-color: #222222;
+  color: #e4e4e4;
+}
+
+treeview header button:active {
+  background-color: #161616;
+  color: #f4f4f4;
+}
+
+treeview header button:focus {
+  outline-width: 1px;
+  outline-offset: -2px;
 }
 
 /* Text fields */
@@ -383,6 +446,14 @@ headerbar:backdrop {
   color: #9a9a9a;
 }
 
+headerbar:backdrop label.header-title-app {
+  color: #c0c0c0;
+}
+
+headerbar:backdrop label.header-title-view {
+  color: #7a7a7a;
+}
+
 treeview:backdrop {
   color: #b0b0b0;
 }
@@ -423,6 +494,23 @@ entry:backdrop {
 }
 
 notebook tab:backdrop {
+  color: #8a8a8a;
+}
+
+/* Bottombar utility buttons (Queue and scheduler / Help and support) — compact + dim */
+button.flat.bottombar-button {
+  font-size: 12px;
+  padding: 2px 8px;
+  min-height: 22px;
+  min-width: 0;
+  color: #b4b4b4;
+}
+
+button.flat.bottombar-button:hover {
+  color: #e8e8e8;
+}
+
+button.flat.bottombar-button:backdrop {
   color: #8a8a8a;
 }
 

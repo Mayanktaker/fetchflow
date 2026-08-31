@@ -1,5 +1,7 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Gtk;
 using Application = Gtk.Application;
 using IoPath = System.IO.Path;
@@ -41,6 +43,11 @@ namespace XDM.GtkUI
         private Image helpImage;
         private Label helpLabel;
         private TrayIconManager trayManager;
+        private Label subtitleLabel;
+        private Label updateDot;
+
+        // Dark-tinted sidebar icons for selected rows, keyed by source pixbuf (tint once, reuse)
+        private static readonly ConditionalWeakTable<Gdk.Pixbuf, Gdk.Pixbuf> selectedSidebarIcons = new();
 
         internal WindowGroup GetWindowGroup() => this.windowGroup;
 
@@ -104,6 +111,17 @@ namespace XDM.GtkUI
         private const int FINISHED_DATA_INDEX = 3;
         private const int INPROGRESS_DATA_INDEX = 5;
 
+        // Headerbar title tokens: bold app name + "· <view>" subtitle tracking the sidebar
+        private const string HeaderAppName = "XDM";
+        private const string HeaderSubtitleSeparator = "· ";
+        // Update-available indicator glyph shown in the headerbar title group
+        private const string UpdateDotGlyph = "●";
+        // Selected sidebar row icon tint (#161616) — reads on the blue accent in both themes
+        private const byte SidebarSelectedIconTint = 0x16;
+        // Button content geometry: labeled buttons keep spacing + symmetric side margins
+        private const int ButtonContentSpacing = 10;
+        private const int ButtonBoxMargin = 2;
+
         private Menu menuInProgress, menuFinished;
         private IPlatformClipboardMonitor clipboarMonitor;
 
@@ -138,6 +156,8 @@ namespace XDM.GtkUI
             hbMain.PackStart(CreateMainPanel(), true, true, 0);
             Add(hbMain);
             hbMain.Show();
+            // CSD headerbar (Wayland-safe): left-aligned title + its own close button only
+            Titlebar = CreateHeaderBar();
 
             // Sidebar default: row 0 "All Unfinished" — matches the main panel's primary
             // (top-packed, toolbar-rich) view; guard against an empty store
@@ -391,6 +411,50 @@ namespace XDM.GtkUI
             this.NewDownloadClicked?.Invoke(sender, e);
         }
 
+        // Left-aligned in-app headerbar: bold "XDM" + dim "· <view>" custom title (not the
+        // centered default title/subtitle); hexpand + halign-start pushes the title left.
+        // Wayland CSD: headerbar supplies the close button; no min/max buttons by convention.
+        private HeaderBar CreateHeaderBar()
+        {
+            var hb = new HeaderBar
+            {
+                ShowCloseButton = true,
+                HasSubtitle = false
+            };
+            hb.StyleContext.AddClass("main-headerbar");
+
+            var appLabel = new Label { Text = HeaderAppName };
+            appLabel.StyleContext.AddClass("header-title-app");
+            subtitleLabel = new Label
+            {
+                Text = HeaderSubtitleSeparator + TextResource.GetText("ALL_UNFINISHED"),
+                Ellipsize = Pango.EllipsizeMode.End
+            };
+            subtitleLabel.StyleContext.AddClass("header-title-view");
+
+            // Update-available dot: hidden until ShowUpdateAvailableNotification flips it on
+            updateDot = new Label { Text = UpdateDotGlyph, Visible = false };
+            updateDot.StyleContext.AddClass("update-dot");
+
+            var titleBox = new HBox(false, ButtonContentSpacing) { Hexpand = true, Halign = Align.Start };
+            titleBox.PackStart(appLabel, false, false, 0);
+            titleBox.PackStart(subtitleLabel, false, false, 0);
+            titleBox.PackStart(updateDot, false, false, 0);
+            hb.CustomTitle = titleBox;
+            hb.ShowAll();
+            return hb;
+        }
+
+        // Headerbar view subtitle tracks the active sidebar selection (e.g. "· All Finished")
+        private void SetHeaderSubtitle(string? viewName)
+        {
+            if (subtitleLabel == null || string.IsNullOrEmpty(viewName))
+            {
+                return;
+            }
+            subtitleLabel.Text = HeaderSubtitleSeparator + viewName;
+        }
+
         private Widget CreateMainPanel()
         {
             var vbMain = new VBox();
@@ -414,13 +478,15 @@ namespace XDM.GtkUI
 
         private Button CreateButtonWithContent(Image image, Label? label)
         {
-            var hbox = new HBox(false, 10)
+            // Icon-only buttons: no side margins/spacing; the image expands and GtkMisc's
+            // default 0.5 xalign centers the glyph inside the button. Labeled buttons unchanged.
+            var hbox = new HBox(false, label != null ? ButtonContentSpacing : 0)
             {
-                MarginStart = 2,
-                MarginEnd = 2
+                MarginStart = label != null ? ButtonBoxMargin : 0,
+                MarginEnd = label != null ? ButtonBoxMargin : 0
             };
 
-            hbox.PackStart(image, false, false, 0);
+            hbox.PackStart(image, label == null, label == null, 0);
             if (label != null)
             {
                 hbox.PackStart(label, false, false, 0);
@@ -441,6 +507,7 @@ namespace XDM.GtkUI
         private Widget CreateBottombar()
         {
             var hbox = new HBox(false, 10);
+            hbox.StyleContext.AddClass("bottombar");
             hbox.Margin = 2;
             hbox.MarginStart = 5;
             hbox.MarginEnd = 5;
@@ -459,6 +526,7 @@ namespace XDM.GtkUI
 
             btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"));
             btnScheduler.Clicked += BtnScheduler_Clicked;
+            btnScheduler.StyleContext.AddClass("bottombar-button");
             //new Button
             //{
             //    Label = TextResource.GetText("DESC_Q_TITLE"),
@@ -477,6 +545,7 @@ namespace XDM.GtkUI
             helpLabel = new Label { Text = TextResource.GetText("LBL_SUPPORT_PAGE") };
             btnHelp = CreateButtonWithContent(helpImage, helpLabel);
             btnHelp.Clicked += BtnHelp_Clicked;
+            btnHelp.StyleContext.AddClass("bottombar-button");
             //btnHelp.Margin = 1;
             //btnHelp.MarginEnd = 5;
             //new Button
@@ -606,6 +675,8 @@ namespace XDM.GtkUI
             cell1.SetPadding(3, 5);
             cols.PackStart(cell1, false);
             cols.AddAttribute(cell1, "pixbuf", 0);
+            // Selected rows swap to a dark-tinted pixbuf so icons read on the blue accent
+            cols.SetCellDataFunc(cell1, new CellLayoutDataFunc(RenderCategoryIcon));
 
             var cell2 = new CellRendererText();
             cell2.SetPadding(0, 5);
@@ -644,6 +715,19 @@ namespace XDM.GtkUI
             return scrolledWindow;
         }
 
+        // Sidebar icon cell: selected rows get the cached dark-tinted variant (text stays white)
+        private void RenderCategoryIcon(ICellLayout cellLayout, CellRenderer cell, ITreeModel treeModel, TreeIter iter)
+        {
+            if (treeModel.GetValue(iter, 0) is not Gdk.Pixbuf icon)
+            {
+                return;
+            }
+            ((CellRendererPixbuf)cell).Pixbuf = categoryTree.Selection.PathIsSelected(treeModel.GetPath(iter))
+                ? selectedSidebarIcons.GetValue(icon, p =>
+                    GtkHelper.TintPixbuf(p, SidebarSelectedIconTint, SidebarSelectedIconTint, SidebarSelectedIconTint))
+                : icon;
+        }
+
         private void OnCategoryChanged(object? sender, EventArgs e)
         {
             if (lvInprogress == null || lvFinished == null)
@@ -666,6 +750,7 @@ namespace XDM.GtkUI
                     category = null;
                     btnOpenFile.Visible = btnOpenFolder.Visible = false;
                     btnPause.Visible = btnResume.Visible = true;
+                    SetHeaderSubtitle(TextResource.GetText("ALL_UNFINISHED"));
                 }
                 else
                 {
@@ -675,6 +760,7 @@ namespace XDM.GtkUI
                     btnOpenFile.Visible = btnOpenFolder.Visible = true;
                     btnPause.Visible = btnResume.Visible = false;
                     finishedDownloadFilter.Refilter();
+                    SetHeaderSubtitle(TextResource.GetText("ALL_FINISHED"));
                 }
             }
             else
@@ -684,6 +770,7 @@ namespace XDM.GtkUI
                 if (categoryTree.Selection.GetSelected(out ITreeModel model, out TreeIter iter))
                 {
                     category = (Category)model.GetValue(iter, 2);
+                    SetHeaderSubtitle(model.GetValue(iter, 1) as string);
                 }
                 finishedDownloadFilter.Refilter();
             }
@@ -741,6 +828,8 @@ namespace XDM.GtkUI
             inprogressDownloadsStoreSorted = sortedStore;
             lvInprogress = new TreeView(sortedStore);
             lvInprogress.Selection.Mode = SelectionMode.Multiple;
+            // Per-view surface tint (see treeview.unfinished in the theme layer)
+            lvInprogress.StyleContext.AddClass("unfinished");
 
             //File name column
             var fileNameColumn = new TreeViewColumn
@@ -905,6 +994,8 @@ namespace XDM.GtkUI
             finishedDownloadsStoreSorted = sortedStore;
             lvFinished = new TreeView(sortedStore);
             lvFinished.Selection.Mode = SelectionMode.Multiple;
+            // Per-view surface tint (see treeview.finished in the theme layer)
+            lvFinished.StyleContext.AddClass("finished");
 
             //File name column
             var fileNameColumn = new TreeViewColumn
@@ -1333,6 +1424,10 @@ namespace XDM.GtkUI
             helpLabel.Text = TextResource.GetText("MSG_UPDATE_AVAILABLE");
             helpImage.Pixbuf = LoadSvg("notification-3-line", 16);
             helpImage.ShowAll();
+            if (updateDot != null)
+            {
+                updateDot.Visible = true;
+            }
         }
 
         public void ClearUpdateInformation()
@@ -1343,6 +1438,10 @@ namespace XDM.GtkUI
                 helpLabel.Text = TextResource.GetText("LBL_SUPPORT_PAGE");
                 helpImage.Pixbuf = LoadSvg("question-line", 16);
                 helpImage.ShowAll();
+                if (updateDot != null)
+                {
+                    updateDot.Visible = false;
+                }
             });
         }
 
