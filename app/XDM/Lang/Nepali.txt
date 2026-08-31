@@ -10,3 +10,7 @@ LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video download
 LBL_NEW_DOWNLOAD=New download
 MSG_INSTALL_UPDATE=अपडेट स्थापना गर्नुहोस्
+
+SETTINGS_DARK_THEME=थिम
+THEME_DARK=गाढा
+THEME_LIGHT=हल्का

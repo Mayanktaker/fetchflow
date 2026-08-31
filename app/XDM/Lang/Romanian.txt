@@ -49,3 +49,7 @@ LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video download
 LBL_NEW_DOWNLOAD=New download
 MSG_INSTALL_UPDATE=Instalează actualizarea
+
+SETTINGS_DARK_THEME=Temă
+THEME_DARK=Întunecată
+THEME_LIGHT=Deschisă

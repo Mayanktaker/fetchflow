@@ -49,3 +49,7 @@ LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video téléchargé
 LBL_NEW_DOWNLOAD=Nouveau téléchargement
 MSG_INSTALL_UPDATE=Installer la mise à jour
+
+SETTINGS_DARK_THEME=Thème
+THEME_DARK=Sombre
+THEME_LIGHT=Clair

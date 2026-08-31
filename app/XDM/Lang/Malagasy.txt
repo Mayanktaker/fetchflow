@@ -48,3 +48,6 @@ SORT_STATUS=Status
 LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Horonan-tsary azo
 LBL_NEW_DOWNLOAD=Telechargement vaovao
+SETTINGS_DARK_THEME=Endrika
+THEME_DARK=Maizina
+THEME_LIGHT=Mazava

@@ -49,3 +49,7 @@ LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video download
 LBL_NEW_DOWNLOAD=New download
 MSG_INSTALL_UPDATE=Инсталирај ажурирање
+
+SETTINGS_DARK_THEME=Тема
+THEME_DARK=Тамна
+THEME_LIGHT=Светла

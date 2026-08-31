@@ -3,3 +3,7 @@ LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video download
 LBL_NEW_DOWNLOAD=New download
 MSG_INSTALL_UPDATE=نصب به‌روزرسانی
+
+SETTINGS_DARK_THEME=تم
+THEME_DARK=تاریک
+THEME_LIGHT=روشن

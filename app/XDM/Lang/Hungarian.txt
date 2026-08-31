@@ -49,3 +49,7 @@ LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video download
 LBL_NEW_DOWNLOAD=New download
 MSG_INSTALL_UPDATE=Frissítés telepítése
+
+SETTINGS_DARK_THEME=Téma
+THEME_DARK=Sötét
+THEME_LIGHT=Világos

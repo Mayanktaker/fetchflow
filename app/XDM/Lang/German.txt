@@ -49,3 +49,7 @@ LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video download
 LBL_NEW_DOWNLOAD=New download
 MSG_INSTALL_UPDATE=Update installieren
+
+SETTINGS_DARK_THEME=Design
+THEME_DARK=Dunkel
+THEME_LIGHT=Hell
