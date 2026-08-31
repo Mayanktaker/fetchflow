@@ -87,6 +87,7 @@ namespace XDM.Core
         public string Language { get; set; } = "English";
 
         public bool AllowSystemDarkTheme { get; set; } = true;
+        public int ThemeMode { get; set; } = 2;
 
         private Config()
         {

@@ -38,7 +38,10 @@ namespace XDM.GtkUI.Dialogs.Settings
             BtnDefault3, CatAdd, CatEdit, CatDel, CatDef, AddPass, EditPass, DelPass, BtnUserAgentReset,
             BtnCopy1, BtnCopy2, BtnCancel, BtnOK, BtnDownloadFolderBrowse, BtnTempFolderBrowse, BtnBrowse;
         [UI]
-        private CheckButton ChkMonitorClipboard, ChkTimestamp, ChkDarkTheme, ChkAutoCat, ChkShowPrg,
+        private Label LblTheme;
+        [UI]
+        private ComboBoxText CmbTheme;
+        private CheckButton ChkMonitorClipboard, ChkTimestamp, ChkAutoCat, ChkShowPrg,
             ChkShowComplete, ChkStartAuto, ChkOverwrite, ChkEnableSpeedLimit, ChkHalt, ChkKeepAwake,
             ChkRunCmd, ChkRunAntivirus, ChkAutoRun;
         [UI]
@@ -140,9 +143,14 @@ namespace XDM.GtkUI.Dialogs.Settings
             BtnBrowse.Clicked += BtnBrowse_Clicked;
             BtnUserAgentReset.Clicked += BtnUserAgentReset_Clicked;
 
-            ChkDarkTheme.Toggled += (_, _) =>
+            CmbTheme.AppendText("Light");
+            CmbTheme.AppendText("Dark");
+            CmbTheme.AppendText("Follow System");
+            CmbTheme.Active = Config.Instance.ThemeMode;
+
+            CmbTheme.Changed += (_, _) =>
             {
-                ThemeManager.ApplyTheme(ChkDarkTheme.Active);
+                ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1));
             };
         }
 
@@ -305,7 +313,7 @@ namespace XDM.GtkUI.Dialogs.Settings
 
         private void BtnCancel_Clicked(object? sender, EventArgs e)
         {
-            ThemeManager.ApplyTheme(Config.Instance.AllowSystemDarkTheme);
+            ThemeManager.ApplyTheme(Config.Instance.ThemeMode == 2 ? null : (bool?)(Config.Instance.ThemeMode == 1));
             Destroy();
         }
 
@@ -509,7 +517,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             Label15.Text = TextResource.GetText("MSG_MAX_DOWNLOAD");
             Label16.Text = TextResource.GetText("SETTINGS_CAT");
 
-            ChkDarkTheme.Label = TextResource.GetText("SETTINGS_DARK_THEME");
+            LblTheme.Text = TextResource.GetText("SETTINGS_THEME") ?? "Theme:";
             ChkAutoCat.Label = TextResource.GetText("SETTINGS_ATUO_CAT");
             ChkShowPrg.Label = TextResource.GetText("SHOW_DWN_PRG");
             ChkShowComplete.Label = TextResource.GetText("SHOW_DWN_COMPLETE");
@@ -576,7 +584,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             ChkShowComplete.Active = Config.Instance.ShowDownloadCompleteWindow;
             ChkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
             ChkOverwrite.Active = Config.Instance.FileConflictResolution == FileConflictResolution.Overwrite;
-            ChkDarkTheme.Active = Config.Instance.AllowSystemDarkTheme;
+
             TxtTempFolder.Text = Config.Instance.TempDir ?? string.Empty;
             GtkHelper.SetSelectedComboBoxValue<int>(CmbMaxParallalDownloads, Config.Instance.MaxParallelDownloads);
             ChkAutoCat.Active = Config.Instance.FolderSelectionMode == FolderSelectionMode.Auto;
@@ -699,8 +707,8 @@ namespace XDM.GtkUI.Dialogs.Settings
             Config.Instance.Categories = GtkHelper.GetListStoreValues<Category>(categoryStore, 3);
             Config.Instance.FolderSelectionMode = ChkAutoCat.Active ? FolderSelectionMode.Auto : FolderSelectionMode.Manual;
             Config.Instance.DefaultDownloadFolder = TxtDownloadFolder.Text;
-            Config.Instance.AllowSystemDarkTheme = ChkDarkTheme.Active;
-            ThemeManager.ApplyTheme(ChkDarkTheme.Active);
+            Config.Instance.ThemeMode = CmbTheme.Active;
+            ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1));
             Config.Instance.DoubleClickOpenFile = CmbDblClickAction.Active == 1;
         }
 

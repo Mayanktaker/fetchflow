@@ -23,8 +23,19 @@ namespace XDM.GtkUI.Utils
         private static CssProvider? currentThemeProvider;
 
         // Swaps the theme provider on the default screen and applies the GTK dark preference
-        public static void ApplyTheme(bool dark)
+        public static void ApplyTheme(bool? darkRequested)
         {
+            bool dark = darkRequested ?? false;
+            if (!darkRequested.HasValue)
+            {
+                try
+                {
+                    string themeName = Gtk.Settings.Default.ThemeName?.ToLowerInvariant() ?? "";
+                    if (themeName.Contains("dark"))
+                        dark = true;
+                }
+                catch { }
+            }
             var cssFile = dark ? DarkThemeCssFile : LightThemeCssFile;
             var cssPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ThemeDir, cssFile);
             try
@@ -61,14 +72,14 @@ namespace XDM.GtkUI.Utils
             // GTK-level dark preference: lets libadwaita-style dark variants resolve per mode
             try
             {
-                if (dark)
+                if (darkRequested == true || (darkRequested == null && dark))
                 {
                     Gtk.Settings.Default.ThemeName = AdwaitaThemeName;
                     Gtk.Settings.Default.ApplicationPreferDarkTheme = true;
                 }
                 else
                 {
-                    Gtk.Settings.Default.ApplicationPreferDarkTheme = false;
+                    if (darkRequested != null) Gtk.Settings.Default.ApplicationPreferDarkTheme = false;
                 }
             }
             catch (Exception settingsEx)

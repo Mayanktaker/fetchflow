@@ -748,7 +748,26 @@ namespace XDM.GtkUI
             }
             categoryTree.Model = categoryTreeStore;
             categoryTree.Selection.Mode = SelectionMode.Single;
-            categoryTree.Selection.Changed += OnCategoryChanged;
+                        categoryTree.Selection.Changed += OnCategoryChanged;
+            
+            categoryTree.ButtonPressEvent += (o, args) =>
+            {
+                if (args.Event.Button == 3)
+                {
+                    if (categoryTree.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath path, out _, out _, out _))
+                    {
+                        categoryTree.Selection.SelectPath(path);
+                        if (categoryTree.Model.GetIter(out TreeIter iter, path))
+                        {
+                            var val = categoryTree.Model.GetValue(iter, 2);
+                            if (val is Category cat)
+                            {
+                                ShowCategoryContextMenu(cat, args.Event);
+                            }
+                        }
+                    }
+                }
+            };
 
             // Pack into a sidebar vertical box with a ScrolledWindow wrapper
             var vbSidebar = new VBox(false, 0);
@@ -770,6 +789,30 @@ namespace XDM.GtkUI
 
             scrolledWindow.ShowAll();
             return scrolledWindow;
+        }
+
+        
+        private void UpdateStatusListCounts()
+        {
+            if (this.statusTreeStore == null || this.inprogressDownloadsStore == null || this.finishedDownloadsStore == null)
+                return;
+
+            int activeCount = inprogressDownloadsStore.IterNChildren();
+            int completeCount = finishedDownloadsStore.IterNChildren();
+
+            if (this.statusTreeStore.GetIterFirst(out TreeIter iter))
+            {
+                var activeText = TextResource.GetText("ALL_UNFINISHED");
+                if (activeCount > 0) activeText += $"  ({activeCount})";
+                this.statusTreeStore.SetValue(iter, 1, activeText);
+
+                if (this.statusTreeStore.IterNext(ref iter))
+                {
+                    var completeText = TextResource.GetText("ALL_FINISHED");
+                    if (completeCount > 0) completeText += $"  ({completeCount})";
+                    this.statusTreeStore.SetValue(iter, 1, completeText);
+                }
+            }
         }
 
         private void OnStatusChanged(object? sender, EventArgs e)
@@ -806,6 +849,25 @@ namespace XDM.GtkUI
                     SetHeaderSubtitle(TextResource.GetText("ALL_FINISHED"));
                 }
             }
+        }
+
+        
+        private void ShowCategoryContextMenu(Category cat, Gdk.EventButton ev)
+        {
+            var menu = new Menu();
+            
+            var openFolderItem = new MenuItem(TextResource.GetText("MENU_OPEN_FOLDER") ?? "Open Folder");
+            openFolderItem.Activated += (s, e) => 
+            {
+                string dir = cat.DefaultFolder;
+                if (string.IsNullOrEmpty(dir)) dir = Config.Instance.DefaultDownloadFolder;
+                System.IO.Directory.CreateDirectory(dir);
+                PlatformHelper.OpenFolder(dir);
+            };
+            
+            menu.Add(openFolderItem);
+            menu.ShowAll();
+            menu.Popup();
         }
 
         private void OnCategoryChanged(object? sender, EventArgs e)
@@ -1313,6 +1375,7 @@ namespace XDM.GtkUI
             inprogressDownloadsStore.SetValue(iter, 3, entry.Progress);
             inprogressDownloadsStore.SetValue(iter, 4, entry.Status.ToString());
             inprogressDownloadsStore.SetValue(iter, 5, entry);
+            UpdateStatusListCounts();
         }
 
         public void AddToTop(FinishedDownloadItem entry)
@@ -1325,6 +1388,7 @@ namespace XDM.GtkUI
             finishedDownloadFilter.Refilter();
             //finishedDownloadsStoreSorted.AppendValues()
             //sortedStore.SetSortColumnId(1, SortType.Descending);
+            UpdateStatusListCounts();
         }
 
         public void SwitchToInProgressView()
@@ -1387,6 +1451,7 @@ namespace XDM.GtkUI
             {
                 var iter = modelIter.Value;
                 inprogressDownloadsStore.Remove(ref iter);
+                UpdateStatusListCounts();
             }
 
             //var iter = GtkHelper.ConvertViewToModel(((InProgressEntryWrapper)row).TreeIter,
@@ -1402,6 +1467,7 @@ namespace XDM.GtkUI
             {
                 var iter = modelIter.Value;
                 finishedDownloadsStore.Remove(ref iter);
+                UpdateStatusListCounts();
             }
             //var iter = GtkHelper.ConvertViewToModel(((FinishedEntryWrapper)row).TreeIter,
             //    finishedDownloadsStoreSorted, finishedDownloadFilter);
@@ -1414,6 +1480,7 @@ namespace XDM.GtkUI
                 return;
             }
             finishedDownloadsStore.Clear();
+            UpdateStatusListCounts();
         }
 
         public void Delete(IEnumerable<IInProgressDownloadRow> rows)
@@ -1529,6 +1596,7 @@ namespace XDM.GtkUI
                     FormattingHelper.FormatSize(item.Size),
                     item);
             }
+            UpdateStatusListCounts();
         }
 
         private void SetInProgressDownloads(IEnumerable<InProgressDownloadItem> incompleteDownloads)
@@ -1543,6 +1611,7 @@ namespace XDM.GtkUI
                     Helpers.GenerateStatusText(item),
                     item);
             }
+            UpdateStatusListCounts();
         }
 
         private IList<IInProgressDownloadRow> GetSelectedInProgressDownloads()

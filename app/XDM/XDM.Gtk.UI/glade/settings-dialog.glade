@@ -977,12 +977,33 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkCheckButton" id="ChkDarkTheme">
-                                <property name="label" translatable="yes">ChkDarkTheme</property>
+                              <object class="GtkBox">
                                 <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="draw-indicator">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="spacing">10</property>
+                                <child>
+                                  <object class="GtkLabel" id="LblTheme">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">Theme:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkComboBoxText" id="CmbTheme">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
