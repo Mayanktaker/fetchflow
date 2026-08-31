@@ -38,12 +38,16 @@ namespace XDM.GtkUI.Dialogs.Settings
             BtnDefault3, CatAdd, CatEdit, CatDel, CatDef, AddPass, EditPass, DelPass, BtnUserAgentReset,
             BtnCopy1, BtnCopy2, BtnCancel, BtnOK, BtnDownloadFolderBrowse, BtnTempFolderBrowse, BtnBrowse;
         [UI]
-        private CheckButton ChkMonitorClipboard, ChkTimestamp, ChkDarkTheme, ChkAutoCat, ChkShowPrg,
+        private CheckButton ChkMonitorClipboard, ChkTimestamp, ChkAutoCat, ChkShowPrg,
             ChkShowComplete, ChkStartAuto, ChkOverwrite, ChkEnableSpeedLimit, ChkHalt, ChkKeepAwake,
             ChkRunCmd, ChkRunAntivirus, ChkAutoRun;
         [UI]
         private ComboBox CmbMinVidSize, CmbDblClickAction, CmbMaxParallalDownloads,
             CmbTimeOut, CmbMaxSegments, CmbMaxRetry, CmbProxyType;
+        [UI]
+        private ComboBoxText CmbTheme;
+        [UI]
+        private Label LblTheme;
         [UI]
         private Entry TxtChromeWebStoreUrl, TxtFirefoxAMOUrl, TxtTempFolder, TxtDownloadFolder,
             TxtMaxSpeedLimit, TxtProxyHost, TxtProxyPort, TxtProxyUser, TxtProxyPassword,
@@ -59,12 +63,16 @@ namespace XDM.GtkUI.Dialogs.Settings
         private ListBox SideList;
 
         private ListStore categoryStore, passwordStore;
+        // Preserve the committed theme while a settings dialog previews a pending selection.
+        private bool initialDarkTheme, pendingDarkTheme;
 
         private SettingsDialog(Builder builder,
             Window parent,
             WindowGroup group) : base(builder.GetRawOwnedObject("dialog"))
         {
             builder.Autoconnect(this);
+
+            initialDarkTheme = pendingDarkTheme = Config.Instance.AllowSystemDarkTheme;
 
             Modal = true;
             SetDefaultSize(768, 480);
@@ -96,6 +104,12 @@ namespace XDM.GtkUI.Dialogs.Settings
             GtkHelper.PopulateComboBox(CmbProxyType, TextResource.GetText("NET_SYSTEM_PROXY"),
                 TextResource.GetText("ND_NO_PROXY"), TextResource.GetText("ND_MANUAL_PROXY"));
 
+            // Theme selector: populate and select Dark/Light before wiring to avoid premature apply.
+            CmbTheme.AppendText(TextResource.GetText("THEME_DARK"));
+            CmbTheme.AppendText(TextResource.GetText("THEME_LIGHT"));
+            CmbTheme.Active = Config.Instance.AllowSystemDarkTheme ? 0 : 1;
+            CmbTheme.Changed += CmbTheme_Changed;
+
             CreatePasswordManagerListView();
 
             VideoWikiLink.Clicked += VideoWikiLink_Clicked;
@@ -116,6 +130,7 @@ namespace XDM.GtkUI.Dialogs.Settings
 
             BtnOK.Clicked += BtnOK_Clicked;
             BtnCancel.Clicked += BtnCancel_Clicked;
+            DeleteEvent += SettingsDialog_DeleteEvent;
 
             BtnTempFolderBrowse.Clicked += BtnTempFolderBrowse_Clicked;
             BtnDownloadFolderBrowse.Clicked += BtnDownloadFolderBrowse_Clicked;
@@ -203,6 +218,28 @@ namespace XDM.GtkUI.Dialogs.Settings
                 };
                 passwordStore.AppendValues(password.Host, password.User, password);
             }
+        }
+
+        // Persist + apply theme immediately on change — live switch, no restart
+        private void CmbTheme_Changed(object? sender, EventArgs e)
+        {
+            pendingDarkTheme = CmbTheme.Active == 0;
+            ThemeManager.ApplyTheme(pendingDarkTheme);
+        }
+
+        // Restore the committed theme whenever the settings preview is cancelled.
+        private void RestoreThemePreview()
+        {
+            if (ThemeManager.IsDark != initialDarkTheme)
+            {
+                ThemeManager.ApplyTheme(initialDarkTheme);
+            }
+        }
+
+        // Restore live theme previews when the dialog closes through the window manager.
+        private void SettingsDialog_DeleteEvent(object? sender, DeleteEventArgs args)
+        {
+            RestoreThemePreview();
         }
 
         private void CmbProxyType_Changed(object? sender, EventArgs e)
@@ -294,6 +331,7 @@ namespace XDM.GtkUI.Dialogs.Settings
 
         private void BtnCancel_Clicked(object? sender, EventArgs e)
         {
+            RestoreThemePreview();
             Dispose();
         }
 
@@ -497,7 +535,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             Label15.Text = TextResource.GetText("MSG_MAX_DOWNLOAD");
             Label16.Text = TextResource.GetText("SETTINGS_CAT");
 
-            ChkDarkTheme.Label = TextResource.GetText("SETTINGS_DARK_THEME");
+            LblTheme.Text = TextResource.GetText("SETTINGS_DARK_THEME");
             ChkAutoCat.Label = TextResource.GetText("SETTINGS_ATUO_CAT");
             ChkShowPrg.Label = TextResource.GetText("SHOW_DWN_PRG");
             ChkShowComplete.Label = TextResource.GetText("SHOW_DWN_COMPLETE");
@@ -564,7 +602,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             ChkShowComplete.Active = Config.Instance.ShowDownloadCompleteWindow;
             ChkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
             ChkOverwrite.Active = Config.Instance.FileConflictResolution == FileConflictResolution.Overwrite;
-            ChkDarkTheme.Active = Config.Instance.AllowSystemDarkTheme;
+            CmbTheme.Active = Config.Instance.AllowSystemDarkTheme ? 0 : 1;
             TxtTempFolder.Text = Config.Instance.TempDir ?? string.Empty;
             GtkHelper.SetSelectedComboBoxValue<int>(CmbMaxParallalDownloads, Config.Instance.MaxParallelDownloads);
             ChkAutoCat.Active = Config.Instance.FolderSelectionMode == FolderSelectionMode.Auto;
@@ -687,8 +725,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             Config.Instance.Categories = GtkHelper.GetListStoreValues<Category>(categoryStore, 3);
             Config.Instance.FolderSelectionMode = ChkAutoCat.Active ? FolderSelectionMode.Auto : FolderSelectionMode.Manual;
             Config.Instance.DefaultDownloadFolder = TxtDownloadFolder.Text;
-            Config.Instance.AllowSystemDarkTheme = ChkDarkTheme.Active;
-            ThemeManager.ApplyTheme(ChkDarkTheme.Active);
+            Config.Instance.AllowSystemDarkTheme = CmbTheme.Active == 0;
             Config.Instance.DoubleClickOpenFile = CmbDblClickAction.Active == 1;
         }
 

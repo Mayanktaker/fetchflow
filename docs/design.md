@@ -20,28 +20,29 @@ properties. Spec: docs/superpowers/specs/2026-08-30-xdm-design-system-modernizat
 ## Color
 | Role | Dark | Light |
 |---|---|---|
-| window | #1d1d1d | #fcfcfc |
-| sidebar | #161616 | #ececec |
-| view | #232323 | #ffffff |
-| entry | #282828 | #ffffff |
-| elevated | #262626 | #ffffff |
-| button surface | #2e2e2e | #ffffff |
-| border | #404040 | #cacaca |
-| text | #f4f4f4 | #222222 |
-| dim text | #b4b4b4 | #6b6b6b |
-| accent / hover / active | #3584e4 / #5a9bea / #2767b8 | same |
-| destructive / hover / active | #e01b24 / #ef4a52 / #a5121a | same |
-| brand / hover | #f97316 / #fb923c | #ea580c / #f97316 |
-| success | #4ade80 | #16a34a |
+| window | #282c34 | #fcfcfc |
+| sidebar | #21252b | #ececec |
+| view | #2c313a | #ffffff |
+| entry | #21252b | #ffffff |
+| elevated | #21252b | #ffffff |
+| button surface | #3e4451 | #ffffff |
+| border | #3e4451 | #cacaca |
+| text | #abb2bf | #222222 |
+| dim text | #9da5b4 | #6b6b6b |
+| accent / hover / active | #61afef / #7cb8f2 / #4d78cc | same |
+| destructive / hover / active | #e06c75 / #ee8189 / #c25a63 | same |
+| brand / hover | #d19a66 / #e0af89 | #ea580c / #f97316 |
+| success | #98c379 | #16a34a |
 
 ## Rules
-1. Blue (#3584e4 family) is the ONLY interactive accent: selection, focus,
-   primary buttons, progress (gradient #3584e4 → #5a9bea).
+1. Blue is the ONLY interactive accent: selection, focus, primary buttons, and
+   progress (dark gradient #61afef → #7cb8f2; light theme keeps its blue family).
 2. Orange (brand) never appears on interactive controls — logo tile, brand
    moments only.
 3. Destructive stays red.
 4. Every corner uses one radius from the scale; every gap from the spacing scale.
-5. System font only; hierarchy via weight + dim color.
+5. Typography uses bundled Inter, then Cantarell, then sans-serif; hierarchy uses weight + dim color.
+6. Settings provides an explicit persisted Dark/Light selector with live switching.
 
 ## Icons
 Remix Icon outline set in app/XDM/XDM.Gtk.UI/svg-icons/ + xdm-mark.svg (brand).

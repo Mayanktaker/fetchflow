@@ -1,13 +1,14 @@
 /*
- * XDM dark theme layer — deep charcoal surfaces + Adwaita blue accent
+ * XDM dark theme layer — One Dark Pro palette (bg family #282c34/#21252b/#2c313a/#3e4451,
+ * fg #abb2bf/#9da5b4/#5c6370, blue #61afef, red #e06c75, green #98c379)
  * © Mayanktaker Computers & Web Development | https://mayanktaker.com
  *
  * Tokens (GTK3 CSS has no variables — values inlined, grouped here):
- *   window  #1d1d1d · sidebar #161616 · view #232323 · entry #282828
- *   elevated #2e2e2e · border #404040 · text #f4f4f4 · dim #b4b4b4
- *   accent #3584e4 (hover #5a9bea / active #2767b8)
- *   destructive #e01b24 (hover #ef4a52 / active #a5121a)
- *   brand #f97316 (hover #fb923c) · success #4ade80
+ *   window  #282c34 · sidebar #21252b · view #2c313a · entry #21252b
+ *   elevated #21252b · button/border #3e4451 · text #abb2bf · dim #9da5b4
+ *   accent #61afef (hover #7cb8f2 / active #4d78cc)
+ *   destructive #e06c75 (hover #ee8189 / active #c25a63)
+ *   brand #d19a66 (hover #e0af89) · success #98c379
  *   radius: sm 6 · md 8 · lg 10 · pill 999 · spacing 4/8/12/16/24
  *   font stack: "Inter" (bundled, user-installed at startup) → "Cantarell" → sans-serif
  */
@@ -15,30 +16,30 @@
 /* Base surfaces */
 window,
 dialog {
-  background-color: #1d1d1d;
-  color: #f4f4f4;
+  background-color: #282c34;
+  color: #abb2bf;
   font-family: "Inter", "Cantarell", sans-serif;
 }
 
 headerbar {
-  background-color: #1a1a1a;
-  border-bottom: 1px solid #0e0e0e;
-  color: #e8e8e8;
+  background-color: #21252b;
+  border-bottom: 1px solid #181a1f;
+  color: #abb2bf;
 }
 
 tooltip {
-  background-color: #3b3b41;
+  background-color: #3e4451;
   border-radius: 6px;
 }
 
 popover {
-  background-color: #262626;
-  border: 1px solid #3a3a3a;
+  background-color: #21252b;
+  border: 1px solid #363c46;
   border-radius: 10px;
 }
 
 separator {
-  background-color: #303030;
+  background-color: #3e4451;
   min-width: 1px;
   min-height: 1px;
 }
@@ -47,17 +48,17 @@ separator {
 paned > separator {
   min-width: 1px;
   min-height: 1px;
-  background-color: #0d0d0d;
+  background-color: #181a1f;
 }
 
 paned > separator:backdrop {
-  background-color: #0b0b0b;
+  background-color: #181a1f;
 }
 
 /* Sidebar + content lists (GTK3 paints row states on the treeview node itself) */
 treeview {
-  background-color: #232323;
-  color: #e4e4e4;
+  background-color: #2c313a;
+  color: #abb2bf;
   font-family: "Inter", "Cantarell", sans-serif;
 }
 
@@ -66,15 +67,15 @@ treeview:hover {
 }
 
 treeview:selected {
-  background-color: #3584e4;
+  background-color: #61afef;
   color: #ffffff;
 }
 
 /* Category sidebar (gets .dark class from MainWindow) */
 treeview.dark {
-  background-color: #161616;
-  color: #c9c9c9;
-  border-right: 1px solid #0d0d0d;
+  background-color: #21252b;
+  color: #9da5b4;
+  border-right: 1px solid #181a1f;
 }
 
 treeview.dark:hover {
@@ -83,63 +84,63 @@ treeview.dark:hover {
 }
 
 treeview.dark:selected {
-  background-color: #3584e4;
+  background-color: #61afef;
   color: #ffffff;
 }
 
 /* Text fields */
 entry {
-  background-color: #282828;
-  border: 1px solid #3f3f3f;
+  background-color: #21252b;
+  border: 1px solid #3e4451;
   border-radius: 8px;
-  color: #f4f4f4;
+  color: #abb2bf;
 }
 
 entry:focus {
-  border-color: #3584e4;
-  box-shadow: inset 0 0 0 1px rgba(53, 132, 228, 0.55);
+  border-color: #61afef;
+  box-shadow: inset 0 0 0 1px rgba(97, 175, 239, 0.55);
 }
 
 entry:disabled {
-  background-color: #242424;
-  border-color: #2e2e2e;
-  color: #757575;
+  background-color: #21252b;
+  border-color: #3e4451;
+  color: #5c6370;
 }
 
 entry selection {
-  background-color: #3584e4;
+  background-color: #61afef;
   color: #ffffff;
 }
 
 /* Neutral buttons — subtle elevation instead of flat grey */
 button {
-  background-color: #2e2e2e;
-  border: 1px solid #404040;
+  background-color: #3e4451;
+  border: 1px solid #3e4451;
   border-radius: 8px;
-  color: #f0f0f0;
+  color: #abb2bf;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
 }
 
 button:hover {
-  background-color: #393939;
-  border-color: #4a4a4a;
+  background-color: #454b57;
+  border-color: #4b5263;
 }
 
 button:active {
-  background-color: #262626;
-  border-color: #383838;
+  background-color: #21252b;
+  border-color: #363c46;
 }
 
 button:checked {
-  background-color: #2b2b2b;
-  border-color: #3584e4;
+  background-color: #21252b;
+  border-color: #61afef;
   color: #ffffff;
 }
 
 button:disabled {
-  background-color: #242424;
-  border-color: #2c2c2c;
-  color: #757575;
+  background-color: #21252b;
+  border-color: #21252b;
+  color: #5c6370;
   box-shadow: none;
 }
 
@@ -147,7 +148,7 @@ button:disabled {
 button:focus {
   outline-width: 2px;
   outline-style: solid;
-  outline-color: #3584e4;
+  outline-color: #61afef;
   outline-offset: -4px;
 }
 
@@ -169,137 +170,137 @@ button.flat:active {
 }
 
 button.flat:checked {
-  background-color: rgba(53, 132, 228, 0.25);
+  background-color: rgba(97, 175, 239, 0.25);
   border-color: transparent;
 }
 
 button.flat:disabled {
   background-color: rgba(255, 255, 255, 0.06);
-  color: #757575;
+  color: #5c6370;
 }
 
 /* Primary (suggested) — Download/Add/Save/Start/OK */
 button.suggested-action {
-  background-color: #3584e4;
-  border-color: #2a6cb8;
+  background-color: #61afef;
+  border-color: #4d78cc;
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 button.suggested-action:hover {
-  background-color: #5a9bea;
-  border-color: #3f7ecb;
+  background-color: #7cb8f2;
+  border-color: #5d8fd6;
 }
 
 button.suggested-action:active {
-  background-color: #2767b8;
-  border-color: #1f56a0;
+  background-color: #4d78cc;
+  border-color: #42639e;
 }
 
 button.suggested-action:disabled {
-  background-color: rgba(53, 132, 228, 0.45);
+  background-color: rgba(97, 175, 239, 0.45);
   border-color: transparent;
   color: rgba(255, 255, 255, 0.65);
   box-shadow: none;
 }
 
 button.suggested-action:focus {
-  outline-color: #9cc3f2;
+  outline-color: #a3cdf6;
 }
 
 /* Destructive — Delete/Remove/Clear */
 button.destructive-action {
-  background-color: #e01b24;
-  border-color: #b0151c;
+  background-color: #e06c75;
+  border-color: #c25a63;
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 button.destructive-action:hover {
-  background-color: #ef4a52;
-  border-color: #c71f28;
+  background-color: #ee8189;
+  border-color: #d16b74;
 }
 
 button.destructive-action:active {
-  background-color: #a5121a;
-  border-color: #8c0f16;
+  background-color: #c25a63;
+  border-color: #a84e56;
 }
 
 button.destructive-action:disabled {
-  background-color: rgba(224, 27, 36, 0.45);
+  background-color: rgba(224, 108, 117, 0.45);
   border-color: transparent;
   color: rgba(255, 255, 255, 0.65);
   box-shadow: none;
 }
 
 button.destructive-action:focus {
-  outline-color: #f5a3a7;
+  outline-color: #f2a9af;
 }
 
 /* Colored flat buttons — toolbar Start (blue) / Remove+Delete (red) */
 button.flat.suggested-action {
   background-color: rgba(255, 255, 255, 0.06);
   border-color: transparent;
-  color: #6ea8ec;
+  color: #61afef;
   box-shadow: none;
 }
 
 button.flat.suggested-action:hover {
-  background-color: rgba(53, 132, 228, 0.18);
+  background-color: rgba(97, 175, 239, 0.18);
   border-color: transparent;
-  color: #8fbcf3;
+  color: #7cb8f2;
 }
 
 button.flat.suggested-action:active {
-  background-color: rgba(53, 132, 228, 0.30);
+  background-color: rgba(97, 175, 239, 0.30);
   border-color: transparent;
 }
 
 button.flat.destructive-action {
   background-color: rgba(255, 255, 255, 0.06);
   border-color: transparent;
-  color: #ef6a70;
+  color: #e06c75;
   box-shadow: none;
 }
 
 button.flat.destructive-action:hover {
-  background-color: rgba(224, 27, 36, 0.18);
+  background-color: rgba(224, 108, 117, 0.18);
   border-color: transparent;
-  color: #f4888d;
+  color: #ee8189;
 }
 
 button.flat.destructive-action:active {
-  background-color: rgba(224, 27, 36, 0.30);
+  background-color: rgba(224, 108, 117, 0.30);
   border-color: transparent;
 }
 
 button.flat.suggested-action:disabled,
 button.flat.destructive-action:disabled {
   background-color: rgba(255, 255, 255, 0.06);
-  color: #757575;
+  color: #5c6370;
 }
 
 /* Switches, checkboxes, radios */
 switch {
-  background-color: #2e2e2e;
-  border: 1px solid #404040;
+  background-color: #3e4451;
+  border: 1px solid #3e4451;
   border-radius: 999px;
 }
 
 switch:checked {
-  background-color: #3584e4;
-  border-color: #2a6cb8;
+  background-color: #61afef;
+  border-color: #4d78cc;
 }
 
 switch slider {
-  background-color: #5a5a5a;
+  background-color: #767d8b;
   border-radius: 999px;
 }
 
 checkbutton check,
 radiobutton radio {
-  background-color: #2a2a2a;
-  border: 1px solid #4a4a4a;
+  background-color: #21252b;
+  border: 1px solid #4b5263;
 }
 
 checkbutton check {
@@ -312,8 +313,8 @@ radiobutton radio {
 
 checkbutton check:checked,
 radiobutton radio:checked {
-  background-color: #3584e4;
-  border-color: #3584e4;
+  background-color: #61afef;
+  border-color: #61afef;
   color: #ffffff;
 }
 
@@ -323,7 +324,7 @@ scrollbar {
 }
 
 scrollbar slider {
-  background-color: #464646;
+  background-color: #4b5263;
   border-radius: 999px;
   margin: 2px;
   min-width: 8px;
@@ -331,44 +332,44 @@ scrollbar slider {
 }
 
 scrollbar slider:hover {
-  background-color: #5e5e5e;
+  background-color: #5c6370;
 }
 
 scrollbar slider:active {
-  background-color: #6a6a6a;
+  background-color: #767d8b;
 }
 
 /* Menus */
 menu {
-  background-color: #262626;
-  border: 1px solid #3a3a3a;
+  background-color: #21252b;
+  border: 1px solid #363c46;
   border-radius: 10px;
 }
 
 menuitem:hover {
-  background-color: #3584e4;
+  background-color: #61afef;
   color: #ffffff;
 }
 
 menuitem:disabled {
-  color: #757575;
+  color: #5c6370;
 }
 
 /* Notebook tabs — active tab gets accent underline */
 notebook header {
-  background-color: #1a1a1a;
+  background-color: #21252b;
 }
 
 notebook header.top {
-  border-bottom: 1px solid #0e0e0e;
+  border-bottom: 1px solid #181a1f;
 }
 
 notebook tab {
-  color: #b4b4b4;
+  color: #9da5b4;
 }
 
 notebook tab:hover {
-  color: #e8e8e8;
+  color: #abb2bf;
 }
 
 notebook tab:checked {
@@ -376,17 +377,17 @@ notebook tab:checked {
 }
 
 notebook header.top tab:checked {
-  box-shadow: inset 0 -2px 0 0 #3584e4;
+  box-shadow: inset 0 -2px 0 0 #61afef;
 }
 
 /* Progress bars */
 progressbar trough {
-  background-color: #2e2e2e;
+  background-color: #3e4451;
   border-radius: 999px;
 }
 
 progressbar progress {
-  background-color: #3584e4;
+  background-color: #61afef;
   border-radius: 999px;
 }
 
@@ -400,7 +401,7 @@ headerbar {
 
 /* Sidebar list rows (ListBox; class set by MainWindow) */
 list.sidebar {
-  background-color: #161616;
+  background-color: #21252b;
   padding: 8px 0px;
 }
 
@@ -416,13 +417,13 @@ list.sidebar row:hover {
 }
 
 list.sidebar row:selected {
-  background-color: #3584e4;
+  background-color: #61afef;
   color: #ffffff;
 }
 
 /* Sidebar section header ("Categories") via ListBox header func */
 .sidebar-section-label {
-  color: #8a8a8a;
+  color: #5c6370;
   font-size: 10px;
   letter-spacing: 0.08em;
   padding: 6px 18px;
@@ -434,7 +435,7 @@ list.sidebar row:selected {
   background-color: rgba(255, 255, 255, 0.09);
   border-radius: 999px;
   padding: 1px 8px;
-  color: #b4b4b4;
+  color: #9da5b4;
   font-size: 10px;
 }
 
@@ -459,7 +460,7 @@ list.rounded-selection row:hover {
 }
 
 list.rounded-selection row:selected {
-  background-color: #3584e4;
+  background-color: #61afef;
   color: #ffffff;
 }
 
@@ -509,7 +510,7 @@ treeview header button {
   background-color: transparent;
   border-style: none;
   box-shadow: none;
-  color: #8a8a8a;
+  color: #5c6370;
   font-size: 10px;
   font-weight: normal;
   padding: 4px 8px;
@@ -526,63 +527,63 @@ treeview header button:backdrop {
 
 /* Pill progress with gradient fill (also styles CellRendererProgress) */
 progressbar progress {
-  background-image: linear-gradient(to right, #3584e4, #5a9bea);
+  background-image: linear-gradient(to right, #61afef, #7cb8f2);
 }
 
 /* Success dot next to sidebar brand mark */
 .status-dot {
-  color: #4ade80;
+  color: #98c379;
   font-size: 10px;
 }
 
 /*
  * Backdrop (unfocused window) — flatter surfaces + dimmer text, Adwaita-style
- * Tokens: text #b8b8b8 · neutral bg #2b2b2b · suggested #3b74b8 · destructive #b9232a
+ * Tokens: text #848a97 · neutral bg #21252b · suggested #5285c4 · destructive #c0626b
  */
 window:backdrop,
 dialog:backdrop {
-  color: #b8b8b8;
+  color: #848a97;
 }
 
 headerbar:backdrop {
-  background-color: #161616;
-  border-bottom-color: #0b0b0b;
-  color: #9a9a9a;
+  background-color: #21252b;
+  border-bottom-color: #181a1f;
+  color: #767d8b;
 }
 
 treeview:backdrop {
-  color: #b0b0b0;
+  color: #848a97;
 }
 
 treeview.dark:backdrop {
-  color: #a0a0a0;
+  color: #79808e;
 }
 
 button:backdrop {
-  background-color: #2b2b2b;
-  border-color: #3a3a3a;
-  color: #c9c9c9;
+  background-color: #21252b;
+  border-color: #363c46;
+  color: #9da5b4;
   box-shadow: none;
 }
 
 button:backdrop:hover {
-  background-color: #333333;
+  background-color: #333842;
 }
 
 button.flat:backdrop {
   background-color: rgba(255, 255, 255, 0.06);
   border-color: transparent;
-  color: #b0b0b0;
+  color: #848a97;
 }
 
 button.suggested-action:backdrop {
-  background-color: #3b74b8;
-  border-color: #2f5c94;
+  background-color: #5285c4;
+  border-color: #42639e;
 }
 
 button.destructive-action:backdrop {
-  background-color: #b9232a;
-  border-color: #931b21;
+  background-color: #c0626b;
+  border-color: #a84e56;
 }
 
 /* Flat toolbar variants must stay borderless ghost chips even in backdrop */
@@ -593,12 +594,12 @@ button.flat.destructive-action:backdrop {
 }
 
 entry:backdrop {
-  color: #b8b8b8;
-  border-color: #3a3a3a;
+  color: #848a97;
+  border-color: #363c46;
 }
 
 notebook tab:backdrop {
-  color: #8a8a8a;
+  color: #5c6370;
 }
 
 /*
