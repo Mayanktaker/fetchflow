@@ -78,11 +78,16 @@ namespace XDM.GtkUI.Dialogs.Settings
             var titleText = TextResource.GetText("TITLE_SETTINGS");
             Title = titleText;
             Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
-
             LoadTexts();
 
+            SideList.WidthRequest = 180;
             SideList.StyleContext.AddClass("sidebar");
             SideList.RowSelected += SideList_RowSelected;
+            var row0 = SideList.GetRowAtIndex(0);
+            if (row0 != null)
+            {
+                SideList.SelectRow(row0);
+            }
 
             Tabs.ShowTabs = false;
             GtkHelper.PopulateComboBoxGeneric<int>(CmbMinVidSize, new int[] { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 });
