@@ -114,7 +114,6 @@ treeview:selected {
 treeview.dark {
   background-color: #161616;
   color: #c9c9c9;
-  border-right: 1px solid #0d0d0d;
   border-radius: 8px;
 }
 
@@ -127,6 +126,15 @@ treeview.dark:selected {
   background-color: #3584e4;
   color: #ffffff;
   border-radius: 8px;
+}
+
+label.sidebar-heading {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #808080;
+  padding: 4px 8px;
 }
 
 /* Frames */

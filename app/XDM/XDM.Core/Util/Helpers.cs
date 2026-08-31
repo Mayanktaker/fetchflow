@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -204,8 +204,15 @@ namespace XDM.Core.Util
         public static bool IsOfCategory(string name, Category? category)
         {
             if (category == null) return true;
+            if (string.IsNullOrEmpty(name)) return false;
             var ext = Path.GetExtension(name);
-            return category.Value.FileExtensions.Contains(ext.ToUpperInvariant());
+            if (string.IsNullOrEmpty(ext)) return false;
+            ext = ext.ToUpperInvariant();
+            var extNoDot = ext.StartsWith(".") ? ext.Substring(1) : ext;
+            var extWithDot = ext.StartsWith(".") ? ext : "." + ext;
+            return category.Value.FileExtensions.Contains(ext) ||
+                   category.Value.FileExtensions.Contains(extNoDot) ||
+                   category.Value.FileExtensions.Contains(extWithDot);
         }
 
         private static string GetStatusText(DownloadStatus status)

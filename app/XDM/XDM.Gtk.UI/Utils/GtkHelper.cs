@@ -8,39 +8,42 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Translations;
+using XDM.Core;
 
 namespace XDM.GtkUI.Utils
 {
     internal static class GtkHelper
     {
-        public static void ShowMessageBox(Window window, string text, string? title = null)
+        public static void ShowMessageBox(Window? window, string text, string? title = null)
         {
-            using var msgBox = new MessageDialog(window, DialogFlags.Modal, MessageType.Info, ButtonsType.Ok, text);
-            msgBox.Title = title ?? window.Title;
-            if (window.Group != null)
+            var parent = window ?? (ApplicationContext.MainWindow as Window);
+            using var msgBox = new MessageDialog(parent, DialogFlags.Modal, MessageType.Info, ButtonsType.Ok, text);
+            msgBox.Title = title ?? parent?.Title ?? "FetchFlow";
+            if (parent?.Group != null)
             {
-                window.Group.AddWindow(msgBox);
+                parent.Group.AddWindow(msgBox);
             }
             msgBox.Run();
-            if (window.Group != null)
+            if (parent?.Group != null)
             {
-                window.Group.RemoveWindow(msgBox);
+                parent.Group.RemoveWindow(msgBox);
             }
             msgBox.Destroy();
         }
 
-        public static bool ShowConfirmMessageBox(Window window, string text, string? title = null)
+        public static bool ShowConfirmMessageBox(Window? window, string text, string? title = null)
         {
-            using var msgBox = new MessageDialog(window, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, text);
-            msgBox.Title = title ?? window.Title;
-            if (window.Group != null)
+            var parent = window ?? (ApplicationContext.MainWindow as Window);
+            using var msgBox = new MessageDialog(parent, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, text);
+            msgBox.Title = title ?? parent?.Title ?? "FetchFlow";
+            if (parent?.Group != null)
             {
-                window.Group.AddWindow(msgBox);
+                parent.Group.AddWindow(msgBox);
             }
             var ret = msgBox.Run();
-            if (window.Group != null)
+            if (parent?.Group != null)
             {
-                window.Group.RemoveWindow(msgBox);
+                parent.Group.RemoveWindow(msgBox);
             }
             msgBox.Destroy();
             return ret == (int)ResponseType.Yes;

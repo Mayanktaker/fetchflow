@@ -139,6 +139,11 @@ namespace XDM.GtkUI.Dialogs.Settings
 
             BtnBrowse.Clicked += BtnBrowse_Clicked;
             BtnUserAgentReset.Clicked += BtnUserAgentReset_Clicked;
+
+            ChkDarkTheme.Toggled += (_, _) =>
+            {
+                ThemeManager.ApplyTheme(ChkDarkTheme.Active);
+            };
         }
 
         private void SideList_RowSelected(object o, RowSelectedArgs args)
@@ -300,6 +305,7 @@ namespace XDM.GtkUI.Dialogs.Settings
 
         private void BtnCancel_Clicked(object? sender, EventArgs e)
         {
+            ThemeManager.ApplyTheme(Config.Instance.AllowSystemDarkTheme);
             Destroy();
         }
 

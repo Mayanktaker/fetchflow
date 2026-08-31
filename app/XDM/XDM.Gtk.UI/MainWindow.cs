@@ -21,8 +21,9 @@ namespace XDM.GtkUI
 {
     public class MainWindow : Window, IApplicationWindow
     {
-        private TreeStore categoryTreeStore;
-        private TreeView categoryTree;
+        private TreeStore statusTreeStore, categoryTreeStore;
+        private TreeView statusTree, categoryTree;
+        private bool isSelectingSidebar = false;
         private ListStore inprogressDownloadsStore, finishedDownloadsStore;
         private TreeView lvInprogress, lvFinished;
         private ScrolledWindow swInProgress, swFinished;
@@ -159,11 +160,10 @@ namespace XDM.GtkUI
             // CSD headerbar (Wayland-safe): left-aligned title + its own close button only
             Titlebar = CreateHeaderBar();
 
-            // Sidebar default: row 0 "All Unfinished" — matches the main panel's primary
-            // (top-packed, toolbar-rich) view; guard against an empty store
-            if (categoryTreeStore!.GetIterFirst(out TreeIter iter))
+            // Sidebar default: row 0 "All Unfinished" in statusTree
+            if (statusTreeStore!.GetIterFirst(out TreeIter iter))
             {
-                categoryTree!.Selection.SelectIter(iter);
+                statusTree!.Selection.SelectIter(iter);
             }
             UpdateBrowserMonitorButton();
             CreateMenu();
@@ -655,50 +655,106 @@ namespace XDM.GtkUI
                 }
             }
 
-            categoryTree = new TreeView()
+            // Top status section (Active & Complete)
+            statusTree = new TreeView()
             {
                 HeadersVisible = false,
                 ShowExpanders = false,
-                LevelIndentation = 15
+                LevelIndentation = 0
             };
-            categoryTree.StyleContext.AddClass("dark");
+            statusTree.StyleContext.AddClass("dark");
 
-            var cols = new TreeViewColumn();
+            var statusCols = new TreeViewColumn();
+            var statusCellPix = new CellRendererPixbuf();
+            statusCellPix.SetPadding(3, 5);
+            statusCols.PackStart(statusCellPix, false);
+            statusCols.AddAttribute(statusCellPix, "pixbuf", 0);
+            statusCols.SetCellDataFunc(statusCellPix, new CellLayoutDataFunc((layout, cell, model, iter) =>
+            {
+                if (model.GetValue(iter, 0) is Gdk.Pixbuf icon)
+                {
+                    ((CellRendererPixbuf)cell).Pixbuf = statusTree.Selection.PathIsSelected(model.GetPath(iter))
+                        ? selectedSidebarIcons.GetValue(icon, p => GtkHelper.TintPixbuf(p, 255, 255, 255))
+                        : icon;
+                }
+            }));
 
-            var cell1 = new CellRendererPixbuf();
-            cell1.SetPadding(3, 5);
-            cols.PackStart(cell1, false);
-            cols.AddAttribute(cell1, "pixbuf", 0);
-            // Selected rows swap to crisp pure white icon, unselected show vibrant category color
-            cols.SetCellDataFunc(cell1, new CellLayoutDataFunc(RenderCategoryIcon));
+            var statusCellText = new CellRendererText();
+            statusCellText.SetPadding(0, 5);
+            statusCols.PackStart(statusCellText, true);
+            statusCols.AddAttribute(statusCellText, "text", 1);
+            statusTree.AppendColumn(statusCols);
 
-            var cell2 = new CellRendererText();
-            cell2.SetPadding(0, 5);
-            cols.PackStart(cell2, true);
-            cols.AddAttribute(cell2, "text", 1);
-
-            categoryTreeStore = new TreeStore(typeof(Gdk.Pixbuf), typeof(string), typeof(Category));
+            statusTreeStore = new TreeStore(typeof(Gdk.Pixbuf), typeof(string));
             var rawActive = LoadSvg("arrow-down-line", 20);
             var rawFinished = LoadSvg("check-line", 20);
             var activeIcon = rawActive != null ? GtkHelper.TintPixbuf(rawActive, 53, 132, 228) : null;
             var finishedIcon = rawFinished != null ? GtkHelper.TintPixbuf(rawFinished, 46, 194, 126) : null;
 
-            categoryTreeStore.AppendValues(activeIcon, TextResource.GetText("ALL_UNFINISHED"));
-            var iter = categoryTreeStore.AppendValues(finishedIcon, TextResource.GetText("ALL_FINISHED"));
+            statusTreeStore.AppendValues(activeIcon, TextResource.GetText("ALL_UNFINISHED"));
+            statusTreeStore.AppendValues(finishedIcon, TextResource.GetText("ALL_FINISHED"));
+            statusTree.Model = statusTreeStore;
+            statusTree.Selection.Mode = SelectionMode.Single;
+            statusTree.Selection.Changed += OnStatusChanged;
 
-            foreach (var category in Config.Instance.Categories)
+            // Categories section header label
+            var catHeaderLabel = new Label
             {
-                var (iconName, r, g, b) = GetCategoryIconConfig(category.Name);
+                Text = TextResource.GetText("SETTINGS_CAT") ?? "Categories",
+                Halign = Align.Start,
+                MarginStart = 10,
+                MarginTop = 14,
+                MarginBottom = 4
+            };
+            catHeaderLabel.StyleContext.AddClass("sidebar-heading");
+
+            // Categories TreeView
+            categoryTree = new TreeView()
+            {
+                HeadersVisible = false,
+                ShowExpanders = false,
+                LevelIndentation = 0
+            };
+            categoryTree.StyleContext.AddClass("dark");
+
+            var catCols = new TreeViewColumn();
+            var catCellPix = new CellRendererPixbuf();
+            catCellPix.SetPadding(3, 5);
+            catCols.PackStart(catCellPix, false);
+            catCols.AddAttribute(catCellPix, "pixbuf", 0);
+            catCols.SetCellDataFunc(catCellPix, new CellLayoutDataFunc((layout, cell, model, iter) =>
+            {
+                if (model.GetValue(iter, 0) is Gdk.Pixbuf icon)
+                {
+                    ((CellRendererPixbuf)cell).Pixbuf = categoryTree.Selection.PathIsSelected(model.GetPath(iter))
+                        ? selectedSidebarIcons.GetValue(icon, p => GtkHelper.TintPixbuf(p, 255, 255, 255))
+                        : icon;
+                }
+            }));
+
+            var catCellText = new CellRendererText();
+            catCellText.SetPadding(0, 5);
+            catCols.PackStart(catCellText, true);
+            catCols.AddAttribute(catCellText, "text", 1);
+            categoryTree.AppendColumn(catCols);
+
+            categoryTreeStore = new TreeStore(typeof(Gdk.Pixbuf), typeof(string), typeof(Category));
+            foreach (var cat in Config.Instance.Categories)
+            {
+                var (iconName, r, g, b) = GetCategoryIconConfig(cat.Name);
                 var rawIcon = LoadSvg(iconName, 20);
                 var coloredIcon = rawIcon != null ? GtkHelper.TintPixbuf(rawIcon, r, g, b) : null;
-                categoryTreeStore.AppendValues(iter, coloredIcon, category.DisplayName, category);
+                categoryTreeStore.AppendValues(coloredIcon, cat.DisplayName, cat);
             }
-
-            categoryTree.AppendColumn(cols);
             categoryTree.Model = categoryTreeStore;
-            categoryTree.Selection.Mode = SelectionMode.Browse;
-            categoryTree.ExpandAll();
+            categoryTree.Selection.Mode = SelectionMode.Single;
             categoryTree.Selection.Changed += OnCategoryChanged;
+
+            // Pack into a sidebar vertical box with a ScrolledWindow wrapper
+            var vbSidebar = new VBox(false, 0);
+            vbSidebar.PackStart(statusTree, false, false, 0);
+            vbSidebar.PackStart(catHeaderLabel, false, false, 0);
+            vbSidebar.PackStart(categoryTree, true, true, 0);
 
             var scrolledWindow = new ScrolledWindow
             {
@@ -709,40 +765,27 @@ namespace XDM.GtkUI
             scrolledWindow.StyleContext.AddClass("sidebar-scroll");
             scrolledWindow.ShadowType = ShadowType.In;
             scrolledWindow.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
-            scrolledWindow.Add(categoryTree);
+            scrolledWindow.Add(vbSidebar);
             scrolledWindow.SetSizeRequest(192, 200);
 
             scrolledWindow.ShowAll();
             return scrolledWindow;
         }
 
-        // Sidebar icon cell: selected rows get crisp pure white icon, unselected get vibrant category color
-        private void RenderCategoryIcon(ICellLayout cellLayout, CellRenderer cell, ITreeModel treeModel, TreeIter iter)
+        private void OnStatusChanged(object? sender, EventArgs e)
         {
-            if (treeModel.GetValue(iter, 0) is not Gdk.Pixbuf icon)
+            if (isSelectingSidebar || lvInprogress == null || lvFinished == null)
             {
                 return;
             }
-            ((CellRendererPixbuf)cell).Pixbuf = categoryTree.Selection.PathIsSelected(treeModel.GetPath(iter))
-                ? selectedSidebarIcons.GetValue(icon, p => GtkHelper.TintPixbuf(p, 255, 255, 255))
-                : icon;
-        }
+            if (statusTree.Selection.GetSelected(out ITreeModel model, out TreeIter iter))
+            {
+                isSelectingSidebar = true;
+                categoryTree.Selection.UnselectAll();
+                isSelectingSidebar = false;
 
-        private void OnCategoryChanged(object? sender, EventArgs e)
-        {
-            if (lvInprogress == null || lvFinished == null)
-            {
-                return;
-            }
-            var paths = categoryTree.Selection.GetSelectedRows();
-            if (paths == null || paths.Length == 0)
-            {
-                return;
-            }
-
-            if (paths[0].Depth == 1)
-            {
-                var index = paths[0].Indices[0];
+                var path = model.GetPath(iter);
+                var index = path.Indices[0];
                 if (index == 0)
                 {
                     swInProgress.ShowAll();
@@ -763,16 +806,27 @@ namespace XDM.GtkUI
                     SetHeaderSubtitle(TextResource.GetText("ALL_FINISHED"));
                 }
             }
-            else
+        }
+
+        private void OnCategoryChanged(object? sender, EventArgs e)
+        {
+            if (isSelectingSidebar || lvInprogress == null || lvFinished == null)
             {
+                return;
+            }
+            if (categoryTree.Selection.GetSelected(out ITreeModel model, out TreeIter iter))
+            {
+                isSelectingSidebar = true;
+                statusTree.Selection.UnselectAll();
+                isSelectingSidebar = false;
+
                 swFinished.ShowAll();
                 swInProgress.Hide();
-                if (categoryTree.Selection.GetSelected(out ITreeModel model, out TreeIter iter))
-                {
-                    category = (Category)model.GetValue(iter, 2);
-                    SetHeaderSubtitle(model.GetValue(iter, 1) as string);
-                }
+                category = (Category)model.GetValue(iter, 2);
+                btnOpenFile.Visible = btnOpenFolder.Visible = true;
+                btnPause.Visible = btnResume.Visible = false;
                 finishedDownloadFilter.Refilter();
+                SetHeaderSubtitle(model.GetValue(iter, 1) as string);
             }
         }
 
@@ -1275,9 +1329,9 @@ namespace XDM.GtkUI
 
         public void SwitchToInProgressView()
         {
-            if (this.categoryTreeStore.GetIterFirst(out TreeIter iter))
+            if (this.statusTreeStore.GetIterFirst(out TreeIter iter))
             {
-                this.categoryTree.Selection.SelectIter(iter);
+                this.statusTree.Selection.SelectIter(iter);
             }
         }
 
@@ -1288,10 +1342,10 @@ namespace XDM.GtkUI
 
         public void SwitchToFinishedView()
         {
-            if (this.categoryTreeStore.GetIterFirst(out TreeIter iter) &&
-                this.categoryTreeStore.IterNext(ref iter))
+            if (this.statusTreeStore.GetIterFirst(out TreeIter iter) &&
+                this.statusTreeStore.IterNext(ref iter))
             {
-                this.categoryTree.Selection.SelectIter(iter);
+                this.statusTree.Selection.SelectIter(iter);
             }
         }
 
@@ -1531,10 +1585,9 @@ namespace XDM.GtkUI
 
         private int GetSelectedCategory()
         {
-            var paths = categoryTree.Selection.GetSelectedRows();
-            if (paths != null && paths.Length > 0 && paths[0].Depth == 1)
+            if (statusTree != null && statusTree.Selection.GetSelected(out ITreeModel model, out TreeIter iter))
             {
-                return paths[0].Indices[0];
+                return model.GetPath(iter).Indices[0];
             }
             return -1;
         }

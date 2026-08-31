@@ -1,10 +1,17 @@
-<svg width="800" height="800" xmlns="http://www.w3.org/2000/svg" stroke="null">
- <g id="Layer_1">
-  <title>Layer 1</title>
-  <rect id="svg_1" height="800" width="800" y="0" x="0" stroke="#2471A3" fill="#2471A3"/>
-  <ellipse ry="273.00006" rx="571.00013" id="svg_2" cy="91.33359" cx="400" stroke="#3498DB" fill="#3498DB"/>
-  <rect fill="#FFFFFF" x="295.33241" y="175.99878" width="209.33521" height="272.00244" id="svg_3" stroke="#FFFFFF"/>
-  <path transform="rotate(180 400 507)" stroke="#FFFFFF" id="svg_4" d="m197.99999,631.49998l202,-248.99999l202,248.99999l-404,0z" fill="#FFFFFF"/>
- </g>
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <defs>
+    <linearGradient id="brandOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="40%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <filter id="arrowShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="115" fill="url(#brandOrange)"/>
+  <g filter="url(#arrowShadow)">
+    <path d="M 216 130 L 296 130 L 296 280 L 376 280 L 256 400 L 136 280 L 216 280 Z" fill="#ffffff"/>
+  </g>
 </svg>
