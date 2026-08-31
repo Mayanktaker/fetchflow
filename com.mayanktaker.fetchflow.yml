@@ -1,10 +1,10 @@
-app-id: io.github.subhra74.xdm
+app-id: com.mayanktaker.fetchflow
 runtime: org.freedesktop.Platform
 runtime-version: '23.08'
 sdk: org.freedesktop.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.dotnet8
-command: xdm-app
+command: fetchflow
 finish-args:
   - --share=network
   - --share=ipc
@@ -18,11 +18,11 @@ build-options:
   env:
     DOTNET_ROOT: /usr/lib/sdk/dotnet8
 modules:
-  - name: xdm
+  - name: fetchflow
     buildsystem: simple
     build-commands:
-      - dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o /app/bin/xdm-app-dir
-      - ln -s /app/bin/xdm-app-dir/xdm-app /app/bin/xdm-app
+      - dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o /app/bin/fetchflow-dir
+      - ln -s /app/bin/fetchflow-dir/fetchflow /app/bin/fetchflow
     sources:
       - type: dir
         path: .

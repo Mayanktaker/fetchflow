@@ -1,9 +1,9 @@
 #!/bin/bash
-# © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
 # Build an Arch .pkg.tar.* (Wayland-aware). Run from XDM.Linux.Installer/.
 # Please place all the published files under ./binary-source directory
 
-# Single source of truth for the version (Wayland/Phase0.3)
+# Single source of truth for the version
 source ./version.env
 
 SRC_DIR=binary-source
@@ -16,63 +16,78 @@ rm -f "${SOURCE_NAME}*pkg.tar.*"
 rm -f PKGBUILD
 
 mkdir "${SOURCE_NAME}"
-mkdir -p "${SOURCE_NAME}/opt/xdman"
+mkdir -p "${SOURCE_NAME}/opt/fetchflow"
 mkdir -p "${SOURCE_NAME}/usr/bin"
 mkdir -p "${SOURCE_NAME}/usr/share/applications"
-# Wayland/Phase4: themed icon + mime package for proper DE integration
 mkdir -p "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps"
 mkdir -p "${SOURCE_NAME}/usr/share/mime/packages"
 
-cp -r "${SRC_DIR}/." "${SOURCE_NAME}/opt/xdman"
+cp -r "${SRC_DIR}/." "${SOURCE_NAME}/opt/fetchflow"
 
 find "${SOURCE_NAME}/" -type d -print0 | xargs -0 chmod 0755
 find "${SOURCE_NAME}/" -type f -print0 | xargs -0 chmod 0644
 
-touch "${SOURCE_NAME}/opt/xdman/xdm-app.desktop"
-touch "${SOURCE_NAME}/usr/bin/xdman"
+touch "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.desktop"
+touch "${SOURCE_NAME}/usr/bin/fetchflow"
 
-# Wayland/Phase1.3: register BOTH xdm-app:// and xdm+app:// schemes; themed Icon=
-cat <<EOF > "${SOURCE_NAME}/opt/xdman/xdm-app.desktop"
+cat <<EOF > "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.desktop"
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
-Exec=env GTK_USE_PORTAL=1 /opt/xdman/xdm-app %U
+Exec=env GTK_USE_PORTAL=1 /opt/fetchflow/fetchflow %U
 Type=Application
 Terminal=false
-Name=Xtreme Download Manager
-Comment=Xtreme Download Manager
-Categories=Network;
-Icon=xdm-app
-MimeType=application/xdm-app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
+Name=FetchFlow Download Manager
+Comment=Fast, modern download accelerator and video downloader
+Categories=Network;FileTransfer;
+Icon=fetchflow
+MimeType=application/fetchflow;x-scheme-handler/fetchflow;x-scheme-handler/fetchflow+app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
 StartupNotify=true
+StartupWMClass=com.mayanktaker.fetchflow
 EOF
 
-cat <<EOF > "${SOURCE_NAME}/usr/bin/xdman"
+cat <<EOF > "${SOURCE_NAME}/usr/bin/fetchflow"
 #!/bin/bash
 # Wayland-friendly launcher wrapper
 export GTK_USE_PORTAL=1
-/opt/xdman/xdm-app \$@
+/opt/fetchflow/fetchflow "\$@"
 EOF
 
-cat <<EOF > "${SOURCE_NAME}/opt/xdman/source_pkg.txt"
-xdman_gtk|.pkg.tar.zst;.pkg.tar.xz;.pkg.tar.gz;.pkg.tar.bz2
+# Legacy CLI symlink
+cat <<EOF > "${SOURCE_NAME}/usr/bin/xdman"
+#!/bin/bash
+export GTK_USE_PORTAL=1
+/opt/fetchflow/fetchflow "\$@"
 EOF
 
-cp "${SOURCE_NAME}/opt/xdman/xdm-app.desktop" "${SOURCE_NAME}/usr/share/applications"
-# Wayland/Phase4: themed scalable icon + mime package
-cp "${SOURCE_NAME}/opt/xdman/xdm-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/xdm-app.svg"
-cp xdm-app.xml "${SOURCE_NAME}/usr/share/mime/packages/xdm-app.xml"
+cat <<EOF > "${SOURCE_NAME}/opt/fetchflow/source_pkg.txt"
+fetchflow|.pkg.tar.zst;.pkg.tar.xz;.pkg.tar.gz;.pkg.tar.bz2
+EOF
 
+cp "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.desktop" "${SOURCE_NAME}/usr/share/applications"
+cp "${SRC_DIR}/fetchflow-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg" 2>/dev/null || cp "${SOURCE_NAME}/opt/fetchflow/fetchflow-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg"
+
+cat <<EOF > "${SOURCE_NAME}/usr/share/mime/packages/com.mayanktaker.fetchflow.xml"
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/fetchflow">
+    <comment>FetchFlow Download</comment>
+    <glob pattern="*.fetchflow"/>
+  </mime-type>
+</mime-info>
+EOF
+
+chmod 755 "${SOURCE_NAME}/usr/bin/fetchflow"
 chmod 755 "${SOURCE_NAME}/usr/bin/xdman"
-chmod 755 "${SOURCE_NAME}/opt/xdman/xdm-app"
+chmod 755 "${SOURCE_NAME}/opt/fetchflow/fetchflow"
 
 cat <<EOF > "PKGBUILD"
-pkgname=xdman_gtk
+pkgname=fetchflow
 pkgver=${VERSION}
 pkgrel=1
-pkgdesc="Open source download accelerator and video downloader."
+pkgdesc="Fast, modern open source download accelerator and video downloader."
 arch=("x86_64")
-url="https://github.com/Mayanktaker/xdm"
+url="https://mayanktaker.com"
 license=('GPLv3')
 depends=('ffmpeg' 'gtk3>=3.24')
 optdepends=('xdg-desktop-portal: native file choosers under Wayland/sandboxes'
@@ -80,7 +95,6 @@ optdepends=('xdg-desktop-portal: native file choosers under Wayland/sandboxes'
 
 package() {
 	cp -r * \$pkgdir
-	# Wayland/Phase4: refresh caches after pacman installs the files
 	update-desktop-database -q "\$pkgdir/usr/share/applications" 2>/dev/null || :
 	gtk-update-icon-cache -q -t -f "\$pkgdir/usr/share/icons/hicolor" 2>/dev/null || :
 }

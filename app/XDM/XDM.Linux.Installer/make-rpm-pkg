@@ -1,73 +1,89 @@
 #!/bin/bash
-# © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
 # Build an .rpm for Fedora/RHEL/openSUSE (Wayland-aware). Run from XDM.Linux.Installer/.
 # Please place all the published files under ./binary-source directory
 
-# Single source of truth for the version (Wayland/Phase0.3)
+# Single source of truth for the version
 source ./version.env
 
 SRC_DIR=binary-source
-SOURCE_NAME="xdman_gtk-${VERSION}"
+SOURCE_NAME="fetchflow-${VERSION}"
 
 rm -rf "${SOURCE_NAME}"
 
-mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS,tmp}
 mkdir "${SOURCE_NAME}"
 
-mkdir -p "${SOURCE_NAME}/opt/xdman"
+mkdir -p "${SOURCE_NAME}/opt/fetchflow"
 mkdir -p "${SOURCE_NAME}/usr/bin"
 mkdir -p "${SOURCE_NAME}/usr/share/applications"
-# Wayland/Phase4: install icon into hicolor theme + mime package for proper DE integration
 mkdir -p "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps"
 mkdir -p "${SOURCE_NAME}/usr/share/mime/packages"
 
-cp -r "${SRC_DIR}/." "${SOURCE_NAME}/opt/xdman"
-cp ../../../xdm-updater.sh "${SOURCE_NAME}/opt/xdman/"
-chmod +x "${SOURCE_NAME}/opt/xdman/xdm-updater.sh"
+cp -r "${SRC_DIR}/." "${SOURCE_NAME}/opt/fetchflow"
+cp ../../../xdm-updater.sh "${SOURCE_NAME}/opt/fetchflow/" 2>/dev/null || :
+[ -f "${SOURCE_NAME}/opt/fetchflow/xdm-updater.sh" ] && chmod +x "${SOURCE_NAME}/opt/fetchflow/xdm-updater.sh"
 
-touch "${SOURCE_NAME}/opt/xdman/xdm-app.desktop"
-touch "${SOURCE_NAME}/usr/bin/xdman"
+touch "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.desktop"
+touch "${SOURCE_NAME}/usr/bin/fetchflow"
 
-# Wayland/Phase1.3: register BOTH xdm-app:// and xdm+app:// schemes; use themed Icon=
-cat <<EOF > "${SOURCE_NAME}/opt/xdman/xdm-app.desktop"
+# Register fetchflow:// and legacy xdm-app:// schemes
+cat <<EOF > "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.desktop"
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
-Exec=env GTK_USE_PORTAL=1 /opt/xdman/xdm-app %U
+Exec=env GTK_USE_PORTAL=1 /opt/fetchflow/fetchflow %U
 Type=Application
 Terminal=false
-Name=Xtreme Download Manager
-Comment=Xtreme Download Manager
-Categories=Network;
-Icon=xdm-app
-MimeType=application/xdm-app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
+Name=FetchFlow Download Manager
+Comment=Fast, modern download accelerator and video downloader
+Categories=Network;FileTransfer;
+Icon=fetchflow
+MimeType=application/fetchflow;x-scheme-handler/fetchflow;x-scheme-handler/fetchflow+app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
 StartupNotify=true
+StartupWMClass=com.mayanktaker.fetchflow
 EOF
 
-cat <<EOF > "${SOURCE_NAME}/usr/bin/xdman"
+cat <<EOF > "${SOURCE_NAME}/usr/bin/fetchflow"
 #!/bin/bash
 # Wayland-friendly launcher wrapper
 export GTK_USE_PORTAL=1
-/opt/xdman/xdm-app \$@
+/opt/fetchflow/fetchflow "\$@"
 EOF
 
-cat <<EOF > "${SOURCE_NAME}/opt/xdman/source_pkg"
-xdman_gtk|.rpm
+# Legacy CLI symlink
+cat <<EOF > "${SOURCE_NAME}/usr/bin/xdman"
+#!/bin/bash
+export GTK_USE_PORTAL=1
+/opt/fetchflow/fetchflow "\$@"
 EOF
 
-cp "${SOURCE_NAME}/opt/xdman/xdm-app.desktop" "${SOURCE_NAME}/usr/share/applications"
-# Wayland/Phase4: themed icon (scalable SVG covers all sizes) + mime package
-cp "${SRC_DIR}/xdm-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/xdm-app.svg" 2>/dev/null || cp "${SOURCE_NAME}/opt/xdman/xdm-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/xdm-app.svg"
-cp xdm-app.xml "${SOURCE_NAME}/usr/share/mime/packages/xdm-app.xml"
+cat <<EOF > "${SOURCE_NAME}/opt/fetchflow/source_pkg"
+fetchflow|.rpm
+EOF
 
+cp "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.desktop" "${SOURCE_NAME}/usr/share/applications"
+cp "${SRC_DIR}/fetchflow-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg" 2>/dev/null || cp "${SOURCE_NAME}/opt/fetchflow/fetchflow-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg"
+
+cat <<EOF > "${SOURCE_NAME}/usr/share/mime/packages/com.mayanktaker.fetchflow.xml"
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/fetchflow">
+    <comment>FetchFlow Download</comment>
+    <glob pattern="*.fetchflow"/>
+  </mime-type>
+</mime-info>
+EOF
+
+chmod 755 "${SOURCE_NAME}/usr/bin/fetchflow"
 chmod 755 "${SOURCE_NAME}/usr/bin/xdman"
-chmod 755 "${SOURCE_NAME}/opt/xdman/xdm-app"
+chmod 755 "${SOURCE_NAME}/opt/fetchflow/fetchflow"
 
 tar --create --file "${SOURCE_NAME}.tar.gz" "${SOURCE_NAME}"
 mv "${SOURCE_NAME}.tar.gz" "rpmbuild/SOURCES"
 
-cat <<EOF > "rpmbuild/SPECS/xdman_gtk.spec"
-Name:       	xdm
+cat <<EOF > "rpmbuild/SPECS/fetchflow.spec"
+Name:       	fetchflow
 %define debug_package %{nil}
 %global __strip /bin/true
 %global __brp_strip /bin/true
@@ -75,7 +91,7 @@ Name:       	xdm
 %global __brp_strip_lto /bin/true
 Version:    	${VERSION}
 Release:    	1%{?dist}
-Summary:    	Xtreme Download Manager
+Summary:    	FetchFlow Download Manager
 AutoReqProv: 	no
 Requires:   	gtk3 >= 3.24
 Recommends: 	(ffmpeg-free or ffmpeg)
@@ -87,15 +103,14 @@ License:    	GPLv3+
 Source0:    	${SOURCE_NAME}.tar.gz
 
 %description
-Open source download accelerator and video downloader.
+Fast, modern, open source download accelerator and video downloader for Linux.
 
 %prep
-%setup -q -n xdman_gtk-%{version}
+%setup -q -n fetchflow-%{version}
 
 %install
 cp -rfa * %{buildroot}
 
-# Wayland/Phase4: refresh desktop/icon/mime caches on install and uninstall
 %post
 update-desktop-database -q /usr/share/applications || :
 gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || :
@@ -109,9 +124,9 @@ update-mime-database -n /usr/share/mime || :
 %files
 /usr/bin/*
 /usr/share/applications/*
-/usr/share/icons/hicolor/scalable/apps/xdm-app.svg
-/usr/share/mime/packages/xdm-app.xml
-/opt/xdman/*
+/usr/share/icons/hicolor/scalable/apps/fetchflow.svg
+/usr/share/mime/packages/com.mayanktaker.fetchflow.xml
+/opt/fetchflow/*
 EOF
 
-rpmbuild --define "_topdir `pwd`/rpmbuild" -bb rpmbuild/SPECS/xdman_gtk.spec
+rpmbuild --define "_topdir `pwd`/rpmbuild" --define "_tmppath `pwd`/rpmbuild/tmp" -bb rpmbuild/SPECS/fetchflow.spec

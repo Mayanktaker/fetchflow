@@ -1,8 +1,10 @@
-# XDM (Xtreme Download Manager) — Project Rules
+# FetchFlow Download Manager — Project Rules
 
 ## Project Identity
+- **App Name:** FetchFlow Download Manager (Wayland Edition)
+- **App ID / Flathub:** `com.mayanktaker.fetchflow`
 - **Developer / Maintainer:** Mayanktaker | Mayanktaker Computers & Web Development (https://mayanktaker.com)
-- **App Version:** 9.1.1 (keep `AppInfo.cs`, `version.env`, and all `manifest.json` files in sync)
+- **App Version:** 9.1.4 (keep `AppInfo.cs`, `version.env`, and all `manifest.json` files in sync)
 - **Copyright:** © 2013 - 2026 Mayanktaker | Mayanktaker Computers & Web Development
 
 ## Tech Stack

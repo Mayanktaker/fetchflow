@@ -637,19 +637,19 @@ export default class App {
     attachContextMenu() {
         chrome.contextMenus.create({
             id: 'download-any-link',
-            title: "Download with XDM",
+            title: "Download with FetchFlow",
             contexts: ["link", "video", "audio", "all"]
         });
 
         chrome.contextMenus.create({
             id: 'download-image-link',
-            title: "Download Image with XDM",
+            title: "Download Image with FetchFlow",
             contexts: ["image"]
         });
 
         chrome.contextMenus.create({
             id: 'download-blob-media',
-            title: "Download Blob Media with XDM",
+            title: "Download Blob Media with FetchFlow",
             contexts: ["video", "audio", "image", "link"]
         });
 

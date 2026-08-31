@@ -1,9 +1,9 @@
 {
-    "name": "XDM v9 Browser Helper",
+    "name": "FetchFlow Browser Helper",
     "action": {},
     "manifest_version": 3,
-    "version": "9.1.3",
-    "description": "Download files with XDM v9",
+    "version": "9.1.4",
+    "description": "Download files and capture videos with FetchFlow Download Manager",
     "host_permissions": [
         "*://*/*"
     ],

@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,7 +37,7 @@ namespace XDM.GtkUI.Dialogs.About
 
             GtkHelper.AttachSafeDispose(this);
 
-            AppLogo.Pixbuf = GtkHelper.LoadSvg("xdm-logo", 128);
+            AppLogo.Pixbuf = GtkHelper.LoadSvg("fetchflow-logo", 128);
             TxtAppVersion.Text = AppInfo.APP_VERSION_TEXT;
             TxtAppVersion.StyleContext.AddClass("medium-font");
             TxtCopyright.Text = AppInfo.APP_COPYRIGHT_TEXT;

@@ -1,18 +1,19 @@
-# XDM — Agent Operating Map
+# FetchFlow — Agent Operating Map
 
 <!-- © 2026 Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 
-Compact map for AI agents working on Xtreme Download Manager (Wayland Edition).
-User-facing details live in [README.md](README.md); this file stays lean.
+Compact map for AI agents working on FetchFlow Download Manager (Wayland Edition).
+User-facing details live in [README.md](README.md); design tokens live in [docs/design.md](docs/design.md).
 
 ## Project environment
 
 | Item | Value |
 |------|-------|
-| App | Xtreme Download Manager v9 — Wayland Edition |
+| App | FetchFlow Download Manager v9 — Wayland Edition |
+| App ID / Flathub | `com.mayanktaker.fetchflow` |
 | Stack | C# / .NET 8 (`net8.0`), GTK3 UI via Glade files |
 | Runtime | .NET SDK 8.0.424 at `~/.dotnet8` (user-local, no sudo) |
-| Browser extensions | Chrome + Firefox (vanilla JS, in `app/XDM/chrome-extension/` and `app/XDM/firefox-amo/`) |
+| Browser extensions | Chrome + Firefox (vanilla JS MV3, in `app/XDM/chrome-extension/` and `app/XDM/firefox-amo/`) |
 | Build host | Fedora Linux x64 (bash); packaging tools: `rpmbuild`, `zip`, `tar` |
 | rpmbuild setup | User-local extraction at `~/.local/rpm-build-root`; `~/.rpmmacros` sets `%_rpmconfigdir` there and `build_all.sh` adds it to `PATH` — RPM builds work without sudo |
 | Version source of truth | `app/XDM/XDM.Linux.Installer/version.env` (currently `9.1.4`) |

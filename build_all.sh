@@ -1,5 +1,5 @@
 #!/bin/bash
-# © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
 set -e
 
 export DOTNET_ROOT=/home/mayanktakeroffice/.dotnet8
@@ -28,7 +28,7 @@ mkdir -p "$OUT_DIR"
 
 echo "Packaging Chrome Extension..."
 cd app/XDM/chrome-extension
-zip -r "$OUT_DIR/xdm-chrome-extension-${VERSION}.zip" .
+zip -r "$OUT_DIR/fetchflow-chrome-extension-${VERSION}.zip" . -x ".*"
 cd ../../..
 
 echo "Packaging Firefox Extension..."
@@ -36,26 +36,26 @@ cd app/XDM/firefox-amo
 if [ -n "$MOZ_API_KEY" ] && [ -n "$MOZ_API_SECRET" ]; then
     echo "Signing Firefox extension with web-ext..."
     npx -y web-ext sign --api-key="$MOZ_API_KEY" --api-secret="$MOZ_API_SECRET" --channel=unlisted --artifacts-dir=web-ext-artifacts
-    cp web-ext-artifacts/*.xpi "$OUT_DIR/xdm-firefox-extension-${VERSION}.xpi"
+    cp web-ext-artifacts/*.xpi "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi"
 else
     echo "No Mozilla API keys provided, creating unsigned XPI..."
-    zip -r "$OUT_DIR/xdm-firefox-extension-${VERSION}.xpi" .
+    zip -r "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" . -x ".*"
 fi
 cd ../../..
 
-echo "Publishing XDM .NET Application..."
+echo "Publishing FetchFlow .NET Application..."
 rm -rf build_output
 mkdir -p build_output
 dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o build_output/xdm-app
 
 echo "Packaging Portable Tarball..."
 cd build_output/xdm-app
-tar -czvf "$OUT_DIR/xdm-linux-x64-${VERSION}.tar.gz" *
+tar -czvf "$OUT_DIR/fetchflow-linux-x64-${VERSION}.tar.gz" *
 cd ../..
 
 echo "Creating RPM Package..."
 cd app/XDM/XDM.Linux.Installer
-rm -rf rpmbuild xdm-${VERSION}.tar.gz xdm-${VERSION}
+rm -rf rpmbuild fetchflow-${VERSION}.tar.gz fetchflow-${VERSION}
 # Ensure binary-source is fresh
 rm -rf binary-source/*
 cp -r ../../../build_output/xdm-app/* binary-source/

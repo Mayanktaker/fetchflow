@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -260,8 +260,10 @@ namespace XDM.Core
                 var xdgData = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
                 var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 var legacyRoot = Path.Combine(userProfile, ".xdm-app-data");
-                AppDir = !string.IsNullOrEmpty(xdgConfig) ? Path.Combine(xdgConfig, "xdm-app") : legacyRoot;
-                DataDir = !string.IsNullOrEmpty(xdgData) ? Path.Combine(xdgData, "xdm-app") : Path.Combine(legacyRoot, "Data");
+                var fetchflowRoot = Path.Combine(userProfile, ".fetchflow-app-data");
+                var rootDir = Directory.Exists(fetchflowRoot) ? fetchflowRoot : (Directory.Exists(legacyRoot) ? legacyRoot : fetchflowRoot);
+                AppDir = !string.IsNullOrEmpty(xdgConfig) ? Path.Combine(xdgConfig, "fetchflow") : rootDir;
+                DataDir = !string.IsNullOrEmpty(xdgData) ? Path.Combine(xdgData, "fetchflow") : Path.Combine(rootDir, "Data");
             }
 #endif
             instance = new Config

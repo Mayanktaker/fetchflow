@@ -7,7 +7,7 @@
     <!-- Wayland/Phase3.1: net6.0 (EOL) -> net8.0 LTS -->
     <TargetFramework>net8.0</TargetFramework>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <AssemblyName>xdm-app</AssemblyName>
+    <AssemblyName>fetchflow</AssemblyName>
     <RootNamespace>XDM.GtkUI</RootNamespace>
     <!--RuntimeIdentifier>linux-x64</RuntimeIdentifier-->
     <!--RuntimeIdentifier>win-x64</RuntimeIdentifier-->
@@ -67,6 +67,7 @@
     </Content>
     <Content Include="..\Lang\*.*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" LinkBase="Lang\" />
     <None Remove="images\extension-folder.jpg" />
+    <Content Include="..\fetchflow-logo.svg" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="..\xdm-logo.svg" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
   </ItemGroup>
 
@@ -79,6 +80,8 @@
     <None Update="source_pkg.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Content Include="fetchflow-logo-512.png" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="fetchflow-logo.png" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="xdm-logo-512.png" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
   </ItemGroup>
 

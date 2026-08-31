@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -158,8 +158,10 @@ namespace XDM.Core
             var switchName = string.Empty;
             foreach (var arg in args)
             {
-                // Wayland/Phase1.3: accept both xdm-app:// and xdm+app:// launch schemes
-                if (arg.StartsWith("xdm+app://", StringComparison.OrdinalIgnoreCase) ||
+                // Accept both fetchflow:// (and fetchflow+app://) and legacy xdm-app:// launch schemes
+                if (arg.StartsWith("fetchflow+app://", StringComparison.OrdinalIgnoreCase) ||
+                    arg.StartsWith("fetchflow://", StringComparison.OrdinalIgnoreCase) ||
+                    arg.StartsWith("xdm+app://", StringComparison.OrdinalIgnoreCase) ||
                     arg.StartsWith("xdm-app://", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;

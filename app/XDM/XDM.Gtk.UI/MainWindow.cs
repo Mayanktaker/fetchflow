@@ -112,7 +112,7 @@ namespace XDM.GtkUI
         private const int INPROGRESS_DATA_INDEX = 5;
 
         // Headerbar title tokens: bold app name + "· <view>" subtitle tracking the sidebar
-        private const string HeaderAppName = "XDM";
+        private const string HeaderAppName = "FetchFlow";
         private const string HeaderSubtitleSeparator = "· ";
         // Update-available indicator glyph shown in the headerbar title group
         private const string UpdateDotGlyph = "●";
@@ -125,12 +125,12 @@ namespace XDM.GtkUI
         private Menu menuInProgress, menuFinished;
         private IPlatformClipboardMonitor clipboarMonitor;
 
-        public MainWindow() : base("Xtreme Download Manager")
+        public MainWindow() : base("FetchFlow Download Manager")
         {
             // Set window icon — crash-safe: missing file must never abort startup
             try
             {
-                var iconPath = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-logo-512.png");
+                var iconPath = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo-512.png");
                 if (System.IO.File.Exists(iconPath))
                 {
                     SetDefaultIconFromFile(iconPath);
@@ -138,7 +138,7 @@ namespace XDM.GtkUI
                 else
                 {
                     // Fallback to embedded SVG logo if PNG is absent
-                    var svgPath = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-logo.svg");
+                    var svgPath = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo.svg");
                     if (System.IO.File.Exists(svgPath))
                     {
                         SetDefaultIconFromFile(svgPath);
@@ -172,11 +172,9 @@ namespace XDM.GtkUI
             clipboarMonitor = new PollingClipboardMonitor();
             clipboarMonitor.ClipboardChanged += (_, _) => this.ClipboardChanged?.Invoke(this, EventArgs.Empty);
 
-            // Tray/Phase5: register a tray icon via the desktop's preferred protocol (SNI on
-            // KDE/GNOME+ext/waybar; legacy StatusIcon on X11-only DEs). Falls back to None
-            // (Wayland with no SNI host). IsTrayActive drives the close-to-tray vs minimize logic.
+            // Tray: register a tray icon via the desktop's preferred protocol (SNI on KDE/GNOME/Wayland)
             trayManager = new TrayIconManager();
-            trayManager.Init(GtkHelper.LoadSvg("xdm-logo", 22), "Xtreme Download Manager",
+            trayManager.Init(GtkHelper.LoadSvg("fetchflow-logo", 22), "FetchFlow Download Manager",
                              ShowAndActivate, QuitFromTray);
             
             CheckUpdatesInBackground();
@@ -1130,8 +1128,8 @@ namespace XDM.GtkUI
             try
             {
                 PlatformHelper.SpawnSubProcess("notify-send",
-                    new[] { "Xtreme Download Manager",
-                            "XDM is still running in the background — to fully quit, use the tray icon or the ☰ menu → Exit." });
+                    new[] { "FetchFlow Download Manager",
+                            "FetchFlow is still running in the background — to fully quit, use the tray icon or the ☰ menu → Exit." });
             }
             catch { /* notify-send is best-effort */ }
         }
@@ -1142,8 +1140,8 @@ namespace XDM.GtkUI
             var active = CountActiveDownloads();
             if (active > 0 &&
                 !Confirm(this, active == 1
-                    ? "1 download is in progress. Quit XDM anyway?"
-                    : $"{active} downloads are in progress. Quit XDM anyway?"))
+                    ? "1 download is in progress. Quit FetchFlow anyway?"
+                    : $"{active} downloads are in progress. Quit FetchFlow anyway?"))
             {
                 return;
             }
