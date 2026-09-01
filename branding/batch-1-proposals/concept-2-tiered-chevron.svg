@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <defs>
+    <!-- Background Dark Squircle -->
+    <linearGradient id="p2Bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181c"/>
+      <stop offset="100%" stop-color="#0a0a0d"/>
+    </linearGradient>
+
+    <!-- Top Chevron (Blaze Orange) -->
+    <linearGradient id="p2Top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff782e"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+
+    <!-- Mid Chevron (Amber Gold) -->
+    <linearGradient id="p2Mid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <!-- Bottom Chevron (Golden Glow) -->
+    <linearGradient id="p2Bot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <filter id="p2Glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#ea580c" flood-opacity="0.3"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Squircle Container -->
+  <rect width="512" height="512" rx="120" fill="url(#p2Bg)" stroke="#27272e" stroke-width="2"/>
+
+  <!-- Tiered Velocity Chevron Shield (No text) -->
+  <g filter="url(#p2Glow)" transform="translate(0, 15)">
+    <!-- Tier 1: Top Chevron -->
+    <polygon points="256,230 110,120 180,105 256,165 332,105 402,120" 
+             fill="url(#p2Top)"/>
+    <polygon points="256,230 256,165 332,105 402,120" 
+             fill="#c2410c" opacity="0.3"/>
+
+    <!-- Tier 2: Mid Chevron -->
+    <polygon points="256,315 110,205 180,190 256,250 332,190 402,205" 
+             fill="url(#p2Mid)"/>
+    <polygon points="256,315 256,250 332,190 402,205" 
+             fill="#d97706" opacity="0.3"/>
+
+    <!-- Tier 3: Bottom Piercing Spear Chevron -->
+    <polygon points="256,400 110,290 180,275 256,335 332,275 402,290" 
+             fill="url(#p2Bot)"/>
+    <polygon points="256,400 256,335 332,275 402,290" 
+             fill="#b45309" opacity="0.3"/>
+  </g>
+</svg>

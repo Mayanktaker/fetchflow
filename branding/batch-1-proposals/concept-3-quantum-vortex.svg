@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <defs>
+    <linearGradient id="bgGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1329"/>
+      <stop offset="100%" stop-color="#050814"/>
+    </linearGradient>
+
+    <linearGradient id="vortexNeonOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffedd5"/>
+      <stop offset="25%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+
+    <linearGradient id="vortexCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a5f3fc"/>
+      <stop offset="40%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <linearGradient id="vortexPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+
+    <filter id="vortexGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Squircle Base -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGrad3)" stroke="#1e293b" stroke-width="2"/>
+
+  <!-- Swirling Vortex Ingestion Curves -->
+  <g filter="url(#vortexGlow)">
+    <!-- Cyan Stream Arc -->
+    <path d="M 170 140 C 240 80 370 100 390 190 C 410 270 340 330 280 340 C 230 350 200 310 210 270 C 220 230 270 210 290 240 C 305 265 295 290 270 295" 
+          fill="none" stroke="url(#vortexCyan)" stroke-width="24" stroke-linecap="round"/>
+
+    <!-- Orange Stream Arc -->
+    <path d="M 340 120 C 260 70 150 110 130 210 C 110 300 170 380 256 400" 
+          fill="none" stroke="url(#vortexNeonOrange)" stroke-width="28" stroke-linecap="round"/>
+
+    <!-- Core Convergent Downward Vector -->
+    <path d="M 256 220 L 256 340 M 200 300 L 256 360 L 312 300" 
+          fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+          
+    <polygon points="256,410 190,320 235,320 235,210 277,210 277,320 322,320" 
+             fill="url(#vortexNeonOrange)"/>
+  </g>
+</svg>

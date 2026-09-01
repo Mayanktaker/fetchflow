@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <!-- 100% Flat App Icon Squircle Container (No Gradient, No Gloss) -->
+  <rect width="512" height="512" rx="120" fill="#18181b"/>
+
+  <!-- Streamline FF Media Tracks + Downward Arrow (100% Flat) -->
+  <g transform="translate(0, 0)">
+    <!-- Primary 'F' Flow Track (Upper Arm & Main Download Shaft) -->
+    <path d="M 130 120 L 360 120 L 360 175 L 205 175 L 205 225 L 320 225 L 320 280 L 205 280 L 205 330 L 270 330 L 270 310 L 340 310 L 256 415 L 172 310 L 205 310 L 205 330 L 130 330 Z" 
+          fill="#f97316"/>
+
+    <!-- Secondary 'F' Accent / Media Content Track (Amber) -->
+    <path d="M 230 195 L 382 195 L 382 250 L 250 250 L 250 305 L 345 305 L 315 345 L 230 345 Z" 
+          fill="#fbbf24"/>
+
+    <!-- Media Play Indicator in Negative Space -->
+    <polygon points="148,200 148,260 188,230" fill="#ffffff"/>
+  </g>
+</svg>

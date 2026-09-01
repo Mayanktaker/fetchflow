@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <!-- 100% Flat App Icon Squircle Container (No Gradient, No Gloss) -->
+  <rect width="512" height="512" rx="120" fill="#0b1120"/>
+
+  <!-- Minimalist Geometric Dual FF Media Download Chevron -->
+  <g transform="translate(0, 0)">
+    <!-- First 'F' (Fetch) - Solid Vibrant Orange -->
+    <path d="M 150 120 L 320 120 L 320 170 L 210 170 L 210 220 L 290 220 L 290 270 L 210 270 L 210 330 L 150 330 Z" 
+          fill="#f97316"/>
+
+    <!-- Second 'F' (Flow) - Solid Cool Cyan / White Accent -->
+    <path d="M 235 185 L 365 185 L 365 235 L 285 235 L 285 285 L 345 285 L 345 335 L 285 335 L 285 350 L 235 350 Z" 
+          fill="#38bdf8"/>
+
+    <!-- Prominent Downward Download Arrow Head with Media Play Apex -->
+    <polygon points="256,430 150,320 215,320 215,280 297,280 297,320 362,320" 
+             fill="#f97316"/>
+    <polygon points="256,395 230,345 282,345" fill="#ffffff"/>
+  </g>
+</svg>

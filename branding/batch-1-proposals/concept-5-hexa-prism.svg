@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <defs>
+    <!-- Background Dark Squircle -->
+    <linearGradient id="p5Bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- Top Prism Face -->
+    <linearGradient id="p5Top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdba74"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+
+    <!-- Left Prism Face -->
+    <linearGradient id="p5Left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+
+    <!-- Right Prism Face -->
+    <linearGradient id="p5Right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <!-- Conduit Glow Gradient -->
+    <linearGradient id="p5Conduit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+
+    <filter id="p5Glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#f97316" flood-opacity="0.3"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Squircle Container -->
+  <rect width="512" height="512" rx="120" fill="url(#p5Bg)" stroke="#1e293b" stroke-width="2"/>
+
+  <!-- Isometric Hexa-Stream Glass Conduit (No text) -->
+  <g filter="url(#p5Glow)" transform="translate(0, 5)">
+    <!-- Top Face -->
+    <polygon points="256,90 366,150 256,210 146,150" fill="url(#p5Top)"/>
+
+    <!-- Left Face -->
+    <polygon points="146,150 256,210 256,330 146,270" fill="url(#p5Left)"/>
+
+    <!-- Right Face -->
+    <polygon points="256,210 366,150 366,270 256,330" fill="url(#p5Right)"/>
+
+    <!-- Inner Parallel Channel Ingestion Conduits -->
+    <g stroke="url(#p5Conduit)" stroke-width="10" stroke-linecap="round" fill="none">
+      <path d="M 195 125 L 195 245 L 256 280"/>
+      <path d="M 256 105 L 256 225 L 256 280"/>
+      <path d="M 317 125 L 317 245 L 256 280"/>
+    </g>
+
+    <!-- Downward Vector Spear Ingestion Node -->
+    <polygon points="256,430 185,320 230,320 230,265 282,265 282,320 327,320" 
+             fill="url(#p5Conduit)"/>
+  </g>
+</svg>

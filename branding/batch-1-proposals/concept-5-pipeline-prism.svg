@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <defs>
+    <linearGradient id="bgGrad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <linearGradient id="prismTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbcfe8"/>
+      <stop offset="50%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+
+    <linearGradient id="prismLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+
+    <linearGradient id="prismRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+
+    <linearGradient id="streamLines" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+
+    <filter id="prismGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#f43f5e" flood-opacity="0.25"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Squircle Base -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGrad5)" stroke="#1e293b" stroke-width="2"/>
+
+  <!-- Isometric Pipeline Prism -->
+  <g filter="url(#prismGlow)" transform="translate(0, 10)">
+    <!-- Top Diamond Face -->
+    <polygon points="256,90 356,145 256,200 156,145" fill="url(#prismTop)"/>
+
+    <!-- Left Facet -->
+    <polygon points="156,145 256,200 256,310 156,255" fill="url(#prismLeft)"/>
+
+    <!-- Right Facet -->
+    <polygon points="256,200 356,145 356,255 256,310" fill="url(#prismRight)"/>
+
+    <!-- Dynamic Convergent Pipeline Channels Emerging from Core -->
+    <g stroke="url(#streamLines)" stroke-width="8" stroke-linecap="round" fill="none">
+      <path d="M 200 120 L 200 230 L 256 260"/>
+      <path d="M 256 100 L 256 210 L 256 260"/>
+      <path d="M 312 120 L 312 230 L 256 260"/>
+    </g>
+
+    <!-- Powerful Downward Ingestion Arrow Head -->
+    <polygon points="256,420 180,310 226,310 226,250 286,250 286,310 332,310" 
+             fill="url(#streamLines)"/>
+  </g>
+</svg>

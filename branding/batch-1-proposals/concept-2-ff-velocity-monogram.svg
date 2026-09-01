@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <defs>
+    <linearGradient id="bgGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#181e29"/>
+      <stop offset="100%" stop-color="#0b0f17"/>
+    </linearGradient>
+
+    <linearGradient id="ffGradPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="40%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+
+    <linearGradient id="ffGradSecondary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="60%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <filter id="markGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#f97316" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Squircle Base -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGrad2)" stroke="#2d3748" stroke-width="2"/>
+
+  <!-- Geometric Interlocking FF Velocity Monogram -->
+  <g filter="url(#markGlow)" transform="translate(4, 8)">
+    <!-- Upper 'F' Flow Arm -->
+    <path d="M 180 140 C 180 120 195 110 220 110 L 350 110 C 365 110 375 125 365 138 L 335 170 C 330 176 322 180 314 180 L 235 180 L 235 210 L 310 210 C 325 210 335 225 325 238 L 295 270 C 290 276 282 280 274 280 L 235 280 L 235 340 L 256 340 L 256 340 C 245 340 235 348 235 360 L 235 360 L 256 385 L 256 385 Z" fill="none"/>
+
+    <!-- Integrated Double-F Vector Mark -->
+    <!-- First 'F' with Integrated Fast-Forward Downward Spear -->
+    <path d="M 190 120 L 350 120 C 362 120 370 132 362 142 L 340 170 C 335 176 327 180 319 180 L 245 180 L 245 220 L 315 220 C 327 220 335 232 327 242 L 305 270 C 300 276 292 280 284 280 L 245 280 L 245 340 L 285 340 L 217 415 L 150 340 L 190 340 L 190 120 Z" 
+          fill="url(#ffGradPrimary)"/>
+
+    <!-- Second Interlocking Forward Velocity Wing (Top-Right Acceleration) -->
+    <path d="M 270 195 L 380 195 C 392 195 400 207 392 217 L 370 245 C 365 251 357 255 349 255 L 285 255 L 265 225 C 260 215 264 200 270 195 Z" 
+          fill="url(#ffGradSecondary)"/>
+  </g>
+</svg>

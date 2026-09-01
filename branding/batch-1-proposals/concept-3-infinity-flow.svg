@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <defs>
+    <!-- Background Dark Squircle -->
+    <linearGradient id="p3Bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14192b"/>
+      <stop offset="100%" stop-color="#080b14"/>
+    </linearGradient>
+
+    <!-- Infinity Flow Orange/Gold Gradient -->
+    <linearGradient id="p3Flow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffedd5"/>
+      <stop offset="25%" stop-color="#fb923c"/>
+      <stop offset="70%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+
+    <!-- Arrow Tip Gradient -->
+    <linearGradient id="p3Arrow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <filter id="p3Glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#f97316" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Squircle Container -->
+  <rect width="512" height="512" rx="120" fill="url(#p3Bg)" stroke="#222b45" stroke-width="2"/>
+
+  <!-- Vertical Infinity Ribbon Flow with Terminal Arrow (No text) -->
+  <g filter="url(#p3Glow)" transform="translate(0, 10)">
+    <!-- Upper Loop -->
+    <path d="M 256 120 C 310 120 340 160 340 200 C 340 240 300 275 256 310 C 212 345 172 380 172 420 C 172 440 185 455 205 455 C 230 455 255 435 270 410" 
+          fill="none" stroke="url(#p3Flow)" stroke-width="48" stroke-linecap="round"/>
+
+    <!-- Crossing Strand Completing Dynamic Ingestion -->
+    <path d="M 256 120 C 202 120 172 160 172 200 C 172 240 212 275 256 310 C 300 345 340 380 340 420 C 340 435 330 448 315 448 C 290 448 270 425 256 395" 
+          fill="none" stroke="url(#p3Flow)" stroke-width="48" stroke-linecap="round"/>
+
+    <!-- Sharp Illuminated Arrow Head Terminus -->
+    <polygon points="305,425 230,425 268,468" fill="url(#p3Arrow)"/>
+    <polygon points="325,370 270,390 305,425" fill="#fde047"/>
+  </g>
+</svg>

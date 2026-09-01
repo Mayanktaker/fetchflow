@@ -1,184 +1,153 @@
 <!-- © 2026 Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 
-<h1 align="center">FetchFlow Download Manager — Wayland Edition</h1>
+<p align="center">
+  <img src="docs/fetchflow-logo.png" width="120" height="120" alt="FetchFlow Download Manager Logo" />
+</p>
+
+<h1 align="center">FetchFlow Download Manager</h1>
 
 <p align="center">
-  <b>FetchFlow v9</b> — a powerful, fast download manager with native Wayland support,
-  system tray integration, and seamless browser integration.
+  <b>High-Performance Multi-Stream Download Accelerator & Media Ingestion Engine</b>
+  <br />
+  <i>Native Wayland &bull; Modern GTK3 CSD &bull; .NET 8 AOT &bull; System Tray &bull; Browser Integration</i>
 </p>
 
 <p align="center">
-  Maintained by <a href="https://mayanktaker.com">Mayanktaker Computers & Web Development</a>.
-  Based on the original foundation of XDM by <a href="https://github.com/subhra74/xdm">Subhra Sankha Sarkar</a>.
+  <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20Wayland%20%7C%20X11-orange?style=flat-square" alt="Platform" />
+  <img src="https://img.shields.io/badge/.NET-8.0%20(AOT)-512BD4?style=flat-square&logo=dotnet" alt=".NET 8" />
+  <img src="https://img.shields.io/badge/UI-GTK3%20CSD-4A90E2?style=flat-square&logo=gtk" alt="GTK3" />
+  <img src="https://img.shields.io/badge/License-GPL--2.0-blue?style=flat-square" alt="License" />
+  <img src="https://img.shields.io/badge/Maintained%20by-Mayanktaker-F97316?style=flat-square" alt="Maintainer" />
+</p>
+
+<p align="center">
+  Maintained with ❤️ by <a href="https://mayanktaker.com"><b>Mayanktaker Computers &amp; Web Development</b></a>.
+  <br />
+  <i>Built on the open-source foundation of XDM by <a href="https://github.com/subhra74/xdm">Subhra Sankha Sarkar</a>.</i>
 </p>
 
 ---
 
-## Highlights
+## ⚡ Key Highlights
 
-- **Wayland-native** — runs on modern Wayland sessions (KDE Plasma, GNOME, Sway/Hyprland/COSMIC) as well as X11
-- **System tray icon** with a right-click menu (Show / Quit) on KDE, GNOME + AppIndicator extension, waybar and other SNI hosts
-- **Close-to-tray** — closing the window never quits the app; it keeps running in the background
-- **Android-safe file names** — downloaded files keep only `A-Z a-z 0-9 . _ -` and space; everything else becomes `-`, so files copy cleanly to Android phones via USB/MTP
-- **Browser integration** for Chrome, Firefox, Edge, Opera, Vivaldi and other Chromium/Firefox-based browsers
-- **Video saving** from YouTube, Vimeo, Facebook, Instagram, Dailymotion and many more streaming sites
-- **Faster downloads** with multi-connection acceleration and resume of broken/dead downloads
-- **Modern packaging** — `.deb`, `.rpm`, Arch `.pkg.tar.zst`, portable `.tar.gz` and a Flatpak manifest (`com.mayanktaker.fetchflow`)
+| Feature | Technical Capability |
+|---|---|
+| **Multi-Stream Acceleration** | Divides downloads into dynamic parallel segments (up to 32 connections) for maximum throughput |
+| **Native Wayland Support** | Full Wayland client integration (KDE Plasma 6, GNOME 46+, Sway, Hyprland, COSMIC) with zero XWayland quirks |
+| **System Tray Integration** | StatusNotifierItem (SNI) D-Bus protocol on Wayland with a full right-click context menu (Show / Hide / Quit) |
+| **Video & Stream Grabber** | Built-in streaming media detection powered by `yt-dlp` — save video/audio from YouTube, Vimeo, Twitch, and 1000+ sites |
+| **Browser Integration** | Vanilla Manifest V3 extensions for Chrome, Firefox, Brave, Edge, Opera, Vivaldi, and Floorp |
+| **Android / MTP Safe Names** | Automatically sanitizes downloaded file names to ASCII-safe formats, avoiding transfer failures over USB/MTP |
+| **Resilient Resumption** | Seamlessly resume broken, timed-out, or expired downloads with automatic URL refresh and token re-acquisition |
+| **Modern Packaging** | First-class distribution packages: Fedora/RHEL (`.rpm`), Debian/Ubuntu (`.deb`), Arch (`.pkg.tar.zst`), Flatpak, and Portable Tarball |
 
-## What's New in FetchFlow v9
+---
 
-- Runs natively on **Wayland** (no XWayland quirks for window placement, dialogs or the tray icon).
-- **System tray icon** on Wayland desktops via the StatusNotifier protocol, with a proper right-click menu on KDE Plasma 6.
-- Closing the window now **hides the app to the tray** (or minimizes it) — FetchFlow always keeps running in the background. To fully quit, use the tray menu or the ☰ menu → Exit.
-- **Blob downloads** (files generated in-page, e.g. streamed documents) are now captured by the browser extensions and transferred to FetchFlow.
-- The **Firefox extension is faster and more reliable** — download takeovers no longer block pages, and right-click "Download with FetchFlow" works seamlessly.
-- **Downloaded file names are cleaned automatically** — brackets, quotes, `%`, `^` and other characters that break copying to Android phones are replaced with `-`.
-- **Video capture improved** for multi-site support with a loading indicator and smarter caching.
-- Brand-new packaging pipeline: one command builds every distribution package.
+## 📦 Installation & Packaging
 
-## Features
+FetchFlow distributes self-contained, high-performance Linux binaries that require no separate runtime installation.
 
-- Increase download speeds by downloading file segments in parallel
-- Resume broken or interrupted downloads
-- Save videos from popular streaming websites
-- Download web content directly from the browser with the right-click menu:
-  - **Download with FetchFlow** — any link
-  - **Download Image with FetchFlow** — images
-  - **Download Blob Media with FetchFlow** — in-page media
-- Schedule downloads, group them in queues, and limit download speed
-- Categories with automatic folder assignment (documents, music, videos, programs, archives)
-- Video conversion support via the built-in video downloader (yt-dlp based)
-- Multi-language UI including Hindi, English and many more
-
-## Installation
-
-### Fedora / RHEL (and derivatives)
-
+### Fedora / RHEL / CentOS (RPM)
 ```bash
-sudo dnf install ./fetchflow-9.1.4-1.fc44.x86_64.rpm
+sudo dnf install ./xdm-release/fetchflow-9.1.4-1.fc44.x86_64.rpm
 ```
 
-### Debian / Ubuntu (and derivatives)
-
+### Debian / Ubuntu / Linux Mint (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.4_amd64.deb
+sudo apt install ./xdm-release/fetchflow_9.1.4_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS
-
-Build from the included `PKGBUILD` or install the prebuilt package:
-
 ```bash
-makepkg -si   # from the XDM.Linux.Installer directory
-# or
-sudo pacman -U fetchflow-9.1.4-1-x86_64.pkg.tar.zst
+# Install via prebuilt package
+sudo pacman -U ./xdm-release/fetchflow-9.1.4-1-x86_64.pkg.tar.zst
+
+# Or build via PKGBUILD
+cd app/XDM/XDM.Linux.Installer && makepkg -si
 ```
 
-### Portable (any modern x64 Linux)
-
+### Portable Tarball (Universal Linux x64)
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.4.tar.gz -C /opt
+tar -xzf xdm-release/fetchflow-linux-x64-9.1.4.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
 ### Flatpak
-
-A Flatpak manifest (`com.mayanktaker.fetchflow.yml`) is included for building your own Flatpak bundle:
-
 ```bash
 flatpak-builder --user --install --force-clean build-dir com.mayanktaker.fetchflow.yml
 ```
 
-> The app is installed under `/opt/fetchflow` and registers the `fetchflow://` URL scheme, the desktop entry and the tray icon automatically.
+---
 
-## Browser Integration
+## 🌐 Browser Extensions (Manifest V3)
 
-FetchFlow ships browser extensions for Chrome/Chromium and Firefox (MV3):
+FetchFlow integrates directly with your default web browser via native WebSocket/HTTP loopback IPC:
 
-| Browser | Package | What it does |
+| Browser Family | Extension Artifact | Features |
 |---|---|---|
-| Chrome / Edge / Opera / Vivaldi | `fetchflow-chrome-extension-9.1.4.zip` | Takes over downloads, saves videos, adds context-menu items |
-| Firefox | `fetchflow-firefox-extension-9.1.4.xpi` | Same features, tuned for Firefox's MV3 support |
+| **Chromium** (Chrome, Brave, Edge, Opera, Vivaldi) | `fetchflow-chrome-extension-9.1.4.zip` | Automatic download interception, in-page blob media capture, video sniffing, context menu |
+| **Gecko** (Firefox, Floorp, LibreWolf, Waterfox) | `fetchflow-firefox-extension-9.1.4.xpi` | Full MV3 support, background streaming listener, right-click download triggers |
 
-The extension and the app talk over a **loopback relay** (`127.0.0.1:8597`, WebSocket first, HTTP fallback), and the OS-registered `fetchflow://` scheme launches FetchFlow on demand — no native messaging host needed on Linux.
+### Loading Extensions Manually
+- **Chrome / Chromium:** Navigate to `chrome://extensions` &rarr; Enable *Developer mode* &rarr; Click *Load unpacked* and select `app/XDM/chrome-extension`.
+- **Firefox:** Navigate to `about:debugging#/runtime/this-firefox` &rarr; Click *Load Temporary Add-on* and select `app/XDM/firefox-amo/manifest.json`.
 
-To install:
+---
 
-1. Install the extension from the Chrome Web Store / Firefox Add-ons, or load the packaged file manually (Firefox: `about:debugging` → Load Temporary Add-on; Chrome: `chrome://extensions` → Developer mode → Load unpacked).
-2. Start FetchFlow once — it registers the URL scheme and browser monitoring automatically (first run shows the integration dialog).
-3. Enable monitoring with the browser-monitor toggle in the main window.
+## 🛠️ Architecture & Core Engine
 
-Right-click any link and choose **Download with FetchFlow**.
+```
+Browser Extension (MV3)
+    │ (WebSocket / HTTP Loopback IPC @ 127.0.0.1:8597)
+    ▼
+IpcHttpMessageProcessor
+    ├── VideoUrlHelper (yt-dlp stream extraction & caching)
+    ├── NetworkHelper (Connection pooling & multi-socket segmentation)
+    └── DownloadEngine (Segment assembler & chunk verification)
+            ▼
+GTK3 Modern Shell (Wayland CSD HeaderBar & Responsive Paned TreeView)
+    │
+    ├── StatusNotifierItem (D-Bus Tray Client for KDE/GNOME/Waybar)
+    └── SQLite Storage Engine (~/.fetchflow-app-data/downloads.db)
+```
 
-## System Tray & Window Close
+---
 
-- Closing the window **hides FetchFlow to the tray** when a tray icon is available; otherwise the window minimizes and FetchFlow keeps running.
-- Tray detection retries in the background for ~2 minutes at startup, so a tray host that starts after FetchFlow (e.g. plasmashell at login) is picked up automatically.
-- **Quit** is only available from the tray icon's right-click menu or the ☰ menu → Exit. If downloads are in progress, FetchFlow asks for confirmation first.
+## 🔧 Building from Source
 
-## File Naming (Android / MTP safe)
+### Prerequisites
+- .NET SDK 8.0 (`net8.0`)
+- GTK3 runtime & development libraries (`gtk3`, `glib2`, `cairo`, `pango`)
+- Standard build tools: `tar`, `zip`, `rpmbuild` (optional: `dpkg-deb`, `makepkg`)
 
-Downloaded files keep only letters, digits, `.`, `_`, `-` and spaces. All other characters (`( ) [ ] { } % ^ # " ' : ? * < > |` etc.) are replaced with `-` automatically, and repeated dashes are collapsed — so `My [file] (1)^.mp4` becomes `My -file- 1.mp4`. This applies to all new downloads and keeps files copying to Android phones, TVs and NAS devices without errors.
-
-## Building from Source
-
-### Requirements
-
-- .NET SDK 8 (the build script expects it under `~/.dotnet8` or on `PATH`)
-- Linux x64 host with GTK3 development libraries
-- `zip` for packaging the browser extensions
-
-### Build everything
-
+### One-Command Release Build
 ```bash
 bash build_all.sh
 ```
 
-All artifacts land in `xdm-release/`:
+This compiles the self-contained single-file AOT binary, packages all Linux distribution targets (RPM, DEB, Arch, Tarball), and bundles the browser extensions into `xdm-release/`.
 
-| Artifact | Format | Target |
-|---|---|---|
-| `fetchflow-linux-x64-<ver>.tar.gz` | Portable tarball | Any modern x64 Linux |
-| `fetchflow_<ver>_amd64.deb` | DEB | Debian / Ubuntu |
-| `fetchflow-<ver>-1.x86_64.rpm` | RPM | Fedora / RHEL / openSUSE |
-| `fetchflow-<ver>-1-x86_64.pkg.tar.zst` | Arch package | Arch / Manjaro / EndeavourOS |
-| `fetchflow-chrome-extension-<ver>.zip` | Chrome extension | Chrome Web Store |
-| `fetchflow-firefox-extension-<ver>.xpi` | Firefox extension | Firefox Add-ons (AMO) |
-
-The version is defined once in `app/XDM/XDM.Linux.Installer/version.env` — all packaging scripts source it, so bump it there before a release.
-
-### Run the tests
-
+### Running Automated Test Suite
 ```bash
 dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj
 ```
 
-## Data & Configuration
+---
 
-| Item | Location |
-|---|---|
-| Downloads database, queues, settings | `~/.fetchflow-app-data/` (`downloads.db`, `queues.db`, `settings.dat`) |
-| Legacy fallback migration | `~/.xdm-app-data/` (auto-detected and migrated seamlessly) |
-| Crash log (always on, 5 MB cap with rotation) | `~/.fetchflow-app-data/crash.log` — every `GLib`/`AppDomain`/unobserved-task exception lands here, even when the terminal is detached, so "crashed after some time" is diagnosable; send this file when reporting a crash |
-| Log file (debug mode) | `~/.fetchflow-app-data/log.txt` (only when `XDM_DEBUG_MODE=1`) |
-| Installed app | `/opt/fetchflow/` |
-| Auto-start entry | `~/.config/autostart/fetchflow.desktop` |
+## 📁 Data & Configuration Paths
 
-### Where data lives (XDG vs legacy)
+| Purpose | Default Path (Standard Linux) | Flatpak / Sandbox Path |
+|---|---|---|
+| **Database & Settings** | `~/.fetchflow-app-data/downloads.db` | `$XDG_CONFIG_HOME/fetchflow/downloads.db` |
+| **Queues Configuration** | `~/.fetchflow-app-data/queues.db` | `$XDG_CONFIG_HOME/fetchflow/queues.db` |
+| **Crash & Diagnostic Log** | `~/.fetchflow-app-data/crash.log` (5 MB rotated) | `$XDG_CONFIG_HOME/fetchflow/crash.log` |
+| **Binary Installation** | `/opt/fetchflow/` | `/app/bin/` |
+| **Desktop Entry & Icons** | `/usr/share/applications/fetchflow.desktop`<br>`/usr/share/icons/hicolor/scalable/apps/fetchflow.svg` | App package metadata |
 
-`XDM.Core/Config.cs` resolves `AppDir`/`DataDir` on Linux as:
+---
 
-1. Explicit `path` arg to `LoadConfig(path)` wins (tests/sandbox).
-2. Otherwise, if `XDG_CONFIG_HOME` is set, `AppDir = $XDG_CONFIG_HOME/fetchflow` and `DataDir = $XDG_DATA_HOME/fetchflow` (or `$XDG_DATA_HOME` is empty → `$rootDir/Data`).
-3. Otherwise, `rootDir` is `~/.fetchflow-app-data` if it exists, else `~/.xdm-app-data` if that exists (auto-migration from the original XDM), else a fresh `~/.fetchflow-app-data` is created.
+## 📜 Credits & License
 
-So on a normal Fedora install `crash.log`, `log.txt`, `downloads.db`, `queues.db` and `settings.dat` all live under `~/.fetchflow-app-data/`; inside Flatpak/sandbox `XDG_CONFIG_HOME`/`XDG_DATA_HOME` relocate them to the container's config/data dirs automatically.
-
-## Credits & License
-
-**FetchFlow Download Manager (Wayland Edition)** is maintained by [Mayanktaker Computers & Web Development](https://mayanktaker.com), © 2026.
-
-The project builds upon the foundational architecture of the original **Xtreme Download Manager**, originally created by [Subhra Sankha Sarkar (subhra74)](https://github.com/subhra74/xdm).
-
-This project is licensed under the **GNU General Public License v2** — see [`LICENSE`](LICENSE).
-
+- **Lead Developer & Maintainer:** [Mayanktaker Computers & Web Development](https://mayanktaker.com)
+- **Original Architecture & Heritage:** [Subhra Sankha Sarkar (subhra74)](https://github.com/subhra74/xdm)
+- **License:** [GNU General Public License v2.0 (GPL-2.0)](LICENSE)
