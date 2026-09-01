@@ -47,7 +47,9 @@ namespace XDM.GtkUI.Dialogs.Properties
             Title = titleText;
             Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
             GtkHelper.SetWindowAppIcon(this);
-            SetDefaultSize(480, 240);
+            SetDefaultSize(560, 420);
+            SetSizeRequest(480, 360);
+            Resizable = true;
             LoadTexts();
         }
 

@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<?xml version='1.0' encoding='UTF-8'?>
 <interface>
-  <requires lib="gtk+" version="3.24"/>
+  <requires lib="gtk+" version="3.24" />
   <object class="GtkDialog" id="dialog">
     <property name="can-focus">False</property>
     <property name="type-hint">dialog</property>
@@ -23,7 +22,7 @@
                 <property name="margin-end">5</property>
                 <property name="margin-bottom">10</property>
                 <style>
-                  <class name="suggested-action"/>
+                  <class name="suggested-action" />
                 </style>
               </object>
               <packing>
@@ -49,6 +48,10 @@
             </child>
           </object>
           <packing>
+          </packing>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
           </packing>
         </child>
         <child>
@@ -155,7 +158,6 @@
                               </packing>
                             </child>
                             <child>
-                              <!-- n-columns=2 n-rows=3 -->
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
@@ -258,7 +260,6 @@
                               </packing>
                             </child>
                             <child>
-                              <!-- n-columns=3 n-rows=2 -->
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
@@ -322,7 +323,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -336,7 +337,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -385,7 +386,7 @@
                                 <property name="receives-default">True</property>
                                 <property name="halign">start</property>
                                 <style>
-                                  <class name="flat"/>
+                                  <class name="flat" />
                                 </style>
                               </object>
                               <packing>
@@ -428,7 +429,7 @@
                                 <property name="receives-default">True</property>
                                 <property name="halign">start</property>
                                 <style>
-                                  <class name="flat"/>
+                                  <class name="flat" />
                                 </style>
                               </object>
                               <packing>
@@ -471,7 +472,7 @@
                                 <property name="receives-default">True</property>
                                 <property name="halign">start</property>
                                 <style>
-                                  <class name="flat"/>
+                                  <class name="flat" />
                                 </style>
                               </object>
                               <packing>
@@ -725,7 +726,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -776,7 +777,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -877,7 +878,7 @@
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <child internal-child="selection">
-                                      <object class="GtkTreeSelection"/>
+                                      <object class="GtkTreeSelection" />
                                     </child>
                                   </object>
                                 </child>
@@ -901,7 +902,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -919,8 +920,8 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
-                                      <class name="destructive-action"/>
+                                      <class name="flat" />
+                                      <class name="destructive-action" />
                                     </style>
                                   </object>
                                   <packing>
@@ -938,7 +939,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -955,7 +956,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -1151,7 +1152,6 @@
                               </packing>
                             </child>
                             <child>
-                              <!-- n-columns=2 n-rows=5 -->
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
@@ -1327,7 +1327,7 @@
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <child internal-child="selection">
-                              <object class="GtkTreeSelection"/>
+                              <object class="GtkTreeSelection" />
                             </child>
                           </object>
                         </child>
@@ -1351,8 +1351,8 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <style>
-                              <class name="flat"/>
-                              <class name="destructive-action"/>
+                              <class name="flat" />
+                              <class name="destructive-action" />
                             </style>
                           </object>
                           <packing>
@@ -1370,7 +1370,7 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <style>
-                              <class name="flat"/>
+                              <class name="flat" />
                             </style>
                           </object>
                           <packing>
@@ -1387,7 +1387,7 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <style>
-                              <class name="flat"/>
+                              <class name="flat" />
                             </style>
                           </object>
                           <packing>
@@ -1544,7 +1544,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -1634,7 +1634,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat"/>
+                                      <class name="flat" />
                                     </style>
                                   </object>
                                   <packing>
@@ -1663,6 +1663,10 @@
             </child>
           </object>
           <packing>
+          </packing>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
           </packing>
         </child>
       </object>

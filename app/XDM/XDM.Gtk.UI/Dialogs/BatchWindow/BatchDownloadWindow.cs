@@ -94,6 +94,8 @@ namespace XDM.GtkUI.Dialogs.BatchWindow
             Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
             GtkHelper.SetWindowAppIcon(this);
             SetDefaultSize(720, 500);
+            SetSizeRequest(580, 400);
+            Resizable = true;
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
 

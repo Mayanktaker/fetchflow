@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<?xml version='1.0' encoding='UTF-8'?>
 <interface>
-  <requires lib="gtk+" version="3.20"/>
+  <requires lib="gtk+" version="3.20" />
   <object class="GtkWindow" id="window">
     <property name="can-focus">False</property>
     <child>
@@ -17,7 +16,6 @@
             <property name="margin-end">10</property>
             <property name="margin-top">10</property>
             <child>
-              <!-- n-columns=2 n-rows=3 -->
               <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
@@ -102,7 +100,6 @@
               </packing>
             </child>
             <child>
-              <!-- n-columns=2 n-rows=6 -->
               <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
@@ -236,10 +233,10 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
+                  <placeholder />
                 </child>
                 <child>
-                  <placeholder/>
+                  <placeholder />
                 </child>
               </object>
               <packing>
@@ -258,7 +255,6 @@
               </packing>
             </child>
             <child>
-              <!-- n-columns=2 n-rows=2 -->
               <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
@@ -325,6 +321,7 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
@@ -335,7 +332,7 @@
             <property name="margin-top">10</property>
             <property name="margin-bottom">10</property>
             <child>
-              <placeholder/>
+              <placeholder />
             </child>
             <child>
               <object class="GtkButton" id="btnCancel">
@@ -361,7 +358,7 @@
                 <property name="margin-end">10</property>
                 <property name="image-position">right</property>
                 <style>
-                  <class name="suggested-action"/>
+                  <class name="suggested-action" />
                 </style>
               </object>
               <packing>
@@ -373,6 +370,9 @@
             </child>
           </object>
           <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

@@ -45,7 +45,9 @@ namespace XDM.GtkUI.Dialogs
             Title = titleText;
             Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
             GtkHelper.SetWindowAppIcon(this);
-            SetDefaultSize(480, 220);
+            SetDefaultSize(440, 240);
+            SetSizeRequest(380, 200);
+            Resizable = true;
 
             Modal = true;
             // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)

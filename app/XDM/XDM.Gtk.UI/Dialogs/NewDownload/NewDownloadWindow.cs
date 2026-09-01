@@ -57,6 +57,8 @@ namespace XDM.GtkUI.Dialogs.NewDownload
         {
             builder.Autoconnect(this);
             SetDefaultSize(600, 320);
+            SetSizeRequest(520, 240);
+            Resizable = true;
             KeepAbove = true;
 
             var titleText = TextResource.GetText("ND_TITLE");

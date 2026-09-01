@@ -58,6 +58,10 @@ namespace XDM.GtkUI.Dialogs.DeleteConfirm
 
             BtnDelete.Label = TextResource.GetText("DESC_DEL");
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
+
+            SetDefaultSize(400, 180);
+            SetSizeRequest(360, 150);
+            Resizable = true;
             ChkDiskDel.Label = TextResource.GetText("LBL_DELETE_FILE");
             TxtLabel.Text = TextResource.GetText("DEL_SEL_TEXT");
 

@@ -30,6 +30,8 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
         {
             builder.Autoconnect(this);
             SetDefaultSize(768, 440);
+            SetSizeRequest(600, 360);
+            Resizable = true;
 
             var titleText = TextResource.GetText("MSG_MEDIA_CAPTURE");
             Title = titleText;

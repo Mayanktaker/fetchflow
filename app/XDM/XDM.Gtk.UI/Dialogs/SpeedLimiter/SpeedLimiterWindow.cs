@@ -30,7 +30,9 @@ namespace XDM.GtkUI.Dialogs.SpeedLimiter
 
         public SpeedLimiterWindow(Builder builder) : base(builder.GetRawOwnedObject("window"))
         {
-            SetDefaultSize(480, 260);
+            SetDefaultSize(400, 200);
+            SetSizeRequest(360, 160);
+            Resizable = true;
             builder.Autoconnect(this);
             var titleText = TextResource.GetText("DESC_ADV_TITLE");
             Title = titleText;

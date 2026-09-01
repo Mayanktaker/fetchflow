@@ -40,7 +40,9 @@ namespace XDM.GtkUI.Dialogs.Updater
             BtnInstall.StyleContext.AddClass("suggested-action");
             BtnInstall.Sensitive = false;
             TxtHeading.Text = TextResource.GetText("STAT_DOWNLOADING");
-            SetDefaultSize(600, 220);
+            SetDefaultSize(520, 200);
+            SetSizeRequest(440, 180);
+            Resizable = true;
 
             GtkHelper.AttachSafeDispose(this);
 

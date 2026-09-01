@@ -51,6 +51,8 @@ namespace XDM.GtkUI.Dialogs.Language
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
 
             SetDefaultSize(480, 240);
+            SetSizeRequest(400, 200);
+            Resizable = true;
 
             var indexFile = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Lang\index.txt");
             var items = new List<string>();

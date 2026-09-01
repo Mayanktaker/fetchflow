@@ -55,7 +55,9 @@ namespace XDM.GtkUI.Dialogs.Settings
             BtnOk.Label = TextResource.GetText("MSG_OK");
             BtnCancel.Label = TextResource.GetText("ND_CANCEL");
 
-            SetDefaultSize(480, 320);
+            SetDefaultSize(480, 260);
+            SetSizeRequest(400, 220);
+            Resizable = true;
         }
 
         public void SetPassword(PasswordEntry password)

@@ -263,6 +263,8 @@ namespace XDM.GtkUI.Dialogs.ProgressWindow
         {
             builder.Autoconnect(this);
             SetDefaultSize(540, 300);
+            SetSizeRequest(480, 240);
+            Resizable = true;
             var titleText = TextResource.GetText("STAT_DOWNLOADING");
             Title = titleText;
             Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);

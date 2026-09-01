@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<?xml version='1.0' encoding='UTF-8'?>
 <interface>
-  <requires lib="gtk+" version="3.20"/>
+  <requires lib="gtk+" version="3.20" />
   <object class="GtkAdjustment" id="adjustment1">
     <property name="upper">1000000000</property>
     <property name="step-increment">1</property>
@@ -33,7 +32,6 @@
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <!-- n-columns=3 n-rows=9 -->
                   <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
@@ -307,16 +305,16 @@
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
+                      <placeholder />
                     </child>
                     <child>
-                      <placeholder/>
+                      <placeholder />
                     </child>
                     <child>
-                      <placeholder/>
+                      <placeholder />
                     </child>
                     <child>
-                      <placeholder/>
+                      <placeholder />
                     </child>
                   </object>
                   <packing>
@@ -397,6 +395,7 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
@@ -426,7 +425,7 @@
                 <property name="receives-default">True</property>
                 <property name="margin-end">10</property>
                 <style>
-                  <class name="suggested-action"/>
+                  <class name="suggested-action" />
                 </style>
               </object>
               <packing>
@@ -438,6 +437,9 @@
             </child>
           </object>
           <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

@@ -125,6 +125,8 @@ namespace XDM.GtkUI.Dialogs.DownloadSelection
         {
             builder.Autoconnect(this);
             SetDefaultSize(720, 500);
+            SetSizeRequest(600, 380);
+            Resizable = true;
 
             windowGroup = new WindowGroup();
             windowGroup.AddWindow(this);

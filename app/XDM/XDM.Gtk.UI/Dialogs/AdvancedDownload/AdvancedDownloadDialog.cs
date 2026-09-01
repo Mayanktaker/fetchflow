@@ -71,6 +71,8 @@ namespace XDM.GtkUI.Dialogs.AdvancedDownload
         public AdvancedDownloadDialog(Builder builder, Window parent, WindowGroup group) : base(builder.GetRawOwnedObject("dialog"))// base(TextResource.GetText("DESC_ADV_TITLE"), parent, DialogFlags.Modal)
         {
             SetDefaultSize(660, 460);
+            SetSizeRequest(520, 360);
+            Resizable = true;
             builder.Autoconnect(this);
             var titleText = TextResource.GetText("DESC_ADV_TITLE");
             Title = titleText;
