@@ -1,7 +1,7 @@
 {
     "name": "FetchFlow Browser Helper",
     "manifest_version": 3,
-    "version": "9.1.5",
+    "version": "9.1.6",
     "description": "Download files and capture videos with FetchFlow Download Manager",
     "action": {},
     "host_permissions": [

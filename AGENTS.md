@@ -17,7 +17,7 @@ User-facing details live in [README.md](README.md); design system tokens live in
 | **Browser Extensions** | Manifest V3 (Vanilla JS) | Chrome (`app/XDM/chrome-extension/`), Firefox (`app/XDM/firefox-amo/`) |
 | **Runtime & Toolchain** | .NET SDK 8.0.424 | Local at `~/.dotnet8` (or `~/.dotnet`); no root/sudo needed |
 | **Packaging Tools** | `rpmbuild`, `dpkg-deb`, `zip`, `tar` | User-local rpmbuild at `~/.local/rpm-build-root` (`%_rpmconfigdir`) |
-| **Version Source of Truth** | `app/XDM/XDM.Linux.Installer/version.env` | Currently `9.1.5` (synced with `AppInfo.cs` and manifests) |
+| **Version Source of Truth** | `app/XDM/XDM.Linux.Installer/version.env` | Currently `9.1.6` (synced with `AppInfo.cs` and manifests) |
 
 ## Related Documentation & Single Sources of Truth
 
