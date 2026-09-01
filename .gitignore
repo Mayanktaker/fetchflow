@@ -384,6 +384,7 @@ msg.bin
 app/XDM/XDM.Linux.Installer/src/
 app/XDM/XDM.Linux.Installer/PKGBUILD
 app/XDM/XDM.Linux.Installer/xdman_gtk_*_amd64/
+app/XDM/XDM.Linux.Installer/fetchflow*/
 
 # Local clutter & Agent operating maps
 .superpowers/

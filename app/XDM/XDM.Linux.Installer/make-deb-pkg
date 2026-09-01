@@ -105,4 +105,16 @@ chmod 755 "${PKG}/usr/bin/xdman"
 chmod 755 "${PKG}/opt/fetchflow/fetchflow"
 chmod 755 "${PKG}/DEBIAN/postinst" "${PKG}/DEBIAN/postrm"
 
-dpkg-deb --build --root-owner-group -Z xz "${PKG}"
+if command -v dpkg-deb >/dev/null 2>&1; then
+    dpkg-deb --build --root-owner-group -Z xz "${PKG}"
+else
+    echo "dpkg-deb not found; assembling .deb package using ar and tar..."
+    DEB_OUT="$(pwd)/${PKG}.deb"
+    BUILD_TMP="$(mktemp -d)"
+    echo "2.0" > "${BUILD_TMP}/debian-binary"
+    (cd "${PKG}/DEBIAN" && tar --owner=0 --group=0 --numeric-owner -czf "${BUILD_TMP}/control.tar.gz" *)
+    (cd "${PKG}" && tar --owner=0 --group=0 --numeric-owner --exclude="./DEBIAN" -czf "${BUILD_TMP}/data.tar.gz" opt usr)
+    (cd "${BUILD_TMP}" && ar -rc "${DEB_OUT}" debian-binary control.tar.gz data.tar.gz)
+    rm -rf "${BUILD_TMP}"
+    echo "Built: ${DEB_OUT}"
+fi
