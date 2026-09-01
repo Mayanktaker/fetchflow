@@ -173,6 +173,9 @@
                 </child>
               </object>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
@@ -1871,6 +1874,9 @@
             </child>
           </object>
           <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
@@ -1891,9 +1897,9 @@
             <property name="layout-style">end</property>
             <property name="margin-start">16</property>
             <property name="margin-end">16</property>
-            <property name="margin-top">8</property>
-            <property name="margin-bottom">10</property>
-            <property name="spacing">8</property>
+            <property name="margin-top">10</property>
+            <property name="margin-bottom">12</property>
+            <property name="spacing">10</property>
             <child>
               <object class="GtkButton" id="BtnCancel">
                 <property name="label" translatable="yes">Cancel</property>
@@ -1926,6 +1932,9 @@
             </child>
           </object>
           <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
