@@ -19,7 +19,7 @@
   <a href="https://github.com/Mayanktaker/fetchflow/releases"><img src="https://img.shields.io/github/downloads/Mayanktaker/fetchflow/total?color=blue&style=flat-square" alt="Total Downloads" /></a>
   <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20Wayland%20%7C%20X11%20%7C%20Windows-brightgreen?style=flat-square" alt="Platform" />
   <img src="https://img.shields.io/badge/.NET-8.0%20AOT-512BD4?style=flat-square&logo=dotnet" alt=".NET 8" />
-  <img src="https://img.shields.io/badge/UI-GTK3%20CSD-4A90E2?style=flat-square&logo=gtk" alt="GTK3" />
+  <img src="https://img.shields.io/badge/UI-GTK3%20CSD%20%7C%20Windows%20WPF-4A90E2?style=flat-square" alt="UI" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--2.0-blue?style=flat-square" alt="License" /></a>
   <a href="https://mayanktaker.com"><img src="https://img.shields.io/badge/Maintained%20by-Mayanktaker-F97316?style=flat-square" alt="Maintainer" /></a>
 </p>
