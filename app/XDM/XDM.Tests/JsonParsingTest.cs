@@ -1,18 +1,20 @@
-using NUnit.Framework;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using System.IO;
 using System;
 
 namespace XDM.Tests
 {
-    public class Tests
+    [TestClass]
+    public class JsonParsingTests
     {
-        [SetUp]
+        [TestInitialize]
         public void Setup()
         {
         }
 
-        [Test]
+        [TestMethod]
         public void DeserializeBrowserMessageJsonSuccess()
         {
             Test();

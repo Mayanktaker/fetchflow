@@ -1,14 +1,16 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using TraceLog;
 using XDM.Core;
 
 namespace XDM.Core.BrowserMonitoring
 {
+    // Manages the lifecycle of the browser integration IPC server
     public static class BrowserMonitor
     {
-        //private static IpcServer ipcServer;
-        private static IpcHttpMessageProcessor messageProcessor;
+        private static IpcHttpMessageProcessor? messageProcessor;
 
+        // Starts the IPC message processor
         public static void Run()
         {
             try
@@ -20,24 +22,26 @@ namespace XDM.Core.BrowserMonitoring
             {
                 Log.Debug(ex, ex.Message);
             }
-            //ipcServer = new IpcServer(8597);
-            //try
-            //{
-            //    ipcServer.Start();
-            //    ApplicationContext.ApplicationEvent += ApplicationContext_ApplicationEvent;
-            //}
-            //catch (Exception ex)
-            //{
-            //    Log.Debug(ex, ex.Message);
-            //}
         }
 
-        //private static void ApplicationContext_ApplicationEvent(object? sender, ApplicationEvent e)
-        //{
-        //    if (e.EventType == "ConfigChanged" || e.EventType == "MediaUpdate")
-        //    {
-        //        ipcServer.SendConfig();
-        //    }
-        //}
+        // Restarts the IPC message processor listener
+        public static void Restart()
+        {
+            try
+            {
+                if (messageProcessor == null)
+                {
+                    Run();
+                }
+                else
+                {
+                    messageProcessor.Restart();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "BrowserMonitor.Restart error: " + ex.Message);
+            }
+        }
     }
 }

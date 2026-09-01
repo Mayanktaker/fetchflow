@@ -119,6 +119,74 @@ namespace XDM.Tests
                 Assert.Fail($"GtkSmoke failed: Builder load/autoconnect threw {builderEx.GetType().Name}: {builderEx.Message}\n{builderEx.StackTrace}");
         }
 
+        private class DownloadCompleteSmokeStub
+        {
+#pragma warning disable CS0649, CS0169
+            [UI] private Image ImgFileIcon = null!;
+            [UI] private Label TxtFileName = null!;
+            [UI] private Label TxtLocation = null!;
+            [UI] private Button BtnOpenFolder = null!;
+            [UI] private Button BtnOpen = null!;
+            [UI] private LinkButton TxtDontShowCompleteDialog = null!;
+#pragma warning restore CS0649, CS0169
+        }
+
+        [TestMethod]
+        [TestCategory("GtkSmoke")]
+        public void Builder_ShouldLoadDownloadCompleteDialog_AndAutoconnect_StubWithoutThrowing()
+        {
+            if (!IsDisplayAvailable(out var skipReason))
+                Assert.Inconclusive(skipReason);
+
+            try
+            {
+                Application.Init();
+            }
+            catch (Exception ex)
+            {
+                Assert.Inconclusive($"Skipped GtkSmoke: GTK init failed: {ex.GetType().Name}: {ex.Message}");
+            }
+
+            var gladePath = Path.Combine(RepoRoot, "app", "XDM", "XDM.Gtk.UI", "glade", "download-complete-window.glade");
+            Assert.IsTrue(File.Exists(gladePath), $"download-complete-window.glade not found at {gladePath}");
+
+            Exception? builderEx = null;
+            Builder? builder = null;
+            try
+            {
+                builder = new Builder();
+                builder.AddFromFile(gladePath);
+
+                var windowObj = builder.GetObject("window");
+                Assert.IsNotNull(windowObj, "Builder.GetObject('window') should not be null for download-complete-window.glade");
+
+                var stub = new DownloadCompleteSmokeStub();
+                builder.Autoconnect(stub);
+
+                AssertFieldWired(stub, "ImgFileIcon");
+                AssertFieldWired(stub, "TxtFileName");
+                AssertFieldWired(stub, "TxtLocation");
+                AssertFieldWired(stub, "BtnOpenFolder");
+                AssertFieldWired(stub, "BtnOpen");
+                AssertFieldWired(stub, "TxtDontShowCompleteDialog");
+            }
+            catch (Exception ex) when (IsDisplayRelatedException(ex))
+            {
+                Assert.Inconclusive($"Skipped GtkSmoke: display-related failure: {ex.GetType().Name}: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                builderEx = ex;
+            }
+            finally
+            {
+                try { builder?.Dispose(); } catch { }
+            }
+
+            if (builderEx != null)
+                Assert.Fail($"GtkSmoke failed for download complete dialog: {builderEx.GetType().Name}: {builderEx.Message}\n{builderEx.StackTrace}");
+        }
+
         private static void AssertFieldWired(object stub, string fieldName)
         {
             var fi = stub.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);

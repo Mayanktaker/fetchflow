@@ -1,4 +1,4 @@
-// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Text;
 using System.Net;
@@ -21,8 +21,15 @@ namespace XDM.Core.BrowserMonitoring
         private static string[] blockedHeaders = { "accept", "if", "authorization", "proxy", "connection", "expect", "TE",
             "upgrade", "range", "cookie", "transfer-encoding", "content-type", "content-length","content-encoding" };
 
+        public static IpcHttpMessageProcessor? Instance { get; private set; }
+
         // Phase2.3: the port actually bound (the browser extension probes the same range)
         public static int EffectivePort { get; private set; } = 8597;
+
+        // Active connection metrics
+        public static DateTime LastActivityTime { get; private set; } = DateTime.MinValue;
+        public static int ActiveWebSocketSessionsCount => Instance?.wsSessions.Count ?? 0;
+        public static bool IsConnected => ActiveWebSocketSessionsCount > 0 || (DateTime.UtcNow - LastActivityTime).TotalSeconds < 60;
 
         // Phase6: all active WebSocket sessions (for push/broadcast to extensions)
         private readonly List<WebSocketSession> wsSessions = new();
@@ -36,56 +43,78 @@ namespace XDM.Core.BrowserMonitoring
 
         public IpcHttpMessageProcessor()
         {
-            EffectivePort = FindFreePort(Config.IpcPort);
-            Log.Debug("IPC HTTP relay binding to 127.0.0.1:" + EffectivePort);
-            server = new NanoServer(IPAddress.Loopback, EffectivePort);
-            server.RequestReceived += (sender, args) =>
-            {
-                HandleRequest(args.RequestContext);
-            };
-            // Phase6: accept WebSocket upgrades on any path
-            server.WebSocketAccepted += OnWebSocketAccepted;
+            Instance = this;
+            EffectivePort = Config.IpcPort;
 
             // Start periodic cleanup of abandoned blob transfers (every 5 min)
             blobPurgeTimer = new Timer(_ => blobReceiver.PurgeStaleTransfers(),
                 null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
         }
 
-        // Phase2.3: probe a small range so startup survives if the preferred port is taken
-        private static int FindFreePort(int preferred)
-        {
-            for (int p = preferred; p < preferred + 7; p++)
-            {
-                try
-                {
-                    var l = new TcpListener(IPAddress.Loopback, p);
-                    l.Start();
-                    l.Stop();
-                    return p;
-                }
-                catch { /* port busy — try next */ }
-            }
-            return preferred; // last resort: let NanoServer.Start throw the real error
-        }
-
+        // Starts the IPC HTTP/WebSocket listener on the first available port in the range
         public void Run()
         {
             new Thread(() =>
             {
-                try
+                for (int p = Config.IpcPort; p < Config.IpcPort + 7; p++)
                 {
-                    server.Start();
+                    try
+                    {
+                        EffectivePort = p;
+                        Log.Debug("IPC HTTP relay starting on 127.0.0.1:" + EffectivePort);
+                        server = new NanoServer(IPAddress.Loopback, EffectivePort);
+                        server.RequestReceived += (sender, args) => HandleRequest(args.RequestContext);
+                        server.WebSocketAccepted += OnWebSocketAccepted;
+                        server.Start();
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Debug($"IPC port {p} start error: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
+
+                Log.Debug("Failed to start IPC server on any port in range.");
+            })
+            {
+                IsBackground = true
+            }.Start();
+        }
+
+        // Stops the active server and terminates active sessions
+        public void Stop()
+        {
+            try
+            {
+                server?.Stop();
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Error stopping IPC server: " + ex.Message);
+            }
+
+            lock (wsLock)
+            {
+                foreach (var session in wsSessions)
                 {
-                    Log.Debug(ex.ToString());
-                    ApplicationContext.Application.ShowMessageBox(null, TextResource.GetText("MSG_ALREADY_RUNNING"));
+                    try { session.Close(); } catch { }
                 }
-            }).Start();
+                wsSessions.Clear();
+            }
+        }
+
+        // Restarts the IPC server listener and re-probes available ports
+        public void Restart()
+        {
+            Log.Debug("Restarting IPC HTTP relay...");
+            Stop();
+            Run();
+            ApplicationContext.RaiseApplicationEvent("ExtensionConnectionChanged", 0);
         }
 
         public void HandleRequest(RequestContext context)
         {
+            LastActivityTime = DateTime.UtcNow;
             try
             {
                 // Blob upload: binary POST with custom headers — handle before OnSyncMessage
@@ -462,13 +491,16 @@ namespace XDM.Core.BrowserMonitoring
 
         private void OnWebSocketAccepted(string path, Dictionary<string, List<string>> headers, WebSocketSession session)
         {
+            LastActivityTime = DateTime.UtcNow;
             lock (wsLock) { wsSessions.Add(session); }
             Log.Debug("WebSocket connected: " + path + " (total: " + wsSessions.Count + ")");
+            ApplicationContext.RaiseApplicationEvent("ExtensionConnectionChanged", wsSessions.Count);
 
             session.OnClosed += s =>
             {
                 lock (wsLock) { wsSessions.Remove(s); }
                 Log.Debug("WebSocket disconnected (total: " + wsSessions.Count + ")");
+                ApplicationContext.RaiseApplicationEvent("ExtensionConnectionChanged", wsSessions.Count);
             };
 
             // Read loop on a background thread

@@ -1,10 +1,13 @@
-﻿using XDM.Core;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using XDM.Core;
 using XDM.Core.Util;
 
 namespace XDM.Core.UI
 {
+    // Coordinates download complete dialog events with core platform services
     public static class DownloadCompleteUIController
     {
+        // Initializes dialog fields and wires platform open and config save handlers
         public static void ShowDialog(IDownloadCompleteDialog dwnCmpldDlg, string file, string folder)
         {
             dwnCmpldDlg.FileNameText = file;
@@ -26,6 +29,7 @@ namespace XDM.Core.UI
             dwnCmpldDlg.DontShowAgainClickd += (sender, args) =>
             {
                 Config.Instance.ShowDownloadCompleteWindow = false;
+                Config.SaveConfig();
             };
             dwnCmpldDlg.ShowDownloadCompleteDialog();
         }

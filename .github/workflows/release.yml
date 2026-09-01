@@ -1,0 +1,125 @@
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+name: Release FetchFlow
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install packaging tools and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm dpkg-dev zip tar libgtk-3-0 xvfb
+
+      - name: Run automated test suite
+        run: |
+          xvfb-run dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
+
+      - name: Build and package release artifacts
+        env:
+          MOZ_API_KEY: ${{ secrets.MOZ_API_KEY }}
+          MOZ_API_SECRET: ${{ secrets.MOZ_API_SECRET }}
+        run: |
+          # Read version from installer environment
+          source app/XDM/XDM.Linux.Installer/version.env
+          OUT_DIR="$(pwd)/xdm-release"
+          mkdir -p "$OUT_DIR" build_output/xdm-app
+
+          echo "=== 1. Packaging Browser Extensions ==="
+          cd app/XDM/chrome-extension
+          zip -r "$OUT_DIR/fetchflow-chrome-extension-${VERSION}.zip" . -x ".*"
+          cd ../../..
+
+          cd app/XDM/firefox-amo
+          if [ -n "$MOZ_API_KEY" ] && [ -n "$MOZ_API_SECRET" ]; then
+            npx -y web-ext sign --api-key="$MOZ_API_KEY" --api-secret="$MOZ_API_SECRET" --channel=unlisted --artifacts-dir=web-ext-artifacts
+            cp web-ext-artifacts/*.xpi "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi"
+          else
+            zip -r "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" . -x ".*"
+          fi
+          cd ../../..
+
+          echo "=== 2. Publishing FetchFlow Application ==="
+          dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 \
+            --self-contained true -p:PublishSingleFile=true -o build_output/xdm-app
+
+          cp -r app/XDM/chrome-extension build_output/xdm-app/
+          cp -r app/XDM/firefox-amo build_output/xdm-app/firefox-extension
+          cp -r app/XDM/XDM.Gtk.UI/svg-icons build_output/xdm-app/
+          cp -r app/XDM/XDM.Gtk.UI/glade build_output/xdm-app/
+          cp -r app/XDM/XDM.Gtk.UI/theme build_output/xdm-app/
+          cp -r app/XDM/XDM.Gtk.UI/images build_output/xdm-app/
+          cp -r app/XDM/Lang build_output/xdm-app/
+          cp app/XDM/fetchflow-logo.svg build_output/xdm-app/ 2>/dev/null || :
+          cp app/XDM/XDM.Gtk.UI/fetchflow-logo-512.png build_output/xdm-app/ 2>/dev/null || :
+          cp app/XDM/XDM.Gtk.UI/fetchflow-logo.png build_output/xdm-app/ 2>/dev/null || :
+
+          echo "=== 3. Packaging Portable Tarball ==="
+          cd build_output/xdm-app
+          tar -czvf "$OUT_DIR/fetchflow-linux-x64-${VERSION}.tar.gz" *
+          cd ../..
+
+          echo "=== 4. Building Linux Packages (RPM & DEB) ==="
+          cd app/XDM/XDM.Linux.Installer
+          rm -rf rpmbuild fetchflow-${VERSION}.tar.gz fetchflow-${VERSION}
+          mkdir -p binary-source
+          rm -rf binary-source/*
+          cp -r ../../../build_output/xdm-app/* binary-source/
+
+          bash make-rpm-pkg
+          bash make-deb-pkg
+
+          cp rpmbuild/RPMS/x86_64/*.rpm "$OUT_DIR/" 2>/dev/null || :
+          cp *.deb "$OUT_DIR/" 2>/dev/null || :
+          cd ../../..
+
+          echo "=== 5. Generating SHA256 Checksums ==="
+          cd "$OUT_DIR"
+          sha256sum * > SHA256SUMS.txt
+          cd ..
+
+          echo "=== Artifacts summary ==="
+          ls -lh "$OUT_DIR"
+
+      - name: Upload Artifacts to Workflow Run
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetchflow-release-artifacts
+          path: |
+            xdm-release/*.tar.gz
+            xdm-release/*.rpm
+            xdm-release/*.deb
+            xdm-release/*.zip
+            xdm-release/*.xpi
+            xdm-release/SHA256SUMS.txt
+
+      - name: Create GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            xdm-release/*.tar.gz
+            xdm-release/*.rpm
+            xdm-release/*.deb
+            xdm-release/*.zip
+            xdm-release/*.xpi
+            xdm-release/SHA256SUMS.txt
+          generate_release_notes: true

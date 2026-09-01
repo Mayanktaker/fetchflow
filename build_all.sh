@@ -49,6 +49,8 @@ mkdir -p build_output/xdm-app
 dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o build_output/xdm-app
 
 # Copy all runtime assets into publish directory
+cp -r app/XDM/chrome-extension build_output/xdm-app/
+cp -r app/XDM/firefox-amo build_output/xdm-app/firefox-extension
 cp -r app/XDM/XDM.Gtk.UI/svg-icons build_output/xdm-app/
 cp -r app/XDM/XDM.Gtk.UI/glade build_output/xdm-app/
 cp -r app/XDM/XDM.Gtk.UI/theme build_output/xdm-app/
@@ -79,6 +81,12 @@ bash make-arch-pkg || echo "WARNING: Arch package skipped (makepkg missing or fa
 cp rpmbuild/RPMS/x86_64/*.rpm "$OUT_DIR/" 2>/dev/null || echo "No .rpm packages found to copy"
 cp *.deb "$OUT_DIR/" 2>/dev/null || echo "No .deb packages found to copy"
 cp *.pkg.tar.* "$OUT_DIR/" 2>/dev/null || echo "No .pkg.tar.* packages found to copy"
+cd ../../..
+
+echo "Generating SHA256 Checksums..."
+cd "$OUT_DIR"
+sha256sum * > SHA256SUMS.txt 2>/dev/null || true
+cd ..
 
 echo "========================================="
 echo "Build complete! Artifacts are in $OUT_DIR"

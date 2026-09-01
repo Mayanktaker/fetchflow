@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -147,12 +147,22 @@ namespace XDM.Core.Updater
         {
             try
             {
-                return new Version(tag);
+                if (string.IsNullOrWhiteSpace(tag)) return new Version(0, 0, 0);
+                var cleaned = tag.TrimStart('v', 'V').Trim();
+                if (!cleaned.Contains('.'))
+                {
+                    cleaned += ".0";
+                }
+                if (Version.TryParse(cleaned, out var v))
+                {
+                    return v;
+                }
+                return new Version(0, 0, 0);
             }
             catch (Exception ex)
             {
                 Log.Debug(ex, "ParseGitHubTag");
-                return new Version(Int32.MaxValue, 0, 0);
+                return new Version(0, 0, 0);
             }
         }
 

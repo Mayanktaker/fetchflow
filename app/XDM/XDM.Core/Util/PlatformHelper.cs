@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -342,11 +342,12 @@ namespace XDM.Core.Util
                     {
                         if (enable)
                         {
-                            var xdmExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-app.exe");
-                            hkcuRun.SetValue("XDM", $"\"{xdmExe}\" --background");
+                            var appExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow.exe");
+                            hkcuRun.SetValue("FetchFlow", $"\"{appExe}\" --background");
                         }
                         else
                         {
+                            hkcuRun.DeleteValue("FetchFlow", false);
                             hkcuRun.DeleteValue("XDM", false);
                         }
                     }
@@ -364,7 +365,7 @@ namespace XDM.Core.Util
                     {
                         Directory.CreateDirectory(autoStartDir);
                     }
-                    var desktopFile = Path.Combine(autoStartDir, "xdm-app.desktop");
+                    var desktopFile = Path.Combine(autoStartDir, "com.mayanktaker.fetchflow.desktop");
                     File.WriteAllText(desktopFile, GetLinuxDesktopFile());
                     SetExecutable(desktopFile);
                     return true;
@@ -390,8 +391,8 @@ namespace XDM.Core.Util
 
         public static string GetLinuxDesktopFile()
         {
-            var appPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-app");
-            var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-logo.svg");
+            var appPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow");
+            var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo.svg");
 
             return "[Desktop Entry]\r\n" +
                 "Encoding=UTF-8\r\n" +
@@ -399,8 +400,8 @@ namespace XDM.Core.Util
                 "Type=Application\r\n" +
                 "Terminal=false\r\n" +
                 $"Exec=env GTK_USE_PORTAL=1 \"{appPath}\" --background\r\n" +
-                "Name=Xtreme Download Manager\r\n" +
-                "Comment=Xtreme Download Manager\r\n" +
+                "Name=FetchFlow Download Manager\r\n" +
+                "Comment=FetchFlow Download Manager (Wayland Edition)\r\n" +
                 "Categories=Network;\r\n" +
                 $"Icon={iconPath}";
         }
@@ -507,10 +508,9 @@ namespace XDM.Core.Util
                     using var hkcuRun = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run");
                     if (hkcuRun != null)
                     {
-                        var command = (string)hkcuRun.GetValue("XDM");
+                        var command = (string?)hkcuRun.GetValue("FetchFlow") ?? (string?)hkcuRun.GetValue("XDM");
                         var path = FileHelper.GetFileNameFromQuote(command);
-                        return !string.IsNullOrEmpty(path) &&
-                            path == Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-app.exe");
+                        return !string.IsNullOrEmpty(path);
                     }
                 }
 #if NET5_0_OR_GREATER
@@ -521,13 +521,14 @@ namespace XDM.Core.Util
                     {
                         return false;
                     }
-                    var file = Path.Combine(autoStartDir, "xdm-app.desktop");
+                    var file = Path.Combine(autoStartDir, "com.mayanktaker.fetchflow.desktop");
                     if (!File.Exists(file))
                     {
-                        return false;
+                        file = Path.Combine(autoStartDir, "xdm-app.desktop");
+                        if (!File.Exists(file)) return false;
                     }
                     var text = File.ReadAllText(file);
-                    return text.Contains(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-app"));
+                    return text.Contains("fetchflow") || text.Contains("xdm-app");
                 }
 #endif
             }

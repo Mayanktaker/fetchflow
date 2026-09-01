@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -202,6 +203,12 @@ namespace XDM.Core.IO
                     case "ShowDownloadCompleteWindow":
                         instance.ShowDownloadCompleteWindow = r.ReadBoolean();
                         break;
+                    case "AutoDismissCompleteDialogSeconds":
+                        instance.AutoDismissCompleteDialogSeconds = r.ReadInt32();
+                        break;
+                    case "PlayCompletionSound":
+                        instance.PlayCompletionSound = r.ReadBoolean();
+                        break;
                     case "ShowProgressWindow":
                         instance.ShowProgressWindow = r.ReadBoolean();
                         break;
@@ -349,6 +356,8 @@ namespace XDM.Core.IO
             //WriteBoolean(w, instance.RunOnLogon, "RunOnLogon");
             WriteBoolean(w, instance.ScanWithAntiVirus, "ScanWithAntiVirus");
             WriteBoolean(w, instance.ShowDownloadCompleteWindow, "ShowDownloadCompleteWindow");
+            WriteBoolean(w, instance.PlayCompletionSound, "PlayCompletionSound");
+            WriteInt32(w, instance.AutoDismissCompleteDialogSeconds, "AutoDismissCompleteDialogSeconds");
             WriteBoolean(w, instance.ShowProgressWindow, "ShowProgressWindow");
             WriteBoolean(w, instance.ShutdownAfterAllFinished, "ShutdownAfterAllFinished");
             WriteBoolean(w, instance.StartDownloadAutomatically, "StartDownloadAutomatically");

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using XDM.Core.BrowserMonitoring;
@@ -114,6 +114,12 @@ namespace XDM.Core
         public static void ExtensionRegistered()
         {
             ApplicationEvent?.Invoke(null, new ApplicationEvent("ExtensionRegistered"));
+        }
+
+        // Broadcasts an application-wide event with optional payload data
+        public static void RaiseApplicationEvent(string eventType, object? data = null)
+        {
+            ApplicationEvent?.Invoke(null, new ApplicationEvent(eventType, data));
         }
 
         public static AppInstanceConfigurer Configurer()

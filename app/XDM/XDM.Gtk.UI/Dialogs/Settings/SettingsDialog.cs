@@ -38,10 +38,11 @@ namespace XDM.GtkUI.Dialogs.Settings
         // for compat; they stay without [UI] so Autoconnect doesn't fail on missing ids.
         [UI] Button BtnChrome, BtnFirefox, BtnEdge, BtnOpera, BtnBrave, BtnVivaldi, BtnDefault1, BtnDefault2,
             BtnDefault3, CatAdd, CatEdit, CatDel, CatDef, AddPass, EditPass, DelPass, BtnUserAgentReset,
-            BtnCopy1, BtnCopy2, BtnCancel, BtnOK, BtnDownloadFolderBrowse, BtnTempFolderBrowse, BtnBrowse;
+            BtnCopy1, BtnCopy2, BtnCancel, BtnOK, BtnDownloadFolderBrowse, BtnTempFolderBrowse, BtnBrowse,
+            BtnRestartIpc;
         private Button BtnChromium, BtnYandex;
         [UI]
-        private Label LblTheme;
+        private Label LblTheme, LblIpcStatus;
         [UI]
         private ComboBoxText CmbTheme;
         // Builder.Autoconnect only wires fields marked [UI]; missing annotation leaves the
@@ -157,6 +158,12 @@ namespace XDM.GtkUI.Dialogs.Settings
             {
                 ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1));
             };
+
+            if (BtnRestartIpc != null)
+            {
+                BtnRestartIpc.Clicked += BtnRestartIpc_Clicked;
+            }
+            UpdateIpcStatus();
         }
 
         private void SideList_RowSelected(object o, RowSelectedArgs args)
@@ -176,6 +183,57 @@ namespace XDM.GtkUI.Dialogs.Settings
             if (!string.IsNullOrEmpty(file))
             {
                 TxtAntiVirusCmd.Text = file;
+            }
+        }
+
+        // Restarts the background IPC server and updates the status label
+        private void BtnRestartIpc_Clicked(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (BtnRestartIpc != null)
+                {
+                    BtnRestartIpc.Sensitive = false;
+                    BtnRestartIpc.Label = "Restarting...";
+                }
+                BrowserMonitor.Restart();
+                UpdateIpcStatus();
+                GLib.Timeout.Add(600, () =>
+                {
+                    if (BtnRestartIpc != null)
+                    {
+                        BtnRestartIpc.Sensitive = true;
+                        BtnRestartIpc.Label = "Restart IPC Relay";
+                    }
+                    UpdateIpcStatus();
+                    return false;
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Error restarting IPC server from settings: " + ex.Message);
+            }
+        }
+
+        // Refreshes the IPC server connectivity badge and port display
+        private void UpdateIpcStatus()
+        {
+            if (LblIpcStatus == null) return;
+            var port = IpcHttpMessageProcessor.EffectivePort;
+            var count = IpcHttpMessageProcessor.ActiveWebSocketSessionsCount;
+            var isConnected = IpcHttpMessageProcessor.IsConnected;
+
+            if (count > 0)
+            {
+                LblIpcStatus.Markup = $"<span color='#22c55e'><b>● Running:</b> 127.0.0.1:{port} ({count} active extensions)</span>";
+            }
+            else if (isConnected)
+            {
+                LblIpcStatus.Markup = $"<span color='#38bdf8'><b>● Running:</b> 127.0.0.1:{port} (Ready)</span>";
+            }
+            else
+            {
+                LblIpcStatus.Markup = $"<span color='#94a3b8'><b>○ Listening:</b> 127.0.0.1:{port}</span>";
             }
         }
 
@@ -497,6 +555,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             Label4.Text = TextResource.GetText("DESC_OTHER_BROWSERS");
             Label5.Text = TextResource.GetText("DESC_CHROME");
             Label6.Text = TextResource.GetText("DESC_MOZ");
+            if (BtnRestartIpc != null) BtnRestartIpc.Label = "Restart IPC Relay";
 
             //BtnChrome.Label = TextResource.GetText("MSG_VID_WIKI_LINK");
             //BtnFirefox.Label = TextResource.GetText("MSG_VID_WIKI_LINK");

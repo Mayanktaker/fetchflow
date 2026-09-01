@@ -1,5 +1,5 @@
-// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
-using NUnit.Framework;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 using System.Linq;
@@ -12,13 +12,13 @@ namespace XDM.Tests
     /// Unit tests for blob chunking, reassembly, and filename sanitization logic
     /// (mirrors the algorithm in XDM.Core.BrowserMonitoring.BlobUploadReceiver)
     /// </summary>
-    [TestFixture]
+    [TestClass]
     public class BlobUploadReceiverTests
     {
         // Chunk size constant — must match BLOB_CHUNK_SIZE in app.js (512 KiB)
         private const int CHUNK_SIZE = 512 * 1024;
 
-        [SetUp]
+        [TestInitialize]
         public void Setup()
         {
         }
@@ -64,7 +64,7 @@ namespace XDM.Tests
         }
 
         // Test: single chunk round-trip preserves data
-        [Test]
+        [TestMethod]
         public void SingleChunkRoundTrip()
         {
             var data = Encoding.UTF8.GetBytes("Hello, blob world!");
@@ -76,7 +76,7 @@ namespace XDM.Tests
         }
 
         // Test: multi-chunk round-trip for data larger than CHUNK_SIZE
-        [Test]
+        [TestMethod]
         public void MultiChunkRoundTrip()
         {
             // Create 2.5 MiB of test data (exactly 5 chunks of 512 KiB)
@@ -91,7 +91,7 @@ namespace XDM.Tests
         }
 
         // Test: chunk count matches Math.Ceiling(totalSize / chunkSize)
-        [Test]
+        [TestMethod]
         public void ChunkCountIsCorrect()
         {
             var data = new byte[CHUNK_SIZE + 1]; // just over 1 chunk
@@ -100,7 +100,7 @@ namespace XDM.Tests
         }
 
         // Test: last chunk is smaller than CHUNK_SIZE for non-multiples
-        [Test]
+        [TestMethod]
         public void LastChunkIsPartial()
         {
             var data = new byte[CHUNK_SIZE + 100];
@@ -111,7 +111,7 @@ namespace XDM.Tests
         }
 
         // Test: empty data produces one empty chunk (edge case)
-        [Test]
+        [TestMethod]
         public void EmptyDataProducesOneChunk()
         {
             var data = new byte[0];
@@ -121,7 +121,7 @@ namespace XDM.Tests
         }
 
         // Test: path traversal is blocked — directory components stripped
-        [Test]
+        [TestMethod]
         public void PathTraversalIsBlocked()
         {
             var malicious = "../../../etc/passwd";
@@ -132,7 +132,7 @@ namespace XDM.Tests
         }
 
         // Test: Windows-style path traversal is blocked
-        [Test]
+        [TestMethod]
         public void WindowsPathTraversalIsBlocked()
         {
             var malicious = "..\\..\\Windows\\System32\\config";
@@ -142,7 +142,7 @@ namespace XDM.Tests
         }
 
         // Test: null/empty filename returns empty string
-        [Test]
+        [TestMethod]
         public void NullFilenameReturnsEmpty()
         {
             Assert.AreEqual("", SanitizeFileName(null));
@@ -150,7 +150,7 @@ namespace XDM.Tests
         }
 
         // Test: valid filename passes through unchanged
-        [Test]
+        [TestMethod]
         public void ValidFilenameIsPreserved()
         {
             Assert.AreEqual("image.png", SanitizeFileName("image.png"));
@@ -158,7 +158,7 @@ namespace XDM.Tests
         }
 
         // Test: non-portable chars (break Android/MTP copy) become '-'
-        [Test]
+        [TestMethod]
         public void NonPortableCharsBecomeDash()
         {
             Assert.AreEqual("file -1.mp4", SanitizeFileName("file (1)^.mp4"));
@@ -168,7 +168,7 @@ namespace XDM.Tests
         }
 
         // Test: transfer ID uniqueness via GUID generation
-        [Test]
+        [TestMethod]
         public void TransferIdsAreUnique()
         {
             var id1 = Guid.NewGuid().ToString("N");
@@ -178,7 +178,7 @@ namespace XDM.Tests
         }
 
         // Test: total size verification (size mismatch detection)
-        [Test]
+        [TestMethod]
         public void SizeVerificationDetectsMismatch()
         {
             var data = new byte[1024];
@@ -193,7 +193,7 @@ namespace XDM.Tests
         }
 
         // Test: filename collision suffix logic
-        [Test]
+        [TestMethod]
         public void FilenameCollisionSuffixWorks()
         {
             string baseName = "download.mp4";

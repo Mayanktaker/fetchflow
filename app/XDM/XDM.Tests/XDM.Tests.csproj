@@ -9,12 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <!-- MSTest framework for YdlParserTests (uses [TestClass]/[TestMethod] + Microsoft.VisualStudio.TestTools.UnitTesting) -->
+    <!-- MSTest framework (uses [TestClass]/[TestMethod] + Microsoft.VisualStudio.TestTools.UnitTesting) -->
     <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
-    <!-- NUnit framework for JsonParsingTest -->
-    <PackageReference Include="NUnit" Version="3.13.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
     <!-- Newtonsoft.Json required by YDLOutputParser -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <!-- GtkSmokeTests: real Builder/Autoconnect smoke under Xvfb (DISPLAY). Same GtkSharp as XDM.Gtk.UI -->

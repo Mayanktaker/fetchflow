@@ -896,6 +896,10 @@ namespace XDM.Core.BrowserMonitoring
 
                 using var response = http.Send(request);
                 Log.Debug("Downloading manifest response: " + response.StatusCode);
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    return null;
+                }
                 var path = Path.GetTempFileName();
 
                 using var fs = new FileStream(path, FileMode.Create);
@@ -1018,10 +1022,18 @@ namespace XDM.Core.BrowserMonitoring
                                             }
                                             else if (fmt.YDLEntryType == YDLEntryType.MpegDash)
                                             {
+                                                var baseUri = !string.IsNullOrEmpty(fmt.FragmentBaseUrl) && Uri.TryCreate(fmt.FragmentBaseUrl, UriKind.Absolute, out var bUri) ? bUri : null;
+                                                var vSegs = fmt.VideoFragments?.Where(x => !string.IsNullOrEmpty(x.Path))
+                                                    .Select(x => Uri.TryCreate(x.Path, UriKind.Absolute, out var aUri) ? aUri : (baseUri != null && Uri.TryCreate(baseUri, x.Path, out var rUri) ? rUri : null))
+                                                    .Where(u => u != null).Select(u => u!).ToList();
+                                                var aSegs = fmt.AudioFragments?.Where(x => !string.IsNullOrEmpty(x.Path))
+                                                    .Select(x => Uri.TryCreate(x.Path, UriKind.Absolute, out var aUri) ? aUri : (baseUri != null && Uri.TryCreate(baseUri, x.Path, out var rUri) ? rUri : null))
+                                                    .Where(u => u != null).Select(u => u!).ToList();
+
                                                 ApplicationContext.VideoTracker.AddVideoNotification(displayInfo, new MultiSourceDASHDownloadInfo
                                                 {
-                                                    VideoSegments = fmt.VideoFragments?.Select(x => new Uri(new Uri(fmt.FragmentBaseUrl), x.Path)).ToList(),
-                                                    AudioSegments = fmt.AudioFragments?.Select(x => new Uri(new Uri(fmt.FragmentBaseUrl), x.Path)).ToList(),
+                                                    VideoSegments = vSegs,
+                                                    AudioSegments = aSegs,
                                                     AudioFormat = fmt.AudioFormat != null ? "." + fmt.AudioFormat : null,
                                                     VideoFormat = fmt.VideoFormat != null ? "." + fmt.VideoFormat : null,
                                                     Url = fmt.VideoUrl,

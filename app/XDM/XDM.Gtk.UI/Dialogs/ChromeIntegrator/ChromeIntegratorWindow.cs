@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace XDM.GtkUI.Dialogs.ChromeIntegrator
     {
         private int page = 0;
 
-        [UI] private Button BtnNext, BtnBack, BtnHelp, BtnCopyURL, BtnCopy;
+        [UI] private Button BtnNext, BtnBack, BtnHelp, BtnCopyURL, BtnCopy, BtnOpenFolder;
         [UI] private Label Page0Lbl1, Page1Lbl1, Page2Lbl1, Page3Lbl1, MsgSuccess, MsgFail, MsgInfo;
         [UI] private Box Page0, Page1, Page2, Page3, Page4;
         [UI] private Image Img1, Img2, Img3, Img4, Img5;
@@ -49,11 +50,20 @@ namespace XDM.GtkUI.Dialogs.ChromeIntegrator
             BtnHelp.Clicked += BtnHelp_Clicked;
             BtnCopyURL.Clicked += BtnCopyURL_Clicked;
             BtnCopy.Clicked += BtnCopy_Clicked;
+            BtnOpenFolder.Clicked += BtnOpenFolder_Clicked;
             this.LoadTexts();
-            TxtURL.Text = "chrome://extensions/";
-            TxtFolder.Text = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "chrome-extension");
+            TxtURL.Text = browser == Browser.Firefox ? "about:debugging#/runtime/this-firefox" : "chrome://extensions/";
+            TxtFolder.Text = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, browser == Browser.Firefox ? "firefox-extension" : "chrome-extension");
             LoadImages();
             RenderPage();
+        }
+
+        private void BtnOpenFolder_Clicked(object? sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(TxtFolder.Text))
+            {
+                PlatformHelper.OpenFolder(TxtFolder.Text);
+            }
         }
 
         private void BtnCopy_Clicked(object? sender, EventArgs e)
@@ -105,6 +115,7 @@ namespace XDM.GtkUI.Dialogs.ChromeIntegrator
             this.BtnBack.Label = TextResource.GetText("MSG_BACK");
             this.BtnCopyURL.Label = TextResource.GetText("MSG_COPY");
             this.BtnCopy.Label = TextResource.GetText("MSG_COPY");
+            this.BtnOpenFolder.Label = TextResource.GetText("MENU_OPEN_FOLDER") ?? "Open Folder";
 
             this.Page0Lbl1.Text = String.Format(TextResource.GetText("MSG_COPY_PASTE_EXT_URL"), browser);
             this.Page1Lbl1.Text = TextResource.GetText("MSG_PAGE1_TEXT1");

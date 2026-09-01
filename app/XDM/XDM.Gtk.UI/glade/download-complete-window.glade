@@ -1,27 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkWindow" id="window">
     <property name="can-focus">False</property>
+    <property name="resizable">False</property>
+    <property name="default-width">520</property>
+    <property name="default-height">200</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="orientation">vertical</property>
+        <property name="spacing">16</property>
+        <property name="margin-start">20</property>
+        <property name="margin-end">20</property>
+        <property name="margin-top">20</property>
+        <property name="margin-bottom">16</property>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="spacing">16</property>
             <child>
               <object class="GtkImage" id="ImgFileIcon">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="halign">start</property>
-                <property name="valign">start</property>
-                <property name="margin-start">15</property>
-                <property name="margin-end">15</property>
-                <property name="margin-top">30</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
                 <property name="stock">gtk-missing-image</property>
               </object>
               <packing>
@@ -35,14 +42,20 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <property name="valign">center</property>
                 <child>
                   <object class="GtkLabel" id="TxtFileName">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="margin-top">30</property>
-                    <property name="margin-bottom">10</property>
-                    <property name="label" translatable="yes">label</property>
+                    <property name="xalign">0</property>
+                    <property name="hexpand">True</property>
+                    <property name="ellipsize">end</property>
+                    <property name="label" translatable="yes">FileName</property>
+                    <style>
+                      <class name="download-complete-title"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -55,7 +68,13 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">label</property>
+                    <property name="xalign">0</property>
+                    <property name="hexpand">True</property>
+                    <property name="ellipsize">middle</property>
+                    <property name="label" translatable="yes">Location</property>
+                    <style>
+                      <class name="download-complete-path"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -81,17 +100,18 @@
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="margin-start">5</property>
-            <property name="margin-end">10</property>
-            <property name="spacing">10</property>
+            <property name="spacing">12</property>
             <child>
               <object class="GtkLinkButton" id="TxtDontShowCompleteDialog">
-                <property name="label" translatable="yes">button</property>
+                <property name="label" translatable="yes">Don't show this again</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="focus-on-click">False</property>
-                <property name="receives-default">True</property>
                 <property name="relief">none</property>
+                <property name="valign">center</property>
+                <style>
+                  <class name="download-complete-link"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -101,10 +121,14 @@
             </child>
             <child>
               <object class="GtkButton" id="BtnOpen">
-                <property name="label" translatable="yes">button</property>
+                <property name="label" translatable="yes">Open</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="valign">center</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -115,12 +139,11 @@
             </child>
             <child>
               <object class="GtkButton" id="BtnOpenFolder">
-                <property name="label" translatable="yes">button</property>
+                <property name="label" translatable="yes">Open folder</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="has-focus">True</property>
-                <property name="is-focus">True</property>
-                <property name="receives-default">True</property>
+                <property name="receives-default">False</property>
+                <property name="valign">center</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -133,8 +156,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="padding">10</property>
-            <property name="position">2</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

@@ -16,6 +16,7 @@ using XDM.GtkUI.Utils;
 using XDM.GtkUI.Dialogs.DeleteConfirm;
 using XDM.GtkUI.Dialogs.Language;
 using TraceLog;
+using XDM.Core.BrowserMonitoring;
 
 
 namespace XDM.GtkUI
@@ -41,6 +42,7 @@ namespace XDM.GtkUI
         private Menu mainMenu;
         private WindowGroup windowGroup;
         private CheckButton btnMonitoring;
+        private Label lblExtensionStatus;
         private bool isUpdateAvailable;
         private Image helpImage;
         private Label helpLabel;
@@ -178,6 +180,8 @@ namespace XDM.GtkUI
             trayManager = new TrayIconManager();
             trayManager.Init(GtkHelper.LoadSvg("fetchflow-logo", 22), "FetchFlow Download Manager",
                              ShowAndActivate, QuitFromTray);
+
+            ApplicationContext.ApplicationEvent += ApplicationContext_ApplicationEvent;
             
             _ = CheckUpdatesInBackgroundAsync();
         }
@@ -439,6 +443,7 @@ namespace XDM.GtkUI
             var hb = new HeaderBar
             {
                 ShowCloseButton = true,
+                DecorationLayout = ":minimize,maximize,close",
                 HasSubtitle = false
             };
             hb.StyleContext.AddClass("main-headerbar");
@@ -560,6 +565,11 @@ namespace XDM.GtkUI
             var lblMonitoring = new Label { Text = TextResource.GetText("SETTINGS_MONITORING") };
             hbox.PackStart(lblMonitoring, false, false, 0);
 
+            lblExtensionStatus = new Label { MarginStart = 10 };
+            lblExtensionStatus.StyleContext.AddClass("extension-status-label");
+            hbox.PackStart(lblExtensionStatus, false, false, 0);
+            UpdateExtensionStatus();
+
             btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"), 6, 182, 212);
             btnScheduler.Clicked += BtnScheduler_Clicked;
             btnScheduler.StyleContext.AddClass("bottombar-button");
@@ -577,6 +587,44 @@ namespace XDM.GtkUI
             hbox.PackEnd(btnScheduler, false, false, 0);
             hbox.ShowAll();
             return hbox;
+        }
+
+        // Handles application-wide broadcast events to refresh UI state
+        private void ApplicationContext_ApplicationEvent(object? sender, ApplicationEvent e)
+        {
+            if (e.EventType == "ExtensionConnectionChanged" || e.EventType == "ConfigChanged")
+            {
+                Application.Invoke((_, _) => UpdateExtensionStatus());
+            }
+        }
+
+        // Updates the extension connectivity badge in the bottom bar
+        private void UpdateExtensionStatus()
+        {
+            try
+            {
+                if (lblExtensionStatus == null) return;
+                var count = IpcHttpMessageProcessor.ActiveWebSocketSessionsCount;
+                var isConn = IpcHttpMessageProcessor.IsConnected;
+                var port = IpcHttpMessageProcessor.EffectivePort;
+
+                if (count > 0)
+                {
+                    lblExtensionStatus.Markup = $"<span color='#22c55e' size='small'>● Extension Active ({count})</span>";
+                    lblExtensionStatus.TooltipText = $"Browser Extension connected via WebSocket\nIPC Port: {port}\nActive sessions: {count}";
+                }
+                else if (isConn)
+                {
+                    lblExtensionStatus.Markup = $"<span color='#38bdf8' size='small'>● Extension Ready</span>";
+                    lblExtensionStatus.TooltipText = $"Browser Extension connected via HTTP Relay\nIPC Port: {port}";
+                }
+                else
+                {
+                    lblExtensionStatus.Markup = $"<span color='#94a3b8' size='small'>○ Extension Listening</span>";
+                    lblExtensionStatus.TooltipText = $"FetchFlow IPC Server listening on 127.0.0.1:{port}\nWaiting for browser extension connection...";
+                }
+            }
+            catch { }
         }
 
         private void BtnHelp_Clicked(object? sender, EventArgs e)

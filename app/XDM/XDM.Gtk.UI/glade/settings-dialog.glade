@@ -266,6 +266,7 @@
                                 <property name="receives-default">False</property>
                                 <property name="halign">start</property>
                                 <property name="relief">none</property>
+                                <property name="uri">https://fetchflow.mayanktaker.com</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -361,6 +362,50 @@
                                 <property name="expand">False</property>
                                 <property name="fill">True</property>
                                 <property name="position">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="margin-top">4</property>
+                                <property name="margin-bottom">4</property>
+                                <property name="margin-end">10</property>
+                                <property name="spacing">10</property>
+                                <child>
+                                  <object class="GtkButton" id="BtnRestartIpc">
+                                    <property name="label" translatable="yes">Restart IPC Relay</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <style>
+                                      <class name="flat"/>
+                                    </style>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">False</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="LblIpcStatus">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="label" translatable="yes">IPC: 127.0.0.1:8597</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">5</property>
                               </packing>
                             </child>
                             <child>

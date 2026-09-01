@@ -394,7 +394,6 @@ app/XDM/XDM.Linux.Installer/fetchflow*/
 .ai/
 .agents/
 AGENTS.md
-.github/
 deleted_files_folders/
 build_log.txt
 firebase-debug.log

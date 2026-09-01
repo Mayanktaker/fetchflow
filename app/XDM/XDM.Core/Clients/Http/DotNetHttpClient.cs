@@ -1,4 +1,4 @@
-﻿#if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -143,12 +143,10 @@ namespace XDM.Core.Clients.Http
             try
             {
                 response = this.hc!.Send(r, HttpCompletionOption.ResponseHeadersRead, cts.Token);
-                response.EnsureSuccessStatusCode();
             }
             catch (HttpRequestException we)
             {
                 Log.Debug(we, we.Message);
-                response?.Dispose();
             }
             session.Response = response;
             return new HttpResponse { Session = session };

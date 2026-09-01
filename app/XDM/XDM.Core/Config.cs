@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -115,6 +116,12 @@ namespace XDM.Core
         public bool ShowProgressWindow { get; set; } = true;
 
         public bool ShowDownloadCompleteWindow { get; set; } = true;
+
+        // Auto-dismiss duration in seconds for download complete dialog (0 = disabled)
+        public int AutoDismissCompleteDialogSeconds { get; set; } = 10;
+
+        // Plays system sound on download completion
+        public bool PlayCompletionSound { get; set; } = true;
 
         public bool StartDownloadAutomatically { get; set; } = false;
 

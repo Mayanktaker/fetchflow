@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,24 +13,34 @@ namespace XDM.Core
 {
     public static class SingleInstance
     {
-        public static Mutex GlobalMutex;
+        public static Mutex? GlobalMutex;
+        private static bool ownsMutex = false;
+
+        // Atomically acquires named mutex or forwards command args if another instance is active
         public static void Ensure()
         {
             try
             {
-                using var mutex = Mutex.OpenExisting(@"Global\XDM_Active_Instance");
-                throw new InstanceAlreadyRunningException(@"XDM instance already running, Mutex exists 'Global\XDM_Active_Instance'");
+                GlobalMutex = new Mutex(false, @"Global\FetchFlow_Active_Instance");
+                ownsMutex = GlobalMutex.WaitOne(TimeSpan.FromMilliseconds(500), false);
+            }
+            catch (AbandonedMutexException)
+            {
+                // Previous instance exited abnormally; this instance now owns the mutex
+                ownsMutex = true;
             }
             catch (Exception ex)
             {
-                Log.Debug(ex, "Exception in NativeMessagingHostHandler ctor");
-                if (ex is InstanceAlreadyRunningException)
-                {
-                    SendArgsToRunningInstance();
-                    Environment.Exit(0);
-                }
+                Log.Debug(ex, "SingleInstance mutex acquisition error: " + ex.Message);
+                ownsMutex = true;
             }
-            GlobalMutex = new Mutex(true, @"Global\XDM_Active_Instance");
+
+            if (!ownsMutex)
+            {
+                Log.Debug("Another instance is actively running; forwarding arguments and exiting.");
+                SendArgsToRunningInstance();
+                Environment.Exit(0);
+            }
         }
 
         private static void SendArgsToRunningInstance()

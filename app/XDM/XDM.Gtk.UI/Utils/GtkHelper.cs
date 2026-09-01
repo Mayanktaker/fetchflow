@@ -565,7 +565,7 @@ namespace XDM.GtkUI.Utils
                 hb.PackStart(appIcon);
             }
             catch { }
-
+            hb.ShowAll();
             return hb;
         }
 

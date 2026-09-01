@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -19,11 +20,23 @@ namespace XDM.Core.HttpServer
         public NanoServer(IPAddress host, int port)
         {
             this.listener = new TcpListener(host, port);
+            try
+            {
+                this.listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            }
+            catch { }
         }
 
+        // Starts listening for incoming HTTP and WebSocket connections
         public void Start()
         {
+            try
+            {
+                this.listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            }
+            catch { }
             listener.Start();
+            Log.Debug($"NanoServer listening on {listener.LocalEndpoint}");
             while (true)
             {
                 var tcp = listener.AcceptTcpClient();
