@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <!-- 100% Flat App Icon Squircle Container (No Gradient, No Gloss) -->
+  <rect width="512" height="512" rx="120" fill="#0f172a"/>
+
+  <!-- Geometric Interlocking FF + Media Play + Download Arrow -->
+  <g transform="translate(4, 0)">
+    <!-- First 'F' (Left Stem & Top Arm) - Solid Brand Orange -->
+    <path d="M 130 110 L 320 110 L 320 170 L 200 170 L 200 230 L 290 230 L 290 290 L 200 290 L 200 370 L 130 370 Z" 
+          fill="#f97316"/>
+
+    <!-- Second 'F' & Integrated Downward Download Arrow - Solid White -->
+    <path d="M 230 170 L 382 170 L 382 230 L 280 230 L 280 290 L 340 290 L 340 330 L 390 330 L 256 425 L 170 330 L 230 330 Z" 
+          fill="#ffffff"/>
+
+    <!-- Central Media Play Triangle (Embedded in Flow) -->
+    <polygon points="215,225 215,295 275,260" fill="#f97316"/>
+  </g>
+</svg>
