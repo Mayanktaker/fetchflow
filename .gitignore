@@ -393,7 +393,6 @@ app/XDM/XDM.Linux.Installer/fetchflow*/
 .commandcode/
 .ai/
 .agents/
-AGENTS.md
 deleted_files_folders/
 build_log.txt
 firebase-debug.log
