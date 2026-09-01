@@ -19,11 +19,11 @@
             <child>
               <placeholder />
             </child>
-          </object>
+          <property name="visible">False</property><property name="no-show-all">True</property></object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">0</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
@@ -278,8 +278,6 @@
               </packing>
             </child>
           </object>
-          <packing>
-          </packing>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>

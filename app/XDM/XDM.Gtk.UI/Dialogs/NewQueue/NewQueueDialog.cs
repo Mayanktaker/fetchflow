@@ -51,7 +51,11 @@ namespace XDM.GtkUI.Dialogs.NewQueue
             Title = titleText;
             Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
             GtkHelper.SetWindowAppIcon(this);
+            ActionArea.Visible = false;
+            ActionArea.NoShowAll = true;
             SetDefaultSize(768, 480);
+            SetSizeRequest(600, 360);
+            Resizable = true;
             BtnCancel.Clicked += BtnCancel_Clicked;
             BtnOK.Clicked += BtnOK_Clicked;
             BtnOK.StyleContext.AddClass("suggested-action");

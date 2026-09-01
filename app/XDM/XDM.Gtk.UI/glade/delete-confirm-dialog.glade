@@ -52,11 +52,9 @@
             </child>
           </object>
           <packing>
-          </packing>
-          <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-          </packing>
+          <property name="position">1</property></packing>
         </child>
         <child>
           <object class="GtkBox">
@@ -97,11 +95,9 @@
             </child>
           </object>
           <packing>
-          </packing>
-          <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-          </packing>
+          <property name="position">0</property></packing>
         </child>
       </object>
     </child>

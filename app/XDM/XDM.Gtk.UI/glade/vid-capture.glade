@@ -1,11 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.36.0 -->
+<?xml version='1.0' encoding='UTF-8'?>
 <interface>
-  <requires lib="gtk+" version="3.22"/>
+  <requires lib="gtk+" version="3.22" />
   <object class="GtkListStore" id="liststore1">
     <columns>
-      <!-- column-name gchararray1 -->
-      <column type="gchararray"/>
+      <column type="gchararray" />
     </columns>
     <data>
       <row>
@@ -38,7 +36,7 @@
             <property name="can_focus">False</property>
             <property name="model">liststore1</property>
             <child>
-              <object class="GtkCellRendererText"/>
+              <object class="GtkCellRendererText" />
               <attributes>
                 <attribute name="text">0</attribute>
               </attributes>
@@ -73,7 +71,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <style>
-                  <class name="flat"/>
+                  <class name="flat" />
                 </style>
               </object>
               <packing>
@@ -83,7 +81,7 @@
               </packing>
             </child>
             <style>
-              <class name="linked"/>
+              <class name="linked" />
             </style>
           </object>
           <packing>
@@ -160,7 +158,7 @@
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <style>
-              <class name="suggested-action"/>
+              <class name="suggested-action" />
             </style>
           </object>
           <packing>

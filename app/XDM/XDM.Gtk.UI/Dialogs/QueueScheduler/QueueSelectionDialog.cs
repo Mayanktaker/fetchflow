@@ -46,7 +46,11 @@ namespace XDM.GtkUI.Dialogs.QueueScheduler
             Title = titleText;
             Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
             GtkHelper.SetWindowAppIcon(this);
+            ActionArea.Visible = false;
+            ActionArea.NoShowAll = true;
             SetDefaultSize(480, 320);
+            SetSizeRequest(400, 240);
+            Resizable = true;
             LoadTexts();
 
             listStore = new ListStore(typeof(string));

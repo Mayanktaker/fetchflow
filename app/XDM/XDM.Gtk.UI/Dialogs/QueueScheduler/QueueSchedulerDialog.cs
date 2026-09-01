@@ -84,7 +84,11 @@ namespace XDM.GtkUI.Dialogs.QueueScheduler
             Title = titleText;
             Titlebar = GtkHelper.CreateDialogHeaderBar(titleText);
             GtkHelper.SetWindowAppIcon(this);
+            ActionArea.Visible = false;
+            ActionArea.NoShowAll = true;
             SetDefaultSize(840, 520);
+            SetSizeRequest(680, 420);
+            Resizable = true;
             LoadTexts();
             queueListStore = new ListStore(typeof(string), typeof(DownloadQueue));
             LbQueues.Model = queueListStore;

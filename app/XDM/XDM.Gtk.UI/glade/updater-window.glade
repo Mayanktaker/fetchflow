@@ -75,8 +75,6 @@
             </child>
           </object>
           <packing>
-          </packing>
-          <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
             <property name="position">2</property>

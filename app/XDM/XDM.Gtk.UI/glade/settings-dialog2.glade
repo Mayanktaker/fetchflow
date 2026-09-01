@@ -48,8 +48,6 @@
             </child>
           </object>
           <packing>
-          </packing>
-          <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
           </packing>
@@ -1662,8 +1660,6 @@
               </packing>
             </child>
           </object>
-          <packing>
-          </packing>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
