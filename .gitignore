@@ -385,13 +385,18 @@ app/XDM/XDM.Linux.Installer/src/
 app/XDM/XDM.Linux.Installer/PKGBUILD
 app/XDM/XDM.Linux.Installer/xdman_gtk_*_amd64/
 
-# Local clutter
+# Local clutter & Agent operating maps
 .superpowers/
 .worktrees/
 .kilo/
 .commandcode/
+.ai/
+.agents/
+AGENTS.md
+.github/
+deleted_files_folders/
 build_log.txt
 firebase-debug.log
-deleted_files_folders/
 Screenshot_*.png
 screenshot_*.png
+*.log
