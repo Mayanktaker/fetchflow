@@ -1074,28 +1074,32 @@ namespace XDM.GtkUI
                 Reorderable = false,
                 Title = TextResource.GetText("SORT_NAME"),
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 200
+                FixedWidth = 380,
+                MinWidth = 200
             };
 
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(5, 5);
+            fileIconRenderer.SetPadding(6, 6);
             fileNameColumn.PackStart(fileIconRenderer, false);
             fileNameColumn.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
             var fileNameRendererText = new CellRendererText();
+            fileNameRendererText.SetPadding(4, 4);
             fileNameColumn.PackStart(fileNameRendererText, true);
-            fileNameColumn.SetAttributes(fileNameRendererText, "text", 0);
+            SetInProgressNameColumn(fileNameColumn, fileNameRendererText, lvInprogress);
             lvInprogress.AppendColumn(fileNameColumn);
 
             //Last modified column
             var lastModifiedRendererText = new CellRendererText();
+            lastModifiedRendererText.SetPadding(4, 8);
             var lastModifiedColumn = new TreeViewColumn
             {
                 Resizable = true,
                 Reorderable = false,
                 Title = TextResource.GetText("SORT_DATE"),
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 120
+                FixedWidth = 150,
+                MinWidth = 120
             };
             lastModifiedColumn.PackStart(lastModifiedRendererText, false);
             SetDimmedTextColumn(lastModifiedColumn, lastModifiedRendererText, lvInprogress, 1);
@@ -1106,13 +1110,14 @@ namespace XDM.GtkUI
 
             //File size column
             var fileSizeRendererText = new CellRendererText();
-            //fileSizeRendererText.Xalign = 1.0f;
+            fileSizeRendererText.SetPadding(4, 8);
             var fileSizeColumn = new TreeViewColumn
             {
                 Resizable = true,
                 Reorderable = false,
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 80,
+                FixedWidth = 90,
+                MinWidth = 70,
                 Title = TextResource.GetText("SORT_SIZE"),
             };
             fileSizeColumn.PackStart(fileSizeRendererText, false);
@@ -1120,11 +1125,8 @@ namespace XDM.GtkUI
             lvInprogress.AppendColumn(fileSizeColumn);
 
             //File progress column
-            var fileRendererProgress = new CellRendererProgress()
-            {
-                //Text = "Downloading",
-            };
-            fileRendererProgress.SetPadding(5, 10);
+            var fileRendererProgress = new CellRendererProgress();
+            fileRendererProgress.SetPadding(4, 8);
 
             var progressColumn = new TreeViewColumn("%", fileRendererProgress, "value", 3)
             {
@@ -1138,13 +1140,13 @@ namespace XDM.GtkUI
 
             //Download status column
             var statusRendererText = new CellRendererText();
-            statusRendererText.SetPadding(5, 8);
+            statusRendererText.SetPadding(4, 8);
             var statusColumn = new TreeViewColumn(TextResource.GetText("SORT_STATUS"), statusRendererText, "text", 4)
             {
                 Resizable = true,
                 Reorderable = false,
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 80
+                FixedWidth = 90
             };
             statusColumn.SetAttributes(statusRendererText, "text", 4);
             lvInprogress.AppendColumn(statusColumn);
@@ -1240,29 +1242,33 @@ namespace XDM.GtkUI
                 Reorderable = false,
                 Title = TextResource.GetText("SORT_NAME"),
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 400
+                FixedWidth = 420,
+                MinWidth = 250
             };
 
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(5, 5);
+            fileIconRenderer.SetPadding(6, 6);
             fileNameColumn.PackStart(fileIconRenderer, false);
             fileNameColumn.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
             fileNameColumn.SortColumnId = 0;
 
             var fileNameRendererText = new CellRendererText();
+            fileNameRendererText.SetPadding(4, 4);
             fileNameColumn.PackStart(fileNameRendererText, true);
-            fileNameColumn.SetAttributes(fileNameRendererText, "text", 0);
+            SetFinishedNameColumn(fileNameColumn, fileNameRendererText, lvFinished);
             lvFinished.AppendColumn(fileNameColumn);
 
             //Last modified column
             var lastModifiedRendererText = new CellRendererText();
+            lastModifiedRendererText.SetPadding(4, 8);
             var lastModifiedColumn = new TreeViewColumn
             {
                 Resizable = true,
                 Reorderable = false,
                 Title = TextResource.GetText("SORT_DATE"),
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 120
+                FixedWidth = 150,
+                MinWidth = 120
             };
             lastModifiedColumn.PackStart(lastModifiedRendererText, false);
             SetDimmedTextColumn(lastModifiedColumn, lastModifiedRendererText, lvFinished, 1);
@@ -1272,13 +1278,14 @@ namespace XDM.GtkUI
 
             //File size column
             var fileSizeRendererText = new CellRendererText();
-            //fileSizeRendererText.Xalign = 1.0f;
+            fileSizeRendererText.SetPadding(4, 8);
             var fileSizeColumn = new TreeViewColumn
             {
                 Resizable = true,
                 Reorderable = false,
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 80,
+                FixedWidth = 90,
+                MinWidth = 70,
                 Title = TextResource.GetText("SORT_SIZE"),
             };
             fileSizeColumn.PackStart(fileSizeRendererText, false);
@@ -1309,12 +1316,186 @@ namespace XDM.GtkUI
             return swFinished;
         }
 
+        // Resolves design token RGB tint for file type categories
+        private static (byte R, byte G, byte B) GetCategoryColorForFileType(string filename)
+        {
+            var ext = System.IO.Path.GetExtension(filename)?.ToLowerInvariant() ?? string.Empty;
+            var fileType = IconResource.GetFileType(ext);
+            return fileType switch
+            {
+                "Video" => (DestructR, DestructG, DestructB),
+                "Music" => (PurpleR, PurpleG, PurpleB),
+                "Document" => (AmberR, AmberG, AmberB),
+                "Compressed" => (TealR, TealG, TealB),
+                "ApplicationContext.Core" => (IndigoR, IndigoG, IndigoB),
+                _ => (SkyR, SkyG, SkyB)
+            };
+        }
+
+        // Formats absolute paths into user-friendly ~/ paths
+        private static string FormatFriendlyPath(string folder)
+        {
+            if (string.IsNullOrEmpty(folder)) return string.Empty;
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            if (!string.IsNullOrEmpty(home) && folder.StartsWith(home))
+            {
+                return "~" + folder.Substring(home.Length);
+            }
+            return folder;
+        }
+
+        // Extracts clean hostname from URL
+        private static string ExtractDomain(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return string.Empty;
+            try
+            {
+                if (url.StartsWith("blob:", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "blob";
+                }
+                if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                {
+                    var host = uri.Host;
+                    if (host.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+                    {
+                        host = host.Substring(4);
+                    }
+                    return host;
+                }
+            }
+            catch { }
+            return string.Empty;
+        }
+
+        // Rich two-line renderer for completed downloads
+        private static void SetFinishedNameColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
+        {
+            column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
+            {
+                var name = model.GetValue(iter, 0) as string ?? string.Empty;
+                var item = model.GetValue(iter, FINISHED_DATA_INDEX) as FinishedDownloadItem;
+
+                var selected = false;
+                foreach (var path in view.Selection.GetSelectedRows())
+                {
+                    if (path.Compare(model.GetPath(iter)) == 0)
+                    {
+                        selected = true;
+                        break;
+                    }
+                }
+
+                var title = GLib.Markup.EscapeText(name);
+                var metaParts = new List<string>();
+
+                if (item != null)
+                {
+                    var folder = FormatFriendlyPath(item.TargetDir);
+                    if (!string.IsNullOrEmpty(folder))
+                    {
+                        metaParts.Add($"📁 {GLib.Markup.EscapeText(folder)}");
+                    }
+
+                    var domain = ExtractDomain(item.PrimaryUrl);
+                    if (!string.IsNullOrEmpty(domain))
+                    {
+                        metaParts.Add($"🌐 {GLib.Markup.EscapeText(domain)}");
+                    }
+
+                    var ext = System.IO.Path.GetExtension(name)?.TrimStart('.')?.ToUpperInvariant();
+                    if (!string.IsNullOrEmpty(ext))
+                    {
+                        metaParts.Add(GLib.Markup.EscapeText(ext));
+                    }
+                }
+
+                var metaLine = string.Join("   ·   ", metaParts);
+
+                if (selected)
+                {
+                    ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
+                        ? $"<span weight=\"bold\">{title}</span>"
+                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"9000\" alpha=\"55000\">{metaLine}</span>";
+                }
+                else
+                {
+                    ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
+                        ? $"<span weight=\"bold\">{title}</span>"
+                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">{metaLine}</span>";
+                }
+            }));
+        }
+
+        // Rich two-line renderer for in-progress downloads
+        private static void SetInProgressNameColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
+        {
+            column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
+            {
+                var name = model.GetValue(iter, 0) as string ?? string.Empty;
+                var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
+
+                var selected = false;
+                foreach (var path in view.Selection.GetSelectedRows())
+                {
+                    if (path.Compare(model.GetPath(iter)) == 0)
+                    {
+                        selected = true;
+                        break;
+                    }
+                }
+
+                var title = GLib.Markup.EscapeText(name);
+                var metaParts = new List<string>();
+
+                if (item != null)
+                {
+                    var domain = ExtractDomain(item.PrimaryUrl);
+                    if (!string.IsNullOrEmpty(domain))
+                    {
+                        metaParts.Add($"🌐 {GLib.Markup.EscapeText(domain)}");
+                    }
+
+                    var folder = FormatFriendlyPath(item.TargetDir);
+                    if (!string.IsNullOrEmpty(folder))
+                    {
+                        metaParts.Add($"📁 {GLib.Markup.EscapeText(folder)}");
+                    }
+                }
+
+                var metaLine = string.Join("   ·   ", metaParts);
+
+                if (selected)
+                {
+                    ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
+                        ? $"<span weight=\"bold\">{title}</span>"
+                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"9000\" alpha=\"55000\">{metaLine}</span>";
+                }
+                else
+                {
+                    ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
+                        ? $"<span weight=\"bold\">{title}</span>"
+                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">{metaLine}</span>";
+                }
+            }));
+        }
+
+        // Category-tinted 24px file icon with white selection tint
         void GetFileIcon(ICellLayout cell_layout,
                 CellRenderer cell, ITreeModel tree_model, TreeIter iter)
         {
             var name = (string)tree_model.GetValue(iter, 0);
-            var pix = LoadSvg(IconResource.GetSVGNameForFileType(name), 20);
-            ((CellRendererPixbuf)cell).Pixbuf = pix;
+            var (r, g, b) = GetCategoryColorForFileType(name);
+            var svgName = IconResource.GetSVGNameForFileType(name);
+            var rawPix = LoadSvg(svgName, 24);
+            if (rawPix != null)
+            {
+                var view = (cell_layout as TreeViewColumn)?.TreeView as TreeView;
+                var isSelected = view != null && view.Selection.PathIsSelected(tree_model.GetPath(iter));
+                ((CellRendererPixbuf)cell).Pixbuf = isSelected
+                    ? GtkHelper.TintPixbuf(rawPix, 255, 255, 255)
+                    : GtkHelper.TintPixbuf(rawPix, r, g, b);
+            }
         }
 
         // Pango alpha for secondary list text: 60% opacity on the 0-65535 scale
@@ -1490,7 +1671,7 @@ namespace XDM.GtkUI
         {
             var iter = inprogressDownloadsStore.Insert(0);
             inprogressDownloadsStore.SetValue(iter, 0, entry.Name);
-            inprogressDownloadsStore.SetValue(iter, 1, entry.DateAdded.ToShortDateString());
+            inprogressDownloadsStore.SetValue(iter, 1, entry.DateAdded.ToString("MMM d, yyyy · HH:mm"));
             inprogressDownloadsStore.SetValue(iter, 2, FormattingHelper.FormatSize(entry.Size));
             inprogressDownloadsStore.SetValue(iter, 3, entry.Progress);
             inprogressDownloadsStore.SetValue(iter, 4, entry.Status.ToString());
@@ -1502,7 +1683,7 @@ namespace XDM.GtkUI
         {
             finishedDownloadsStore.AppendValues(
                 entry.Name,
-                entry.DateAdded.ToShortDateString(),
+                entry.DateAdded.ToString("MMM d, yyyy · HH:mm"),
                 FormattingHelper.FormatSize(entry.Size),
                 entry);
             finishedDownloadFilter.Refilter();
@@ -1727,7 +1908,7 @@ namespace XDM.GtkUI
             foreach (var item in finishedDownloads)
             {
                 finishedDownloadsStore.AppendValues(item.Name,
-                    item.DateAdded.ToShortDateString(),
+                    item.DateAdded.ToString("MMM d, yyyy · HH:mm"),
                     FormattingHelper.FormatSize(item.Size),
                     item);
             }
@@ -1741,7 +1922,7 @@ namespace XDM.GtkUI
             foreach (var item in incompleteDownloads)
             {
                 inprogressDownloadsStore.AppendValues(item.Name,
-                    item.DateAdded.ToShortDateString(),
+                    item.DateAdded.ToString("MMM d, yyyy · HH:mm"),
                     FormattingHelper.FormatSize(item.Size),
                     item.Progress,
                     Helpers.GenerateStatusText(item),

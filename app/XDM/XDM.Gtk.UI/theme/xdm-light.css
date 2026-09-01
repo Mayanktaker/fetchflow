@@ -104,12 +104,19 @@ treeview.finished {
   background-color: #f8f8f8;
 }
 
-treeview:hover {
-  background-color: rgba(0, 0, 0, 0.045);
+treeview row {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
 }
 
-treeview:selected {
+treeview row:hover {
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+treeview:selected,
+treeview row:selected {
   background-color: #3584e4;
+  background-image: linear-gradient(135deg, rgba(53, 132, 228, 0.95), rgba(90, 155, 234, 0.85));
   color: #ffffff;
 }
 
@@ -197,31 +204,37 @@ list.sidebar row:focus {
 /* Column headers (Name/Date/Size) */
 treeview header {
   background-color: #f0f0f0;
-  border-bottom: 1px solid #d0d0d0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 treeview header button {
   background-color: #f0f0f0;
-  color: #6b6b6b;
+  background-image: linear-gradient(to bottom, #ffffff, #ebebeb);
+  color: #666666;
+  font-size: 11.5px;
+  font-weight: 600;
   border: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 0;
   box-shadow: none;
-  padding: 4px 6px;
+  padding: 8px 12px;
 }
 
 treeview header button:hover {
-  background-color: #e6e6e6;
-  color: #222222;
+  background-color: #e4e4e4;
+  background-image: linear-gradient(to bottom, #ffffff, #e0e0e0);
+  color: #1f1f1f;
 }
 
 treeview header button:active {
   background-color: #dedede;
+  background-image: none;
   color: #111111;
 }
 
 treeview header button:focus {
-  outline-width: 1px;
-  outline-offset: -2px;
+  outline: none;
 }
 
 /* Text fields */

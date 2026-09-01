@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -15,7 +15,7 @@ namespace XDM.Core
             ["ApplicationContext.Core"] = new HashSet<string> { ".exe", ".bin", ".appx", ".ApplicationContext.Core", ".msi", ".rpm", ".deb" }
         };
 
-        private static string GetFileType(string ext)
+        public static string GetFileType(string ext)
         {
             foreach (var key in imageTypes.Keys)
             {
