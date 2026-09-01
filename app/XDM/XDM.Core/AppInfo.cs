@@ -11,7 +11,7 @@ namespace XDM.Core
         public static string APP_NAME = "FetchFlow";
         public static string APP_FULL_NAME = "FetchFlow Download Manager";
         public static string APP_ID = "com.mayanktaker.fetchflow";
-        public static string APP_VERSION = "9.1.4";
+        public static string APP_VERSION = "9.1.5";
         public static string APP_VERSION_TEXT = $"{APP_FULL_NAME} {APP_VERSION}";
         public static string APP_VERSION_ONLY = $"Version {APP_VERSION}";
         public static string APP_COPYRIGHT_TEXT = "© 2026 Mayanktaker | Mayanktaker Computers & Web Development";

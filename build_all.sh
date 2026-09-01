@@ -69,6 +69,7 @@ echo "Creating RPM Package..."
 cd app/XDM/XDM.Linux.Installer
 rm -rf rpmbuild fetchflow-${VERSION}.tar.gz fetchflow-${VERSION}
 # Ensure binary-source is fresh
+mkdir -p binary-source
 rm -rf binary-source/*
 cp -r ../../../build_output/xdm-app/* binary-source/
 
@@ -85,6 +86,7 @@ cd ../../..
 
 echo "Generating SHA256 Checksums..."
 cd "$OUT_DIR"
+rm -f SHA256SUMS.txt
 sha256sum * > SHA256SUMS.txt 2>/dev/null || true
 cd ..
 

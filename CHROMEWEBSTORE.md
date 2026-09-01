@@ -119,7 +119,7 @@ https://mayanktaker.com
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
-| 9.1.4 | 2026-09-01 | MV3 compliance, chunked blob support, 2026 data privacy updates | Ready |
+| 9.1.5 | 2026-09-01 | MV3 compliance, chunked blob support, 2026 data privacy updates | Ready |
 
 ## Review Notes
 
