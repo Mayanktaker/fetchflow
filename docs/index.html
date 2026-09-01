@@ -4,8 +4,8 @@
   <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FetchFlow Download Manager — Native Wayland & High-Speed Media Downloader</title>
-  <meta name="description" content="FetchFlow is an ultra-fast, modern download manager and media stream grabber with native Wayland support, multi-socket acceleration, and browser integration.">
+  <title>FetchFlow Download Manager — Linux & Windows High-Speed Media Downloader</title>
+  <meta name="description" content="FetchFlow is an ultra-fast, modern download manager and media stream grabber with native Wayland & Windows support, multi-socket acceleration, and browser integration.">
   <link rel="icon" type="image/svg+xml" href="fetchflow-logo.svg">
   <style>
     :root {
@@ -126,8 +126,28 @@
     .hero p {
       font-size: 1.25rem;
       color: var(--text-muted);
-      max-width: 760px;
+      max-width: 780px;
       margin: 0 auto 36px;
+    }
+
+    .platform-pills {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .pill {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     /* CTA Buttons */
@@ -354,12 +374,19 @@
 
   <!-- Hero -->
   <header class="hero">
-    <div class="hero-badge" id="live-version-badge">⚡ Wayland Edition v9.1.4</div>
+    <div class="hero-badge" id="live-version-badge">⚡ Linux &bull; Windows &bull; v9.1.4</div>
     <img class="hero-logo" src="fetchflow-logo.png" alt="FetchFlow App Icon">
-    <h1>High-Speed Download Acceleration<br>Engineered for Wayland.</h1>
+    <h1>High-Speed Download Acceleration<br>For Linux &amp; Windows.</h1>
     <p>
-      FetchFlow is a powerful, lightweight, native download manager and streaming video capture engine. Built with .NET 8 AOT and GTK3 CSD for lightning-fast responsiveness.
+      FetchFlow is a powerful, lightweight, native download accelerator and streaming media capture engine. Built with .NET 8 AOT, native Wayland CSD, and Windows WPF for maximum performance.
     </p>
+
+    <div class="platform-pills">
+      <span class="pill">🐧 Linux (Wayland &amp; X11)</span>
+      <span class="pill">🪟 Windows 11 / 10 (64-bit)</span>
+      <span class="pill">🚀 Multi-Socket (32 Streams)</span>
+      <span class="pill">🧩 Chrome &amp; Firefox MV3</span>
+    </div>
 
     <div class="cta-group">
       <a href="#downloads" class="btn-primary" id="btn-hero-download">Download FetchFlow</a>
@@ -378,37 +405,37 @@
       <div class="card">
         <div class="card-icon">🚀</div>
         <h3>Multi-Stream Acceleration</h3>
-        <p>Splits files dynamically into parallel chunks (up to 32 socket streams), maximizing network throughput and connection saturation.</p>
+        <p>Splits files dynamically into parallel chunks (up to 32 socket streams), saturating high-speed fiber & gigabit connections.</p>
       </div>
 
       <div class="card">
-        <div class="card-icon">🖥️</div>
+        <div class="card-icon">🪟</div>
+        <h3>Native Windows Shell</h3>
+        <p>Full support for Windows 11 and 10 with native WPF UI, system tray integration, automatic startup, and clipboard monitoring.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🐧</div>
         <h3>Native Wayland & CSD</h3>
-        <p>Runs natively without XWayland quirks. Supports KDE Plasma 6, GNOME 46+, Sway, and Hyprland with StatusNotifierItem system tray integration.</p>
+        <p>Runs natively on Linux without XWayland. Supports KDE Plasma 6, GNOME 46+, Sway, and Hyprland with StatusNotifierItem tray.</p>
       </div>
 
       <div class="card">
         <div class="card-icon">🎬</div>
         <h3>Streaming Video Grabber</h3>
-        <p>Powered by an integrated <code>yt-dlp</code> engine to detect and ingest video/audio streams from YouTube, Vimeo, and 1000+ web platforms.</p>
+        <p>Integrated <code>yt-dlp</code> engine automatically captures video and audio streams from YouTube, Vimeo, and 1000+ streaming sites.</p>
       </div>
 
       <div class="card">
         <div class="card-icon">🧩</div>
         <h3>Browser Extensions (MV3)</h3>
-        <p>Seamless one-click download takeover and context-menu integration for Chrome, Brave, Edge, Firefox, and Floorp via fast loopback IPC.</p>
+        <p>One-click download takeover and media capture for Chrome, Brave, Edge, Firefox, and Floorp via fast local loopback IPC.</p>
       </div>
 
       <div class="card">
         <div class="card-icon">📱</div>
         <h3>Android & MTP-Safe Names</h3>
-        <p>Automatically sanitizes illegal characters in downloaded file names, preventing copy errors over USB/MTP connections to phones and TVs.</p>
-      </div>
-
-      <div class="card">
-        <div class="card-icon">🔄</div>
-        <h3>Smart Resumption</h3>
-        <p>Easily resume broken, interrupted, or expired downloads with automated link refreshment and token re-acquisition.</p>
+        <p>Automatically sanitizes illegal characters in downloaded file names, preventing copy errors over USB/MTP transfers to phones and tablets.</p>
       </div>
     </div>
   </section>
@@ -432,8 +459,15 @@
       </thead>
       <tbody>
         <tr>
-          <td><strong>Native Wayland & Linux CSD</strong></td>
+          <td><strong>Cross-Platform (Linux &amp; Windows)</strong></td>
+          <td><span class="check">✓ Linux &amp; Windows</span></td>
+          <td><span class="cross">✗ Windows Only</span></td>
           <td><span class="check">✓ Yes</span></td>
+          <td><span class="check">✓ CLI Only</span></td>
+        </tr>
+        <tr>
+          <td><strong>Native Wayland &amp; CSD Support</strong></td>
+          <td><span class="check">✓ Full Native</span></td>
           <td><span class="cross">✗ No</span></td>
           <td><span class="cross">✗ Partial</span></td>
           <td><span class="cross">✗ CLI Only</span></td>
@@ -474,35 +508,45 @@
   <section class="download-section" id="downloads">
     <div class="section-title" style="margin-bottom: 20px;">
       <h2>Distribution Packages</h2>
-      <p id="release-info-text">Self-contained, AOT-compiled binaries — no separate .NET runtime required.</p>
+      <p id="release-info-text">Self-contained, AOT-compiled binaries for Windows and Linux.</p>
     </div>
 
     <table class="download-table">
       <thead>
         <tr>
-          <th>Platform / Distro</th>
+          <th>Operating System / Distro</th>
           <th>Package Type</th>
-          <th>Action</th>
+          <th>Download Link</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong>Fedora / RHEL / CentOS</strong></td>
+          <td><strong>🪟 Windows 11 / 10 (64-bit)</strong></td>
+          <td><span class="pkg-tag">EXE / MSI</span></td>
+          <td><a class="btn-dl-small" id="dl-win-exe" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Windows Installer</a></td>
+        </tr>
+        <tr>
+          <td><strong>🪟 Windows Portable (64-bit)</strong></td>
+          <td><span class="pkg-tag">ZIP</span></td>
+          <td><a class="btn-dl-small" id="dl-win-zip" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Windows .ZIP</a></td>
+        </tr>
+        <tr>
+          <td><strong>🐧 Fedora / RHEL / CentOS / openSUSE</strong></td>
           <td><span class="pkg-tag">RPM</span></td>
           <td><a class="btn-dl-small" id="dl-rpm" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download .RPM</a></td>
         </tr>
         <tr>
-          <td><strong>Debian / Ubuntu / Mint</strong></td>
+          <td><strong>🐧 Debian / Ubuntu / Mint / Pop!_OS</strong></td>
           <td><span class="pkg-tag">DEB</span></td>
           <td><a class="btn-dl-small" id="dl-deb" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download .DEB</a></td>
         </tr>
         <tr>
-          <td><strong>Arch Linux / Manjaro</strong></td>
+          <td><strong>🐧 Arch Linux / Manjaro / EndeavourOS</strong></td>
           <td><span class="pkg-tag">PKG.TAR.ZST</span></td>
           <td><a class="btn-dl-small" id="dl-arch" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Arch Pkg</a></td>
         </tr>
         <tr>
-          <td><strong>Universal Linux x64</strong></td>
+          <td><strong>🐧 Universal Linux x64</strong></td>
           <td><span class="pkg-tag">TAR.GZ</span></td>
           <td><a class="btn-dl-small" id="dl-targz" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Portable .tar.gz</a></td>
         </tr>
@@ -518,7 +562,7 @@
   <section class="features" id="extensions" style="margin-top: 60px;">
     <div class="section-title">
       <h2>Browser Integration</h2>
-      <p>Integrate FetchFlow directly into your favorite web browser.</p>
+      <p>Integrate FetchFlow directly into your favorite web browser on Windows &amp; Linux.</p>
     </div>
 
     <div class="grid-3" style="max-width: 800px; margin: 0 auto;">
@@ -558,7 +602,7 @@
         
         // 1. Update version badge & hero button in real-time
         const badge = document.getElementById('live-version-badge');
-        if (badge) badge.textContent = `⚡ Wayland Edition ${tag}`;
+        if (badge) badge.textContent = `⚡ Linux &bull; Windows &bull; ${tag}`;
         
         const heroBtn = document.getElementById('btn-hero-download');
         if (heroBtn) heroBtn.textContent = `Download FetchFlow ${tag}`;
@@ -566,7 +610,7 @@
         const infoText = document.getElementById('release-info-text');
         if (infoText && release.published_at) {
           const pubDate = new Date(release.published_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-          infoText.textContent = `Latest stable release (${tag} — ${pubDate}). Self-contained, AOT-compiled binaries.`;
+          infoText.textContent = `Latest stable release (${tag} — ${pubDate}). Available for Windows & Linux.`;
         }
 
         // 2. Wire direct asset download URLs from GitHub Release assets
@@ -574,7 +618,13 @@
           release.assets.forEach(asset => {
             const name = asset.name.toLowerCase();
             const url = asset.browser_download_url;
-            if (name.endsWith('.rpm')) {
+            if (name.endsWith('.exe') || name.endsWith('.msi')) {
+              const el = document.getElementById('dl-win-exe');
+              if (el) el.href = url;
+            } else if (name.includes('win') && name.endsWith('.zip')) {
+              const el = document.getElementById('dl-win-zip');
+              if (el) el.href = url;
+            } else if (name.endsWith('.rpm')) {
               const el = document.getElementById('dl-rpm');
               if (el) el.href = url;
             } else if (name.endsWith('.deb')) {

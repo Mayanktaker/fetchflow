@@ -65,7 +65,11 @@
 
 ## 📦 Installation & Packaging
 
-FetchFlow distributes self-contained single-file AOT binaries for Linux with zero runtime dependencies.
+FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linux** with zero runtime prerequisites.
+
+### Windows 11 / 10 (64-bit)
+- **Installer:** Download `FetchFlow-Setup.exe` or `fetchflow.msi` from [Releases](https://github.com/Mayanktaker/fetchflow/releases/latest) and follow the setup wizard.
+- **Portable ZIP:** Download `fetchflow-win-x64.zip`, extract to any folder, and run `xdm-app.exe`.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
