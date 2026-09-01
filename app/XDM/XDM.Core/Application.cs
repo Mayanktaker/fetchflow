@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using TraceLog;
@@ -343,6 +343,10 @@ namespace XDM.Core
                 {
                     ApplicationContext.MainWindow.InProgressDownloads = inProgressDownloads;
                     ApplicationContext.MainWindow.FinishedDownloads = finishedDownloads;
+                    if (inProgressDownloads.Count == 0 && finishedDownloads.Count > 0)
+                    {
+                        ApplicationContext.MainWindow.SwitchToFinishedView();
+                    }
                     return;
                 }
                 else

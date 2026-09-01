@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SQLite;
@@ -236,12 +236,13 @@ namespace XDM.Core.DataAccess
                 {
                     if (cmdUpdateOne == null)
                     {
-                        cmdUpdateOne = new SQLiteCommand(@"UPDATE downloads SET name=@name, date_added=@date_added, size=@size, 
+                        cmdUpdateOne = new SQLiteCommand(@"UPDATE downloads SET completed=1, status=@status, progress=100, name=@name, date_added=@date_added, size=@size, 
                                             download_type=@download_type, targetdir=@targetdir, primary_url=@primary_url,
                                             auth=@auth, user=@user, pass=@pass, proxy=@proxy, proxy_host=@proxy_host,
                                             proxy_port=@proxy_port, proxy_user=@proxy_user, proxy_pass=@proxy_pass, 
                                             proxy_type=@proxy_type WHERE id=@id", db);
                     }
+                    SetParam("@status", (int)DownloadStatus.Finished, cmdUpdateOne.Parameters);
                     SetParam("@id", entry.Id, cmdUpdateOne.Parameters);
                     SetParam("@name", entry.Name, cmdUpdateOne.Parameters);
                     SetParam("@date_added", entry.DateAdded.ToBinary(), cmdUpdateOne.Parameters);
@@ -338,13 +339,14 @@ namespace XDM.Core.DataAccess
                     if (cmdMarkFinished == null)
                     {
                         cmdMarkFinished = new SQLiteCommand("UPDATE downloads SET targetdir=@targetdir, name=@name, " +
-                            "size=@finalFileSize, completed=@completed WHERE id=@id", db);
+                            "size=@finalFileSize, completed=@completed, status=@status, progress=100 WHERE id=@id", db);
                     }
                     SetParam("@targetdir", folder, cmdMarkFinished.Parameters);
                     SetParam("@name", file, cmdMarkFinished.Parameters);
                     SetParam("@finalFileSize", finalFileSize, cmdMarkFinished.Parameters);
                     SetParam("@id", id, cmdMarkFinished.Parameters);
                     SetParam("@completed", 1, cmdMarkFinished.Parameters);
+                    SetParam("@status", (int)DownloadStatus.Finished, cmdMarkFinished.Parameters);
                     cmdMarkFinished.ExecuteNonQuery();
                     return true;
                 }

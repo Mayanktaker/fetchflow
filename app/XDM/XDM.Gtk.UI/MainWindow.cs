@@ -1083,7 +1083,7 @@ namespace XDM.GtkUI
             fileNameColumn.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
             var fileNameRendererText = new CellRendererText();
-            fileNameColumn.PackStart(fileNameRendererText, false);
+            fileNameColumn.PackStart(fileNameRendererText, true);
             fileNameColumn.SetAttributes(fileNameRendererText, "text", 0);
             lvInprogress.AppendColumn(fileNameColumn);
 
@@ -1250,7 +1250,7 @@ namespace XDM.GtkUI
             fileNameColumn.SortColumnId = 0;
 
             var fileNameRendererText = new CellRendererText();
-            fileNameColumn.PackStart(fileNameRendererText, false);
+            fileNameColumn.PackStart(fileNameRendererText, true);
             fileNameColumn.SetAttributes(fileNameRendererText, "text", 0);
             lvFinished.AppendColumn(fileNameColumn);
 
@@ -1731,6 +1731,7 @@ namespace XDM.GtkUI
                     FormattingHelper.FormatSize(item.Size),
                     item);
             }
+            finishedDownloadFilter?.Refilter();
             UpdateStatusListCounts();
         }
 
@@ -1746,6 +1747,7 @@ namespace XDM.GtkUI
                     Helpers.GenerateStatusText(item),
                     item);
             }
+            inprogressDownloadFilter?.Refilter();
             UpdateStatusListCounts();
         }
 

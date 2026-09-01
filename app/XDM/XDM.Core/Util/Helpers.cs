@@ -180,8 +180,9 @@ namespace XDM.Core.Util
 
         public static bool IsMatchesKeyword(string name, string? searchKeyword)
         {
-            return string.IsNullOrEmpty(searchKeyword) ||
-                name.ToLowerInvariant().Contains(searchKeyword?.ToLowerInvariant());
+            if (string.IsNullOrWhiteSpace(searchKeyword)) return true;
+            if (string.IsNullOrEmpty(name)) return false;
+            return name.ToLowerInvariant().Contains(searchKeyword.Trim().ToLowerInvariant());
         }
 
         public static IEnumerable<FinishedDownloadItem> FilterByCategoryOrKeyword(
@@ -192,9 +193,7 @@ namespace XDM.Core.Util
 
         public static bool IsOfCategoryOrMatchesKeyword(string name, string? searchKeyword, Category? category)
         {
-            var searchMatched = string.IsNullOrEmpty(searchKeyword) ||
-                name.ToLowerInvariant().Contains(searchKeyword?.ToLowerInvariant());
-            if (!searchMatched)
+            if (!IsMatchesKeyword(name, searchKeyword))
             {
                 return false;
             }
@@ -205,6 +204,7 @@ namespace XDM.Core.Util
         {
             if (category == null) return true;
             if (string.IsNullOrEmpty(name)) return false;
+            if (category.Value.FileExtensions == null || category.Value.FileExtensions.Count == 0) return true;
             var ext = Path.GetExtension(name);
             if (string.IsNullOrEmpty(ext)) return false;
             ext = ext.ToUpperInvariant();

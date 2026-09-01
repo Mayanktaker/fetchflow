@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -385,6 +385,10 @@ namespace XDM.Core
                 {
                     peer.InProgressDownloads = inProgressDownloads;
                     peer.FinishedDownloads = finishedDownloads;
+                    if (inProgressDownloads.Count == 0 && finishedDownloads.Count > 0)
+                    {
+                        peer.SwitchToFinishedView();
+                    }
                     return;
                 }
                 else
