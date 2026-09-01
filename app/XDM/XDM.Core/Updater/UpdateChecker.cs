@@ -149,7 +149,7 @@ namespace XDM.Core.Updater
             {
                 if (string.IsNullOrWhiteSpace(tag)) return new Version(0, 0, 0);
                 var cleaned = tag.TrimStart('v', 'V').Trim();
-                if (!cleaned.Contains('.'))
+                if (!cleaned.Contains("."))
                 {
                     cleaned += ".0";
                 }

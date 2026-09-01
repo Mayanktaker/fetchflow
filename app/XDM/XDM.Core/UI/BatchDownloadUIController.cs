@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -104,7 +104,7 @@ namespace XDM.Core.UI
 
         public IEnumerable<Uri> GenerateBatchLink()
         {
-            if (!this.view.Url.Contains('*')) return Enumerable.Empty<Uri>();
+            if (!this.view.Url.Contains("*")) return Enumerable.Empty<Uri>();
             try
             {
                 return GenerateBatchLink(this.view.Url);
