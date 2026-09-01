@@ -1,14 +1,20 @@
+<!DOCTYPE html>
 <html>
-
 <head>
+    <meta charset="utf-8">
     <script src="register.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
-
-<body>
-    <div>Please register the extension with FetchFlow</div>
-    <div><a id="link">Register with FetchFlow</a></div>
-    <div id="content"></div>
-    <div><a id="link">Once registered, please restart the browser</a></div>
+<body class="page">
+    <div class="page-card">
+        <header class="popup-header" style="margin: -24px -24px 16px -24px; border-radius: 10px 10px 0 0;">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span class="popup-title">FetchFlow</span>
+        </header>
+        <div>Please register the extension with FetchFlow</div>
+        <div><a id="link" class="btn btn-primary" href="#">Register with FetchFlow</a></div>
+        <div id="content"></div>
+        <div><a id="link" href="#">Once registered, please restart the browser</a></div>
+    </div>
 </body>
-
 </html>

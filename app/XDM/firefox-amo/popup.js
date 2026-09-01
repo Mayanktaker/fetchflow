@@ -41,18 +41,16 @@ class VideoPopup {
             let row = table.insertRow(0);
             let cell = row.insertCell(0);
 
-            let border = "";
-
             let div = document.createElement('div');
-            div.setAttribute("style", "padding: 10px; display: flex; flex-direction: column;" + border);
+            div.className = 'media-item';
 
             let button = document.createElement('button');
-            button.setAttribute("style", "font-family:helvetica,arial,courier; font-size: 14px; cursor: pointer; text-align: left; border: none; background: rgba(0,0,0,0); padding: 0px; padding-bottom: 5px; padding-top: 5px;");
+            button.className = 'media-item-title';
             button.innerText = text;
             button.id = listItem.id;
 
             let p2 = document.createElement('span');
-            p2.setAttribute("style", "font-family:helvetica,arial,courier; font-size: 12px;");
+            p2.className = 'media-item-info';
             let node = document.createTextNode(info);
             p2.appendChild(node);
 

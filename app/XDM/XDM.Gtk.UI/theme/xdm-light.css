@@ -8,7 +8,9 @@
  *   text #222222 · dim #6b6b6b · update-dot #26a269
  *   accent #3584e4 (hover #5a9bea / active #2767b8)
  *   destructive #e01b24 (hover #ef4a52 / active #a5121a)
- *   radius-sm 6px · radius-md 8px · radius-lg 10px · radius-badge 24px · radius-pill 999px
+ *   brand #ea580c (hover #f97316) · success #16a34a
+ *   radius: sm 6 · md 8 · lg 10 · badge 24 · pill 999
+ *   spacing: 4 / 8 / 12 / 16 / 24 px
  */
 
 /* Base surfaces */
@@ -112,18 +114,18 @@ treeview:selected {
 }
 
 /* Category sidebar */
-treeview.dark {
+treeview.sidebar-list {
   background-color: #ececec;
   color: #333333;
   border-radius: 8px;
 }
 
-treeview.dark:hover {
+treeview.sidebar-list:hover {
   background-color: rgba(0, 0, 0, 0.05);
   color: #111111;
 }
 
-treeview.dark:selected {
+treeview.sidebar-list:selected {
   background-color: #3584e4;
   color: #ffffff;
   border-radius: 8px;
@@ -185,11 +187,13 @@ list.sidebar row:selected {
   outline: none;
 }
 
+/* Subtle keyboard focus ring for row navigation */
 row:focus,
 row:selected:focus,
 list row:focus,
 list.sidebar row:focus {
-  outline: none;
+  outline: 2px solid rgba(53, 132, 228, 0.35);
+  outline-offset: -2px;
 }
 
 /* Column headers (Name/Date/Size) */
@@ -469,7 +473,7 @@ radiobutton radio {
 }
 
 checkbutton check {
-  border-radius: 5px;
+  border-radius: 6px;
 }
 
 radiobutton radio {
@@ -564,6 +568,7 @@ progressbar trough {
 
 progressbar progress {
   background-color: #3584e4;
+  background-image: linear-gradient(to right, #3584e4, #5a9bea);
   border-radius: 999px;
 }
 
@@ -591,13 +596,13 @@ treeview:backdrop {
   color: #6b6b6b;
 }
 
-treeview.dark:backdrop {
+treeview.sidebar-list:backdrop {
   color: #555555;
 }
 
 /* Ensure active/selected items retain crisp white text even in backdrop/unfocused window state */
 treeview:selected:backdrop,
-treeview.dark:selected:backdrop,
+treeview.sidebar-list:selected:backdrop,
 treeview.unfinished:selected:backdrop,
 treeview.finished:selected:backdrop,
 list > row:selected:backdrop,
@@ -781,4 +786,76 @@ button.flat.bottombar-button:backdrop {
   font-size: 12px;
   font-weight: 500;
   padding: 2px 6px;
+}
+
+/* ===== Phase 4: Missing interactive states ===== */
+
+/* Link button pressed + keyboard focus */
+.about-section-card linkbutton:active {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: #4a91eb;
+}
+
+.about-section-card linkbutton:focus {
+  outline: 2px solid rgba(53, 132, 228, 0.35);
+  outline-offset: -2px;
+}
+
+/* Download-complete link pressed + keyboard focus */
+.download-complete-link:active {
+  color: #2767b8;
+}
+
+.download-complete-link:focus {
+  outline: 2px solid rgba(53, 132, 228, 0.35);
+  outline-offset: 1px;
+}
+
+/* Notebook tab pressed state */
+notebook tab:active {
+  color: #1f1f1f;
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Bottombar button pressed state */
+button.flat.bottombar-button:active {
+  color: #1f1f1f;
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Switch keyboard focus ring */
+switch:focus {
+  outline: 2px solid rgba(53, 132, 228, 0.45);
+  outline-offset: 2px;
+}
+
+/* ComboBox keyboard focus ring */
+combobox button:focus {
+  outline: 2px solid #3584e4;
+  outline-offset: -3px;
+}
+
+/* Treeview row keyboard focus (visible for accessibility) */
+treeview row:focus {
+  outline: 2px solid rgba(53, 132, 228, 0.25);
+  outline-offset: -2px;
+}
+
+/* Checkbox border-radius to token scale */
+checkbutton check {
+  border-radius: 6px;
+}
+
+/* ===== Phase 5: Subtle gradients + visual depth ===== */
+
+/* Sidebar selected row enriched with subtle gradient */
+treeview.sidebar-list:selected,
+list.sidebar row:selected,
+list.sidebar > row:selected {
+  background-image: linear-gradient(135deg, rgba(53, 132, 228, 0.95), rgba(90, 155, 234, 0.85));
+}
+
+/* Update dot: bump from 10px to 11px for readability */
+label.update-dot {
+  font-size: 11px;
 }

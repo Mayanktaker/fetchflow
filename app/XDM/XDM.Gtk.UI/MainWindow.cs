@@ -123,6 +123,28 @@ namespace XDM.GtkUI
         private const string UpdateDotGlyph = "●";
         // Selected sidebar row icon tint (#161616) — reads on the blue accent in both themes
         private const byte SidebarSelectedIconTint = 0x16;
+        // ===== Design token RGB constants (docs/design.md) =====
+        // Accent blue — primary interactive color
+        private const byte AccentR = 53, AccentG = 132, AccentB = 228;       // #3584e4
+        // Destructive red — delete/remove actions  
+        private const byte DestructR = 239, DestructG = 68, DestructB = 68;  // #ef4444
+        // Success green — completed items, active status
+        private const byte SuccessR = 46, SuccessG = 194, SuccessB = 126;   // #2ec27e
+        // Warning amber — folder icons
+        private const byte AmberR = 245, AmberG = 158, AmberB = 11;         // #f59e0b
+        // Info cyan — scheduler icon
+        private const byte CyanR = 6, CyanG = 182, CyanB = 212;            // #06b6d4
+        // Dim gray — settings/help icons
+        private const byte DimR = 148, DimG = 163, DimB = 184;             // #94a3b8
+        // Purple — music category icon
+        private const byte PurpleR = 168, PurpleG = 85, PurpleB = 247;     // #a855f7
+        // Teal — compressed category icon
+        private const byte TealR = 20, TealG = 184, TealB = 166;           // #14b8a6
+        // Indigo — programs category icon
+        private const byte IndigoR = 99, IndigoG = 102, IndigoB = 241;     // #6366f1
+        // Sky blue — default/other file category
+        private const byte SkyR = 56, SkyG = 189, SkyB = 248;             // #38bdf8
+
         // Button content geometry: labeled buttons keep spacing + symmetric side margins
         private const int ButtonContentSpacing = 10;
         private const int ButtonBoxMargin = 2;
@@ -555,9 +577,9 @@ namespace XDM.GtkUI
         {
             var hbox = new HBox(false, 10);
             hbox.StyleContext.AddClass("bottombar");
-            hbox.Margin = 2;
-            hbox.MarginStart = 5;
-            hbox.MarginEnd = 5;
+            hbox.Margin = 4;
+            hbox.MarginStart = 8;
+            hbox.MarginEnd = 8;
             btnMonitoring = new CheckButton { MarginStart = 5 };
             btnMonitoring.Clicked += BtnMonitoring_Clicked;
             hbox.PackStart(btnMonitoring, false, false, 0);
@@ -570,15 +592,15 @@ namespace XDM.GtkUI
             hbox.PackStart(lblExtensionStatus, false, false, 0);
             UpdateExtensionStatus();
 
-            btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"), 6, 182, 212);
+            btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"), CyanR, CyanG, CyanB);
             btnScheduler.Clicked += BtnScheduler_Clicked;
             btnScheduler.StyleContext.AddClass("bottombar-button");
 
-            btnSettings = CreateButtonWithContent("settings-3-line", TextResource.GetText("TITLE_SETTINGS"), 148, 163, 184);
+            btnSettings = CreateButtonWithContent("settings-3-line", TextResource.GetText("TITLE_SETTINGS"), DimR, DimG, DimB);
             btnSettings.Clicked += BtnSettings_Clicked;
             btnSettings.StyleContext.AddClass("bottombar-button");
 
-            btnHelp = CreateButtonWithContent("question-line", TextResource.GetText("MENU_HELP"), 148, 163, 184);
+            btnHelp = CreateButtonWithContent("question-line", TextResource.GetText("MENU_HELP"), DimR, DimG, DimB);
             btnHelp.Clicked += BtnHelp_Clicked;
             btnHelp.StyleContext.AddClass("bottombar-button");
 
@@ -650,19 +672,19 @@ namespace XDM.GtkUI
         private Widget CreateToolbar()
         {
             var toolbar = new HBox(false, 5);
-            btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"), 53, 132, 228);
+            btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"), AccentR, AccentG, AccentB);
             toolbar.PackStart(btnNew, false, false, 0);
-            btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"), 239, 68, 68);
+            btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"), DestructR, DestructG, DestructB);
             // Immediate destructive trigger — red flat variant, matching queue manager
             btnDel.StyleContext.AddClass("destructive-action");
             toolbar.PackStart(btnDel, false, false, 0);
-            btnOpenFile = CreateButtonWithContent("external-link-line", TextResource.GetText("CTX_OPEN_FILE"), 46, 194, 126);
+            btnOpenFile = CreateButtonWithContent("external-link-line", TextResource.GetText("CTX_OPEN_FILE"), SuccessR, SuccessG, SuccessB);
             toolbar.PackStart(btnOpenFile, false, false, 0);
-            btnOpenFolder = CreateButtonWithContent("folder-shared-line", TextResource.GetText("CTX_OPEN_FOLDER"), 245, 158, 11);
+            btnOpenFolder = CreateButtonWithContent("folder-shared-line", TextResource.GetText("CTX_OPEN_FOLDER"), AmberR, AmberG, AmberB);
             toolbar.PackStart(btnOpenFolder, false, false, 0);
-            btnResume = CreateButtonWithContent("play-line", TextResource.GetText("MENU_RESUME"), 34, 197, 94);
+            btnResume = CreateButtonWithContent("play-line", TextResource.GetText("MENU_RESUME"), SuccessR, SuccessG, SuccessB);
             toolbar.PackStart(btnResume, false, false, 0);
-            btnPause = CreateButtonWithContent("pause-line", TextResource.GetText("MENU_PAUSE"), 249, 115, 22);
+            btnPause = CreateButtonWithContent("pause-line", TextResource.GetText("MENU_PAUSE"), AmberR, AmberG, AmberB);
             toolbar.PackStart(btnPause, false, false, 0);
 
             btnMenu = CreateButtonWithContent("menu-line");
@@ -682,7 +704,7 @@ namespace XDM.GtkUI
                 inprogressDownloadFilter.Refilter();
             };
             toolbar.PackEnd(searchEntry, false, false, 0);
-            toolbar.Margin = 5;
+            toolbar.Margin = 8;
             toolbar.ShowAll();
 
             btnOpenFile.Visible = false;
@@ -713,17 +735,17 @@ namespace XDM.GtkUI
                 switch (name)
                 {
                     case "CAT_DOCUMENTS":
-                        return ("file-text-line", 245, 158, 11);    // Amber / Orange
+                        return ("file-text-line", AmberR, AmberG, AmberB);    // Amber / Orange
                     case "CAT_MUSIC":
-                        return ("file-music-line", 168, 85, 247);   // Purple / Violet
+                        return ("file-music-line", PurpleR, PurpleG, PurpleB);   // Purple / Violet
                     case "CAT_VIDEOS":
-                        return ("movie-line", 239, 68, 68);         // Coral / Red
+                        return ("movie-line", DestructR, DestructG, DestructB);         // Coral / Red
                     case "CAT_COMPRESSED":
-                        return ("file-zip-line", 20, 184, 166);     // Teal / Cyan
+                        return ("file-zip-line", TealR, TealG, TealB);     // Teal / Cyan
                     case "CAT_PROGRAMS":
-                        return ("function-line", 99, 102, 241);     // Indigo / Blue
+                        return ("function-line", IndigoR, IndigoG, IndigoB);     // Indigo / Blue
                     default:
-                        return ("file-line", 56, 189, 248);         // Sky Blue
+                        return ("file-line", SkyR, SkyG, SkyB);         // Sky Blue
                 }
             }
 
@@ -734,7 +756,7 @@ namespace XDM.GtkUI
                 ShowExpanders = false,
                 LevelIndentation = 0
             };
-            statusTree.StyleContext.AddClass("dark");
+            statusTree.StyleContext.AddClass("sidebar-list");
 
             var statusCols = new TreeViewColumn();
             var statusCellPix = new CellRendererPixbuf();
@@ -760,8 +782,8 @@ namespace XDM.GtkUI
             statusTreeStore = new TreeStore(typeof(Gdk.Pixbuf), typeof(string));
             var rawActive = LoadSvg("arrow-down-line", 20);
             var rawFinished = LoadSvg("check-line", 20);
-            var activeIcon = rawActive != null ? GtkHelper.TintPixbuf(rawActive, 53, 132, 228) : null;
-            var finishedIcon = rawFinished != null ? GtkHelper.TintPixbuf(rawFinished, 46, 194, 126) : null;
+            var activeIcon = rawActive != null ? GtkHelper.TintPixbuf(rawActive, AccentR, AccentG, AccentB) : null;
+            var finishedIcon = rawFinished != null ? GtkHelper.TintPixbuf(rawFinished, SuccessR, SuccessG, SuccessB) : null;
 
             statusTreeStore.AppendValues(activeIcon, TextResource.GetText("ALL_UNFINISHED"));
             statusTreeStore.AppendValues(finishedIcon, TextResource.GetText("ALL_FINISHED"));
@@ -775,7 +797,7 @@ namespace XDM.GtkUI
                 Text = TextResource.GetText("SETTINGS_CAT") ?? "Categories",
                 Halign = Align.Start,
                 MarginStart = 10,
-                MarginTop = 14,
+                MarginTop = 16,
                 MarginBottom = 4
             };
             catHeaderLabel.StyleContext.AddClass("sidebar-heading");
@@ -787,7 +809,7 @@ namespace XDM.GtkUI
                 ShowExpanders = false,
                 LevelIndentation = 0
             };
-            categoryTree.StyleContext.AddClass("dark");
+            categoryTree.StyleContext.AddClass("sidebar-list");
 
             var catCols = new TreeViewColumn();
             var catCellPix = new CellRendererPixbuf();
@@ -850,7 +872,7 @@ namespace XDM.GtkUI
             var scrolledWindow = new ScrolledWindow
             {
                 OverlayScrolling = true,
-                Margin = 5,
+                Margin = 8,
                 MarginEnd = 0
             };
             scrolledWindow.StyleContext.AddClass("sidebar-scroll");
@@ -1121,7 +1143,7 @@ namespace XDM.GtkUI
 
             sortedStore.SetSortColumnId(1, SortType.Descending);
 
-            swInProgress = new ScrolledWindow { OverlayScrolling = true, Margin = 5, MarginBottom = 0, MarginTop = 0, ShadowType = ShadowType.In };
+            swInProgress = new ScrolledWindow { OverlayScrolling = true, Margin = 8, MarginBottom = 0, MarginTop = 0, ShadowType = ShadowType.In };
             swInProgress.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swInProgress.Add(lvInprogress);
             swInProgress.ShowAll();
@@ -1258,7 +1280,7 @@ namespace XDM.GtkUI
 
             sortedStore.SetSortColumnId(1, SortType.Descending);
 
-            swFinished = new ScrolledWindow { OverlayScrolling = true, Margin = 5, MarginBottom = 0, MarginTop = 0, ShadowType = ShadowType.In };
+            swFinished = new ScrolledWindow { OverlayScrolling = true, Margin = 8, MarginBottom = 0, MarginTop = 0, ShadowType = ShadowType.In };
             swFinished.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swFinished.Add(lvFinished);
             swFinished.ShowAll();
