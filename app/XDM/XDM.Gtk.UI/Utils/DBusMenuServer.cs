@@ -62,7 +62,7 @@ namespace XDM.GtkUI.Utils
             var children = new List<object>();
 
             children.Add(MakeMenuItem(ShowId, new Dictionary<string, object> {
-                { "label", "Show XDM" },
+                { "label", "Show FetchFlow" },
                 { "type", "standard" },
                 { "enabled", true },
                 { "visible", true }
@@ -138,7 +138,7 @@ namespace XDM.GtkUI.Utils
             return id switch
             {
                 ShowId => new Dictionary<string, object> {
-                    { "label", "Show XDM" },
+                    { "label", "Show FetchFlow" },
                     { "type", "standard" },
                     { "enabled", true },
                     { "visible", true }

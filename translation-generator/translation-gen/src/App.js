@@ -19,7 +19,7 @@ function App() {
     setMappings(mappingsCopy);
   }
   async function loadEnglishTranslation() {
-    const response = await fetch("https://raw.githubusercontent.com/subhra74/xdm/wpf/app/XDM/Lang/English.txt");
+    const response = await fetch("https://raw.githubusercontent.com/Mayanktaker/fetchflow/master/app/XDM/Lang/English.txt");
     const text = await response.text();
     console.log(text);
     let lines = text.split('\n');

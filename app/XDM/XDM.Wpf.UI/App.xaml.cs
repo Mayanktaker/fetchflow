@@ -48,7 +48,7 @@ namespace XDM.Wpf.UI
         {
             Trace.WriteLine("XDM app start");
             //Only if user has chosen to generate log
-            var debugMode = Environment.GetEnvironmentVariable("XDM_DEBUG_MODE");
+            var debugMode = Environment.GetEnvironmentVariable("FETCHFLOW_DEBUG_MODE") ?? Environment.GetEnvironmentVariable("XDM_DEBUG_MODE");
             if (!string.IsNullOrEmpty(debugMode) && debugMode == "1")
             {
                 var logFile = Path.Combine(Config.AppDir, "log.txt");

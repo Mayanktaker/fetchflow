@@ -3,10 +3,10 @@
 set -e
 
 # Default repository
-REPO="Mayanktaker/xdm"
+REPO="Mayanktaker/fetchflow"
 
 echo "Checking for the latest release on GitHub ($REPO)..."
-LATEST_URL=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep "browser_download_url" | grep "xdm-app" | cut -d '"' -f 4)
+LATEST_URL=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep "browser_download_url" | grep "fetchflow" | cut -d '"' -f 4)
 
 if [ -z "$LATEST_URL" ]; then
     # Fallback to downloading a generic tar.gz
@@ -14,7 +14,7 @@ if [ -z "$LATEST_URL" ]; then
 fi
 
 if [ -z "$LATEST_URL" ]; then
-    echo "Could not find a valid download URL (xdm-app or .tar.gz) for the latest release."
+    echo "Could not find a valid download URL (fetchflow or .tar.gz) for the latest release."
     exit 1
 fi
 
@@ -26,28 +26,32 @@ cd "$TMP_DIR"
 
 curl -L -o update_package "$LATEST_URL"
 
-echo "Terminating any running instances of XDM..."
-killall xdm-app 2>/dev/null || true
+echo "Terminating any running instances of FetchFlow..."
+killall fetchflow 2>/dev/null || killall xdm-app 2>/dev/null || true
 
-echo "Applying update (requires sudo to write to /opt/xdman)..."
+echo "Applying update (requires sudo to write to /opt/fetchflow)..."
 if [[ "$LATEST_URL" == *".tar.gz"* ]]; then
     tar -xzf update_package
-    sudo cp -f xdm-app /opt/xdman/xdm-app
+    sudo cp -f fetchflow /opt/fetchflow/fetchflow 2>/dev/null || sudo cp -f xdm-app /opt/xdman/xdm-app 2>/dev/null || sudo cp -f update_package /opt/fetchflow/fetchflow
 else
     # It's the raw binary
-    sudo cp -f update_package /opt/xdman/xdm-app
+    sudo cp -f update_package /opt/fetchflow/fetchflow 2>/dev/null || sudo cp -f update_package /opt/xdman/xdm-app
 fi
 
-sudo chmod 755 /opt/xdman/xdm-app
+sudo chmod 755 /opt/fetchflow/fetchflow 2>/dev/null || sudo chmod 755 /opt/xdman/xdm-app 2>/dev/null || true
 
 echo "Update applied successfully!"
 echo "Cleaning up..."
 cd /
 rm -rf "$TMP_DIR"
 
-echo "Starting XDM..."
+echo "Starting FetchFlow..."
 # Launch via background
 export GTK_USE_PORTAL=1
-nohup /opt/xdman/xdm-app >/dev/null 2>&1 &
+nohup /opt/fetchflow/fetchflow >/dev/null 2>&1 &
+# Fallback legacy path
+if [ ! -x /opt/fetchflow/fetchflow ] && [ -x /opt/xdman/xdm-app ]; then
+  nohup /opt/xdman/xdm-app >/dev/null 2>&1 &
+fi
 
 echo "Update complete."

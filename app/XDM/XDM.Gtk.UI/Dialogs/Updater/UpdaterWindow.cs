@@ -59,7 +59,7 @@ namespace XDM.GtkUI.Dialogs.Updater
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
                 {
                     FileName = "gnome-terminal",
-                    Arguments = "-- bash -c \"sudo /opt/xdman/xdm-updater.sh\"",
+                    Arguments = "-- bash -c \"sudo /opt/fetchflow/fetchflow-updater.sh || sudo /opt/xdman/xdm-updater.sh\"",
                     UseShellExecute = true
                 });
             }

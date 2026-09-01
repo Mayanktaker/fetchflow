@@ -9,7 +9,7 @@ namespace XDM.GtkUI
 {
     public static class UpdateChecker
     {
-        private const string RepoUrl = "https://api.github.com/repos/Mayanktaker/xdm/releases/latest";
+        private const string RepoUrl = "https://api.github.com/repos/Mayanktaker/fetchflow/releases/latest";
 
         /// <summary>
         /// Checks GitHub for a newer version than AppInfo.APP_VERSION.
@@ -20,7 +20,7 @@ namespace XDM.GtkUI
             try
             {
                 using var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("User-Agent", "XDM-Update-Checker");
+                client.DefaultRequestHeaders.Add("User-Agent", "FetchFlow-Update-Checker");
 
                 var response = await client.GetStringAsync(RepoUrl);
                 using var doc = JsonDocument.Parse(response);

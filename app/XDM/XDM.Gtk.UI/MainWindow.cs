@@ -47,6 +47,7 @@ namespace XDM.GtkUI
         private TrayIconManager trayManager;
         private Label subtitleLabel;
         private Button updateDot;
+        private Entry? searchEntry;
 
         // Dark-tinted sidebar icons for selected rows, keyed by source pixbuf (tint once, reuse)
         private static readonly ConditionalWeakTable<Gdk.Pixbuf, Gdk.Pixbuf> selectedSidebarIcons = new();
@@ -207,7 +208,7 @@ namespace XDM.GtkUI
                     {
                         if (this.GdkWindow == null || this.IsDestroyed()) return;
                         using var dialog = new MessageDialog(this, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo,
-                            $"A new version (v{newVersion}) of XDM is available! Would you like to update now?");
+                            $"A new version (v{newVersion}) of FetchFlow is available! Would you like to update now?");
                         dialog.Title = "Update Available";
                         ResponseType response = (ResponseType)dialog.Run();
 
@@ -218,7 +219,7 @@ namespace XDM.GtkUI
                                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
                                 {
                                     FileName = "gnome-terminal",
-                                    Arguments = "-- bash -c \"sudo /opt/xdman/xdm-updater.sh\"",
+                                    Arguments = "-- bash -c \"sudo /opt/fetchflow/fetchflow-updater.sh || sudo /opt/xdman/xdm-updater.sh\"",
                                     UseShellExecute = true
                                 });
                             }
@@ -619,7 +620,7 @@ namespace XDM.GtkUI
             btnMenu = CreateButtonWithContent("menu-line");
             toolbar.PackEnd(btnMenu, false, false, 0);
 
-            var searchEntry = new Entry()
+            searchEntry = new Entry()
             {
                 WidthChars = 15,
                 PlaceholderText = TextResource.GetText("LBL_SEARCH"),
@@ -630,6 +631,7 @@ namespace XDM.GtkUI
             {
                 searchKeyword = searchEntry.Text;
                 finishedDownloadFilter.Refilter();
+                inprogressDownloadFilter.Refilter();
             };
             toolbar.PackEnd(searchEntry, false, false, 0);
             toolbar.Margin = 5;
@@ -851,6 +853,8 @@ namespace XDM.GtkUI
 
                 var path = model.GetPath(iter);
                 var index = path.Indices[0];
+                // Reset search when switching views so stale keyword can't hide all rows
+                ResetSearch();
                 if (index == 0)
                 {
                     swInProgress.ShowAll();
@@ -858,6 +862,7 @@ namespace XDM.GtkUI
                     category = null;
                     btnOpenFile.Visible = btnOpenFolder.Visible = false;
                     btnPause.Visible = btnResume.Visible = true;
+                    inprogressDownloadFilter.Refilter();
                     SetHeaderSubtitle(TextResource.GetText("ALL_UNFINISHED"));
                 }
                 else
@@ -909,6 +914,7 @@ namespace XDM.GtkUI
                 category = (Category)model.GetValue(iter, 2);
                 btnOpenFile.Visible = btnOpenFolder.Visible = true;
                 btnPause.Visible = btnResume.Visible = false;
+                ResetSearch();
                 finishedDownloadFilter.Refilter();
                 SetHeaderSubtitle(model.GetValue(iter, 1) as string);
             }
@@ -1247,7 +1253,7 @@ namespace XDM.GtkUI
 
         private void AppWin1_DeleteEvent(object o, DeleteEventArgs args)
         {
-            // Closing the window never quits XDM: hide to tray when a tray icon is available,
+            // Closing the window never quits FetchFlow: hide to tray when a tray icon is available,
             // otherwise minimize — full quit is only via the tray menu or ☰ → Exit.
             args.RetVal = true;
             if (trayManager != null && trayManager.IsTrayActive)
@@ -1495,9 +1501,24 @@ namespace XDM.GtkUI
             //    finishedDownloadsStoreSorted, finishedDownloadFilter);
         }
 
+        private void ResetSearch()
+        {
+            var raw = searchEntry?.Text;
+            searchKeyword = string.IsNullOrWhiteSpace(raw) ? null : raw.Trim();
+            if (searchEntry != null && !string.IsNullOrEmpty(searchEntry.Text))
+            {
+                searchEntry.Text = string.Empty;
+            }
+            // Make ResetSearch self-healing: callers can't forget to refilter.
+            // Filters may not exist yet during early sidebar init, so guard.
+            try { inprogressDownloadFilter?.Refilter(); } catch { }
+            try { finishedDownloadFilter?.Refilter(); } catch { }
+            searchKeyword = null;
+        }
+
         public void DeleteAllFinishedDownloads()
         {
-            if (!GtkHelper.ShowConfirmMessageBox(this, TextResource.GetText("MENU_DELETE_COMPLETED"), "XDM"))
+            if (!GtkHelper.ShowConfirmMessageBox(this, TextResource.GetText("MENU_DELETE_COMPLETED"), "FetchFlow"))
             {
                 return;
             }

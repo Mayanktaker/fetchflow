@@ -1,5 +1,5 @@
 <!-- © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm) -->
-# XDM on Wayland — User & Packager Notes
+# FetchFlow on Wayland — User & Packager Notes
 
 ## Desktop Environment Support
 
@@ -15,7 +15,7 @@
 ## GNOME AppIndicator Extension (Required for Tray on GNOME Wayland)
 
 GNOME Shell does not provide a system tray host by default. To get the
-XDM tray icon on GNOME Wayland, install the **AppIndicator and KStatusNotifierItem**
+FetchFlow tray icon on GNOME Wayland, install the **AppIndicator and KStatusNotifierItem**
 extension:
 
 ### Fedora (GNOME)
@@ -49,14 +49,14 @@ busctl --user get-property org.kde.StatusNotifierWatcher \
   IsStatusNotifierHostRegistered
 ```
 
-If the extension is not installed or disabled, XDM will still function —
+If the extension is not installed or disabled, FetchFlow will still function —
 it just won't show a tray icon. Close the window → app minimizes to taskbar;
 use `Alt+Tab` or the taskbar entry to restore it.
 
 ## Wayland-Specific Behavior
 
 ### Close Button (X button)
-Closing the window never quits XDM:
+Closing the window never quits FetchFlow:
 - **Tray icon available:** Hides to tray. Restore by clicking the tray icon.
 - **No tray icon:** Minimizes to taskbar + `notify-send` notification.
   Restore via taskbar or `Alt+Tab`.
@@ -64,10 +64,10 @@ Closing the window never quits XDM:
   ☰ menu → Exit.
 
 Tray detection retries in the background for ~2 minutes at startup, so an
-SNI host that appears after XDM (plasmashell/waybar at login) is picked up.
+SNI host that appears after FetchFlow (plasmashell/waybar at login) is picked up.
 
 ### Window Positioning
-XDM does not force center-alignment on Wayland (this causes GTK assertion
+FetchFlow does not force center-alignment on Wayland (this causes GTK assertion
 errors). The window manager controls placement on Wayland.
 
 ## Building & Packaging

@@ -39,13 +39,13 @@ namespace XDM.Core
         public static string DataDir { get; set; }
         public static string AppDir { get; set; }
 
-        // TLS security gate: opt-in insecure validation via XDM_ALLOW_INSECURE_TLS=1 (Wayland/Phase0 hardening)
+        // TLS security gate: opt-in insecure validation via FETCHFLOW_ALLOW_INSECURE_TLS (legacy XDM_ALLOW_INSECURE_TLS still works)
         public static bool AllowInsecureTls =>
-            Environment.GetEnvironmentVariable("XDM_ALLOW_INSECURE_TLS") == "1";
+            (Environment.GetEnvironmentVariable("FETCHFLOW_ALLOW_INSECURE_TLS") ?? Environment.GetEnvironmentVariable("XDM_ALLOW_INSECURE_TLS")) == "1";
 
         // IPC port for browser-monitoring HTTP relay; env-overridable, default 8597 (Phase2.3)
         public static int IpcPort =>
-            int.TryParse(Environment.GetEnvironmentVariable("XDM_IPC_PORT"), out var p) && p > 0 ? p : 8597;
+            int.TryParse(Environment.GetEnvironmentVariable("FETCHFLOW_IPC_PORT") ?? Environment.GetEnvironmentVariable("XDM_IPC_PORT"), out var p) && p > 0 ? p : 8597;
 
         public static int DefaultNotificationTimeOut => 30000;
 

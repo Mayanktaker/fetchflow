@@ -1,4 +1,4 @@
-name: Release XDM
+name: Release FetchFlow
 
 on:
   push:

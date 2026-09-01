@@ -6,7 +6,7 @@
 //   2. Legacy Gtk.StatusIcon (XEmbed)       -> X11-only DEs without an SNI host (back-compat)
 //   3. None                                  -> Wayland with no SNI host (e.g. stock GNOME);
 //                                                MainWindow falls back to minimize-to-taskbar.
-// Right-click context menu: "Show XDM" (restore) + "Quit" (exit).
+// Right-click context menu: "Show FetchFlow" (restore) + "Quit" (exit).
 using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -22,7 +22,7 @@ namespace XDM.GtkUI.Utils
 {
     public class TrayIconManager
     {
-        private const string WellKnownName = "org.xdmapp.Tray";
+        private const string WellKnownName = "com.mayanktaker.fetchflow.Tray";
         private const string WatcherService = "org.kde.StatusNotifierWatcher";
         private const string WatcherPath = "/StatusNotifierWatcher";
 
@@ -180,12 +180,14 @@ namespace XDM.GtkUI.Utils
 
             var props = new SniProperties
             {
-                Id = "xdm-app",
+                Id = "fetchflow",
                 Title = appName,
                 // Provide the DBusMenu path so KDE can render the right-click menu natively
                 ItemIsMenu = false,
                 Menu = new ObjectPath("/MenuBar"),
-                IconName = "xdm-app",
+                // Provide both IconName (for hosts that prefer theme) and IconPixmap (our FetchFlow icon)
+                // so stale "xdm-app" theme lookup is avoided but GNOME AppIndicator still renders.
+                IconName = "com.mayanktaker.fetchflow",
                 IconPixmap = new[] { PixbufToRgba(icon) },
                 ToolTip = (0, 0, Array.Empty<byte>(), appName, ""),
             };
@@ -223,7 +225,7 @@ namespace XDM.GtkUI.Utils
 
             IsTrayActive = true;
             ActiveKind = TrayKind.StatusNotifierItem;
-            Log.Debug("Tray: registered StatusNotifierItem (org.xdmapp.Tray).");
+            Log.Debug("Tray: registered StatusNotifierItem (com.mayanktaker.fetchflow.Tray).");
             return true;
         }
 
@@ -240,12 +242,12 @@ namespace XDM.GtkUI.Utils
         }
 
         // Build and show a GTK popup menu at the given screen coordinates.
-        // Menu items: "Show XDM" (restore window) + separator + "Quit" (exit app).
+        // Menu items: "Show FetchFlow" (restore window) + separator + "Quit" (exit app).
         private static void ShowContextMenu(System.Action onActivate, System.Action onQuit)
         {
             var menu = new Menu();
 
-            var showItem = new MenuItem("Show XDM");
+            var showItem = new MenuItem("Show FetchFlow");
             showItem.Activated += (_, _) => { onActivate?.Invoke(); };
             menu.Append(showItem);
 

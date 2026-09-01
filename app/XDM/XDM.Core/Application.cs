@@ -559,7 +559,8 @@ namespace XDM.Core
                     }
                     return;
                 }
-                ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, TextResource.GetText("MSG_NO_UPDATE"));
+                // Fallback: dot is visible but AppUpdater state hasn't propagated — open update page
+                PlatformHelper.OpenBrowser(AppUpdater.UpdatePage);
             };
 
             ApplicationContext.MainWindow.BrowserMonitoringButtonClicked += (s, e) =>

@@ -22,10 +22,10 @@ namespace XDM.App.Host
         {
             Trace.WriteLine($"[xdm-native-messaging-host] startup");
 
-            var debugMode = Environment.GetEnvironmentVariable("XDM_DEBUG_MODE");
+            var debugMode = Environment.GetEnvironmentVariable("FETCHFLOW_DEBUG_MODE") ?? Environment.GetEnvironmentVariable("XDM_DEBUG_MODE");
             if (!string.IsNullOrEmpty(debugMode) && debugMode == "1")
             {
-                var logFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "messaging-log.txt");
+                var logFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "fetchflow-messaging-log.txt");
                 Trace.Listeners.Add(new TextWriterTraceListener(logFile, "myListener"));
                 Trace.AutoFlush = true;
             }

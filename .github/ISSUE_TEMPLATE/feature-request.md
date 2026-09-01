@@ -18,14 +18,14 @@ labels: 'request'
 ## Checklist
 
 <!--
-Carefully read and work through this check list in order to prevent the most common mistakes and misuse of xdm:
-- First of, make sure you are using the latest version of xdm. Run `XDM menu->Help->About XDM` and ensure your version maches the latest version in https://github.com/Mayanktaker/xdm#downloads. Issues with outdated version will be REJECTED.
-- Search the bugtracker for similar feature requests: https://github.com/Mayanktaker/xdm/issues. DO NOT post duplicates.
+Carefully read and work through this check list in order to prevent the most common mistakes and misuse of FetchFlow:
+- First of, make sure you are using the latest version of FetchFlow. Run `FetchFlow menu → Help → About` and ensure your version matches the latest version in https://github.com/Mayanktaker/fetchflow#downloads. Issues with outdated version will be REJECTED.
+- Search the bugtracker for similar feature requests: https://github.com/Mayanktaker/fetchflow/issues. DO NOT post duplicates.
 - Finally, put x into all relevant boxes (like this [x])
 -->
 
 - [ ] I'm reporting a feature request
-- [ ] I've verified that I'm running xdm latest version
+- [ ] I've verified that I'm running FetchFlow latest version
 - [ ] I've searched the bugtracker for similar feature requests including closed ones
 
 

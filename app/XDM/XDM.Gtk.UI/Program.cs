@@ -79,7 +79,7 @@ namespace XDM.GtkUI
             Config.LoadConfig();
             // File logger is always on now so post-mortem analysis is possible. The optional
             // XDM_DEBUG_MODE flag remains respected for callers that only want it on demand.
-            var debugMode = Environment.GetEnvironmentVariable("XDM_DEBUG_MODE");
+            var debugMode = Environment.GetEnvironmentVariable("FETCHFLOW_DEBUG_MODE") ?? Environment.GetEnvironmentVariable("XDM_DEBUG_MODE");
             if (!string.IsNullOrEmpty(debugMode) && debugMode == "1")
             {
                 Log.InitFileBasedTrace(System.IO.Path.Combine(Config.AppDir, "log.txt"));

@@ -1,6 +1,6 @@
 ---
 name: Ask question
-about: Ask xdm related question
+about: Ask FetchFlow related question
 title: ''
 labels: 'question'
 ---
@@ -18,9 +18,9 @@ labels: 'question'
 ## Checklist
 
 <!--
-Carefully read and work through this check list in order to prevent the most common mistakes and misuse of xdm:
-- Look through the README (https://github.com/Mayanktaker/xdm/blob/master/README.md) and FAQ (https://github.com/Mayanktaker/xdm/wiki) for similar questions
-- Search the bugtracker for similar questions: https://github.com/Mayanktaker/xdm/issues and https://github.com/Mayanktaker/xdm/issues?q=is%3Aissue+is%3Aclosed
+Carefully read and work through this check list in order to prevent the most common mistakes and misuse of FetchFlow:
+- Look through the README (https://github.com/Mayanktaker/fetchflow/blob/master/README.md) and FAQ (https://github.com/Mayanktaker/fetchflow/wiki) for similar questions
+- Search the bugtracker for similar questions: https://github.com/Mayanktaker/fetchflow/issues and https://github.com/Mayanktaker/fetchflow/issues?q=is%3Aissue+is%3Aclosed
 - Finally, put x into all relevant boxes (like this [x])
 -->
 
