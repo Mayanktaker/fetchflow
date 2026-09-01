@@ -304,7 +304,6 @@
             </style>
           </object>
           <packing>
-            <property name="position">1</property>
           </packing>
         </child>
       </object>

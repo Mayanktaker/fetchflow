@@ -28,6 +28,7 @@ User-facing details live in [README.md](README.md); design system tokens live in
 | [`docs/privacy.html`](docs/privacy.html) | HTTPS Privacy Policy certifying zero telemetry, zero ad tracking, and local loopback IPC |
 | [`.github/workflows/release.yml`](.github/workflows/release.yml) | Automated CI/CD release workflow for tarballs, RPM, DEB, extensions & SHA256SUMS |
 | [`docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.md`](docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.md) | UI/UX design tokens, GTK styling rules, and layout specifications |
+| [`docs/design.md`](docs/design.md) | Canonical single source of truth for UI tokens, radius/spacing scale, theme colors & typography |
 
 ## Key Commands
 

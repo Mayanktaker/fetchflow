@@ -39,8 +39,6 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">6</property>
@@ -70,8 +68,6 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">6</property>
@@ -101,8 +97,6 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">6</property>
@@ -132,8 +126,6 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">6</property>
@@ -163,8 +155,6 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">6</property>
@@ -183,9 +173,6 @@
                 </child>
               </object>
               <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
               </packing>
             </child>
             <child>
@@ -205,8 +192,6 @@
                           <object class="GtkBox">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">10</property>
@@ -279,7 +264,6 @@
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="row-spacing">5</property>
                                 <property name="column-spacing">5</property>
@@ -403,9 +387,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">5</property>
                               </packing>
                             </child>
                             <child>
@@ -427,7 +408,6 @@
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="row-spacing">5</property>
                                 <property name="column-spacing">5</property>
@@ -535,7 +515,6 @@
                               <object class="GtkEntry" id="TxtDefaultFileTypes">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                               </object>
                               <packing>
@@ -579,7 +558,6 @@
                               <object class="GtkEntry" id="TxtDefaultVideoFormats">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                               </object>
                               <packing>
@@ -623,7 +601,6 @@
                               <object class="GtkEntry" id="TxtExceptions">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                               </object>
                               <packing>
@@ -653,7 +630,6 @@
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -695,9 +671,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">16</property>
                               </packing>
                             </child>
                             <child>
@@ -756,8 +729,6 @@
                           <object class="GtkBox">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">10</property>
@@ -837,7 +808,6 @@
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -867,9 +837,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">5</property>
                               </packing>
                             </child>
                             <child>
@@ -889,7 +856,6 @@
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -922,9 +888,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">7</property>
                               </packing>
                             </child>
                             <child>
@@ -944,7 +907,6 @@
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -977,16 +939,12 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">9</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -1016,9 +974,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">10</property>
                               </packing>
                             </child>
                             <child>
@@ -1051,9 +1006,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">11</property>
                               </packing>
                             </child>
                             <child>
@@ -1087,7 +1039,6 @@
                               <object class="GtkScrolledWindow">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="shadow-type">in</property>
                                 <property name="min-content-height">200</property>
@@ -1111,7 +1062,6 @@
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -1187,9 +1137,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">15</property>
                               </packing>
                             </child>
                           </object>
@@ -1198,7 +1145,6 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1224,8 +1170,6 @@
                           <object class="GtkBox">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">10</property>
@@ -1249,7 +1193,6 @@
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -1279,16 +1222,12 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -1318,16 +1257,12 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">2</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -1357,16 +1292,12 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">3</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <child>
                                   <object class="GtkCheckButton" id="ChkEnableSpeedLimit">
@@ -1396,9 +1327,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">4</property>
                               </packing>
                             </child>
                             <child>
@@ -1406,7 +1334,6 @@
                               <object class="GtkGrid">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="row-spacing">10</property>
                                 <property name="column-spacing">10</property>
@@ -1542,7 +1469,6 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1560,8 +1486,6 @@
                   <object class="GtkBox">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-left">10</property>
-                    <property name="margin-right">10</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -1663,14 +1587,10 @@
                         </child>
                       </object>
                       <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="position">3</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1696,8 +1616,6 @@
                           <object class="GtkBox">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-left">10</property>
-                            <property name="margin-right">10</property>
                             <property name="margin-start">10</property>
                             <property name="margin-end">10</property>
                             <property name="margin-top">10</property>
@@ -1763,7 +1681,6 @@
                               <object class="GtkEntry" id="TxtCustomCmd">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                               </object>
                               <packing>
@@ -1803,7 +1720,6 @@
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -1836,9 +1752,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">7</property>
                               </packing>
                             </child>
                             <child>
@@ -1858,7 +1771,6 @@
                               <object class="GtkEntry" id="TxtAntiVirusArgs">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                               </object>
                               <packing>
@@ -1898,7 +1810,6 @@
                               <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-right">10</property>
                                 <property name="margin-end">10</property>
                                 <property name="spacing">10</property>
                                 <child>
@@ -1931,9 +1842,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">12</property>
                               </packing>
                             </child>
                           </object>
@@ -1942,7 +1850,6 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="position">4</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1960,14 +1867,10 @@
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
               </packing>
             </child>
           </object>
           <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
           </packing>
         </child>
         <child>
@@ -2023,9 +1926,6 @@
             </child>
           </object>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">2</property>
           </packing>
         </child>
       </object>

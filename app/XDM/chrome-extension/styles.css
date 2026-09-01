@@ -122,6 +122,25 @@ body.popup {
   max-height: 400px;
   overflow: hidden;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.media-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.media-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.media-list::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: var(--r-pill);
+}
+
+.media-list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-faint);
 }
 
 /* Media table base */
@@ -145,6 +164,17 @@ table tbody {
   flex-direction: column;
   gap: var(--s1);
   border-bottom: 1px solid var(--border-soft);
+  transition: background-color 150ms ease;
+}
+
+.media-item:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+@media (prefers-color-scheme: light) {
+  .media-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
 }
 
 .media-item:last-child {
@@ -161,6 +191,7 @@ table tbody {
   color: var(--text);
   padding: 0;
   font-family: inherit;
+  transition: color 120ms ease;
 }
 
 .media-item-title:hover {

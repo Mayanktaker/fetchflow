@@ -233,16 +233,19 @@ entry {
 }
 
 entry.toolbar-search-entry {
-  min-height: 24px;
-  padding: 2px 8px;
+  min-height: 26px;
+  padding: 3px 12px;
   margin: 0;
-  border-radius: 8px;
+  border-radius: 999px;
+  background-color: #222222;
+  border: 1px solid #3d3d3d;
   font-size: 13px;
+  transition: all 150ms ease;
 }
 
 entry:focus {
   border-color: #3584e4;
-  box-shadow: inset 0 0 0 1px rgba(53, 132, 228, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(53, 132, 228, 0.65), 0 0 0 2px rgba(53, 132, 228, 0.25);
 }
 
 entry:disabled {
@@ -262,26 +265,31 @@ combobox button {
   padding: 4px 8px;
 }
 
-/* Neutral buttons — subtle elevation + rounded corners */
+/* Neutral buttons — subtle elevation + tactile gradients */
 button {
   background-color: #2e2e2e;
+  background-image: linear-gradient(to bottom, #343434, #2a2a2a);
   border: 1px solid #404040;
   border-radius: 8px;
   color: #f0f0f0;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
   padding: 6px 12px;
+  transition: all 120ms ease;
 }
 
 button:hover {
   background-color: #393939;
-  border-color: #4a4a4a;
+  background-image: linear-gradient(to bottom, #3d3d3d, #323232);
+  border-color: #4e4e4e;
   border-radius: 8px;
 }
 
 button:active {
-  background-color: #262626;
+  background-color: #242424;
+  background-image: linear-gradient(to bottom, #242424, #1f1f1f);
   border-color: #383838;
   border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 button:checked {
@@ -293,6 +301,7 @@ button:checked {
 
 button:disabled {
   background-color: #242424;
+  background-image: none;
   border-color: #2c2c2c;
   color: #757575;
   box-shadow: none;
@@ -309,9 +318,11 @@ button:focus {
 /* Flat buttons — toolbars, icon/utility buttons */
 button.flat {
   background-color: transparent;
+  background-image: none;
   border-color: transparent;
   box-shadow: none;
   border-radius: 8px;
+  transition: all 120ms ease;
 }
 
 button.flat:hover {
@@ -339,26 +350,32 @@ button.flat:disabled {
 /* Primary (suggested) — Download/Add/Save/Start/OK */
 button.suggested-action {
   background-color: #3584e4;
-  border-color: #2a6cb8;
+  background-image: linear-gradient(to bottom, #3f8ff0, #3079db);
+  border: 1px solid #2566b6;
   color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: all 120ms ease;
 }
 
 button.suggested-action:hover {
   background-color: #5a9bea;
-  border-color: #3f7ecb;
+  background-image: linear-gradient(to bottom, #5ba0f4, #4a91eb);
+  border-color: #3b7ecb;
   border-radius: 8px;
 }
 
 button.suggested-action:active {
   background-color: #2767b8;
-  border-color: #1f56a0;
+  background-image: linear-gradient(to bottom, #2566b6, #1c5194);
+  border-color: #17457e;
   border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 button.suggested-action:disabled {
   background-color: rgba(53, 132, 228, 0.45);
+  background-image: none;
   border-color: transparent;
   color: rgba(255, 255, 255, 0.65);
   box-shadow: none;
@@ -371,26 +388,32 @@ button.suggested-action:focus {
 /* Destructive — Delete/Remove/Clear */
 button.destructive-action {
   background-color: #e01b24;
-  border-color: #b0151c;
+  background-image: linear-gradient(to bottom, #ea2b34, #d31821);
+  border: 1px solid #a31219;
   color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: all 120ms ease;
 }
 
 button.destructive-action:hover {
   background-color: #ef4a52;
-  border-color: #c71f28;
+  background-image: linear-gradient(to bottom, #f34b53, #e52932);
+  border-color: #ba161e;
   border-radius: 8px;
 }
 
 button.destructive-action:active {
   background-color: #a5121a;
-  border-color: #8c0f16;
+  background-image: linear-gradient(to bottom, #a31219, #870d13);
+  border-color: #740b10;
   border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 button.destructive-action:disabled {
   background-color: rgba(224, 27, 36, 0.45);
+  background-image: none;
   border-color: transparent;
   color: rgba(255, 255, 255, 0.65);
   box-shadow: none;
@@ -866,10 +889,23 @@ button.theme-toggle-button {
   min-width: 28px;
   min-height: 28px;
   padding: 4px 6px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-right: 4px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  transition: all 150ms ease;
 }
 
 button.theme-toggle-button:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+button.theme-toggle-button:active {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+button.theme-toggle-button:focus {
+  outline: 2px solid rgba(53, 132, 228, 0.45);
+  outline-offset: -2px;
 }

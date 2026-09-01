@@ -234,16 +234,19 @@ entry {
 }
 
 entry.toolbar-search-entry {
-  min-height: 24px;
-  padding: 2px 8px;
+  min-height: 26px;
+  padding: 3px 12px;
   margin: 0;
-  border-radius: 8px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  border: 1px solid #c8c8c8;
   font-size: 13px;
+  transition: all 150ms ease;
 }
 
 entry:focus {
   border-color: #3584e4;
-  box-shadow: inset 0 0 0 1px rgba(53, 132, 228, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(53, 132, 228, 0.65), 0 0 0 2px rgba(53, 132, 228, 0.2);
 }
 
 entry:disabled {
@@ -263,26 +266,31 @@ combobox button {
   padding: 4px 8px;
 }
 
-/* Neutral buttons */
+/* Neutral buttons — subtle elevation + tactile gradients */
 button {
   background-color: #ffffff;
+  background-image: linear-gradient(to bottom, #ffffff, #f7f7f7);
   border: 1px solid #cacaca;
   border-radius: 8px;
   color: #242424;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   padding: 6px 12px;
+  transition: all 120ms ease;
 }
 
 button:hover {
   background-color: #f4f4f4;
+  background-image: linear-gradient(to bottom, #ffffff, #ededed);
   border-color: #b8b8b8;
   border-radius: 8px;
 }
 
 button:active {
   background-color: #ebebeb;
+  background-image: linear-gradient(to bottom, #e5e5e5, #dedede);
   border-color: #adadad;
   border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 button:checked {
@@ -294,6 +302,7 @@ button:checked {
 
 button:disabled {
   background-color: #fafafa;
+  background-image: none;
   border-color: #e2e2e2;
   color: #a0a0a0;
   box-shadow: none;
@@ -310,9 +319,11 @@ button:focus {
 /* Flat buttons */
 button.flat {
   background-color: transparent;
+  background-image: none;
   border-color: transparent;
   box-shadow: none;
   border-radius: 8px;
+  transition: all 120ms ease;
 }
 
 button.flat:hover {
@@ -340,26 +351,32 @@ button.flat:disabled {
 /* Primary (suggested) — Download/Add/Save/Start/OK */
 button.suggested-action {
   background-color: #3584e4;
-  border-color: #2267b8;
+  background-image: linear-gradient(to bottom, #3d8cf0, #317fdf);
+  border: 1px solid #2267b8;
   color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  transition: all 120ms ease;
 }
 
 button.suggested-action:hover {
   background-color: #4a91eb;
+  background-image: linear-gradient(to bottom, #559cf4, #428ded);
   border-color: #1f5ca5;
   border-radius: 8px;
 }
 
 button.suggested-action:active {
   background-color: #2767b8;
+  background-image: linear-gradient(to bottom, #2566b6, #1c5194);
   border-color: #184b87;
   border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 button.suggested-action:disabled {
   background-color: rgba(53, 132, 228, 0.50);
+  background-image: none;
   border-color: transparent;
   color: rgba(255, 255, 255, 0.75);
   box-shadow: none;
@@ -372,26 +389,32 @@ button.suggested-action:focus {
 /* Destructive — Delete/Remove/Clear */
 button.destructive-action {
   background-color: #e01b24;
-  border-color: #b0151c;
+  background-image: linear-gradient(to bottom, #e72a33, #d21720);
+  border: 1px solid #b0151c;
   color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  transition: all 120ms ease;
 }
 
 button.destructive-action:hover {
   background-color: #ea3840;
-  border-color: #9c1319;
+  background-image: linear-gradient(to bottom, #f1444c, #df242d);
+  border-color: #9e1319;
   border-radius: 8px;
 }
 
 button.destructive-action:active {
   background-color: #a5121a;
-  border-color: #7b0d13;
+  background-image: linear-gradient(to bottom, #a31219, #870d13);
+  border-color: #740b10;
   border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 button.destructive-action:disabled {
   background-color: rgba(224, 27, 36, 0.50);
+  background-image: none;
   border-color: transparent;
   color: rgba(255, 255, 255, 0.75);
   box-shadow: none;
@@ -863,10 +886,23 @@ button.theme-toggle-button {
   min-width: 28px;
   min-height: 28px;
   padding: 4px 6px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-right: 4px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  transition: all 150ms ease;
 }
 
 button.theme-toggle-button:hover {
   background-color: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.04);
+}
+
+button.theme-toggle-button:active {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+button.theme-toggle-button:focus {
+  outline: 2px solid rgba(53, 132, 228, 0.35);
+  outline-offset: -2px;
 }
