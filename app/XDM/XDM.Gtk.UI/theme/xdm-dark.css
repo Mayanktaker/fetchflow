@@ -95,27 +95,34 @@ treeview {
   border-radius: 8px;
 }
 
-treeview.unfinished {
-  background-color: #232323;
-}
-
+treeview.unfinished,
 treeview.finished {
-  background-color: #2a2a2a;
+  background-color: transparent;
 }
 
-treeview row {
-  padding: 4px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+treeview.unfinished row,
+treeview.finished row {
+  margin: 3px 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-treeview row:hover {
-  background-color: rgba(255, 255, 255, 0.04);
+treeview.unfinished row:hover,
+treeview.finished row:hover {
+  background-color: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-treeview:selected,
-treeview row:selected {
+treeview.unfinished row:selected,
+treeview.finished row:selected,
+treeview.unfinished:selected,
+treeview.finished:selected {
   background-color: #3584e4;
   background-image: linear-gradient(135deg, rgba(53, 132, 228, 0.95), rgba(90, 155, 234, 0.85));
+  border-color: #3584e4;
   color: #ffffff;
 }
 

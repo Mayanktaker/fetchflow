@@ -1064,92 +1064,40 @@ namespace XDM.GtkUI
             inprogressDownloadsStoreSorted = sortedStore;
             lvInprogress = new TreeView(sortedStore);
             lvInprogress.Selection.Mode = SelectionMode.Multiple;
+            lvInprogress.HeadersVisible = false;
+            lvInprogress.EnableGridLines = TreeViewGridLines.None;
             // Per-view surface tint (see treeview.unfinished in the theme layer)
             lvInprogress.StyleContext.AddClass("unfinished");
 
-            //File name column
-            var fileNameColumn = new TreeViewColumn
-            {
-                Resizable = true,
-                Reorderable = false,
-                Title = TextResource.GetText("SORT_NAME"),
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 380,
-                MinWidth = 200
-            };
-
+            // Main Card Column (Icon + Title + Subtitle)
+            var inprogressMainCol = new TreeViewColumn { Expand = true, Sizing = TreeViewColumnSizing.Autosize };
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(6, 6);
-            fileNameColumn.PackStart(fileIconRenderer, false);
-            fileNameColumn.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
+            fileIconRenderer.SetPadding(8, 8);
+            inprogressMainCol.PackStart(fileIconRenderer, false);
+            inprogressMainCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
-            var fileNameRendererText = new CellRendererText();
-            fileNameRendererText.SetPadding(4, 4);
-            fileNameColumn.PackStart(fileNameRendererText, true);
-            SetInProgressNameColumn(fileNameColumn, fileNameRendererText, lvInprogress);
-            lvInprogress.AppendColumn(fileNameColumn);
+            var inprogressNameRenderer = new CellRendererText();
+            inprogressNameRenderer.SetPadding(4, 6);
+            inprogressNameRenderer.Ellipsize = Pango.EllipsizeMode.Middle;
+            inprogressMainCol.PackStart(inprogressNameRenderer, true);
+            SetInProgressNameColumn(inprogressMainCol, inprogressNameRenderer, lvInprogress);
+            lvInprogress.AppendColumn(inprogressMainCol);
 
-            //Last modified column
-            var lastModifiedRendererText = new CellRendererText();
-            lastModifiedRendererText.SetPadding(4, 8);
-            var lastModifiedColumn = new TreeViewColumn
+            // Trailing Card Meta Column (Progress % + Live Speed & Status)
+            var inprogressMetaRenderer = new CellRendererText
             {
-                Resizable = true,
-                Reorderable = false,
-                Title = TextResource.GetText("SORT_DATE"),
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 150,
-                MinWidth = 120
+                Xalign = 1.0f,
+                Alignment = Pango.Alignment.Right
             };
-            lastModifiedColumn.PackStart(lastModifiedRendererText, false);
-            SetDimmedTextColumn(lastModifiedColumn, lastModifiedRendererText, lvInprogress, 1);
-            lastModifiedColumn.SortColumnId = 1;
-            lastModifiedColumn.SortOrder = SortType.Descending;
-            lvInprogress.AppendColumn(lastModifiedColumn);
-
-
-            //File size column
-            var fileSizeRendererText = new CellRendererText();
-            fileSizeRendererText.SetPadding(4, 8);
-            var fileSizeColumn = new TreeViewColumn
+            inprogressMetaRenderer.SetPadding(4, 12);
+            var inprogressMetaCol = new TreeViewColumn
             {
-                Resizable = true,
-                Reorderable = false,
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 90,
-                MinWidth = 70,
-                Title = TextResource.GetText("SORT_SIZE"),
+                FixedWidth = 190
             };
-            fileSizeColumn.PackStart(fileSizeRendererText, false);
-            SetDimmedTextColumn(fileSizeColumn, fileSizeRendererText, lvInprogress, 2);
-            lvInprogress.AppendColumn(fileSizeColumn);
-
-            //File progress column
-            var fileRendererProgress = new CellRendererProgress();
-            fileRendererProgress.SetPadding(4, 8);
-
-            var progressColumn = new TreeViewColumn("%", fileRendererProgress, "value", 3)
-            {
-                Resizable = true,
-                Reorderable = false,
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 80
-            };
-            progressColumn.SetAttributes(fileRendererProgress, "value", 3);
-            lvInprogress.AppendColumn(progressColumn);
-
-            //Download status column
-            var statusRendererText = new CellRendererText();
-            statusRendererText.SetPadding(4, 8);
-            var statusColumn = new TreeViewColumn(TextResource.GetText("SORT_STATUS"), statusRendererText, "text", 4)
-            {
-                Resizable = true,
-                Reorderable = false,
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 90
-            };
-            statusColumn.SetAttributes(statusRendererText, "text", 4);
-            lvInprogress.AppendColumn(statusColumn);
+            inprogressMetaCol.PackStart(inprogressMetaRenderer, true);
+            SetInProgressMetaColumn(inprogressMetaCol, inprogressMetaRenderer, lvInprogress);
+            lvInprogress.AppendColumn(inprogressMetaCol);
 
             lvInprogress.Selection.Changed += (_, _) =>
             {
@@ -1167,12 +1115,10 @@ namespace XDM.GtkUI
 
             sortedStore.SetSortColumnId(1, SortType.Descending);
 
-            swInProgress = new ScrolledWindow { OverlayScrolling = true, Margin = 8, MarginBottom = 0, MarginTop = 0, ShadowType = ShadowType.In };
+            swInProgress = new ScrolledWindow { OverlayScrolling = true, Margin = 6, MarginBottom = 2, MarginTop = 2, ShadowType = ShadowType.None };
             swInProgress.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swInProgress.Add(lvInprogress);
             swInProgress.ShowAll();
-            //scrolledWindow.SetSizeRequest(200, 200);
-
             return swInProgress;
         }
 
@@ -1232,66 +1178,41 @@ namespace XDM.GtkUI
             finishedDownloadsStoreSorted = sortedStore;
             lvFinished = new TreeView(sortedStore);
             lvFinished.Selection.Mode = SelectionMode.Multiple;
+            lvFinished.HeadersVisible = false;
+            lvFinished.EnableGridLines = TreeViewGridLines.None;
             // Per-view surface tint (see treeview.finished in the theme layer)
             lvFinished.StyleContext.AddClass("finished");
 
-            //File name column
-            var fileNameColumn = new TreeViewColumn
-            {
-                Resizable = true,
-                Reorderable = false,
-                Title = TextResource.GetText("SORT_NAME"),
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 420,
-                MinWidth = 250
-            };
-
+            // Main Card Column (Icon + Title + Subtitle)
+            var finishedMainCol = new TreeViewColumn { Expand = true, Sizing = TreeViewColumnSizing.Autosize };
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(6, 6);
-            fileNameColumn.PackStart(fileIconRenderer, false);
-            fileNameColumn.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
-            fileNameColumn.SortColumnId = 0;
+            fileIconRenderer.SetPadding(8, 8);
+            finishedMainCol.PackStart(fileIconRenderer, false);
+            finishedMainCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
+            finishedMainCol.SortColumnId = 0;
 
-            var fileNameRendererText = new CellRendererText();
-            fileNameRendererText.SetPadding(4, 4);
-            fileNameColumn.PackStart(fileNameRendererText, true);
-            SetFinishedNameColumn(fileNameColumn, fileNameRendererText, lvFinished);
-            lvFinished.AppendColumn(fileNameColumn);
+            var finishedNameRenderer = new CellRendererText();
+            finishedNameRenderer.SetPadding(4, 6);
+            finishedNameRenderer.Ellipsize = Pango.EllipsizeMode.Middle;
+            finishedMainCol.PackStart(finishedNameRenderer, true);
+            SetFinishedNameColumn(finishedMainCol, finishedNameRenderer, lvFinished);
+            lvFinished.AppendColumn(finishedMainCol);
 
-            //Last modified column
-            var lastModifiedRendererText = new CellRendererText();
-            lastModifiedRendererText.SetPadding(4, 8);
-            var lastModifiedColumn = new TreeViewColumn
+            // Trailing Card Meta Column (Size on top, Date on bottom)
+            var finishedMetaRenderer = new CellRendererText
             {
-                Resizable = true,
-                Reorderable = false,
-                Title = TextResource.GetText("SORT_DATE"),
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 150,
-                MinWidth = 120
+                Xalign = 1.0f,
+                Alignment = Pango.Alignment.Right
             };
-            lastModifiedColumn.PackStart(lastModifiedRendererText, false);
-            SetDimmedTextColumn(lastModifiedColumn, lastModifiedRendererText, lvFinished, 1);
-            lastModifiedColumn.SortColumnId = 1;
-            lvFinished.AppendColumn(lastModifiedColumn);
-
-
-            //File size column
-            var fileSizeRendererText = new CellRendererText();
-            fileSizeRendererText.SetPadding(4, 8);
-            var fileSizeColumn = new TreeViewColumn
+            finishedMetaRenderer.SetPadding(4, 12);
+            var finishedMetaCol = new TreeViewColumn
             {
-                Resizable = true,
-                Reorderable = false,
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 90,
-                MinWidth = 70,
-                Title = TextResource.GetText("SORT_SIZE"),
+                FixedWidth = 170
             };
-            fileSizeColumn.PackStart(fileSizeRendererText, false);
-            SetDimmedTextColumn(fileSizeColumn, fileSizeRendererText, lvFinished, 2);
-            fileSizeColumn.SortColumnId = 2;
-            lvFinished.AppendColumn(fileSizeColumn);
+            finishedMetaCol.PackStart(finishedMetaRenderer, true);
+            SetFinishedMetaColumn(finishedMetaCol, finishedMetaRenderer, lvFinished);
+            lvFinished.AppendColumn(finishedMetaCol);
 
             lvFinished.Selection.Changed += (_, _) =>
             {
@@ -1309,7 +1230,7 @@ namespace XDM.GtkUI
 
             sortedStore.SetSortColumnId(1, SortType.Descending);
 
-            swFinished = new ScrolledWindow { OverlayScrolling = true, Margin = 8, MarginBottom = 0, MarginTop = 0, ShadowType = ShadowType.In };
+            swFinished = new ScrolledWindow { OverlayScrolling = true, Margin = 6, MarginBottom = 2, MarginTop = 2, ShadowType = ShadowType.None };
             swFinished.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swFinished.Add(lvFinished);
             swFinished.ShowAll();
@@ -1480,14 +1401,70 @@ namespace XDM.GtkUI
             }));
         }
 
-        // Category-tinted 24px file icon with white selection tint
+        // Right-aligned card metadata for finished downloads (Size on top, Date on bottom)
+        private static void SetFinishedMetaColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
+        {
+            column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
+            {
+                var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
+                var dateText = model.GetValue(iter, 1) as string ?? string.Empty;
+
+                var selected = false;
+                foreach (var path in view.Selection.GetSelectedRows())
+                {
+                    if (path.Compare(model.GetPath(iter)) == 0)
+                    {
+                        selected = true;
+                        break;
+                    }
+                }
+
+                var sizeMarkup = $"<span weight=\"bold\">{GLib.Markup.EscapeText(sizeText)}</span>";
+                var dateMarkup = selected
+                    ? $"<span size=\"9000\" alpha=\"55000\">{GLib.Markup.EscapeText(dateText)}</span>"
+                    : $"<span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">{GLib.Markup.EscapeText(dateText)}</span>";
+
+                ((CellRendererText)cell).Markup = $"{sizeMarkup}\n{dateMarkup}";
+            }));
+        }
+
+        // Right-aligned card metadata for in-progress downloads (Progress % on top, Live Status/Speed on bottom)
+        private static void SetInProgressMetaColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
+        {
+            column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
+            {
+                var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
+                var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
+                var progress = item?.Progress ?? 0;
+                var statusText = model.GetValue(iter, 4) as string ?? string.Empty;
+
+                var selected = false;
+                foreach (var path in view.Selection.GetSelectedRows())
+                {
+                    if (path.Compare(model.GetPath(iter)) == 0)
+                    {
+                        selected = true;
+                        break;
+                    }
+                }
+
+                var line1 = $"<span weight=\"bold\">{progress}%</span>  <span size=\"9000\" alpha=\"{(selected ? 55000 : SecondaryTextAlpha)}\">({GLib.Markup.EscapeText(sizeText)})</span>";
+                var line2 = selected
+                    ? $"<span size=\"9000\" alpha=\"55000\">{GLib.Markup.EscapeText(statusText)}</span>"
+                    : $"<span size=\"9000\" color=\"#38bdf8\">{GLib.Markup.EscapeText(statusText)}</span>";
+
+                ((CellRendererText)cell).Markup = $"{line1}\n{line2}";
+            }));
+        }
+
+        // Category-tinted 28px file icon with white selection tint
         void GetFileIcon(ICellLayout cell_layout,
                 CellRenderer cell, ITreeModel tree_model, TreeIter iter)
         {
             var name = (string)tree_model.GetValue(iter, 0);
             var (r, g, b) = GetCategoryColorForFileType(name);
             var svgName = IconResource.GetSVGNameForFileType(name);
-            var rawPix = LoadSvg(svgName, 24);
+            var rawPix = LoadSvg(svgName, 28);
             if (rawPix != null)
             {
                 var view = (cell_layout as TreeViewColumn)?.TreeView as TreeView;
@@ -1500,29 +1477,6 @@ namespace XDM.GtkUI
 
         // Pango alpha for secondary list text: 60% opacity on the 0-65535 scale
         private const int SecondaryTextAlpha = 39321;
-
-        // Secondary columns (date/size): dimmed markup at render time so the store
-        // keeps raw values for sorting; selected rows render at full opacity
-        private static void SetDimmedTextColumn(TreeViewColumn column, CellRendererText renderer,
-            TreeView view, int modelIndex)
-        {
-            column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
-            {
-                var text = model.GetValue(iter, modelIndex) as string ?? string.Empty;
-                var selected = false;
-                foreach (var path in view.Selection.GetSelectedRows())
-                {
-                    if (path.Compare(model.GetPath(iter)) == 0)
-                    {
-                        selected = true;
-                        break;
-                    }
-                }
-                ((CellRendererText)cell).Markup = selected
-                    ? GLib.Markup.EscapeText(text)
-                    : $"<span alpha=\"{SecondaryTextAlpha}\">{GLib.Markup.EscapeText(text)}</span>";
-            }));
-        }
 
         private void AppWin1_DeleteEvent(object o, DeleteEventArgs args)
         {
