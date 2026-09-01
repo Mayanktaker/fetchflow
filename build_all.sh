@@ -79,9 +79,9 @@ bash make-deb-pkg || echo "WARNING: DEB package skipped (dpkg-deb missing or fai
 bash make-arch-pkg || echo "WARNING: Arch package skipped (makepkg missing or failed) — this release is incomplete."
 
 # Copy the packages back to the root xdm-release folder
-cp rpmbuild/RPMS/x86_64/*.rpm "$OUT_DIR/" 2>/dev/null || echo "No .rpm packages found to copy"
-cp *.deb "$OUT_DIR/" 2>/dev/null || echo "No .deb packages found to copy"
-cp *.pkg.tar.* "$OUT_DIR/" 2>/dev/null || echo "No .pkg.tar.* packages found to copy"
+cp rpmbuild/RPMS/x86_64/fetchflow-${VERSION}*.rpm "$OUT_DIR/" 2>/dev/null || echo "No .rpm packages found to copy"
+cp fetchflow_${VERSION}*.deb "$OUT_DIR/" 2>/dev/null || echo "No .deb packages found to copy"
+cp fetchflow-${VERSION}*.pkg.tar.* "$OUT_DIR/" 2>/dev/null || echo "No .pkg.tar.* packages found to copy"
 cd ../../..
 
 echo "Generating SHA256 Checksums..."

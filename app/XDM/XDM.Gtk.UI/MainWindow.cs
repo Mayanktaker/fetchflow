@@ -345,6 +345,7 @@ namespace XDM.GtkUI
             var menuClearFinished = new MenuItem(TextResource.GetText("MENU_DELETE_COMPLETED"));
             var menuExport = new MenuItem(TextResource.GetText("MENU_EXPORT"));
             var menuImport = new MenuItem(TextResource.GetText("MENU_IMPORT"));
+            var menuToggleTheme = new MenuItem(ThemeManager.IsDarkActive ? "Switch to Light Theme" : "Switch to Dark Theme");
             var menuLanguage = new MenuItem(TextResource.GetText("MENU_LANG"));
             var menuHelpAndSupport = new MenuItem(TextResource.GetText("LBL_SUPPORT_PAGE"));
             var menuReportProblem = new MenuItem(TextResource.GetText("LBL_REPORT_PROBLEM"));
@@ -355,6 +356,8 @@ namespace XDM.GtkUI
             menuClearFinished.Activated += MenuClearFinished_Activated;
             menuExport.Activated += MenuExport_Activated;
             menuImport.Activated += MenuImport_Activated;
+            menuToggleTheme.Activated += (_, _) => ThemeManager.ToggleTheme();
+            ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) => menuToggleTheme.Label = isDark ? "Switch to Light Theme" : "Switch to Dark Theme");
             menuLanguage.Activated += MenuLanguage_Activated;
             menuBrowserMonitor.Activated += MenuBrowserMonitor_Activated;
             menuHelpAndSupport.Activated += MenuHelpAndSupport_Activated;
@@ -369,6 +372,7 @@ namespace XDM.GtkUI
             mainMenu.Append(menuClearFinished);
             mainMenu.Append(menuExport);
             mainMenu.Append(menuImport);
+            mainMenu.Append(menuToggleTheme);
             mainMenu.Append(menuLanguage);
             mainMenu.Append(menuHelpAndSupport);
             mainMenu.Append(menuReportProblem);
@@ -505,6 +509,24 @@ namespace XDM.GtkUI
             titleBox.PackStart(subtitleLabel, false, false, 0);
             titleBox.PackStart(updateDot, false, false, 0);
             hb.CustomTitle = titleBox;
+
+            // Theme toggle button: allows instant switching between Dark and Light mode
+            var themeToggleBtn = new Button { Visible = true, Relief = ReliefStyle.None, Valign = Align.Center };
+            themeToggleBtn.StyleContext.AddClass("flat");
+            themeToggleBtn.StyleContext.AddClass("theme-toggle-button");
+
+            var themeIcon = new Image();
+            void UpdateThemeIcon(bool isDark)
+            {
+                themeIcon.Pixbuf = LoadSvg(isDark ? "sun-line" : "moon-line", 18);
+                themeToggleBtn.TooltipText = isDark ? "Switch to Light theme" : "Switch to Dark theme";
+            }
+            UpdateThemeIcon(ThemeManager.IsDarkActive);
+            ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) => UpdateThemeIcon(isDark));
+            themeToggleBtn.Add(themeIcon);
+            themeToggleBtn.Clicked += (_, _) => ThemeManager.ToggleTheme();
+
+            hb.PackEnd(themeToggleBtn);
             hb.ShowAll();
             return hb;
         }

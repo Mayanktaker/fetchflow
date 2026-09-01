@@ -134,8 +134,6 @@ treeview.sidebar-list:selected {
 label.sidebar-heading {
   font-size: 11px;
   font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
   color: #6a6a6a;
   padding: 4px 8px;
 }
@@ -858,4 +856,17 @@ list.sidebar > row:selected {
 /* Update dot: bump from 10px to 11px for readability */
 label.update-dot {
   font-size: 11px;
+}
+
+/* Theme toggle headerbar button */
+button.theme-toggle-button {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  margin-right: 4px;
+}
+
+button.theme-toggle-button:hover {
+  background-color: rgba(0, 0, 0, 0.06);
 }

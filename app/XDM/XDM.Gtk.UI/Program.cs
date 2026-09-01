@@ -141,7 +141,7 @@ namespace XDM.GtkUI
                     provider.LoadFromData(globalStyleSheet);
                     Gtk.StyleContext.AddProviderForScreen(screen, provider, 800);
                 }
-                ThemeManager.ApplyTheme(Config.Instance.AllowSystemDarkTheme);
+                ThemeManager.ApplyTheme(Config.Instance.ThemeMode == 2 ? null : (bool?)(Config.Instance.ThemeMode == 1));
             }
             catch (Exception cssEx)
             {

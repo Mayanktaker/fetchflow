@@ -22,6 +22,21 @@ namespace XDM.GtkUI.Utils
         // Provider currently attached to the default screen (null = none attached yet)
         private static CssProvider? currentThemeProvider;
 
+        // Tracks whether the dark theme is actively rendered
+        public static bool IsDarkActive { get; private set; }
+
+        // Event raised whenever the active theme changes
+        public static event Action<bool>? ThemeChanged;
+
+        // Toggles between Dark and Light mode, persisting choice to Config
+        public static void ToggleTheme()
+        {
+            var newMode = IsDarkActive ? 0 : 1; // 0 = Light, 1 = Dark
+            XDM.Core.Config.Instance.ThemeMode = newMode;
+            XDM.Core.Config.SaveConfig();
+            ApplyTheme(newMode == 1);
+        }
+
         // Swaps the theme provider on the default screen and applies the GTK dark preference
         public static void ApplyTheme(bool? darkRequested)
         {
@@ -36,6 +51,7 @@ namespace XDM.GtkUI.Utils
                 }
                 catch { }
             }
+            IsDarkActive = dark;
             var cssFile = dark ? DarkThemeCssFile : LightThemeCssFile;
             var cssPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ThemeDir, cssFile);
             try
@@ -86,6 +102,8 @@ namespace XDM.GtkUI.Utils
             {
                 Log.Debug("Non-fatal: could not apply theme preference: " + settingsEx.Message);
             }
+
+            ThemeChanged?.Invoke(dark);
         }
     }
 }
