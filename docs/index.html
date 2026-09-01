@@ -114,7 +114,6 @@
       margin: 0 auto 24px;
       display: block;
       border-radius: 28px;
-      box-shadow: 0 16px 36px var(--accent-glow);
     }
     .hero h1 {
       font-size: 3.4rem;
@@ -122,9 +121,7 @@
       letter-spacing: -1.5px;
       line-height: 1.15;
       margin-bottom: 20px;
-      background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #ffffff;
     }
     .hero p {
       font-size: 1.25rem;
@@ -148,13 +145,10 @@
       border-radius: 10px;
       font-weight: 700;
       font-size: 1.05rem;
-      box-shadow: 0 8px 24px var(--accent-glow);
-      transition: all 0.2s;
+      transition: background 0.2s;
     }
     .btn-primary:hover {
       background: var(--accent-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(249, 115, 22, 0.4);
     }
     .btn-secondary {
       background: var(--surface);
@@ -164,7 +158,7 @@
       border-radius: 10px;
       font-weight: 600;
       font-size: 1.05rem;
-      transition: all 0.2s;
+      transition: background 0.2s, border-color 0.2s;
     }
     .btn-secondary:hover {
       background: var(--surface-elevated);
@@ -201,12 +195,10 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 32px;
-      transition: all 0.2s;
+      transition: border-color 0.2s;
     }
     .card:hover {
-      transform: translateY(-4px);
       border-color: var(--border-focus);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.3);
     }
     .card-icon {
       width: 48px;
