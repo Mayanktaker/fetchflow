@@ -1,7 +1,9 @@
 <!-- © 2026 Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 
 <p align="center">
-  <img src="docs/fetchflow-logo.png" width="120" height="120" alt="FetchFlow Download Manager Logo" />
+  <a href="https://mayanktaker.github.io/fetchflow/">
+    <img src="docs/fetchflow-logo.png" width="128" height="128" alt="FetchFlow Download Manager Logo" />
+  </a>
 </p>
 
 <h1 align="center">FetchFlow Download Manager</h1>
@@ -9,66 +11,84 @@
 <p align="center">
   <b>High-Performance Multi-Stream Download Accelerator & Media Ingestion Engine</b>
   <br />
-  <i>Native Wayland &bull; Modern GTK3 CSD &bull; .NET 8 AOT &bull; System Tray &bull; Browser Integration</i>
+  <i>Native Wayland &bull; Modern GTK3 CSD &bull; .NET 8 AOT &bull; System Tray &bull; Manifest V3 Browser Integration</i>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20Wayland%20%7C%20X11-orange?style=flat-square" alt="Platform" />
-  <img src="https://img.shields.io/badge/.NET-8.0%20(AOT)-512BD4?style=flat-square&logo=dotnet" alt=".NET 8" />
+  <a href="https://github.com/Mayanktaker/fetchflow/releases/latest"><img src="https://img.shields.io/github/v/release/Mayanktaker/fetchflow?color=orange&style=flat-square&logo=github" alt="Latest Release" /></a>
+  <a href="https://github.com/Mayanktaker/fetchflow/releases"><img src="https://img.shields.io/github/downloads/Mayanktaker/fetchflow/total?color=blue&style=flat-square" alt="Total Downloads" /></a>
+  <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20Wayland%20%7C%20X11%20%7C%20Windows-brightgreen?style=flat-square" alt="Platform" />
+  <img src="https://img.shields.io/badge/.NET-8.0%20AOT-512BD4?style=flat-square&logo=dotnet" alt=".NET 8" />
   <img src="https://img.shields.io/badge/UI-GTK3%20CSD-4A90E2?style=flat-square&logo=gtk" alt="GTK3" />
-  <img src="https://img.shields.io/badge/License-GPL--2.0-blue?style=flat-square" alt="License" />
-  <img src="https://img.shields.io/badge/Maintained%20by-Mayanktaker-F97316?style=flat-square" alt="Maintainer" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--2.0-blue?style=flat-square" alt="License" /></a>
+  <a href="https://mayanktaker.com"><img src="https://img.shields.io/badge/Maintained%20by-Mayanktaker-F97316?style=flat-square" alt="Maintainer" /></a>
 </p>
 
 <p align="center">
-  Maintained with ❤️ by <a href="https://mayanktaker.com"><b>Mayanktaker Computers &amp; Web Development</b></a>.
-  <br />
-  <i>Built on the open-source foundation of XDM by <a href="https://github.com/subhra74/xdm">Subhra Sankha Sarkar</a>.</i>
+  <a href="https://mayanktaker.github.io/fetchflow/"><b>🌐 Official Website</b></a> &bull;
+  <a href="https://github.com/Mayanktaker/fetchflow/releases"><b>📦 Downloads &amp; Releases</b></a> &bull;
+  <a href="#-browser-extensions-manifest-v3"><b>🧩 Browser Extensions</b></a> &bull;
+  <a href="#-why-fetchflow-comparison"><b>⚖️ Comparison</b></a> &bull;
+  <a href="https://github.com/Mayanktaker/fetchflow/issues"><b>🐛 Report an Issue</b></a>
 </p>
 
 ---
 
-## ⚡ Key Highlights
+## ⚡ Key Capabilities
 
-| Feature | Technical Capability |
+| Capability | Engineering Detail |
 |---|---|
-| **Multi-Stream Acceleration** | Divides downloads into dynamic parallel segments (up to 32 connections) for maximum throughput |
-| **Native Wayland Support** | Full Wayland client integration (KDE Plasma 6, GNOME 46+, Sway, Hyprland, COSMIC) with zero XWayland quirks |
-| **System Tray Integration** | StatusNotifierItem (SNI) D-Bus protocol on Wayland with a full right-click context menu (Show / Hide / Quit) |
-| **Video & Stream Grabber** | Built-in streaming media detection powered by `yt-dlp` — save video/audio from YouTube, Vimeo, Twitch, and 1000+ sites |
-| **Browser Integration** | Vanilla Manifest V3 extensions for Chrome, Firefox, Brave, Edge, Opera, Vivaldi, and Floorp |
-| **Android / MTP Safe Names** | Automatically sanitizes downloaded file names to ASCII-safe formats, avoiding transfer failures over USB/MTP |
-| **Resilient Resumption** | Seamlessly resume broken, timed-out, or expired downloads with automatic URL refresh and token re-acquisition |
-| **Modern Packaging** | First-class distribution packages: Fedora/RHEL (`.rpm`), Debian/Ubuntu (`.deb`), Arch (`.pkg.tar.zst`), Flatpak, and Portable Tarball |
+| **Parallel Stream Chunking** | Dynamic multi-socket segmentation (up to 32 parallel connections per file) with real-time chunk re-assembly |
+| **Native Wayland Architecture** | Zero XWayland dependency; native surface allocation on KDE Plasma 6, GNOME 46+, Sway, Hyprland, and COSMIC |
+| **StatusNotifierItem (SNI) Tray** | Full D-Bus system tray menu (Show / Minimize / Quit) with close-to-tray background daemon persistence |
+| **Integrated Media Grabber** | Built-in `yt-dlp` stream extraction engine supporting video/audio ingestion from 1,000+ streaming sites |
+| **Manifest V3 Browser Addons** | High-speed local WebSocket/HTTP IPC (port `8597`) for instant download takeover and in-page blob media capture |
+| **Android / MTP Sanitizer** | Automatic sanitization of illegal characters (`: ? * " < > \| ( ) [ ] ^ %`) for seamless USB file transfers |
+| **Smart Resumption Engine** | Dynamic URL token refresh, HTTP `Range` request validation, and zero data corruption on network drops |
+| **Multi-Language Desktop UI** | Fully localized interface supporting English, Hindi, Spanish, French, German, Russian, Chinese, Arabic, and more |
+
+---
+
+## ⚖️ Why FetchFlow? (Comparison)
+
+| Feature / Metric | FetchFlow v9 | Internet Download Manager (IDM) | Free Download Manager (FDM) | Wget / cURL |
+|---|:---:|:---:|:---:|:---:|
+| **Platform Support** | Linux (Wayland/X11), Windows | Windows Only | Windows, macOS, Linux | Cross-Platform (CLI) |
+| **Native Wayland CSD** | **✓ Full Native** | ✗ No (Windows Only) | ✗ Partial (XWayland) | ✗ CLI Only |
+| **Stream Acceleration** | **✓ Up to 32 Sockets** | ✓ Yes | ✓ Yes | ✗ Single-stream |
+| **Video Sniffing & yt-dlp** | **✓ Built-in (1000+ Sites)** | ✓ Proprietary | ✗ Limited | ✗ No |
+| **Browser Extensions** | **✓ Manifest V3** | ✓ MV3 | ✓ MV3 | ✗ No |
+| **License & Cost** | **✓ 100% Free & FOSS (GPL-2.0)** | ✗ Commercial ($24.95) | ✗ Proprietary Core | ✓ Open Source |
+| **Resource Footprint** | **✓ ~35 MB RAM (AOT Binary)** | ~40 MB RAM | ~120 MB RAM (Electron/Qt) | ~10 MB RAM |
 
 ---
 
 ## 📦 Installation & Packaging
 
-FetchFlow distributes self-contained, high-performance Linux binaries that require no separate runtime installation.
+FetchFlow distributes self-contained single-file AOT binaries for Linux with zero runtime dependencies.
 
-### Fedora / RHEL / CentOS (RPM)
+### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install ./xdm-release/fetchflow-9.1.4-1.fc44.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.4-1.fc44.x86_64.rpm
 ```
 
-### Debian / Ubuntu / Linux Mint (DEB)
+### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./xdm-release/fetchflow_9.1.4_amd64.deb
+sudo apt install ./fetchflow_9.1.4_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS
 ```bash
-# Install via prebuilt package
-sudo pacman -U ./xdm-release/fetchflow-9.1.4-1-x86_64.pkg.tar.zst
+# Using prebuilt package:
+sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.4-1-x86_64.pkg.tar.zst
 
-# Or build via PKGBUILD
+# Or build via PKGBUILD:
 cd app/XDM/XDM.Linux.Installer && makepkg -si
 ```
 
-### Portable Tarball (Universal Linux x64)
+### Universal Portable Tarball
 ```bash
-tar -xzf xdm-release/fetchflow-linux-x64-9.1.4.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.4.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
@@ -79,37 +99,53 @@ flatpak-builder --user --install --force-clean build-dir com.mayanktaker.fetchfl
 
 ---
 
-## 🌐 Browser Extensions (Manifest V3)
+## 🧩 Browser Extensions (Manifest V3)
 
-FetchFlow integrates directly with your default web browser via native WebSocket/HTTP loopback IPC:
+FetchFlow includes native Manifest V3 browser extensions with zero cloud telemetry:
 
-| Browser Family | Extension Artifact | Features |
-|---|---|---|
-| **Chromium** (Chrome, Brave, Edge, Opera, Vivaldi) | `fetchflow-chrome-extension-9.1.4.zip` | Automatic download interception, in-page blob media capture, video sniffing, context menu |
-| **Gecko** (Firefox, Floorp, LibreWolf, Waterfox) | `fetchflow-firefox-extension-9.1.4.xpi` | Full MV3 support, background streaming listener, right-click download triggers |
+| Browser Family | Supported Browsers | Package | Features |
+|---|---|---|---|
+| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.4.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | `fetchflow-firefox-extension-9.1.4.xpi` | Background streaming listener, seamless takeover, media sniffing |
 
-### Loading Extensions Manually
-- **Chrome / Chromium:** Navigate to `chrome://extensions` &rarr; Enable *Developer mode* &rarr; Click *Load unpacked* and select `app/XDM/chrome-extension`.
-- **Firefox:** Navigate to `about:debugging#/runtime/this-firefox` &rarr; Click *Load Temporary Add-on* and select `app/XDM/firefox-amo/manifest.json`.
+### Manual Installation
+- **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.
+- **Firefox:** Open `about:debugging#/runtime/this-firefox` &rarr; Click *Load Temporary Add-on* &rarr; Select `app/XDM/firefox-amo/manifest.json`.
 
 ---
 
-## 🛠️ Architecture & Core Engine
+## 🏗️ Architecture Overview
 
 ```
-Browser Extension (MV3)
+Browser Extension (Chrome / Firefox MV3)
+    │
     │ (WebSocket / HTTP Loopback IPC @ 127.0.0.1:8597)
     ▼
-IpcHttpMessageProcessor
-    ├── VideoUrlHelper (yt-dlp stream extraction & caching)
-    ├── NetworkHelper (Connection pooling & multi-socket segmentation)
-    └── DownloadEngine (Segment assembler & chunk verification)
+IpcHttpMessageProcessor.cs
+    ├── VideoUrlHelper.cs  (yt-dlp media extraction & format caching)
+    ├── NetworkHelper.cs   (Header parsing, referer injection, checksums)
+    └── DownloadEngine.cs  (Parallel socket chunking & multi-part assembler)
             ▼
-GTK3 Modern Shell (Wayland CSD HeaderBar & Responsive Paned TreeView)
-    │
+GTK3 Modern Shell (XDM.Gtk.UI)
+    ├── Modern CSD HeaderBar & Responsive Paned Sidebar
     ├── StatusNotifierItem (D-Bus Tray Client for KDE/GNOME/Waybar)
     └── SQLite Storage Engine (~/.fetchflow-app-data/downloads.db)
 ```
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| <kbd>Ctrl</kbd> + <kbd>N</kbd> | Open New Download Dialog |
+| <kbd>Ctrl</kbd> + <kbd>V</kbd> | Open Video Downloader (Media Grabber) |
+| <kbd>Ctrl</kbd> + <kbd>B</kbd> | Open Batch Download Dialog |
+| <kbd>Ctrl</kbd> + <kbd>Q</kbd> | Exit FetchFlow Completely |
+| <kbd>Delete</kbd> | Delete Selected Download Entry |
+| <kbd>Shift</kbd> + <kbd>Delete</kbd> | Delete Download and Delete File from Disk |
+| <kbd>F5</kbd> | Refresh Download List & Active Speeds |
+| <kbd>Ctrl</kbd> + <kbd>,</kbd> | Open Settings & Preferences |
 
 ---
 
@@ -117,37 +153,36 @@ GTK3 Modern Shell (Wayland CSD HeaderBar & Responsive Paned TreeView)
 
 ### Prerequisites
 - .NET SDK 8.0 (`net8.0`)
-- GTK3 runtime & development libraries (`gtk3`, `glib2`, `cairo`, `pango`)
-- Standard build tools: `tar`, `zip`, `rpmbuild` (optional: `dpkg-deb`, `makepkg`)
+- GTK3 development libraries (`gtk3`, `glib2`, `cairo`, `pango`)
+- Packaging tools: `rpmbuild`, `tar`, `zip` (optional: `dpkg-deb`, `makepkg`)
 
-### One-Command Release Build
+### Build Everything (Binaries + Packages + Extensions)
 ```bash
 bash build_all.sh
 ```
 
-This compiles the self-contained single-file AOT binary, packages all Linux distribution targets (RPM, DEB, Arch, Tarball), and bundles the browser extensions into `xdm-release/`.
+All compiled packages land in `xdm-release/`.
 
-### Running Automated Test Suite
+### Run Automated Tests
 ```bash
 dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj
 ```
 
 ---
 
-## 📁 Data & Configuration Paths
+## 📁 System Configuration & Diagnostic Paths
 
-| Purpose | Default Path (Standard Linux) | Flatpak / Sandbox Path |
+| File / Folder | Standard Location | Flatpak / Sandbox Location |
 |---|---|---|
-| **Database & Settings** | `~/.fetchflow-app-data/downloads.db` | `$XDG_CONFIG_HOME/fetchflow/downloads.db` |
+| **Database & Metadata** | `~/.fetchflow-app-data/downloads.db` | `$XDG_CONFIG_HOME/fetchflow/downloads.db` |
 | **Queues Configuration** | `~/.fetchflow-app-data/queues.db` | `$XDG_CONFIG_HOME/fetchflow/queues.db` |
-| **Crash & Diagnostic Log** | `~/.fetchflow-app-data/crash.log` (5 MB rotated) | `$XDG_CONFIG_HOME/fetchflow/crash.log` |
-| **Binary Installation** | `/opt/fetchflow/` | `/app/bin/` |
-| **Desktop Entry & Icons** | `/usr/share/applications/fetchflow.desktop`<br>`/usr/share/icons/hicolor/scalable/apps/fetchflow.svg` | App package metadata |
+| **Crash & Diagnostic Log** | `~/.fetchflow-app-data/crash.log` (5 MB auto-rotated) | `$XDG_CONFIG_HOME/fetchflow/crash.log` |
+| **Installation Directory** | `/opt/fetchflow/` | `/app/bin/` |
 
 ---
 
 ## 📜 Credits & License
 
-- **Lead Developer & Maintainer:** [Mayanktaker Computers & Web Development](https://mayanktaker.com)
-- **Original Architecture & Heritage:** [Subhra Sankha Sarkar (subhra74)](https://github.com/subhra74/xdm)
+- **Developer & Maintainer:** [Mayanktaker Computers & Web Development](https://mayanktaker.com)
+- **Open-Source Heritage:** Built upon the original XDM foundation by [Subhra Sankha Sarkar](https://github.com/subhra74/xdm).
 - **License:** [GNU General Public License v2.0 (GPL-2.0)](LICENSE)
