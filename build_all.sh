@@ -2,7 +2,13 @@
 # © Mayanktaker Computers & Web Development | https://mayanktaker.com
 set -e
 
-export DOTNET_ROOT=/home/mayanktakeroffice/.dotnet8
+if [ -x "/mnt/Development/_DevSofts/dotnet8/dotnet" ]; then
+    export DOTNET_ROOT=/mnt/Development/_DevSofts/dotnet8
+elif [ -x "/home/mayanktakeroffice/.dotnet8/dotnet" ]; then
+    export DOTNET_ROOT=/home/mayanktakeroffice/.dotnet8
+elif [ -d "$HOME/.dotnet8" ]; then
+    export DOTNET_ROOT="$HOME/.dotnet8"
+fi
 export PATH=$DOTNET_ROOT:$PATH
 
 # User-local rpmbuild (extracted rpm-build package; see AGENTS.md)

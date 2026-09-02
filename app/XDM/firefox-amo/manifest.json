@@ -4,6 +4,15 @@
     "version": "9.1.7",
     "description": "Download files and capture videos with FetchFlow Download Manager",
     "action": {},
+    "commands": {
+        "_execute_action": {
+            "suggested_key": {
+                "default": "Alt+Shift+F",
+                "mac": "Alt+Shift+F"
+            },
+            "description": "Open FetchFlow popup inspector"
+        }
+    },
     "host_permissions": [
         "*://*/*"
     ],
