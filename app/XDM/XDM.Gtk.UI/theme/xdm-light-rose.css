@@ -151,10 +151,10 @@ treeview.unfinished row:selected,
 treeview.finished row:selected,
 treeview.unfinished:selected,
 treeview.finished:selected {
-  background-color: #e11d48;
-  background-image: linear-gradient(135deg, rgba(225, 29, 72, 0.95), rgba(251, 113, 133, 0.85));
-  border-color: #e11d48;
-  color: #ffffff;
+  background-color: #f4d1dc;
+  background-image: linear-gradient(135deg, #f4d1dc, #fae0e8);
+  border-color: #e5a9bc;
+  color: #0f172a;
 }
 
 /* Category sidebar */
@@ -1027,20 +1027,20 @@ treeview.unfinished row:selected,
 treeview.finished row:selected,
 treeview.unfinished:selected,
 treeview.finished:selected {
-  background-color: #e11d48;
-  background-image: linear-gradient(135deg, #e11d48, #f43f5e);
-  border-color: #e11d48;
-  color: #ffffff;
+  background-color: #f4d1dc;
+  background-image: linear-gradient(135deg, #f4d1dc, #fae0e8);
+  border-color: #e5a9bc;
+  color: #0f172a;
 }
 
 treeview.unfinished row:selected:hover,
 treeview.finished row:selected:hover,
 treeview.unfinished:selected:hover,
 treeview.finished:selected:hover {
-  background-color: #f43f5e;
-  background-image: linear-gradient(135deg, #f43f5e, #e11d48);
-  border-color: #be123c;
-  color: #ffffff;
+  background-color: #edbed0;
+  background-image: linear-gradient(135deg, #edbed0, #f4d1dc);
+  border-color: #db91a7;
+  color: #0f172a;
 }
 
 treeview.unfinished row:selected:backdrop,

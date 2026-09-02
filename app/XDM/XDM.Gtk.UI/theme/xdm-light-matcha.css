@@ -151,10 +151,10 @@ treeview.unfinished row:selected,
 treeview.finished row:selected,
 treeview.unfinished:selected,
 treeview.finished:selected {
-  background-color: #059669;
-  background-image: linear-gradient(135deg, rgba(5, 150, 105, 0.95), rgba(16, 185, 129, 0.85));
-  border-color: #059669;
-  color: #ffffff;
+  background-color: #cbe7d7;
+  background-image: linear-gradient(135deg, #cbe7d7, #dbefe3);
+  border-color: #9ecdba;
+  color: #0f172a;
 }
 
 /* Category sidebar */
@@ -1027,20 +1027,20 @@ treeview.unfinished row:selected,
 treeview.finished row:selected,
 treeview.unfinished:selected,
 treeview.finished:selected {
-  background-color: #059669;
-  background-image: linear-gradient(135deg, #059669, #10b981);
-  border-color: #059669;
-  color: #ffffff;
+  background-color: #cbe7d7;
+  background-image: linear-gradient(135deg, #cbe7d7, #dbefe3);
+  border-color: #9ecdba;
+  color: #0f172a;
 }
 
 treeview.unfinished row:selected:hover,
 treeview.finished row:selected:hover,
 treeview.unfinished:selected:hover,
 treeview.finished:selected:hover {
-  background-color: #10b981;
-  background-image: linear-gradient(135deg, #10b981, #059669);
-  border-color: #047857;
-  color: #ffffff;
+  background-color: #bedecb;
+  background-image: linear-gradient(135deg, #bedecb, #cbe7d7);
+  border-color: #89beaa;
+  color: #0f172a;
 }
 
 treeview.unfinished row:selected:backdrop,

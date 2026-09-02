@@ -154,9 +154,9 @@ namespace XDM.GtkUI
         // Button content geometry: labeled buttons keep spacing + symmetric side margins
         private const int ButtonContentSpacing = 10;
         private const int ButtonBoxMargin = 2;
-        private const int DownloadColumnSpacing = 8;
+        private const int DownloadColumnSpacing = 0;
         private const int DownloadIconHorizontalPadding = 12;
-        private const int DownloadNameHorizontalPadding = 8;
+        private const int DownloadNameHorizontalPadding = 12;
         private const int DownloadMetaHorizontalPadding = 16;
         private const int DownloadMetaActiveWidth = 196;
         private const int DownloadMetaFinishedWidth = 176;
@@ -1658,9 +1658,13 @@ namespace XDM.GtkUI
 
                 if (selected)
                 {
+                    var isDark = ThemeManager.IsDarkActive;
+                    var titleCol = isDark ? "#ffffff" : "#0f172a";
+                    var metaCol = isDark ? "#ffffff" : "#334155";
+                    var metaAlpha = isDark ? "55000" : $"{SecondaryTextAlpha}";
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
-                        ? $"<span weight=\"bold\" color=\"#ffffff\">{title}</span>"
-                        : $"<span weight=\"bold\" color=\"#ffffff\">{title}</span>\n<span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">{metaLine}</span>";
+                        ? $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>"
+                        : $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>\n<span size=\"9000\" alpha=\"{metaAlpha}\" color=\"{metaCol}\">{metaLine}</span>";
                 }
                 else
                 {
@@ -1708,9 +1712,13 @@ namespace XDM.GtkUI
 
                 if (selected)
                 {
+                    var isDark = ThemeManager.IsDarkActive;
+                    var titleCol = isDark ? "#ffffff" : "#0f172a";
+                    var metaCol = isDark ? "#ffffff" : "#334155";
+                    var metaAlpha = isDark ? "55000" : $"{SecondaryTextAlpha}";
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
-                        ? $"<span weight=\"bold\" color=\"#ffffff\">{title}</span>"
-                        : $"<span weight=\"bold\" color=\"#ffffff\">{title}</span>\n<span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">{metaLine}</span>";
+                        ? $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>"
+                        : $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>\n<span size=\"9000\" alpha=\"{metaAlpha}\" color=\"{metaCol}\">{metaLine}</span>";
                 }
                 else
                 {
@@ -1736,11 +1744,16 @@ namespace XDM.GtkUI
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
                 var dateText = model.GetValue(iter, 1) as string ?? string.Empty;
 
+                var isDark = ThemeManager.IsDarkActive;
+                var textCol = isDark ? "#ffffff" : "#0f172a";
+                var dateCol = isDark ? "#ffffff" : "#475569";
+                var dateAlpha = isDark ? "55000" : $"{SecondaryTextAlpha}";
+
                 var sizeMarkup = selected
-                    ? $"<span weight=\"bold\" color=\"#ffffff\">{GLib.Markup.EscapeText(sizeText)}</span>"
+                    ? $"<span weight=\"bold\" color=\"{textCol}\">{GLib.Markup.EscapeText(sizeText)}</span>"
                     : $"<span weight=\"bold\">{GLib.Markup.EscapeText(sizeText)}</span>";
                 var dateMarkup = selected
-                    ? $"<span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">{GLib.Markup.EscapeText(dateText)}</span>"
+                    ? $"<span size=\"9000\" alpha=\"{dateAlpha}\" color=\"{dateCol}\">{GLib.Markup.EscapeText(dateText)}</span>"
                     : $"<span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">{GLib.Markup.EscapeText(dateText)}</span>";
 
                 ((CellRendererText)cell).Markup = $"{sizeMarkup}\n{dateMarkup}";
@@ -1764,11 +1777,16 @@ namespace XDM.GtkUI
                 var progress = item?.Progress ?? 0;
                 var statusText = model.GetValue(iter, 4) as string ?? string.Empty;
 
+                var isDark = ThemeManager.IsDarkActive;
+                var metaTextCol = isDark ? "#ffffff" : "#0f172a";
+                var speedCol = isDark ? "#ffffff" : "#0284c7";
+                var subAlpha = isDark ? "55000" : $"{SecondaryTextAlpha}";
+
                 var line1 = selected
-                    ? $"<span weight=\"bold\" color=\"#ffffff\">{progress}%</span>  <span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">({GLib.Markup.EscapeText(sizeText)})</span>"
+                    ? $"<span weight=\"bold\" color=\"{metaTextCol}\">{progress}%</span>  <span size=\"9000\" alpha=\"{subAlpha}\" color=\"{metaTextCol}\">({GLib.Markup.EscapeText(sizeText)})</span>"
                     : $"<span weight=\"bold\">{progress}%</span>  <span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">({GLib.Markup.EscapeText(sizeText)})</span>";
                 var line2 = selected
-                    ? $"<span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">{GLib.Markup.EscapeText(statusText)}</span>"
+                    ? $"<span size=\"9000\" alpha=\"{subAlpha}\" color=\"{speedCol}\">{GLib.Markup.EscapeText(statusText)}</span>"
                     : $"<span size=\"9000\" color=\"#38bdf8\">{GLib.Markup.EscapeText(statusText)}</span>";
 
                 ((CellRendererText)cell).Markup = $"{line1}\n{line2}";
@@ -1794,7 +1812,8 @@ namespace XDM.GtkUI
 
             if (rawPix != null)
             {
-                ((CellRendererPixbuf)cell).Pixbuf = isSelected
+                var isDark = ThemeManager.IsDarkActive;
+                ((CellRendererPixbuf)cell).Pixbuf = (isSelected && isDark)
                     ? GtkHelper.TintPixbuf(rawPix, 255, 255, 255)
                     : GtkHelper.TintPixbuf(rawPix, r, g, b);
             }

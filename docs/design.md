@@ -47,26 +47,27 @@ FetchFlow provides 7 curated color schemes for Dark mode and 7 curated color sch
 ### Dark Theme Palettes (7 Schemes)
 
 | Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex & Hover | TreeView Hover |
-|:---|:---|:---|:---|:---|:---|:---|
-| `0` | **Charcoal Blue (Default)** | `#1d1d1d` | `#161616` | `#262626` | `#3584e4` / `#5a9bea` | `#262c36` |
-| `1` | **Midnight Violet** | `#161420` | `#110f1a` | `#211e30` | `#8b5cf6` / `#a78bfa` | `#282038` |
-| `2` | **Nord Emerald** | `#131c1a` | `#0d1513` | `#1d2c29` | `#10b981` / `#34d399` | `#1b302a` |
-| `3` | **Sunset Amber** | `#1a1618` | `#141012` | `#2b2328` | `#f43f5e` / `#fb7185` | `#332128` |
-| `4` | **Dracula Orchid** | `#191622` | `#13101c` | `#221d2e` | `#ec4899` / `#f472b6` | `#301e38` |
-| `5` | **Cyberpunk Matrix** | `#0f172a` | `#0a0f1d` | `#182236` | `#06b6d4` / `#22d3ee` | `#162a3d` |
-| `6` | **Espresso Mocha** | `#1c1816` | `#14110f` | `#26211e` | `#f59e0b` / `#fbbf24` | `#30241b` |
+| Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex & Hover | TreeView Hover | Active Row Hex |
+|:---|:---|:---|:---|:---|:---|:---|:---|
+| `0` | **Charcoal Blue (Default)** | `#1d1d1d` | `#161616` | `#262626` | `#3584e4` / `#5a9bea` | `#262c36` | `#323b4a` |
+| `1` | **Midnight Violet** | `#161420` | `#110f1a` | `#211e30` | `#8b5cf6` / `#a78bfa` | `#282038` | `#382d4e` |
+| `2` | **Nord Emerald** | `#131c1a` | `#0d1513` | `#1d2c29` | `#10b981` / `#34d399` | `#1b302a` | `#27443c` |
+| `3` | **Sunset Amber** | `#1a1618` | `#141012` | `#2b2328` | `#f43f5e` / `#fb7185` | `#332128` | `#462e37` |
+| `4` | **Dracula Orchid** | `#191622` | `#13101c` | `#221d2e` | `#ec4899` / `#f472b6` | `#301e38` | `#422b4d` |
+| `5` | **Cyberpunk Matrix** | `#0f172a` | `#0a0f1d` | `#182236` | `#06b6d4` / `#22d3ee` | `#162a3d` | `#223b55` |
+| `6` | **Espresso Mocha** | `#1c1816` | `#14110f` | `#26211e` | `#f59e0b` / `#fbbf24` | `#30241b` | `#443327` |
 
 ### Light Theme Palettes (7 Schemes)
 
-| Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex & Hover | TreeView Hover |
-|:---|:---|:---|:---|:---|:---|:---|
-| `0` | **Classic Blue (Default)** | `#fcfcfc` | `#ececec` | `#ffffff` | `#3584e4` / `#5a9bea` | `#f0f4f9` |
-| `1` | **Nordic Frost** | `#f4f8fa` | `#e3edf1` | `#f8fafb` | `#0891b2` / `#06b6d4` | `#e6f4f8` |
-| `2` | **Solarized Sand** | `#faf6ee` | `#ede6d8` | `#fdfbf6` | `#d97706` / `#f59e0b` | `#f7eee0` |
-| `3` | **Rose Garden** | `#fbf5f7` | `#f2e4ea` | `#fdf8fa` | `#e11d48` / `#f43f5e` | `#fbe8ee` |
-| `4` | **Matcha Forest** | `#f3f8f5` | `#e2ede6` | `#ffffff` | `#059669` / `#10b981` | `#e3f3eb` |
-| `5` | **Lavender Bloom** | `#f7f5fb` | `#eae5f4` | `#ffffff` | `#7c3aed` / `#8b5cf6` | `#ede7fa` |
-| `6` | **Citrus Peach** | `#fdf6f0` | `#f6e7db` | `#ffffff` | `#ea580c` / `#f97316` | `#fdece0` |
+| Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex & Hover | TreeView Hover | Active Row Hex |
+|:---|:---|:---|:---|:---|:---|:---|:---|
+| `0` | **Classic Blue (Default)** | `#fcfcfc` | `#ececec` | `#ffffff` | `#3584e4` / `#5a9bea` | `#f0f4f9` | `#dbe7f7` |
+| `1` | **Nordic Frost** | `#f4f8fa` | `#e3edf1` | `#f8fafb` | `#0891b2` / `#06b6d4` | `#e6f4f8` | `#cfe2ea` |
+| `2` | **Solarized Sand** | `#faf6ee` | `#ede6d8` | `#fdfbf6` | `#d97706` / `#f59e0b` | `#f7eee0` | `#ecddc5` |
+| `3` | **Rose Garden** | `#fbf5f7` | `#f2e4ea` | `#fdf8fa` | `#e11d48` / `#f43f5e` | `#fbe8ee` | `#f4d1dc` |
+| `4` | **Matcha Forest** | `#f3f8f5` | `#e2ede6` | `#ffffff` | `#059669` / `#10b981` | `#e3f3eb` | `#cbe7d7` |
+| `5` | **Lavender Bloom** | `#f7f5fb` | `#eae5f4` | `#ffffff` | `#7c3aed` / `#8b5cf6` | `#ede7fa` | `#ded2f5` |
+| `6` | **Citrus Peach** | `#fdf6f0` | `#f6e7db` | `#ffffff` | `#ea580c` / `#f97316` | `#fdece0` | `#f7d8c0` |
 
 ## Typography
 

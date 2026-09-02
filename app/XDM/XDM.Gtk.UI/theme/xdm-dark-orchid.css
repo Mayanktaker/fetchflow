@@ -149,9 +149,9 @@ treeview.unfinished row:selected,
 treeview.finished row:selected,
 treeview.unfinished:selected,
 treeview.finished:selected {
-  background-color: #ec4899;
-  background-image: linear-gradient(135deg, rgba(236, 72, 153, 0.95), rgba(244, 114, 182, 0.85));
-  border-color: #ec4899;
+  background-color: #422b4d;
+  background-image: linear-gradient(135deg, #422b4d, #51355f);
+  border-color: #6b467d;
   color: #ffffff;
 }
 
@@ -1029,9 +1029,9 @@ treeview.unfinished row:selected,
 treeview.finished row:selected,
 treeview.unfinished:selected,
 treeview.finished:selected {
-  background-color: #ec4899;
-  background-image: linear-gradient(135deg, #ec4899, #f472b6);
-  border-color: #f472b6;
+  background-color: #422b4d;
+  background-image: linear-gradient(135deg, #422b4d, #51355f);
+  border-color: #6b467d;
   color: #ffffff;
 }
 
@@ -1039,9 +1039,9 @@ treeview.unfinished row:selected:hover,
 treeview.finished row:selected:hover,
 treeview.unfinished:selected:hover,
 treeview.finished:selected:hover {
-  background-color: #f472b6;
-  background-image: linear-gradient(135deg, #f472b6, #ec4899);
-  border-color: #fbcfe8;
+  background-color: #51355f;
+  background-image: linear-gradient(135deg, #51355f, #613f71);
+  border-color: #88589d;
   color: #ffffff;
 }
 
