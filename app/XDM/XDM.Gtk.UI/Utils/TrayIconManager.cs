@@ -262,6 +262,33 @@ namespace XDM.GtkUI.Utils
             menu.PopupAtPointer(null);
         }
 
+        // Updates live download speed status in the tray tooltip and context menu
+        public void UpdateSpeedStatus(string speedText)
+        {
+            try
+            {
+                var title = string.IsNullOrEmpty(speedText) ? (appName ?? "FetchFlow") : $"FetchFlow - ⚡ {speedText}";
+                if (legacyIcon != null)
+                {
+                    Gtk.Application.Invoke((_, _) =>
+                    {
+                        if (legacyIcon != null)
+                        {
+                            legacyIcon.TooltipText = title;
+                        }
+                    });
+                }
+                if (dbusMenuServer != null)
+                {
+                    dbusMenuServer.UpdateSpeedStatus(speedText);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Error updating tray speed status: " + ex.Message);
+            }
+        }
+
         // Non-blocking teardown: never block the GTK thread on D-Bus. The synchronous
         // Dispose() fires the unregister on the ThreadPool and returns immediately;
         // DisposeAsync() is available for callers that can await.

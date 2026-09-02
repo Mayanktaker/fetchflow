@@ -35,7 +35,7 @@ namespace XDM.GtkUI
         private TreeModelSort finishedDownloadsStoreSorted;
         private string? searchKeyword;
         private Category? category;
-        private Button btnNew, btnDel, btnOpenFile, btnOpenFolder, btnResume, btnPause, btnMenu, btnHelp, btnScheduler, btnSettings;
+        private Button btnNew, btnDel, btnOpenFile, btnOpenFolder, btnResume, btnPause, btnMenu, btnScheduler, btnSpeedLimit;
         private IButton newButton, deleteButton, pauseButton, resumeButton, openFileButton, openFolderButton;
         private IMenuItem[] menuItems;
         private Menu newDownloadMenu;
@@ -686,20 +686,17 @@ namespace XDM.GtkUI
             lblTotalSpeed.StyleContext.AddClass("total-speed-label");
             hbox.PackStart(lblTotalSpeed, false, false, 0);
 
+            btnSpeedLimit = CreateButtonWithContent("time-line", null, DimR, DimG, DimB);
+            btnSpeedLimit.Clicked += BtnSpeedLimit_Clicked;
+            btnSpeedLimit.StyleContext.AddClass("bottombar-button");
+            btnSpeedLimit.MarginStart = 6;
+            hbox.PackStart(btnSpeedLimit, false, false, 0);
+            UpdateSpeedLimitButton();
+
             btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"), CyanR, CyanG, CyanB);
             btnScheduler.Clicked += BtnScheduler_Clicked;
             btnScheduler.StyleContext.AddClass("bottombar-button");
 
-            btnSettings = CreateButtonWithContent("settings-3-line", TextResource.GetText("TITLE_SETTINGS"), DimR, DimG, DimB);
-            btnSettings.Clicked += BtnSettings_Clicked;
-            btnSettings.StyleContext.AddClass("bottombar-button");
-
-            btnHelp = CreateButtonWithContent("question-line", TextResource.GetText("MENU_HELP"), DimR, DimG, DimB);
-            btnHelp.Clicked += BtnHelp_Clicked;
-            btnHelp.StyleContext.AddClass("bottombar-button");
-
-            hbox.PackEnd(btnHelp, false, false, 0);
-            hbox.PackEnd(btnSettings, false, false, 0);
             hbox.PackEnd(btnScheduler, false, false, 0);
             hbox.ShowAll();
             return hbox;
@@ -743,14 +740,44 @@ namespace XDM.GtkUI
             catch { }
         }
 
-        private void BtnHelp_Clicked(object? sender, EventArgs e)
+        // Toggles global bandwidth throttling on or off
+        private void BtnSpeedLimit_Clicked(object? sender, EventArgs e)
         {
-            OpenMainMenu();
+            Config.Instance.EnableSpeedLimit = !Config.Instance.EnableSpeedLimit;
+            if (Config.Instance.EnableSpeedLimit && Config.Instance.DefaltDownloadSpeed <= 0)
+            {
+                Config.Instance.DefaltDownloadSpeed = 1024; // 1 MB/s default throttle
+            }
+            Config.SaveConfig();
+            ApplicationContext.BroadcastConfigChange();
+            UpdateSpeedLimitButton();
         }
 
-        private void BtnSettings_Clicked(object? sender, EventArgs e)
+        // Refreshes the bandwidth limiter button visual state and tooltip
+        private void UpdateSpeedLimitButton()
         {
-            SettingsClicked?.Invoke(sender, e);
+            if (btnSpeedLimit == null) return;
+            bool enabled = Config.Instance.EnableSpeedLimit;
+            int limit = Config.Instance.DefaltDownloadSpeed;
+            if (enabled && limit > 0)
+            {
+                var limitStr = FormattingHelper.FormatSize(limit * 1024.0) + "/s";
+                btnSpeedLimit.TooltipText = $"Speed Limiter: {limitStr} (Click to disable)";
+                var pix = LoadSvg("time-line", 16);
+                if (pix != null)
+                {
+                    btnSpeedLimit.Image = new Image(GtkHelper.TintPixbuf(pix, AccentR, AccentG, AccentB));
+                }
+            }
+            else
+            {
+                btnSpeedLimit.TooltipText = "Speed Limiter: Off (Click to enable bandwidth limit)";
+                var pix = LoadSvg("time-line", 16);
+                if (pix != null)
+                {
+                    btnSpeedLimit.Image = new Image(GtkHelper.TintPixbuf(pix, DimR, DimG, DimB));
+                }
+            }
         }
 
         private void BtnScheduler_Clicked(object? sender, EventArgs e)
@@ -763,9 +790,15 @@ namespace XDM.GtkUI
             BrowserMonitoringButtonClicked?.Invoke(sender, e);
         }
 
+        // Creates the top action toolbar styled as a card matching the sidebar background
         private Widget CreateToolbar()
         {
-            var toolbar = new HBox(false, 5);
+            var toolbar = new HBox(false, 5)
+            {
+                Margin = 4,
+                MarginStart = 8,
+                MarginEnd = 8
+            };
             btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"), AccentR, AccentG, AccentB);
             toolbar.PackStart(btnNew, false, false, 0);
             btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"), DestructR, DestructG, DestructB);
@@ -796,8 +829,16 @@ namespace XDM.GtkUI
                 inprogressDownloadFilter.Refilter();
             };
             toolbar.PackEnd(searchEntry, false, false, 0);
-            toolbar.Margin = 8;
-            toolbar.ShowAll();
+
+            // Container card for top action toolbar matching the sidebar surface
+            var toolbarCard = new EventBox
+            {
+                Margin = 6,
+                MarginBottom = 2
+            };
+            toolbarCard.StyleContext.AddClass("main-toolbar");
+            toolbarCard.Add(toolbar);
+            toolbarCard.ShowAll();
 
             btnOpenFile.Visible = false;
             btnOpenFolder.Visible = false;
@@ -812,7 +853,7 @@ namespace XDM.GtkUI
 
             btnMenu.Clicked += BtnMenu_Clicked;
 
-            return toolbar;
+            return toolbarCard;
         }
 
         private void BtnMenu_Clicked(object? sender, EventArgs e)
@@ -1038,6 +1079,43 @@ namespace XDM.GtkUI
                     if (completeCount > 0) completeText += $"  ({completeCount})";
                     this.statusTreeStore.SetValue(iter, 1, completeText);
                 }
+            }
+
+            // Update per-category download count badges in the sidebar
+            if (this.categoryTreeStore != null && this.categoryTreeStore.GetIterFirst(out TreeIter catIter))
+            {
+                var names = new List<string>(activeCount + completeCount);
+                if (inprogressDownloadsStore.GetIterFirst(out TreeIter inIter))
+                {
+                    do
+                    {
+                        if (inprogressDownloadsStore.GetValue(inIter, 0) is string n && !string.IsNullOrEmpty(n))
+                            names.Add(n);
+                    } while (inprogressDownloadsStore.IterNext(ref inIter));
+                }
+                if (finishedDownloadsStore.GetIterFirst(out TreeIter finIter))
+                {
+                    do
+                    {
+                        if (finishedDownloadsStore.GetValue(finIter, 0) is string n && !string.IsNullOrEmpty(n))
+                            names.Add(n);
+                    } while (finishedDownloadsStore.IterNext(ref finIter));
+                }
+
+                do
+                {
+                    if (categoryTreeStore.GetValue(catIter, 2) is Category cat)
+                    {
+                        int count = 0;
+                        for (int i = 0; i < names.Count; i++)
+                        {
+                            if (Helpers.IsOfCategory(names[i], cat)) count++;
+                        }
+                        var label = cat.DisplayName;
+                        if (count > 0) label += $"  ({count})";
+                        categoryTreeStore.SetValue(catIter, 1, label);
+                    }
+                } while (categoryTreeStore.IterNext(ref catIter));
             }
         }
 
@@ -1914,10 +1992,12 @@ namespace XDM.GtkUI
                     lblTotalSpeed.Markup = $"<span color='#f97316'><b>⚡ {formatted}</b></span> <span color='#888888' size='small'>({count} active)</span>";
                     lblTotalSpeed.TooltipText = $"Aggregate live download speed: {formatted} across {count} transfer(s)";
                     lblTotalSpeed.Visible = true;
+                    trayManager?.UpdateSpeedStatus($"{formatted} ({count} active)");
                 }
                 else
                 {
                     lblTotalSpeed.Visible = false;
+                    trayManager?.UpdateSpeedStatus("");
                 }
             }
         }

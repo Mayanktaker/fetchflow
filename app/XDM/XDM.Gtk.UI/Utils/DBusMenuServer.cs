@@ -39,10 +39,12 @@ namespace XDM.GtkUI.Utils
         private readonly System.Action onQuit;
         private uint revision = 1;
         private DBusMenuProperties props = new DBusMenuProperties();
+        private string? speedStatus;
 
         private const int RootId = 0;
         private const int ShowId = 1;
         private const int QuitId = 2;
+        private const int SpeedStatusId = 3;
 
         public event Action<(uint revision, int parent)> OnLayoutUpdated;
         public event Action<(int id, uint timestamp)> OnItemActivationRequested;
@@ -53,6 +55,14 @@ namespace XDM.GtkUI.Utils
             this.onQuit = onQuit;
         }
 
+        public void UpdateSpeedStatus(string? status)
+        {
+            if (speedStatus == status) return;
+            speedStatus = status;
+            revision++;
+            OnLayoutUpdated?.Invoke((revision, RootId));
+        }
+
         public ObjectPath ObjectPath => new("/MenuBar");
 
         public Task<DBusMenuProperties> GetAllAsync() => Task.FromResult(props);
@@ -60,6 +70,21 @@ namespace XDM.GtkUI.Utils
         public Task<(uint revision, (int id, IDictionary<string, object> properties, object[] children) layout)> GetLayoutAsync(int parentId, int recursionDepth, string[] propertyNames)
         {
             var children = new List<object>();
+
+            if (!string.IsNullOrEmpty(speedStatus))
+            {
+                children.Add(MakeMenuItem(SpeedStatusId, new Dictionary<string, object> {
+                    { "label", $"⚡ {speedStatus}" },
+                    { "type", "standard" },
+                    { "enabled", false },
+                    { "visible", true }
+                }));
+
+                children.Add(MakeMenuItem(98, new Dictionary<string, object> {
+                    { "type", "separator" },
+                    { "visible", true }
+                }));
+            }
 
             children.Add(MakeMenuItem(ShowId, new Dictionary<string, object> {
                 { "label", "Show FetchFlow" },
@@ -133,10 +158,20 @@ namespace XDM.GtkUI.Utils
             return (id, properties, Array.Empty<object>());
         }
 
-        private static IDictionary<string, object> GetItemProperties(int id)
+        private IDictionary<string, object> GetItemProperties(int id)
         {
             return id switch
             {
+                SpeedStatusId => new Dictionary<string, object> {
+                    { "label", $"⚡ {speedStatus}" },
+                    { "type", "standard" },
+                    { "enabled", false },
+                    { "visible", true }
+                },
+                98 => new Dictionary<string, object> {
+                    { "type", "separator" },
+                    { "visible", true }
+                },
                 ShowId => new Dictionary<string, object> {
                     { "label", "Show FetchFlow" },
                     { "type", "standard" },

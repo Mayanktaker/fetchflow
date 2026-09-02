@@ -61,6 +61,7 @@ cd ../../..
 echo "Publishing FetchFlow .NET Application..."
 rm -rf build_output
 mkdir -p build_output/xdm-app
+dotnet restore app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -r linux-x64
 dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o build_output/xdm-app
 
 # Copy all runtime assets into publish directory

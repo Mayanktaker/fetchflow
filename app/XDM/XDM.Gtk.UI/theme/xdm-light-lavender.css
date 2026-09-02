@@ -79,6 +79,13 @@ scrolledwindow.sidebar-scroll {
   background-color: #f4f0fa;
 }
 
+/* Top action toolbar card styled to match sidebar surface */
+.main-toolbar {
+  background-color: #f4f0fa;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 7px;
+}
+
 /* Dedicated Active & Complete status section card */
 .sidebar-status-card {
   background-color: #ded6f0;
