@@ -50,7 +50,7 @@ function App() {
   return (
     <div className="App">
       <nav className="navbar fixed-top navbar-dark bg-dark">
-        <div className="navbar-brand" style={{padding: "10px"}}>XDM translation generator</div>
+        <div className="navbar-brand" style={{padding: "10px"}}>FetchFlow translation generator</div>
       </nav>
       <div style={{ paddingTop: '100px', paddingBottom: '20px' }}>
         <label htmlFor='txtname'>Translating to </label>

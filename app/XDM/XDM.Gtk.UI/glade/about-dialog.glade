@@ -54,7 +54,7 @@
                   <object class="GtkLabel" id="TxtAppVersion">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label">Version 9.1.4</property>
+                    <property name="label">Version 9.1.6</property>
                   </object>
                 </child>
                 <child>

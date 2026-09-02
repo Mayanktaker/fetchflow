@@ -310,7 +310,7 @@ namespace XDM.Wpf.UI
 
         public bool Confirm(object? window, string text)
         {
-            return MessageBox.Show((Window)(window ?? this), text, "XDM", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+            return MessageBox.Show((Window)(window ?? this), text, "FetchFlow", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
         }
 
         public void ConfirmDelete(string text, out bool approved, out bool deleteFiles)
@@ -348,7 +348,7 @@ namespace XDM.Wpf.UI
 
         public void DeleteAllFinishedDownloads()
         {
-            if (MessageBox.Show(this, TextResource.GetText("MENU_DELETE_COMPLETED"), "XDM", MessageBoxButton.YesNo)
+            if (MessageBox.Show(this, TextResource.GetText("MENU_DELETE_COMPLETED"), "FetchFlow", MessageBoxButton.YesNo)
                 != MessageBoxResult.Yes)
             {
                 return;

@@ -148,7 +148,7 @@ namespace XDM.GtkUI
                 Log.Debug("Non-fatal: global CSS provider not applied: " + cssEx.Message);
             }
 
-            // TLS: secure by default; opt-in insecure validation via XDM_ALLOW_INSECURE_TLS=1
+            // TLS: secure by default; opt-in insecure validation via FETCHFLOW_ALLOW_INSECURE_TLS=1
             if (Config.AllowInsecureTls)
             {
                 ServicePointManager.ServerCertificateValidationCallback += (a, b, c, d) => true;

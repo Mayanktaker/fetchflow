@@ -927,3 +927,110 @@ button.theme-toggle-button:focus {
   outline: 2px solid rgba(53, 132, 228, 0.35);
   outline-offset: -2px;
 }
+
+treeview.unfinished row,
+treeview.finished row {
+  margin: 4px 8px;
+  padding: 8px 12px;
+  color: #222222;
+}
+
+treeview.unfinished row:hover,
+treeview.finished row:hover {
+  background-color: #f1f4f8;
+  border-color: rgba(0, 0, 0, 0.16);
+  color: #111111;
+}
+
+treeview.unfinished row:selected,
+treeview.finished row:selected,
+treeview.unfinished:selected,
+treeview.finished:selected {
+  background-color: #3584e4;
+  background-image: linear-gradient(135deg, #3584e4, #5a9bea);
+  border-color: #3584e4;
+  color: #ffffff;
+}
+
+treeview.unfinished row:selected:hover,
+treeview.finished row:selected:hover,
+treeview.unfinished:selected:hover,
+treeview.finished:selected:hover {
+  background-color: #5a9bea;
+  background-image: linear-gradient(135deg, #5a9bea, #3584e4);
+  border-color: #2767b8;
+  color: #ffffff;
+}
+
+treeview.unfinished row:selected:backdrop,
+treeview.finished row:selected:backdrop,
+treeview.unfinished:selected:backdrop,
+treeview.finished:selected:backdrop {
+  background-color: #3584e4;
+  background-image: none;
+  border-color: #3584e4;
+  color: #ffffff;
+}
+
+button:not(:disabled):hover {
+  color: #111111;
+}
+
+button:not(:disabled):active {
+  color: #111111;
+}
+
+button.flat:not(:disabled):hover {
+  color: #222222;
+}
+
+button.flat:not(:disabled):active {
+  color: #111111;
+}
+
+button.suggested-action:not(:disabled):hover,
+button.suggested-action:not(:disabled):active,
+button.flat.suggested-action:not(:disabled):hover,
+button.flat.suggested-action:not(:disabled):active {
+  color: #ffffff;
+}
+
+button.destructive-action:not(:disabled):hover,
+button.destructive-action:not(:disabled):active,
+button.flat.destructive-action:not(:disabled):hover,
+button.flat.destructive-action:not(:disabled):active {
+  color: #ffffff;
+}
+
+entry.toolbar-search-entry {
+  color: #222222;
+  caret-color: #2767b8;
+}
+
+entry.toolbar-search-entry:focus {
+  background-color: #ffffff;
+  border-color: #3584e4;
+}
+
+button.flat.bottombar-button:hover,
+button.flat.bottombar-button:active {
+  color: #111111;
+}
+
+treeview.sidebar-list row:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: #111111;
+}
+
+treeview.sidebar-list row:selected,
+treeview.sidebar-list:selected {
+  background-color: #3584e4;
+  background-image: linear-gradient(135deg, #3584e4, #5a9bea);
+  color: #ffffff;
+}
+
+treeview.sidebar-list row:selected:hover,
+treeview.sidebar-list:selected:hover {
+  background-color: #5a9bea;
+  color: #ffffff;
+}

@@ -359,7 +359,7 @@ namespace XDM.GtkUI.Utils
 
         public static string? SelectFolder(Window parent)
         {
-            using var fc = new FileChooserNative("XDM", parent, FileChooserAction.SelectFolder, 
+            using var fc = new FileChooserNative("FetchFlow", parent, FileChooserAction.SelectFolder, 
                 TextResource.GetText("MSG_SELECT_FOLDER"), TextResource.GetText("ND_CANCEL"));
             if (fc.Run() == (int)ResponseType.Accept)
             {
@@ -367,7 +367,7 @@ namespace XDM.GtkUI.Utils
             }
             return null;
 
-            //using var fc = new FileChooserDialog("XDM", parent, FileChooserAction.SelectFolder);
+            //using var fc = new FileChooserDialog("FetchFlow", parent, FileChooserAction.SelectFolder);
             //try
             //{
             //    if (parent.Group != null)
@@ -395,7 +395,7 @@ namespace XDM.GtkUI.Utils
 
         public static string? SelectFile(Window parent)
         {
-            using var fc = new FileChooserNative("XDM", parent, FileChooserAction.Open,
+            using var fc = new FileChooserNative("FetchFlow", parent, FileChooserAction.Open,
                 TextResource.GetText("MSG_SELECT_FOLDER"), TextResource.GetText("ND_CANCEL"));
             if (fc.Run() == (int)ResponseType.Accept)
             {
@@ -403,7 +403,7 @@ namespace XDM.GtkUI.Utils
             }
             return null;
 
-            //using var fc = new FileChooserDialog("XDM", parent, FileChooserAction.Open);
+            //using var fc = new FileChooserDialog("FetchFlow", parent, FileChooserAction.Open);
             //try
             //{
             //    if (parent.Group != null)
@@ -435,7 +435,7 @@ namespace XDM.GtkUI.Utils
         // escapes as TargetInvocationException through GLib.SignalClosure (crash in crash.log).
         public static string? SaveFile(Window parent, string? path)
         {
-            using var fc = new FileChooserNative("XDM", parent, FileChooserAction.Save,
+            using var fc = new FileChooserNative("FetchFlow", parent, FileChooserAction.Save,
                 TextResource.GetText("DESC_SAVE_Q"), TextResource.GetText("ND_CANCEL"));
             if (!string.IsNullOrEmpty(path))
             {
@@ -459,7 +459,7 @@ namespace XDM.GtkUI.Utils
             }
             return null;
 
-            //using var fc = new FileChooserDialog("XDM", parent, FileChooserAction.Save);
+            //using var fc = new FileChooserDialog("FetchFlow", parent, FileChooserAction.Save);
             //if (!string.IsNullOrEmpty(path))
             //{
             //    var dir = Path.GetDirectoryName(path);

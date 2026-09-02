@@ -4,9 +4,9 @@
 // Content script: intercepts blob: URLs via injected page script,
 // and intercepts blob DOWNLOAD ACTIONS at the DOM level before the
 // browser's download manager can take over. Communicates with
-// background (app.js) for chunked upload to XDM.
+// background (app.js) for chunked upload to FetchFlow.
 
-console.log("[XDM] blob-capture.js loaded (content script)");
+console.log("[FetchFlow] blob-capture.js loaded (content script)");
 const BLOB_TTL_MS = 5 * 60 * 1000;
 const blobRefs = new Map();
 
@@ -102,7 +102,7 @@ function injectCreatorHook() {
     })();`;
     (document.head || document.documentElement).appendChild(script);
     script.remove();
-    console.log("[XDM] Page-context hooks injected");
+    console.log("[FetchFlow] Page-context hooks injected");
 }
 
 injectCreatorHook();
@@ -135,18 +135,18 @@ document.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     const filename = link.getAttribute("download") || link.textContent?.trim() || "";
-    console.log("[XDM] DOM click on blob link:", href, filename);
+    console.log("[FetchFlow] DOM click on blob link:", href, filename);
 
     // Capture blob data immediately in content script context before URL is revoked
     fetch(href).then(r => r.blob()).then(blob => {
         const reader = new FileReader();
         reader.onload = () => {
-            console.log("[XDM] DOM blob captured:", blob.size, "bytes");
+            console.log("[FetchFlow] DOM blob captured:", blob.size, "bytes");
             sendBlobToBackground(href, filename, blob.type || "application/octet-stream", blob.size, reader.result.split(",")[1]);
         };
         reader.readAsDataURL(blob);
     }).catch(err => {
-        console.log("[XDM] DOM blob fetch failed, sending intent:", err);
+        console.log("[FetchFlow] DOM blob fetch failed, sending intent:", err);
         sendBlobToBackground(href, filename, "", 0, null);
     });
 }, true);
@@ -155,10 +155,10 @@ document.addEventListener("click", (e) => {
 function handleBlobDownloadIntent(data) {
     const { blobUrl, filename, base64, size, mime } = data;
     if (base64) {
-        console.log("[XDM] Blob intent with data:", filename, size, "bytes");
+        console.log("[FetchFlow] Blob intent with data:", filename, size, "bytes");
         sendBlobToBackground(blobUrl, filename || deriveFilename(blobUrl, mime), mime, size, base64);
     } else {
-        console.log("[XDM] Blob intent without data, using ref:", blobUrl);
+        console.log("[FetchFlow] Blob intent without data, using ref:", blobUrl);
         const ref = blobRefs.get(blobUrl);
         const knownMime = ref?.mime || "application/octet-stream";
         sendBlobToBackground(blobUrl, filename || deriveFilename(blobUrl, knownMime), knownMime, ref?.size || 0, null);
@@ -168,7 +168,7 @@ function handleBlobDownloadIntent(data) {
 // --- Handle xdm-capture-blob requests from background (fallback re-fetch) ---
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "xdm-capture-blob") {
-        console.log("[XDM] Background requesting blob capture:", message.blobUrl);
+        console.log("[FetchFlow] Background requesting blob capture:", message.blobUrl);
         fetch(message.blobUrl).then(r => r.blob()).then(blob => {
             const reader = new FileReader();
             reader.onload = () => {
@@ -180,7 +180,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             };
             reader.readAsDataURL(blob);
         }).catch(err => {
-            console.log("[XDM] Background blob capture failed:", err);
+            console.log("[FetchFlow] Background blob capture failed:", err);
             sendResponse({ error: "Failed to capture blob: " + err.message });
         });
         return true; // async response
@@ -188,9 +188,9 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     else if (message.type === "xdm-stream-result") {
         // Background forwarded the streaming result — show in page console
         if (message.success) {
-            console.log("[XDM] ✅ Stream complete!", message.detail);
+            console.log("[FetchFlow] ✅ Stream complete!", message.detail);
         } else {
-            console.error("[XDM] ❌ Stream FAILED:", message.error, message.detail);
+            console.error("[FetchFlow] ❌ Stream FAILED:", message.error, message.detail);
         }
     }
 });
@@ -199,14 +199,14 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function sendBlobToBackground(blobUrl, filename, mime, size, base64) {
     try {
         const msgType = base64 ? "xdm-blob-download-data" : "xdm-blob-download-intent";
-        console.log("[XDM] Sending to background:", msgType, filename, size, "bytes");
+        console.log("[FetchFlow] Sending to background:", msgType, filename, size, "bytes");
         const reply = await browser.runtime.sendMessage({
             type: msgType,
             blobUrl, filename, mime, size, base64
         });
-        console.log("[XDM] Background reply:", reply);
+        console.log("[FetchFlow] Background reply:", reply);
     } catch (e) {
-        console.error("[XDM] blob send error:", e.message || e);
+        console.error("[FetchFlow] blob send error:", e.message || e);
     }
 }
 

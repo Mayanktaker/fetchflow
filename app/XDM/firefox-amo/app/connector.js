@@ -142,7 +142,7 @@ class Connector {
         return response.json();
     }
 
-    // Wayland/Phase2.4: open the OS-registered xdm-app:// scheme so the desktop launches XDM
+    // Wayland/Phase2.4: open the OS-registered xdm-app:// scheme so the desktop launches FetchFlow
     launchApp() {
         try {
             chrome.tabs.create({ url: "xdm-app://launch" });

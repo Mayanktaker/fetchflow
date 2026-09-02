@@ -60,7 +60,7 @@ namespace XDM.Wpf.UI
 
             notifyIcon = new NotifyIcon
             {
-                Text = "XDM",
+                Text = "FetchFlow",
                 Visible = true,
                 Icon = new Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xdm-logo.ico")),
                 ContextMenu = ctx

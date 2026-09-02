@@ -44,14 +44,14 @@ export default class App {
     }
 
     onMessage(msg) {
-        this.logger.log("message from XDM");
+        this.logger.log("message from FetchFlow");
         this.logger.log(msg);
         chrome.storage.local.set({ "xdmConfig": msg });
         this.updateConfig(msg);
         this.flushPendingDownloads();
     }
 
-    // Send downloads that were queued while XDM was offline (called once the relay reconnects)
+    // Send downloads that were queued while FetchFlow was offline (called once the relay reconnects)
     flushPendingDownloads() {
         if (!this.connector.isConnected() || !this.pendingDownloads || this.pendingDownloads.length === 0) {
             return;
@@ -256,7 +256,7 @@ export default class App {
 
     startBlobTransfer(blobUrl, filename, mime, tabId) {
         if (!this.connector.isConnected()) {
-            this.logger.log("Cannot transfer blob: not connected to XDM");
+            this.logger.log("Cannot transfer blob: not connected to FetchFlow");
             this.connector.launchApp();
             return;
         }
@@ -298,15 +298,15 @@ export default class App {
                 return;
             }
             if (response?.base64) {
-                await this.streamBlobToXdm(response.base64, filename, response.mime || mime, response.size || 0, blobUrl);
+                await this.streamBlobToFetchFlow(response.base64, filename, response.mime || mime, response.size || 0, blobUrl);
             }
         } catch (e) {
             this.logger.log("Blob capture message error: " + e.message);
         }
     }
 
-    async streamBlobToXdm(base64Data, filename, mime, size, blobUrl) {
-        this.logger.log("=== streamBlobToXdm START ===");
+    async streamBlobToFetchFlow(base64Data, filename, mime, size, blobUrl) {
+        this.logger.log("=== streamBlobToFetchFlow START ===");
         this.logger.log("Filename: " + filename + " | Size: " + size + " | Base64 len: " + base64Data.length);
         let raw;
         try {
@@ -483,7 +483,7 @@ export default class App {
             if (this.connector.isConnected()) {
                 this.connector.postMessage("/download", data);
             } else {
-                // XDM isn't reachable — launch it and hold the download until it connects
+                // FetchFlow isn't reachable — launch it and hold the download until it connects
                 this.pendingDownloads.push(data);
                 this.connector.launchApp();
             }
@@ -551,8 +551,8 @@ export default class App {
             this.logger.log("Connector connected: " + this.connector.isConnected());
             const tabId = sender.tab?.id || null;
             if (!this.connector.isConnected()) {
-                this.logger.log("ERROR: Cannot stream blob — XDM is not connected!");
-                sendResponse({ error: "XDM not connected" });
+                this.logger.log("ERROR: Cannot stream blob — FetchFlow is not connected!");
+                sendResponse({ error: "FetchFlow not connected" });
                 return;
             }
             if (request.base64) {
@@ -582,7 +582,7 @@ export default class App {
         }
     }
 
-    sendLinkToXDM(info, tab) {
+    sendLinkToFetchFlow(info, tab) {
         let url = info.linkUrl;
         if (!this.isSupportedProtocol(url)) {
             url = info.srcUrl;
@@ -596,7 +596,7 @@ export default class App {
         this.triggerDownload(url, null, info.pageUrl, null, null);
     }
 
-    sendImageToXDM(info, tab) {
+    sendImageToFetchFlow(info, tab) {
         let url = info.srcUrl;
         if (!this.isSupportedProtocol(url))
             url = info.linkUrl;
@@ -609,13 +609,13 @@ export default class App {
         this.triggerDownload(url, null, info.pageUrl, null, null);
     }
 
-    sendBlobMediaToXDM(info, tab) {
+    sendBlobMediaToFetchFlow(info, tab) {
         // Try srcUrl (blob), then linkUrl, then pageUrl — capture any blob URL
         let url = info.srcUrl;
         if (!this.isBlobUrl(url)) url = info.linkUrl;
         if (!this.isBlobUrl(url)) {
             // No blob URL found in context; fall through to normal http path
-            this.sendImageToXDM(info, tab);
+            this.sendImageToFetchFlow(info, tab);
             return;
         }
         const filename = info.menuItemId ? undefined : (tab?.title || undefined);
@@ -624,13 +624,13 @@ export default class App {
 
     onMenuClicked(info, tab) {
         if (info.menuItemId == "download-any-link") {
-            this.sendLinkToXDM(info, tab);
+            this.sendLinkToFetchFlow(info, tab);
         }
         if (info.menuItemId == "download-image-link") {
-            this.sendImageToXDM(info, tab);
+            this.sendImageToFetchFlow(info, tab);
         }
         if (info.menuItemId == "download-blob-media") {
-            this.sendBlobMediaToXDM(info, tab);
+            this.sendBlobMediaToFetchFlow(info, tab);
         }
     }
 

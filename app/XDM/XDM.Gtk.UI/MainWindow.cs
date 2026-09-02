@@ -148,6 +148,12 @@ namespace XDM.GtkUI
         // Button content geometry: labeled buttons keep spacing + symmetric side margins
         private const int ButtonContentSpacing = 10;
         private const int ButtonBoxMargin = 2;
+        private const int DownloadColumnSpacing = 8;
+        private const int DownloadIconHorizontalPadding = 12;
+        private const int DownloadNameHorizontalPadding = 8;
+        private const int DownloadMetaHorizontalPadding = 16;
+        private const int DownloadMetaActiveWidth = 196;
+        private const int DownloadMetaFinishedWidth = 176;
 
         private Menu menuInProgress, menuFinished;
         private IPlatformClipboardMonitor clipboarMonitor;
@@ -461,7 +467,7 @@ namespace XDM.GtkUI
             this.NewDownloadClicked?.Invoke(sender, e);
         }
 
-        // Left-aligned in-app headerbar: bold "XDM" + dim "· <view>" custom title (not the
+        // Left-aligned in-app headerbar: bold "FetchFlow" + dim "· <view>" custom title (not the
         // centered default title/subtitle); hexpand + halign-start pushes the title left.
         // Wayland CSD: headerbar supplies the close button; no min/max buttons by convention.
         private HeaderBar CreateHeaderBar()
@@ -1070,14 +1076,19 @@ namespace XDM.GtkUI
             lvInprogress.StyleContext.AddClass("unfinished");
 
             // Main Card Column (Icon + Title + Subtitle)
-            var inprogressMainCol = new TreeViewColumn { Expand = true, Sizing = TreeViewColumnSizing.Autosize };
+            var inprogressMainCol = new TreeViewColumn
+            {
+                Expand = true,
+                Sizing = TreeViewColumnSizing.Autosize,
+                Spacing = DownloadColumnSpacing
+            };
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(8, 8);
+            fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, 8);
             inprogressMainCol.PackStart(fileIconRenderer, false);
             inprogressMainCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
             var inprogressNameRenderer = new CellRendererText();
-            inprogressNameRenderer.SetPadding(4, 6);
+            inprogressNameRenderer.SetPadding(DownloadNameHorizontalPadding, 6);
             inprogressNameRenderer.Ellipsize = Pango.EllipsizeMode.Middle;
             inprogressMainCol.PackStart(inprogressNameRenderer, true);
             SetInProgressNameColumn(inprogressMainCol, inprogressNameRenderer, lvInprogress);
@@ -1089,11 +1100,11 @@ namespace XDM.GtkUI
                 Xalign = 1.0f,
                 Alignment = Pango.Alignment.Right
             };
-            inprogressMetaRenderer.SetPadding(4, 12);
+            inprogressMetaRenderer.SetPadding(DownloadMetaHorizontalPadding, 12);
             var inprogressMetaCol = new TreeViewColumn
             {
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 190
+                FixedWidth = DownloadMetaActiveWidth
             };
             inprogressMetaCol.PackStart(inprogressMetaRenderer, true);
             SetInProgressMetaColumn(inprogressMetaCol, inprogressMetaRenderer, lvInprogress);
@@ -1184,15 +1195,20 @@ namespace XDM.GtkUI
             lvFinished.StyleContext.AddClass("finished");
 
             // Main Card Column (Icon + Title + Subtitle)
-            var finishedMainCol = new TreeViewColumn { Expand = true, Sizing = TreeViewColumnSizing.Autosize };
+            var finishedMainCol = new TreeViewColumn
+            {
+                Expand = true,
+                Sizing = TreeViewColumnSizing.Autosize,
+                Spacing = DownloadColumnSpacing
+            };
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(8, 8);
+            fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, 8);
             finishedMainCol.PackStart(fileIconRenderer, false);
             finishedMainCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
             finishedMainCol.SortColumnId = 0;
 
             var finishedNameRenderer = new CellRendererText();
-            finishedNameRenderer.SetPadding(4, 6);
+            finishedNameRenderer.SetPadding(DownloadNameHorizontalPadding, 6);
             finishedNameRenderer.Ellipsize = Pango.EllipsizeMode.Middle;
             finishedMainCol.PackStart(finishedNameRenderer, true);
             SetFinishedNameColumn(finishedMainCol, finishedNameRenderer, lvFinished);
@@ -1204,11 +1220,11 @@ namespace XDM.GtkUI
                 Xalign = 1.0f,
                 Alignment = Pango.Alignment.Right
             };
-            finishedMetaRenderer.SetPadding(4, 12);
+            finishedMetaRenderer.SetPadding(DownloadMetaHorizontalPadding, 12);
             var finishedMetaCol = new TreeViewColumn
             {
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 170
+                FixedWidth = DownloadMetaFinishedWidth
             };
             finishedMetaCol.PackStart(finishedMetaRenderer, true);
             SetFinishedMetaColumn(finishedMetaCol, finishedMetaRenderer, lvFinished);
@@ -1680,7 +1696,7 @@ namespace XDM.GtkUI
                 owner = this;
             }
             using var msg = new MessageDialog(owner, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, text);
-            msg.Title = "XDM";
+            msg.Title = "FetchFlow";
             if (msg.Run() == (int)ResponseType.Yes)
             {
                 return true;

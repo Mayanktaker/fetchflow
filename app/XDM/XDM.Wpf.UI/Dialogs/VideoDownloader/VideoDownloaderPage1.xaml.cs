@@ -47,7 +47,7 @@ namespace XDM.Wpf.UI.Dialogs.VideoDownloader
             }
             catch
             {
-                if (MessageBox.Show(ParentWindow, TextResource.GetText("MSG_HELPER_TOOLS_MISSING"), "XDM", MessageBoxButton.YesNo)
+                if (MessageBox.Show(ParentWindow, TextResource.GetText("MSG_HELPER_TOOLS_MISSING"), "FetchFlow", MessageBoxButton.YesNo)
                     == MessageBoxResult.Yes)
                 {
                     PlatformHelper.OpenBrowser(Links.HelperToolsUrl);
