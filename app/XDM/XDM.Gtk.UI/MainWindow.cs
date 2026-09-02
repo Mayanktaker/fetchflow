@@ -123,9 +123,10 @@ namespace XDM.GtkUI
         private const string UpdateDotGlyph = "●";
         // Selected sidebar row icon tint (#161616) — reads on the blue accent in both themes
         private const byte SidebarSelectedIconTint = 0x16;
-        // ===== Design token RGB constants (docs/design.md) =====
-        // Accent blue — primary interactive color
-        private const byte AccentR = 53, AccentG = 132, AccentB = 228;       // #3584e4
+        // Dynamic active theme accent RGB components
+        private static byte AccentR => ThemeManager.ActiveAccentColor.R;
+        private static byte AccentG => ThemeManager.ActiveAccentColor.G;
+        private static byte AccentB => ThemeManager.ActiveAccentColor.B;
         // Destructive red — delete/remove actions  
         private const byte DestructR = 239, DestructG = 68, DestructB = 68;  // #ef4444
         // Success green — completed items, active status
@@ -401,7 +402,12 @@ namespace XDM.GtkUI
                     }
                 }
             }
-            ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) => RefreshMenuIcons(isDark));
+            ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) =>
+            {
+                RefreshMenuIcons(isDark);
+                lvFinished?.QueueDraw();
+                lvInprogress?.QueueDraw();
+            });
 
             menuSettings.Activated += MenuSettings_Activated;
             menuClearFinished.Activated += MenuClearFinished_Activated;
@@ -1440,7 +1446,7 @@ namespace XDM.GtkUI
                 var selected = view.Selection.PathIsSelected(path);
                 var isHovered = !selected && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0;
 
-                ((CellRendererText)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
 
                 var name = model.GetValue(iter, 0) as string ?? string.Empty;
                 var item = model.GetValue(iter, FINISHED_DATA_INDEX) as FinishedDownloadItem;
@@ -1495,7 +1501,7 @@ namespace XDM.GtkUI
                 var selected = view.Selection.PathIsSelected(path);
                 var isHovered = !selected && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0;
 
-                ((CellRendererText)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
 
                 var name = model.GetValue(iter, 0) as string ?? string.Empty;
                 var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
@@ -1544,7 +1550,7 @@ namespace XDM.GtkUI
                 var selected = view.Selection.PathIsSelected(path);
                 var isHovered = !selected && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0;
 
-                ((CellRendererText)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
 
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
                 var dateText = model.GetValue(iter, 1) as string ?? string.Empty;
@@ -1569,7 +1575,7 @@ namespace XDM.GtkUI
                 var selected = view.Selection.PathIsSelected(path);
                 var isHovered = !selected && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0;
 
-                ((CellRendererText)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
 
                 var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
@@ -1601,7 +1607,7 @@ namespace XDM.GtkUI
             var isHovered = !isSelected && ((view == lvFinished && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0) ||
                                             (view == lvInprogress && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0));
 
-            ((CellRendererPixbuf)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+            ((CellRendererPixbuf)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
 
             if (rawPix != null)
             {

@@ -1,0 +1,1102 @@
+/*
+ * XDM dark theme layer — Espresso Mocha (Roasted Cacao surfaces + Golden Caramel Amber accent)
+ * © Mayanktaker Computers & Web Development | https://mayanktaker.com
+ */
+
+/* Base surfaces */
+window,
+dialog {
+  background-color: #1c1816;
+  color: #fffbeb;
+}
+
+headerbar {
+  background-color: #181412;
+  border-bottom: 1px solid #0e0e0e;
+  color: #fef3c7;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+}
+
+/* Compact padding scoped to the main window headerbar so dialog headerbars keep stock metrics */
+headerbar.main-headerbar {
+  padding: 2px 6px;
+}
+
+/* Left-aligned headerbar custom title: bold app name + dim view subtitle */
+label.header-title-app {
+  font-weight: bold;
+  color: #fffbeb;
+}
+
+label.header-title-view {
+  color: #f59e0b;
+}
+
+/* Update-available dot after the title group (green pops on both surface tones) */
+label.update-dot {
+  color: #33d17a;
+  font-size: 10px;
+  margin-left: 6px;
+}
+
+/* Dot is a flat click target — no button chrome, just the glyph */
+button.flat.update-dot-button {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0 2px;
+  min-height: 0;
+  min-width: 0;
+}
+
+tooltip {
+  background-color: #362d26;
+  border-radius: 4px;
+}
+
+popover {
+  background-color: #26211e;
+  border: 1px solid #443a32;
+  border-radius: 7px;
+  padding: 6px;
+}
+
+separator {
+  background-color: #382f28;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+/* ScrolledWindow rounded frame for sidebars */
+scrolledwindow {
+  border-radius: 6px;
+}
+
+scrolledwindow.sidebar-scroll {
+  border-radius: 7px;
+  background-color: #0f0c0b;
+}
+
+/* Dedicated Active & Complete status section card */
+.sidebar-status-card {
+  background-color: #2b211a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  padding: 4px;
+}
+
+treeview.sidebar-status-list {
+  background-color: transparent;
+  color: #fcd34d;
+  border-radius: 6px;
+}
+
+treeview.sidebar-status-list:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+treeview.sidebar-status-list:selected {
+  background-color: #f59e0b;
+  background-image: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: #ffffff;
+  border-radius: 5px;
+}
+
+/* Sidebar + content lists */
+treeview {
+  background-color: #221e1a;
+  color: #fde68a;
+  border-radius: 6px;
+}
+
+treeview.unfinished,
+treeview.finished {
+  background-color: transparent;
+}
+
+treeview.unfinished row,
+treeview.finished row {
+  margin: 3px 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #26211e;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+treeview.unfinished row:hover,
+treeview.finished row:hover {
+  background-color: #413832;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+treeview.unfinished row:selected,
+treeview.finished row:selected,
+treeview.unfinished:selected,
+treeview.finished:selected {
+  background-color: #f59e0b;
+  background-image: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(234, 88, 12, 0.85));
+  border-color: #f59e0b;
+  color: #ffffff;
+}
+
+/* Category sidebar (gets .sidebar-list class from MainWindow) */
+treeview.sidebar-list {
+  background-color: transparent;
+  color: #fbbf24;
+  border-radius: 6px;
+}
+
+treeview.sidebar-list:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+treeview.sidebar-list:selected {
+  background-color: #f59e0b;
+  background-image: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: #ffffff;
+  border-radius: 6px;
+}
+
+label.sidebar-heading {
+  font-size: 11px;
+  font-weight: bold;
+  color: #948375;
+  padding: 4px 8px;
+}
+
+/* Frames */
+frame > border {
+  border: 1px solid #382f28;
+  border-radius: 7px;
+}
+
+/* ListBox & Sidebar List with Rounded Active Selection Pills */
+list,
+listbox,
+list.sidebar {
+  background-color: #14110f;
+  border-radius: 7px;
+  padding: 4px;
+}
+
+row,
+list > row,
+list.sidebar > row,
+list row,
+list.sidebar row {
+  border-radius: 6px;
+  margin: 2px 4px;
+  padding: 8px 12px;
+  background-color: transparent;
+  transition: all 150ms ease;
+}
+
+row:hover,
+list > row:hover,
+list.sidebar > row:hover,
+list row:hover,
+list.sidebar row:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+
+row:selected,
+list > row:selected,
+list.sidebar > row:selected,
+list row:selected,
+list.sidebar row:selected {
+  background-color: #f59e0b;
+  color: #ffffff;
+  border-radius: 6px;
+  outline: none;
+}
+
+/* Subtle keyboard focus ring for row navigation */
+row:focus,
+row:selected:focus,
+list row:focus,
+list.sidebar row:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.45);
+  outline-offset: -2px;
+}
+
+/* Column headers (Name/Date/Size) */
+treeview header {
+  background-color: #191513;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+treeview header button {
+  background-color: #191513;
+  background-image: linear-gradient(to bottom, #241f1c, #161210);
+  color: #a3a3a3;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px 12px;
+}
+
+treeview header button:hover {
+  background-color: #2d2723;
+  background-image: linear-gradient(to bottom, #3a322c, #222222);
+  color: #fffbeb;
+}
+
+treeview header button:active {
+  background-color: #14110f;
+  background-image: none;
+  color: #ffffff;
+}
+
+treeview header button:focus {
+  outline: none;
+}
+
+/* Text fields */
+entry {
+  background-color: #2d2723;
+  border: 1px solid #3f3f3f;
+  border-radius: 6px;
+  color: #fffbeb;
+  padding: 6px 8px;
+}
+
+entry.toolbar-search-entry {
+  min-height: 26px;
+  padding: 3px 12px;
+  margin: 0;
+  border-radius: 999px;
+  background-color: #222222;
+  border: 1px solid #3d3d3d;
+  font-size: 13px;
+  transition: all 150ms ease;
+}
+
+entry:focus {
+  border-color: #f59e0b;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.65), 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+entry:disabled {
+  background-color: #242424;
+  border-color: #3a322c;
+  color: #757575;
+}
+
+entry selection {
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+
+/* ComboBox */
+combobox button {
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+/* Neutral buttons — subtle elevation + tactile gradients */
+button {
+  background-color: #3a322c;
+  background-image: linear-gradient(to bottom, #343434, #332c27);
+  border: 1px solid #4a3e35;
+  border-radius: 6px;
+  color: #f0f0f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  padding: 6px 12px;
+  transition: all 120ms ease;
+}
+
+button:hover {
+  background-color: #393939;
+  background-image: linear-gradient(to bottom, #3d3d3d, #323232);
+  border-color: #4e4e4e;
+  border-radius: 6px;
+}
+
+button:active {
+  background-color: #242424;
+  background-image: linear-gradient(to bottom, #242424, #1f1f1f);
+  border-color: #40362e;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+button:checked {
+  background-color: #2b2b2b;
+  border-color: #f59e0b;
+  color: #ffffff;
+  border-radius: 6px;
+}
+
+button:disabled {
+  background-color: #242424;
+  background-image: none;
+  border-color: #2c2c2c;
+  color: #757575;
+  box-shadow: none;
+}
+
+/* Keyboard focus ring */
+button:focus {
+  outline-width: 2px;
+  outline-style: solid;
+  outline-color: #f59e0b;
+  outline-offset: -4px;
+}
+
+/* Flat buttons — toolbars, icon/utility buttons */
+button.flat {
+  background-color: transparent;
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+  border-radius: 6px;
+  transition: all 120ms ease;
+}
+
+button.flat:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: transparent;
+  border-radius: 6px;
+}
+
+button.flat:active {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+}
+
+button.flat:checked {
+  background-color: rgba(245, 158, 11, 0.25);
+  border-color: transparent;
+  border-radius: 6px;
+}
+
+button.flat:disabled {
+  background-color: transparent;
+  color: #757575;
+}
+
+/* Primary (suggested) — Download/Add/Save/Start/OK */
+button.suggested-action {
+  background-color: #f59e0b;
+  background-image: linear-gradient(to bottom, #fbbf24, #d97706);
+  border: 1px solid #b45309;
+  color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: all 120ms ease;
+}
+
+button.suggested-action:hover {
+  background-color: #fbbf24;
+  background-image: linear-gradient(to bottom, #fef08a, #fde68a);
+  border-color: #9a3412;
+  border-radius: 6px;
+}
+
+button.suggested-action:active {
+  background-color: #d97706;
+  background-image: linear-gradient(to bottom, #d97706, #78350f);
+  border-color: #451a03;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+button.suggested-action:disabled {
+  background-color: rgba(245, 158, 11, 0.45);
+  background-image: none;
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  box-shadow: none;
+}
+
+button.suggested-action:focus {
+  outline-color: #fef9c3;
+}
+
+/* Destructive — Delete/Remove/Clear */
+button.destructive-action {
+  background-color: #e01b24;
+  background-image: linear-gradient(to bottom, #ea2b34, #d31821);
+  border: 1px solid #a31219;
+  color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: all 120ms ease;
+}
+
+button.destructive-action:hover {
+  background-color: #ef4a52;
+  background-image: linear-gradient(to bottom, #f34b53, #e52932);
+  border-color: #ba161e;
+  border-radius: 6px;
+}
+
+button.destructive-action:active {
+  background-color: #a5121a;
+  background-image: linear-gradient(to bottom, #a31219, #870d13);
+  border-color: #740b10;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+button.destructive-action:disabled {
+  background-color: rgba(224, 27, 36, 0.45);
+  background-image: none;
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  box-shadow: none;
+}
+
+button.destructive-action:focus {
+  outline-color: #f5a3a7;
+}
+
+/* Colored flat buttons — toolbar Start (blue) / Remove+Delete (red) */
+button.flat.suggested-action {
+  background-color: transparent;
+  border-color: transparent;
+  color: #fb923c;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+button.flat.suggested-action:hover {
+  background-color: rgba(245, 158, 11, 0.18);
+  color: #fef3c7;
+  border-radius: 6px;
+}
+
+button.flat.suggested-action:active {
+  background-color: rgba(245, 158, 11, 0.30);
+  border-radius: 6px;
+}
+
+button.flat.destructive-action {
+  background-color: transparent;
+  border-color: transparent;
+  color: #ef6a70;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+button.flat.destructive-action:hover {
+  background-color: rgba(224, 27, 36, 0.18);
+  color: #f4888d;
+  border-radius: 6px;
+}
+
+button.flat.destructive-action:active {
+  background-color: rgba(224, 27, 36, 0.30);
+  border-radius: 6px;
+}
+
+button.flat.suggested-action:disabled,
+button.flat.destructive-action:disabled {
+  background-color: transparent;
+  color: #757575;
+}
+
+/* Switches, checkboxes, radios */
+switch {
+  background-color: #3a322c;
+  border: 1px solid #4a3e35;
+  border-radius: 10px;
+}
+
+switch:checked {
+  background-color: #f59e0b;
+  border-color: #92400e;
+}
+
+switch slider {
+  background-color: #5a5a5a;
+  border-radius: 8px;
+}
+
+checkbutton check,
+radiobutton radio {
+  background-color: #332c27;
+  border: 1px solid #4a4a4a;
+}
+
+checkbutton check {
+  border-radius: 4px;
+}
+
+radiobutton radio {
+  border-radius: 100%;
+}
+
+checkbutton check:checked,
+radiobutton radio:checked {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+  color: #ffffff;
+}
+
+/* Thin, unobtrusive scrollbars */
+scrollbar {
+  background-color: transparent;
+}
+
+scrollbar slider {
+  background-color: #464646;
+  border-radius: 4px;
+  margin: 2px;
+  min-width: 8px;
+  min-height: 8px;
+}
+
+scrollbar slider:hover {
+  background-color: #5e5e5e;
+}
+
+scrollbar slider:active {
+  background-color: #6a6a6a;
+}
+
+/* Menus */
+menu {
+  background-color: #26211e;
+  border: 1px solid #443a32;
+  border-radius: 7px;
+  padding: 4px;
+}
+
+menuitem {
+  border-radius: 4px;
+  margin: 1px 4px;
+  padding: 6px 10px;
+}
+
+menuitem:hover {
+  background-color: #f59e0b;
+  color: #ffffff;
+  border-radius: 4px;
+}
+
+menuitem:hover label {
+  color: #ffffff;
+}
+
+menuitem:disabled {
+  color: #757575;
+}
+
+/* Notebook tabs — active tab gets accent underline */
+notebook header {
+  background-color: #181412;
+  border-radius: 6px 6px 0 0;
+}
+
+notebook header.top {
+  border-bottom: 1px solid #0e0e0e;
+}
+
+notebook tab {
+  color: #c4b5a5;
+  border-radius: 4px 4px 0 0;
+  padding: 6px 12px;
+}
+
+notebook tab:hover {
+  color: #fef3c7;
+}
+
+notebook tab:checked {
+  color: #ffffff;
+}
+
+notebook header.top tab:checked {
+  box-shadow: inset 0 -2px 0 0 #f59e0b;
+}
+
+/* Progress bars */
+progressbar trough {
+  background-color: #3a322c;
+  border-radius: 999px;
+}
+
+progressbar progress {
+  background-color: #f59e0b;
+  background-image: linear-gradient(to right, #f59e0b, #fbbf24);
+  border-radius: 999px;
+}
+
+/* Backdrop (unfocused window) */
+window:backdrop,
+dialog:backdrop {
+  color: #b8b8b8;
+}
+
+headerbar:backdrop {
+  background-color: #14110f;
+  border-bottom-color: #0b0b0b;
+  color: #f59e0b;
+}
+
+headerbar:backdrop label.header-title-app {
+  color: #c0c0c0;
+}
+
+headerbar:backdrop label.header-title-view {
+  color: #7a7a7a;
+}
+
+treeview:backdrop {
+  color: #b0b0b0;
+}
+
+treeview.sidebar-list:backdrop {
+  color: #a0a0a0;
+}
+
+/* Ensure active/selected items retain crisp white text even in backdrop/unfocused window state */
+treeview:selected:backdrop,
+treeview.sidebar-list:selected:backdrop,
+treeview.unfinished:selected:backdrop,
+treeview.finished:selected:backdrop,
+list > row:selected:backdrop,
+list.sidebar > row:selected:backdrop,
+list row:selected:backdrop,
+list.sidebar row:selected:backdrop,
+row:selected:backdrop {
+  background-color: #7c2d12;
+  color: #ffffff;
+}
+
+button:backdrop {
+  background-color: #2b2b2b;
+  border-color: #443a32;
+  color: #fbbf24;
+  box-shadow: none;
+}
+
+button:backdrop:hover {
+  background-color: #333333;
+}
+
+button.flat:backdrop {
+  background-color: transparent;
+  color: #b0b0b0;
+}
+
+button.suggested-action:backdrop {
+  background-color: #b45309;
+  border-color: #431407;
+}
+
+button.destructive-action:backdrop {
+  background-color: #b9232a;
+  border-color: #931b21;
+}
+
+entry:backdrop {
+  color: #b8b8b8;
+  border-color: #443a32;
+}
+
+notebook tab:backdrop {
+  color: #8a8a8a;
+}
+
+/* Bottombar utility buttons */
+button.flat.bottombar-button {
+  font-size: 12px;
+  padding: 2px 8px;
+  min-height: 22px;
+  min-width: 0;
+  color: #c4b5a5;
+  border-radius: 4px;
+}
+
+button.flat.bottombar-button:hover {
+  color: #fef3c7;
+  border-radius: 4px;
+}
+
+button.flat.bottombar-button:backdrop {
+  color: #8a8a8a;
+}
+
+/* Linked button groups */
+.linked > button {
+  border-radius: 0;
+  border-right-width: 0;
+}
+
+.linked > button:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.linked > button:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-right-width: 1px;
+}
+
+.linked > button:only-child {
+  border-radius: 6px;
+  border-right-width: 1px;
+}
+
+/* About Dialog Custom Theme Layer */
+.about-logo-badge {
+  background: linear-gradient(145deg, #262930, #16181d);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 17px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.about-title {
+  font-size: 17px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.about-version-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fb923c;
+  background-color: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 999px;
+  padding: 3px 14px;
+}
+
+.about-tagline {
+  font-size: 13px;
+  color: #a4a4a4;
+}
+
+.about-section-card {
+  background-color: #242424;
+  border: 1px solid #363636;
+  border-radius: 7px;
+  padding: 8px 12px;
+}
+
+.about-section-card linkbutton {
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: #fb923c;
+}
+
+.about-section-card linkbutton:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #fef3c7;
+}
+
+.about-credits-card {
+  background-color: #1b1b1b;
+  border: 1px solid #3a322c;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.about-copyright-text {
+  font-size: 12px;
+  color: #c4c4c4;
+}
+
+.about-credit-text {
+  font-size: 11px;
+  color: #8a8a8a;
+}
+
+/* Download Complete Dialog */
+.download-complete-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #fffbeb;
+}
+
+.download-complete-path {
+  font-size: 12px;
+  color: #f59e0b;
+}
+
+.download-complete-link {
+  font-size: 12px;
+  color: #f59e0b;
+  padding: 0;
+  min-height: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.download-complete-link:hover {
+  color: #fbbf24;
+  text-decoration: underline;
+}
+
+.extension-status-label {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 6px;
+}
+
+/* ===== Phase 4: Missing interactive states ===== */
+
+/* Link button pressed + keyboard focus */
+.about-section-card linkbutton:active {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #fbbf24;
+}
+
+.about-section-card linkbutton:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.45);
+  outline-offset: -2px;
+}
+
+/* Download-complete link pressed + keyboard focus */
+.download-complete-link:active {
+  color: #d97706;
+}
+
+.download-complete-link:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.45);
+  outline-offset: 1px;
+}
+
+/* Notebook tab pressed state */
+notebook tab:active {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Bottombar button pressed state */
+button.flat.bottombar-button:active {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+/* Switch keyboard focus ring */
+switch:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.55);
+  outline-offset: 2px;
+}
+
+/* ComboBox keyboard focus ring */
+combobox button:focus {
+  outline: 2px solid #f59e0b;
+  outline-offset: -3px;
+}
+
+/* Treeview row keyboard focus (visible for accessibility) */
+treeview row:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.35);
+  outline-offset: -2px;
+}
+
+/* Checkbox border-radius to token scale */
+checkbutton check {
+  border-radius: 4px;
+}
+
+/* ===== Phase 5: Subtle gradients + visual depth ===== */
+
+/* Headerbar subtle depth gradient */
+headerbar {
+  background-image: linear-gradient(to bottom, #191513, #181412);
+}
+
+/* Sidebar selected row enriched with subtle gradient */
+treeview.sidebar-list:selected,
+list.sidebar row:selected,
+list.sidebar > row:selected {
+  background-image: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(234, 88, 12, 0.85));
+}
+
+/* Update dot: bump from 10px to 11px for readability */
+label.update-dot {
+  font-size: 11px;
+}
+
+/* Theme toggle headerbar button */
+button.theme-toggle-button {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  margin-right: 4px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  transition: all 150ms ease;
+}
+
+button.theme-toggle-button:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+button.theme-toggle-button:active {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+button.theme-toggle-button:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.45);
+  outline-offset: -2px;
+}
+
+/* Headerbar CSD window controls (minimize, maximize, close) */
+headerbar button.titlebutton,
+button.titlebutton {
+  background-color: transparent;
+  background-image: none;
+  border: 1px solid transparent;
+  box-shadow: none;
+  padding: 4px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 4px;
+  color: #d0d0d0;
+  transition: all 120ms ease;
+}
+
+headerbar button.titlebutton:hover,
+button.titlebutton:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  background-image: none;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+headerbar button.titlebutton:active,
+button.titlebutton:active {
+  background-color: rgba(255, 255, 255, 0.2);
+  background-image: none;
+  border-color: transparent;
+  color: #ffffff;
+}
+
+headerbar button.titlebutton.close:hover,
+button.titlebutton.close:hover {
+  background-color: #e01b24;
+  background-image: none;
+  border-color: #c0171e;
+  color: #ffffff;
+}
+
+headerbar button.titlebutton.close:active,
+button.titlebutton.close:active {
+  background-color: #a5121a;
+  background-image: none;
+  border-color: transparent;
+  color: #ffffff;
+}
+
+treeview.unfinished row,
+treeview.finished row {
+  margin: 4px 8px;
+  padding: 8px 12px;
+  color: #fffbeb;
+}
+
+treeview.unfinished row:hover,
+treeview.finished row:hover {
+  background-color: #333333;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+treeview.unfinished row:selected,
+treeview.finished row:selected,
+treeview.unfinished:selected,
+treeview.finished:selected {
+  background-color: #f59e0b;
+  background-image: linear-gradient(135deg, #f59e0b, #fbbf24);
+  border-color: #fbbf24;
+  color: #ffffff;
+}
+
+treeview.unfinished row:selected:hover,
+treeview.finished row:selected:hover,
+treeview.unfinished:selected:hover,
+treeview.finished:selected:hover {
+  background-color: #fbbf24;
+  background-image: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border-color: #fef3c7;
+  color: #ffffff;
+}
+
+treeview.unfinished row:selected:backdrop,
+treeview.finished row:selected:backdrop,
+treeview.unfinished:selected:backdrop,
+treeview.finished:selected:backdrop {
+  background-color: #f59e0b;
+  background-image: none;
+  border-color: #f59e0b;
+  color: #ffffff;
+}
+
+button:not(:disabled):hover {
+  color: #ffffff;
+}
+
+button:not(:disabled):active {
+  color: #ffffff;
+}
+
+button.flat:not(:disabled):hover {
+  color: #fffbeb;
+}
+
+button.flat:not(:disabled):active {
+  color: #ffffff;
+}
+
+button.flat.suggested-action:not(:disabled):hover,
+button.flat.suggested-action:not(:disabled):active {
+  color: #ffffff;
+}
+
+button.flat.destructive-action:not(:disabled):hover,
+button.flat.destructive-action:not(:disabled):active {
+  color: #ffffff;
+}
+
+entry.toolbar-search-entry {
+  color: #fffbeb;
+  caret-color: #fbbf24;
+}
+
+entry.toolbar-search-entry:focus {
+  background-color: #2d2723;
+  border-color: #fbbf24;
+}
+
+button.flat.bottombar-button:hover,
+button.flat.bottombar-button:active {
+  color: #ffffff;
+}
+
+treeview.sidebar-list row:hover {
+  background-color: rgba(255, 255, 255, 0.10);
+  color: #ffffff;
+}
+
+treeview.sidebar-list row:selected,
+treeview.sidebar-list:selected {
+  background-color: #f59e0b;
+  background-image: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #ffffff;
+}
+
+treeview.sidebar-list row:selected:hover,
+treeview.sidebar-list:selected:hover {
+  background-color: #fbbf24;
+  color: #ffffff;
+}

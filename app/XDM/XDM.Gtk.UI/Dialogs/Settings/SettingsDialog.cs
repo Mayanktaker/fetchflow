@@ -43,9 +43,9 @@ namespace XDM.GtkUI.Dialogs.Settings
             BtnRestartIpc;
         private Button BtnChromium, BtnYandex;
         [UI]
-        private Label LblTheme, LblIpcStatus;
+        private Label LblTheme, LblColorScheme, LblIpcStatus;
         [UI]
-        private ComboBoxText CmbTheme;
+        private ComboBoxText CmbTheme, CmbColorScheme;
         // Builder.Autoconnect only wires fields marked [UI]; missing annotation leaves the
         // field null → NRE in LoadTexts when the dialog is opened (crash in crash.log).
         [UI] private CheckButton ChkMonitorClipboard, ChkTimestamp, ChkAutoCat, ChkShowPrg,
@@ -157,9 +157,23 @@ namespace XDM.GtkUI.Dialogs.Settings
             CmbTheme.AppendText("Follow System");
             CmbTheme.Active = Config.Instance.ThemeMode;
 
+            PopulateColorSchemeOptions(IsDarkSelected());
+            CmbColorScheme.Active = Config.Instance.ColorScheme;
+
             CmbTheme.Changed += (_, _) =>
             {
-                ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1));
+                var wasScheme = CmbColorScheme.Active;
+                PopulateColorSchemeOptions(IsDarkSelected());
+                CmbColorScheme.Active = (wasScheme >= 0 && wasScheme < 4) ? wasScheme : 0;
+                ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), CmbColorScheme.Active);
+            };
+
+            CmbColorScheme.Changed += (_, _) =>
+            {
+                if (CmbColorScheme.Active >= 0)
+                {
+                    ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), CmbColorScheme.Active);
+                }
             };
 
             if (BtnRestartIpc != null)
@@ -379,8 +393,44 @@ namespace XDM.GtkUI.Dialogs.Settings
 
         private void BtnCancel_Clicked(object? sender, EventArgs e)
         {
-            ThemeManager.ApplyTheme(Config.Instance.ThemeMode == 2 ? null : (bool?)(Config.Instance.ThemeMode == 1));
+            ThemeManager.ApplyTheme(Config.Instance.ThemeMode == 2 ? null : (bool?)(Config.Instance.ThemeMode == 1), Config.Instance.ColorScheme);
             Destroy();
+        }
+
+        // Returns whether dark theme mode is actively selected in the dropdown
+        private bool IsDarkSelected()
+        {
+            if (CmbTheme.Active == 1) return true;
+            if (CmbTheme.Active == 0) return false;
+            return ThemeManager.IsDarkActive;
+        }
+
+        // Populates the color scheme dropdown with mode-tailored palette options
+        private void PopulateColorSchemeOptions(bool isDark)
+        {
+            if (CmbColorScheme == null) return;
+            var currentIdx = CmbColorScheme.Active;
+            try
+            {
+                CmbColorScheme.RemoveAll();
+            }
+            catch
+            {
+                (CmbColorScheme.Model as ListStore)?.Clear();
+            }
+            var schemes = isDark ? ThemeManager.DarkSchemes : ThemeManager.LightSchemes;
+            foreach (var s in schemes)
+            {
+                CmbColorScheme.AppendText(s.DisplayName);
+            }
+            if (currentIdx >= 0 && currentIdx < schemes.Length)
+            {
+                CmbColorScheme.Active = currentIdx;
+            }
+            else
+            {
+                CmbColorScheme.Active = 0;
+            }
         }
 
         private void BtnOK_Clicked(object? sender, EventArgs e)
@@ -542,9 +592,9 @@ namespace XDM.GtkUI.Dialogs.Settings
 
         private void LoadTexts()
         {
-            PageHeader1.Text = TextResource.GetText("SETTINGS_MONITORING");
-            PageHeader2.Text = TextResource.GetText("SETTINGS_GENERAL");
-            PageHeader3.Text = TextResource.GetText("SETTINGS_NETWORK");
+            PageHeader1.Text = TextResource.GetText("SETTINGS_GENERAL");
+            PageHeader2.Text = TextResource.GetText("SETTINGS_NETWORK");
+            PageHeader3.Text = TextResource.GetText("SETTINGS_MONITORING");
             PageHeader4.Text = TextResource.GetText("SETTINGS_CRED");
             PageHeader5.Text = TextResource.GetText("SETTINGS_ADV");
 
@@ -598,6 +648,10 @@ namespace XDM.GtkUI.Dialogs.Settings
             Label16.Text = TextResource.GetText("SETTINGS_CAT");
 
             LblTheme.Text = TextResource.GetText("SETTINGS_THEME") ?? "Theme:";
+            if (LblColorScheme != null)
+            {
+                LblColorScheme.Text = TextResource.GetText("SETTINGS_COLOR_SCHEME") ?? "Color Scheme:";
+            }
             ChkAutoCat.Label = TextResource.GetText("SETTINGS_ATUO_CAT");
             ChkShowPrg.Label = TextResource.GetText("SHOW_DWN_PRG");
             ChkShowComplete.Label = TextResource.GetText("SHOW_DWN_COMPLETE");
@@ -788,7 +842,8 @@ namespace XDM.GtkUI.Dialogs.Settings
             Config.Instance.FolderSelectionMode = ChkAutoCat.Active ? FolderSelectionMode.Auto : FolderSelectionMode.Manual;
             Config.Instance.DefaultDownloadFolder = TxtDownloadFolder.Text;
             Config.Instance.ThemeMode = CmbTheme.Active;
-            ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1));
+            Config.Instance.ColorScheme = (CmbColorScheme != null && CmbColorScheme.Active >= 0) ? CmbColorScheme.Active : 0;
+            ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), Config.Instance.ColorScheme);
             Config.Instance.DoubleClickOpenFile = CmbDblClickAction.Active == 1;
         }
 

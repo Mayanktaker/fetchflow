@@ -507,7 +507,7 @@ namespace XDM.Core
 
             ApplicationContext.MainWindow.SettingsClicked += (s, e) =>
             {
-                ApplicationContext.PlatformUIService.ShowSettingsDialog(1);
+                ApplicationContext.PlatformUIService.ShowSettingsDialog(0);
             };
 
             ApplicationContext.MainWindow.BrowserMonitoringSettingsClicked += (s, e) =>

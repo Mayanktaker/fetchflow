@@ -567,7 +567,7 @@ namespace XDM.Core
 
             peer.SettingsClicked += (s, e) =>
             {
-                peer.ShowSettingsDialog(app, 1);
+                peer.ShowSettingsDialog(app, 0);
                 peer.UpdateParallalismLabel();
             };
 

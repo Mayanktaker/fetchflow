@@ -144,7 +144,7 @@ namespace XDM.GtkUI
 
         public void ShowBrowserMonitoringDialog()
         {
-            ShowSettingsDialog(0);
+            ShowSettingsDialog(2);
         }
 
         public IUpdaterUI CreateUpdateUIDialog()
