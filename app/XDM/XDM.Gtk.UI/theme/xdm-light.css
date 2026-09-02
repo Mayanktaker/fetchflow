@@ -9,7 +9,7 @@
  *   accent #3584e4 (hover #5a9bea / active #2767b8)
  *   destructive #e01b24 (hover #ef4a52 / active #a5121a)
  *   brand #ea580c (hover #f97316) · success #16a34a
- *   radius: sm 6 · md 8 · lg 10 · badge 24 · pill 999
+ *   radius: sm 4 · md 6 · lg 7 · badge 17 · pill 999
  *   spacing: 4 / 8 / 12 / 16 / 24 px
  */
 
@@ -24,8 +24,8 @@ headerbar {
   background-color: #f0f0f0;
   border-bottom: 1px solid #d0d0d0;
   color: #242424;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
 }
 
 /* Compact padding scoped to the main window headerbar so dialog headerbars keep stock metrics */
@@ -62,14 +62,14 @@ button.flat.update-dot-button {
 
 tooltip {
   background-color: #3b3b41;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #ffffff;
 }
 
 popover {
   background-color: #ffffff;
   border: 1px solid #d8d8d8;
-  border-radius: 10px;
+  border-radius: 7px;
   padding: 6px;
 }
 
@@ -81,19 +81,45 @@ separator {
 
 /* ScrolledWindow rounded frame for sidebars */
 scrolledwindow {
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 scrolledwindow.sidebar-scroll {
-  border-radius: 8px;
-  background-color: #ececec;
+  border-radius: 7px;
+  background-color: #f7f9fb;
+}
+
+/* Dedicated Active & Complete status section card */
+.sidebar-status-card {
+  background-color: #ebf0f7;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 7px;
+  padding: 4px;
+}
+
+treeview.sidebar-status-list {
+  background-color: transparent;
+  color: #333333;
+  border-radius: 6px;
+}
+
+treeview.sidebar-status-list:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #111111;
+}
+
+treeview.sidebar-status-list:selected {
+  background-color: #3584e4;
+  background-image: linear-gradient(135deg, #3584e4, #4893ec);
+  color: #ffffff;
+  border-radius: 5px;
 }
 
 /* Sidebar + content lists */
 treeview {
   background-color: #ffffff;
   color: #242424;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 treeview.unfinished,
@@ -105,7 +131,7 @@ treeview.unfinished row,
 treeview.finished row {
   margin: 3px 6px;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 6px;
   background-color: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -130,9 +156,9 @@ treeview.finished:selected {
 
 /* Category sidebar */
 treeview.sidebar-list {
-  background-color: #ececec;
+  background-color: transparent;
   color: #333333;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 treeview.sidebar-list:hover {
@@ -142,21 +168,22 @@ treeview.sidebar-list:hover {
 
 treeview.sidebar-list:selected {
   background-color: #3584e4;
+  background-image: linear-gradient(135deg, #3584e4, #4893ec);
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 label.sidebar-heading {
   font-size: 11px;
   font-weight: bold;
-  color: #6a6a6a;
+  color: #727a84;
   padding: 4px 8px;
 }
 
 /* Frames */
 frame > border {
   border: 1px solid #dedede;
-  border-radius: 10px;
+  border-radius: 7px;
 }
 
 /* ListBox & Sidebar List with Rounded Active Selection Pills */
@@ -164,7 +191,7 @@ list,
 listbox,
 list.sidebar {
   background-color: #ececec;
-  border-radius: 10px;
+  border-radius: 7px;
   padding: 4px;
 }
 
@@ -173,7 +200,7 @@ list > row,
 list.sidebar > row,
 list row,
 list.sidebar row {
-  border-radius: 8px;
+  border-radius: 6px;
   margin: 2px 4px;
   padding: 8px 12px;
   background-color: transparent;
@@ -186,7 +213,7 @@ list.sidebar > row:hover,
 list row:hover,
 list.sidebar row:hover {
   background-color: rgba(0, 0, 0, 0.06);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 row:selected,
@@ -196,7 +223,7 @@ list row:selected,
 list.sidebar row:selected {
   background-color: #3584e4;
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: 6px;
   outline: none;
 }
 
@@ -249,7 +276,7 @@ treeview header button:focus {
 entry {
   background-color: #ffffff;
   border: 1px solid #c8c8c8;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #222222;
   padding: 6px 8px;
 }
@@ -283,7 +310,7 @@ entry selection {
 
 /* ComboBox */
 combobox button {
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 4px 8px;
 }
 
@@ -292,7 +319,7 @@ button {
   background-color: #ffffff;
   background-image: linear-gradient(to bottom, #ffffff, #f7f7f7);
   border: 1px solid #cacaca;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #242424;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   padding: 6px 12px;
@@ -303,14 +330,14 @@ button:hover {
   background-color: #f4f4f4;
   background-image: linear-gradient(to bottom, #ffffff, #ededed);
   border-color: #b8b8b8;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button:active {
   background-color: #ebebeb;
   background-image: linear-gradient(to bottom, #e5e5e5, #dedede);
   border-color: #adadad;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
@@ -318,7 +345,7 @@ button:checked {
   background-color: #e5effd;
   border-color: #3584e4;
   color: #1b5bb5;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button:disabled {
@@ -343,25 +370,25 @@ button.flat {
   background-image: none;
   border-color: transparent;
   box-shadow: none;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: all 120ms ease;
 }
 
 button.flat:hover {
   background-color: rgba(0, 0, 0, 0.06);
   border-color: transparent;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.flat:active {
   background-color: rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.flat:checked {
   background-color: rgba(53, 132, 228, 0.15);
   border-color: transparent;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.flat:disabled {
@@ -375,7 +402,7 @@ button.suggested-action {
   background-image: linear-gradient(to bottom, #3d8cf0, #317fdf);
   border: 1px solid #2267b8;
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
   transition: all 120ms ease;
 }
@@ -384,14 +411,14 @@ button.suggested-action:hover {
   background-color: #4a91eb;
   background-image: linear-gradient(to bottom, #559cf4, #428ded);
   border-color: #1f5ca5;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.suggested-action:active {
   background-color: #2767b8;
   background-image: linear-gradient(to bottom, #2566b6, #1c5194);
   border-color: #184b87;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
@@ -413,7 +440,7 @@ button.destructive-action {
   background-image: linear-gradient(to bottom, #e72a33, #d21720);
   border: 1px solid #b0151c;
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
   transition: all 120ms ease;
 }
@@ -422,14 +449,14 @@ button.destructive-action:hover {
   background-color: #ea3840;
   background-image: linear-gradient(to bottom, #f1444c, #df242d);
   border-color: #9e1319;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.destructive-action:active {
   background-color: #a5121a;
   background-image: linear-gradient(to bottom, #a31219, #870d13);
   border-color: #740b10;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
@@ -450,38 +477,38 @@ button.flat.suggested-action {
   background-color: transparent;
   border-color: transparent;
   color: #1f6acc;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: none;
 }
 
 button.flat.suggested-action:hover {
   background-color: rgba(53, 132, 228, 0.12);
   color: #1855a4;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.flat.suggested-action:active {
   background-color: rgba(53, 132, 228, 0.22);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.flat.destructive-action {
   background-color: transparent;
   border-color: transparent;
   color: #c7161e;
-  border-radius: 8px;
+  border-radius: 6px;
   box-shadow: none;
 }
 
 button.flat.destructive-action:hover {
   background-color: rgba(224, 27, 36, 0.12);
   color: #a81219;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.flat.destructive-action:active {
   background-color: rgba(224, 27, 36, 0.22);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 button.flat.suggested-action:disabled,
@@ -494,7 +521,7 @@ button.flat.destructive-action:disabled {
 switch {
   background-color: #e0e0e0;
   border: 1px solid #cacaca;
-  border-radius: 14px;
+  border-radius: 10px;
 }
 
 switch:checked {
@@ -504,7 +531,7 @@ switch:checked {
 
 switch slider {
   background-color: #ffffff;
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
@@ -515,7 +542,7 @@ radiobutton radio {
 }
 
 checkbutton check {
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 radiobutton radio {
@@ -536,7 +563,7 @@ scrollbar {
 
 scrollbar slider {
   background-color: #bcbcbc;
-  border-radius: 6px;
+  border-radius: 4px;
   margin: 2px;
   min-width: 8px;
   min-height: 8px;
@@ -554,12 +581,12 @@ scrollbar slider:active {
 menu {
   background-color: #ffffff;
   border: 1px solid #d8d8d8;
-  border-radius: 10px;
+  border-radius: 7px;
   padding: 4px;
 }
 
 menuitem {
-  border-radius: 6px;
+  border-radius: 4px;
   margin: 1px 4px;
   padding: 6px 10px;
 }
@@ -567,7 +594,11 @@ menuitem {
 menuitem:hover {
   background-color: #3584e4;
   color: #ffffff;
-  border-radius: 6px;
+  border-radius: 4px;
+}
+
+menuitem:hover label {
+  color: #ffffff;
 }
 
 menuitem:disabled {
@@ -577,7 +608,7 @@ menuitem:disabled {
 /* Notebook tabs */
 notebook header {
   background-color: #f0f0f0;
-  border-radius: 8px 8px 0 0;
+  border-radius: 6px 6px 0 0;
 }
 
 notebook header.top {
@@ -586,7 +617,7 @@ notebook header.top {
 
 notebook tab {
   color: #6b6b6b;
-  border-radius: 6px 6px 0 0;
+  border-radius: 4px 4px 0 0;
   padding: 6px 12px;
 }
 
@@ -698,12 +729,12 @@ button.flat.bottombar-button {
   min-height: 22px;
   min-width: 0;
   color: #6b6b6b;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 button.flat.bottombar-button:hover {
   color: #1f1f1f;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 button.flat.bottombar-button:backdrop {
@@ -717,18 +748,18 @@ button.flat.bottombar-button:backdrop {
 }
 
 .linked > button:first-child {
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
 }
 
 .linked > button:last-child {
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
   border-right-width: 1px;
 }
 
 .linked > button:only-child {
-  border-radius: 8px;
+  border-radius: 6px;
   border-right-width: 1px;
 }
 
@@ -736,7 +767,7 @@ button.flat.bottombar-button:backdrop {
 .about-logo-badge {
   background: linear-gradient(145deg, #ffffff, #f0f2f5);
   border: 1px solid rgba(0, 0, 0, 0.10);
-  border-radius: 24px;
+  border-radius: 17px;
   padding: 12px 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
 }
@@ -765,13 +796,13 @@ button.flat.bottombar-button:backdrop {
 .about-section-card {
   background-color: #f7f7f8;
   border: 1px solid #dedede;
-  border-radius: 10px;
+  border-radius: 7px;
   padding: 8px 12px;
 }
 
 .about-section-card linkbutton {
   padding: 5px 10px;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #2767b8;
 }
 
@@ -783,7 +814,7 @@ button.flat.bottombar-button:backdrop {
 .about-credits-card {
   background-color: #f0f0f2;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 8px 12px;
 }
 
@@ -885,7 +916,7 @@ treeview row:focus {
 
 /* Checkbox border-radius to token scale */
 checkbutton check {
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 /* ===== Phase 5: Subtle gradients + visual depth ===== */
@@ -907,7 +938,7 @@ button.theme-toggle-button {
   min-width: 28px;
   min-height: 28px;
   padding: 4px 6px;
-  border-radius: 8px;
+  border-radius: 6px;
   margin-right: 4px;
   background-color: transparent;
   border: 1px solid transparent;
@@ -926,6 +957,53 @@ button.theme-toggle-button:active {
 button.theme-toggle-button:focus {
   outline: 2px solid rgba(53, 132, 228, 0.35);
   outline-offset: -2px;
+}
+
+/* Headerbar CSD window controls (minimize, maximize, close) */
+headerbar button.titlebutton,
+button.titlebutton {
+  background-color: transparent;
+  background-image: none;
+  border: 1px solid transparent;
+  box-shadow: none;
+  padding: 4px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 4px;
+  color: #4a4a4a;
+  transition: all 120ms ease;
+}
+
+headerbar button.titlebutton:hover,
+button.titlebutton:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  background-image: none;
+  border-color: rgba(0, 0, 0, 0.06);
+  color: #111111;
+}
+
+headerbar button.titlebutton:active,
+button.titlebutton:active {
+  background-color: rgba(0, 0, 0, 0.15);
+  background-image: none;
+  border-color: transparent;
+  color: #000000;
+}
+
+headerbar button.titlebutton.close:hover,
+button.titlebutton.close:hover {
+  background-color: #e01b24;
+  background-image: none;
+  border-color: #c0171e;
+  color: #ffffff;
+}
+
+headerbar button.titlebutton.close:active,
+button.titlebutton.close:active {
+  background-color: #a5121a;
+  background-image: none;
+  border-color: transparent;
+  color: #ffffff;
 }
 
 treeview.unfinished row,

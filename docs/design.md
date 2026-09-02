@@ -6,14 +6,15 @@ Single source of truth for FetchFlow's UI tokens. GTK theme files inline these v
 (GTK3 CSS has no variables); browser extensions mirror them as CSS custom properties.
 Spec: docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.md
 
-## Radius
+## Radius (70% Scale)
 
 | Token | Value | Used for |
 |---|---|---|
-| sm | 6px | checkboxes, small chips |
-| md | 8px | buttons, sidebar pills, icon tiles, linked outer corners |
-| lg | 10px | menus, popovers, extension cards |
-| badge | 24px | about-dialog logo badge |
+| sm | 4px | checkboxes, small chips, title buttons |
+| md | 6px | buttons, sidebar pills, icon tiles, row cards, linked outer corners |
+| lg | 7px | menus, popovers, extension cards, status card container |
+| xl | 8px / 10px | dialog containers, card frames |
+| badge | 17px | about-dialog logo badge |
 | pill | 999px | search entry, progress bars, switches, badges |
 
 ## Spacing

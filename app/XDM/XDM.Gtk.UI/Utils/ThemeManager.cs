@@ -85,12 +85,12 @@ namespace XDM.GtkUI.Utils
                 Log.Debug("Non-fatal: theme CSS provider not applied: " + cssEx.Message);
             }
 
-            // GTK-level dark preference: lets libadwaita-style dark variants resolve per mode
+            // GTK-level theme and dark preference: ensures Adwaita icons and CSD decorations resolve per mode
             try
             {
+                Gtk.Settings.Default.ThemeName = AdwaitaThemeName;
                 if (darkRequested == true || (darkRequested == null && dark))
                 {
-                    Gtk.Settings.Default.ThemeName = AdwaitaThemeName;
                     Gtk.Settings.Default.ApplicationPreferDarkTheme = true;
                 }
                 else

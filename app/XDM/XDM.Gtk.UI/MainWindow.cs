@@ -157,6 +157,8 @@ namespace XDM.GtkUI
 
         private Menu menuInProgress, menuFinished;
         private IPlatformClipboardMonitor clipboarMonitor;
+        private TreePath? hoveredInprogressPath;
+        private TreePath? hoveredFinishedPath;
 
         public MainWindow() : base("FetchFlow Download Manager")
         {
@@ -279,25 +281,25 @@ namespace XDM.GtkUI
         {
             menuItems = new IMenuItem[]
             {
-                new MenuItemWrapper("pause",TextResource.GetText("MENU_PAUSE")),
-                new MenuItemWrapper("resume",TextResource.GetText("MENU_RESUME")),
-                new MenuItemWrapper("delete",TextResource.GetText("DESC_DEL")),
-                new MenuItemWrapper("saveAs",TextResource.GetText("CTX_SAVE_AS")),
-                new MenuItemWrapper("refresh",TextResource.GetText("MENU_REFRESH_LINK")),
-                new MenuItemWrapper("showProgress",TextResource.GetText("LBL_SHOW_PROGRESS")),
-                new MenuItemWrapper("copyURL",TextResource.GetText("CTX_COPY_URL")),
-                new MenuItemWrapper("restart",TextResource.GetText("MENU_RESTART")),
-                new MenuItemWrapper("moveToQueue",TextResource.GetText("Q_MOVE_TO")),
-                new MenuItemWrapper("properties",TextResource.GetText("MENU_PROPERTIES")),
+                new MenuItemWrapper("pause", TextResource.GetText("MENU_PAUSE"), true, "pause-line"),
+                new MenuItemWrapper("resume", TextResource.GetText("MENU_RESUME"), true, "play-line"),
+                new MenuItemWrapper("delete", TextResource.GetText("DESC_DEL"), true, "delete-bin-7-line"),
+                new MenuItemWrapper("saveAs", TextResource.GetText("CTX_SAVE_AS"), true, "download-2-line"),
+                new MenuItemWrapper("refresh", TextResource.GetText("MENU_REFRESH_LINK"), true, "refresh-line"),
+                new MenuItemWrapper("showProgress", TextResource.GetText("LBL_SHOW_PROGRESS"), true, "external-link-line"),
+                new MenuItemWrapper("copyURL", TextResource.GetText("CTX_COPY_URL"), true, "links-line"),
+                new MenuItemWrapper("restart", TextResource.GetText("MENU_RESTART"), true, "refresh-line"),
+                new MenuItemWrapper("moveToQueue", TextResource.GetText("Q_MOVE_TO"), true, "folder-shared-line"),
+                new MenuItemWrapper("properties", TextResource.GetText("MENU_PROPERTIES"), true, "settings-3-line"),
 
-                new MenuItemWrapper("open",TextResource.GetText("CTX_OPEN_FILE")),
-                new MenuItemWrapper("openFolder",TextResource.GetText("CTX_OPEN_FOLDER")),
-                new MenuItemWrapper("deleteDownloads",TextResource.GetText("MENU_DELETE_DWN")),
-                new MenuItemWrapper("copyURL1",TextResource.GetText("CTX_COPY_URL")),
-                new MenuItemWrapper("copyFile",TextResource.GetText("CTX_COPY_FILE")),
-                new MenuItemWrapper("downloadAgain",TextResource.GetText("MENU_RESTART")),
-                new MenuItemWrapper("properties1",TextResource.GetText("MENU_PROPERTIES")),
-                new MenuItemWrapper("schedule",TextResource.GetText("Q_SCHEDULE_TXT"),false)
+                new MenuItemWrapper("open", TextResource.GetText("CTX_OPEN_FILE"), true, "file-line"),
+                new MenuItemWrapper("openFolder", TextResource.GetText("CTX_OPEN_FOLDER"), true, "folder-shared-line"),
+                new MenuItemWrapper("deleteDownloads", TextResource.GetText("MENU_DELETE_DWN"), true, "delete-bin-7-line"),
+                new MenuItemWrapper("copyURL1", TextResource.GetText("CTX_COPY_URL"), true, "links-line"),
+                new MenuItemWrapper("copyFile", TextResource.GetText("CTX_COPY_FILE"), true, "file-copy-line"),
+                new MenuItemWrapper("downloadAgain", TextResource.GetText("MENU_RESTART"), true, "refresh-line"),
+                new MenuItemWrapper("properties1", TextResource.GetText("MENU_PROPERTIES"), true, "settings-3-line"),
+                new MenuItemWrapper("schedule", TextResource.GetText("Q_SCHEDULE_TXT"), false, "time-line")
             };
 
             var dict = new Dictionary<string, IMenuItem>();
@@ -333,11 +335,11 @@ namespace XDM.GtkUI
             menuInProgress.ShowAll();
 
             newDownloadMenu = new Menu();
-            var menuNewDownload = new MenuItem(TextResource.GetText("LBL_NEW_DOWNLOAD"));
+            var menuNewDownload = CreateIconMenuItem("file-download-line", TextResource.GetText("LBL_NEW_DOWNLOAD") ?? "New download", out var imgNewDl, out _);
             menuNewDownload.Activated += MenuNewDownload_Click;
-            var menuVideoDownload = new MenuItem(TextResource.GetText("LBL_VIDEO_DOWNLOAD"));
+            var menuVideoDownload = CreateIconMenuItem("movie-line", TextResource.GetText("LBL_VIDEO_DOWNLOAD") ?? "Video download", out var imgVideoDl, out _);
             menuVideoDownload.Activated += MenuVideoDownload_Click;
-            var menuBatchDownload = new MenuItem(TextResource.GetText("MENU_BATCH_DOWNLOAD"));
+            var menuBatchDownload = CreateIconMenuItem("list-settings-line", TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch download", out var imgBatchDl, out _);
             menuBatchDownload.Activated += MenuBatchDownload_Click;
             newDownloadMenu.Append(menuNewDownload);
             newDownloadMenu.Append(menuVideoDownload);
@@ -345,25 +347,67 @@ namespace XDM.GtkUI
             newDownloadMenu.ShowAll();
 
             mainMenu = new Menu();
-            var menuSettings = new MenuItem(TextResource.GetText("TITLE_SETTINGS"));
-            var menuBrowserMonitor = new MenuItem(TextResource.GetText("SETTINGS_MONITORING"));
-            var menuMediaGrabber = new MenuItem(TextResource.GetText("MSG_MEDIA_CAPTURE"));
-            var menuClearFinished = new MenuItem(TextResource.GetText("MENU_DELETE_COMPLETED"));
-            var menuExport = new MenuItem(TextResource.GetText("MENU_EXPORT"));
-            var menuImport = new MenuItem(TextResource.GetText("MENU_IMPORT"));
-            var menuToggleTheme = new MenuItem(ThemeManager.IsDarkActive ? "Switch to Light Theme" : "Switch to Dark Theme");
-            var menuLanguage = new MenuItem(TextResource.GetText("MENU_LANG"));
-            var menuHelpAndSupport = new MenuItem(TextResource.GetText("LBL_SUPPORT_PAGE"));
-            var menuReportProblem = new MenuItem(TextResource.GetText("LBL_REPORT_PROBLEM"));
-            var menuCheckForUpdate = new MenuItem(TextResource.GetText("MENU_UPDATE"));
-            var menuAbout = new MenuItem(TextResource.GetText("MENU_ABOUT"));
-            var menuExit = new MenuItem(TextResource.GetText("MENU_EXIT"));
+            var menuSettings = CreateIconMenuItem("settings-3-line", TextResource.GetText("TITLE_SETTINGS") ?? "Settings", out var imgSettings, out _);
+            var menuBrowserMonitor = CreateIconMenuItem("links-line", TextResource.GetText("SETTINGS_MONITORING") ?? "Browser monitoring", out var imgBrowserMonitor, out _);
+            var menuMediaGrabber = CreateIconMenuItem("movie-line", TextResource.GetText("MSG_MEDIA_CAPTURE") ?? "Media grabber", out var imgMediaGrabber, out _);
+            var menuClearFinished = CreateIconMenuItem("delete-bin-7-line", TextResource.GetText("MENU_DELETE_COMPLETED") ?? "Remove finished downloads", out var imgClearFinished, out _);
+            var menuExport = CreateIconMenuItem("upload-2-line", TextResource.GetText("MENU_EXPORT") ?? "Export", out var imgExport, out _);
+            var menuImport = CreateIconMenuItem("download-2-line", TextResource.GetText("MENU_IMPORT") ?? "Import", out var imgImport, out _);
+            var menuToggleTheme = CreateIconMenuItem(ThemeManager.IsDarkActive ? "sun-line" : "moon-line", ThemeManager.IsDarkActive ? "Switch to Light Theme" : "Switch to Dark Theme", out var imgToggleTheme, out var lblToggleTheme);
+            var menuLanguage = CreateIconMenuItem("global-line", TextResource.GetText("MENU_LANG") ?? "Language", out var imgLanguage, out _);
+            var menuHelpAndSupport = CreateIconMenuItem("question-line", TextResource.GetText("LBL_SUPPORT_PAGE") ?? "Help and support", out var imgHelp, out _);
+            var menuReportProblem = CreateIconMenuItem("feedback-line", TextResource.GetText("LBL_REPORT_PROBLEM") ?? "Report a problem", out var imgReport, out _);
+            var menuCheckForUpdate = CreateIconMenuItem("refresh-line", TextResource.GetText("MENU_UPDATE") ?? "Check for update", out var imgUpdate, out _);
+            var menuAbout = CreateIconMenuItem("fetchflow-mark", TextResource.GetText("MENU_ABOUT") ?? "About FetchFlow", out var imgAbout, out _);
+            var menuExit = CreateIconMenuItem("logout-box-r-line", TextResource.GetText("MENU_EXIT") ?? "Exit", out var imgExit, out _);
+
+            void RefreshMenuIcons(bool isDark)
+            {
+                void UpdateIcon(Image img, string name)
+                {
+                    var raw = LoadSvg(name, 16);
+                    if (raw != null)
+                    {
+                        img.Pixbuf = isDark ? GtkHelper.TintPixbuf(raw, 200, 200, 200) : GtkHelper.TintPixbuf(raw, 90, 90, 90);
+                    }
+                }
+                UpdateIcon(imgSettings, "settings-3-line");
+                UpdateIcon(imgBrowserMonitor, "links-line");
+                UpdateIcon(imgMediaGrabber, "movie-line");
+                UpdateIcon(imgClearFinished, "delete-bin-7-line");
+                UpdateIcon(imgExport, "upload-2-line");
+                UpdateIcon(imgImport, "download-2-line");
+                UpdateIcon(imgToggleTheme, isDark ? "sun-line" : "moon-line");
+                lblToggleTheme.Text = isDark ? "Switch to Light Theme" : "Switch to Dark Theme";
+                UpdateIcon(imgLanguage, "global-line");
+                UpdateIcon(imgHelp, "question-line");
+                UpdateIcon(imgReport, "feedback-line");
+                UpdateIcon(imgUpdate, "refresh-line");
+                UpdateIcon(imgAbout, "fetchflow-mark");
+                UpdateIcon(imgExit, "logout-box-r-line");
+
+                UpdateIcon(imgNewDl, "file-download-line");
+                UpdateIcon(imgVideoDl, "movie-line");
+                UpdateIcon(imgBatchDl, "list-settings-line");
+
+                if (menuItems != null)
+                {
+                    foreach (var mi in menuItems)
+                    {
+                        if (mi is MenuItemWrapper miw)
+                        {
+                            miw.UpdateTheme(isDark);
+                        }
+                    }
+                }
+            }
+            ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) => RefreshMenuIcons(isDark));
+
             menuSettings.Activated += MenuSettings_Activated;
             menuClearFinished.Activated += MenuClearFinished_Activated;
             menuExport.Activated += MenuExport_Activated;
             menuImport.Activated += MenuImport_Activated;
             menuToggleTheme.Activated += (_, _) => ThemeManager.ToggleTheme();
-            ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) => menuToggleTheme.Label = isDark ? "Switch to Light Theme" : "Switch to Dark Theme");
             menuLanguage.Activated += MenuLanguage_Activated;
             menuBrowserMonitor.Activated += MenuBrowserMonitor_Activated;
             menuHelpAndSupport.Activated += MenuHelpAndSupport_Activated;
@@ -386,6 +430,34 @@ namespace XDM.GtkUI
             mainMenu.Append(menuAbout);
             mainMenu.Append(menuExit);
             mainMenu.ShowAll();
+        }
+
+        // Creates a MenuItem with a 16px monochrome icon and left-aligned text
+        private static MenuItem CreateIconMenuItem(string iconName, string text, out Image iconImage, out Label label)
+        {
+            var item = new MenuItem();
+            var box = new HBox(false, 10)
+            {
+                MarginStart = 2,
+                MarginEnd = 6,
+                MarginTop = 2,
+                MarginBottom = 2
+            };
+            var rawPixbuf = LoadSvg(iconName, 16);
+            var tintedPixbuf = rawPixbuf != null
+                ? (ThemeManager.IsDarkActive ? GtkHelper.TintPixbuf(rawPixbuf, 200, 200, 200) : GtkHelper.TintPixbuf(rawPixbuf, 90, 90, 90))
+                : null;
+            iconImage = tintedPixbuf != null ? new Image(tintedPixbuf) : new Image();
+            label = new Label(text)
+            {
+                Halign = Align.Start,
+                Xalign = 0
+            };
+            box.PackStart(iconImage, false, false, 0);
+            box.PackStart(label, true, true, 0);
+            item.Add(box);
+            item.ShowAll();
+            return item;
         }
 
         private void MenuMediaGrabber_Activated(object? sender, EventArgs e)
@@ -509,12 +581,13 @@ namespace XDM.GtkUI
             updateDot.StyleContext.AddClass("update-dot-button");
             updateDot.Clicked += (_, _) => UpdateClicked?.Invoke(this, EventArgs.Empty);
 
-            var titleBox = new HBox(false, ButtonContentSpacing) { Hexpand = true, Halign = Align.Start };
+            var titleBox = new HBox(false, ButtonContentSpacing) { Hexpand = false, Halign = Align.Start };
             titleBox.PackStart(appIcon, false, false, 0);
             titleBox.PackStart(appLabel, false, false, 0);
             titleBox.PackStart(subtitleLabel, false, false, 0);
             titleBox.PackStart(updateDot, false, false, 0);
-            hb.CustomTitle = titleBox;
+            hb.PackStart(titleBox);
+            hb.CustomTitle = new Label("");
 
             // Theme toggle button: allows instant switching between Dark and Light mode
             var themeToggleBtn = new Button { Visible = true, Relief = ReliefStyle.None, Valign = Align.Center };
@@ -703,8 +776,6 @@ namespace XDM.GtkUI
             btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"), AccentR, AccentG, AccentB);
             toolbar.PackStart(btnNew, false, false, 0);
             btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"), DestructR, DestructG, DestructB);
-            // Immediate destructive trigger — red flat variant, matching queue manager
-            btnDel.StyleContext.AddClass("destructive-action");
             toolbar.PackStart(btnDel, false, false, 0);
             btnOpenFile = CreateButtonWithContent("external-link-line", TextResource.GetText("CTX_OPEN_FILE"), SuccessR, SuccessG, SuccessB);
             toolbar.PackStart(btnOpenFile, false, false, 0);
@@ -782,13 +853,17 @@ namespace XDM.GtkUI
             {
                 HeadersVisible = false,
                 ShowExpanders = false,
-                LevelIndentation = 0
+                LevelIndentation = 0,
+                MarginStart = 4,
+                MarginEnd = 4,
+                MarginTop = 2,
+                MarginBottom = 2
             };
-            statusTree.StyleContext.AddClass("sidebar-list");
+            statusTree.StyleContext.AddClass("sidebar-status-list");
 
             var statusCols = new TreeViewColumn();
             var statusCellPix = new CellRendererPixbuf();
-            statusCellPix.SetPadding(3, 5);
+            statusCellPix.SetPadding(4, 7);
             statusCols.PackStart(statusCellPix, false);
             statusCols.AddAttribute(statusCellPix, "pixbuf", 0);
             statusCols.SetCellDataFunc(statusCellPix, new CellLayoutDataFunc((layout, cell, model, iter) =>
@@ -802,7 +877,7 @@ namespace XDM.GtkUI
             }));
 
             var statusCellText = new CellRendererText();
-            statusCellText.SetPadding(0, 5);
+            statusCellText.SetPadding(2, 7);
             statusCols.PackStart(statusCellText, true);
             statusCols.AddAttribute(statusCellText, "text", 1);
             statusTree.AppendColumn(statusCols);
@@ -819,13 +894,22 @@ namespace XDM.GtkUI
             statusTree.Selection.Mode = SelectionMode.Single;
             statusTree.Selection.Changed += OnStatusChanged;
 
+            // Separate card container for Active & Complete status section
+            var statusCard = new EventBox();
+            statusCard.StyleContext.AddClass("sidebar-status-card");
+            statusCard.MarginStart = 8;
+            statusCard.MarginEnd = 8;
+            statusCard.MarginTop = 8;
+            statusCard.MarginBottom = 8;
+            statusCard.Add(statusTree);
+
             // Categories section header label
             var catHeaderLabel = new Label
             {
                 Text = TextResource.GetText("SETTINGS_CAT") ?? "Categories",
                 Halign = Align.Start,
-                MarginStart = 10,
-                MarginTop = 16,
+                MarginStart = 16,
+                MarginTop = 8,
                 MarginBottom = 4
             };
             catHeaderLabel.StyleContext.AddClass("sidebar-heading");
@@ -835,13 +919,15 @@ namespace XDM.GtkUI
             {
                 HeadersVisible = false,
                 ShowExpanders = false,
-                LevelIndentation = 0
+                LevelIndentation = 0,
+                MarginStart = 8,
+                MarginEnd = 8
             };
             categoryTree.StyleContext.AddClass("sidebar-list");
 
             var catCols = new TreeViewColumn();
             var catCellPix = new CellRendererPixbuf();
-            catCellPix.SetPadding(3, 5);
+            catCellPix.SetPadding(4, 7);
             catCols.PackStart(catCellPix, false);
             catCols.AddAttribute(catCellPix, "pixbuf", 0);
             catCols.SetCellDataFunc(catCellPix, new CellLayoutDataFunc((layout, cell, model, iter) =>
@@ -855,7 +941,7 @@ namespace XDM.GtkUI
             }));
 
             var catCellText = new CellRendererText();
-            catCellText.SetPadding(0, 5);
+            catCellText.SetPadding(2, 7);
             catCols.PackStart(catCellText, true);
             catCols.AddAttribute(catCellText, "text", 1);
             categoryTree.AppendColumn(catCols);
@@ -870,7 +956,7 @@ namespace XDM.GtkUI
             }
             categoryTree.Model = categoryTreeStore;
             categoryTree.Selection.Mode = SelectionMode.Single;
-                        categoryTree.Selection.Changed += OnCategoryChanged;
+            categoryTree.Selection.Changed += OnCategoryChanged;
             
             categoryTree.ButtonPressEvent += (o, args) =>
             {
@@ -893,21 +979,21 @@ namespace XDM.GtkUI
 
             // Pack into a sidebar vertical box with a ScrolledWindow wrapper
             var vbSidebar = new VBox(false, 0);
-            vbSidebar.PackStart(statusTree, false, false, 0);
+            vbSidebar.PackStart(statusCard, false, false, 0);
             vbSidebar.PackStart(catHeaderLabel, false, false, 0);
             vbSidebar.PackStart(categoryTree, true, true, 0);
 
             var scrolledWindow = new ScrolledWindow
             {
                 OverlayScrolling = true,
-                Margin = 8,
+                Margin = 6,
                 MarginEnd = 0
             };
             scrolledWindow.StyleContext.AddClass("sidebar-scroll");
             scrolledWindow.ShadowType = ShadowType.In;
             scrolledWindow.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             scrolledWindow.Add(vbSidebar);
-            scrolledWindow.SetSizeRequest(192, 200);
+            scrolledWindow.SetSizeRequest(196, 200);
 
             scrolledWindow.ShowAll();
             return scrolledWindow;
@@ -1075,8 +1161,8 @@ namespace XDM.GtkUI
             // Per-view surface tint (see treeview.unfinished in the theme layer)
             lvInprogress.StyleContext.AddClass("unfinished");
 
-            // Main Card Column (Icon + Title + Subtitle)
-            var inprogressMainCol = new TreeViewColumn
+            // Unified Single Card Column (Icon + Title/Sub on left, Meta on right)
+            var inprogressCardCol = new TreeViewColumn
             {
                 Expand = true,
                 Sizing = TreeViewColumnSizing.Autosize,
@@ -1084,35 +1170,55 @@ namespace XDM.GtkUI
             };
             var fileIconRenderer = new CellRendererPixbuf { };
             fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, 8);
-            inprogressMainCol.PackStart(fileIconRenderer, false);
-            inprogressMainCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
+            inprogressCardCol.PackStart(fileIconRenderer, false);
+            inprogressCardCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
             var inprogressNameRenderer = new CellRendererText();
             inprogressNameRenderer.SetPadding(DownloadNameHorizontalPadding, 6);
             inprogressNameRenderer.Ellipsize = Pango.EllipsizeMode.Middle;
-            inprogressMainCol.PackStart(inprogressNameRenderer, true);
-            SetInProgressNameColumn(inprogressMainCol, inprogressNameRenderer, lvInprogress);
-            lvInprogress.AppendColumn(inprogressMainCol);
+            inprogressCardCol.PackStart(inprogressNameRenderer, true);
+            SetInProgressNameColumn(inprogressCardCol, inprogressNameRenderer, lvInprogress);
 
-            // Trailing Card Meta Column (Progress % + Live Speed & Status)
             var inprogressMetaRenderer = new CellRendererText
             {
                 Xalign = 1.0f,
                 Alignment = Pango.Alignment.Right
             };
             inprogressMetaRenderer.SetPadding(DownloadMetaHorizontalPadding, 12);
-            var inprogressMetaCol = new TreeViewColumn
-            {
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = DownloadMetaActiveWidth
-            };
-            inprogressMetaCol.PackStart(inprogressMetaRenderer, true);
-            SetInProgressMetaColumn(inprogressMetaCol, inprogressMetaRenderer, lvInprogress);
-            lvInprogress.AppendColumn(inprogressMetaCol);
+            inprogressCardCol.PackEnd(inprogressMetaRenderer, false);
+            SetInProgressMetaColumn(inprogressCardCol, inprogressMetaRenderer, lvInprogress);
+
+            lvInprogress.AppendColumn(inprogressCardCol);
 
             lvInprogress.Selection.Changed += (_, _) =>
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
+            };
+
+            lvInprogress.MotionNotifyEvent += (o, args) =>
+            {
+                if (lvInprogress.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath path, out _, out _, out _))
+                {
+                    if (hoveredInprogressPath == null || hoveredInprogressPath.Compare(path) != 0)
+                    {
+                        hoveredInprogressPath = path;
+                        lvInprogress.QueueDraw();
+                    }
+                }
+                else if (hoveredInprogressPath != null)
+                {
+                    hoveredInprogressPath = null;
+                    lvInprogress.QueueDraw();
+                }
+            };
+
+            lvInprogress.LeaveNotifyEvent += (o, args) =>
+            {
+                if (hoveredInprogressPath != null)
+                {
+                    hoveredInprogressPath = null;
+                    lvInprogress.QueueDraw();
+                }
             };
 
             lvInprogress.ButtonReleaseEvent += (a, b) =>
@@ -1194,45 +1300,65 @@ namespace XDM.GtkUI
             // Per-view surface tint (see treeview.finished in the theme layer)
             lvFinished.StyleContext.AddClass("finished");
 
-            // Main Card Column (Icon + Title + Subtitle)
-            var finishedMainCol = new TreeViewColumn
+            // Unified Single Card Column (Icon + Title/Sub on left, Meta on right)
+            var finishedCardCol = new TreeViewColumn
             {
                 Expand = true,
                 Sizing = TreeViewColumnSizing.Autosize,
-                Spacing = DownloadColumnSpacing
+                Spacing = DownloadColumnSpacing,
+                SortColumnId = 0
             };
             var fileIconRenderer = new CellRendererPixbuf { };
             fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, 8);
-            finishedMainCol.PackStart(fileIconRenderer, false);
-            finishedMainCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
-            finishedMainCol.SortColumnId = 0;
+            finishedCardCol.PackStart(fileIconRenderer, false);
+            finishedCardCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
             var finishedNameRenderer = new CellRendererText();
             finishedNameRenderer.SetPadding(DownloadNameHorizontalPadding, 6);
             finishedNameRenderer.Ellipsize = Pango.EllipsizeMode.Middle;
-            finishedMainCol.PackStart(finishedNameRenderer, true);
-            SetFinishedNameColumn(finishedMainCol, finishedNameRenderer, lvFinished);
-            lvFinished.AppendColumn(finishedMainCol);
+            finishedCardCol.PackStart(finishedNameRenderer, true);
+            SetFinishedNameColumn(finishedCardCol, finishedNameRenderer, lvFinished);
 
-            // Trailing Card Meta Column (Size on top, Date on bottom)
             var finishedMetaRenderer = new CellRendererText
             {
                 Xalign = 1.0f,
                 Alignment = Pango.Alignment.Right
             };
             finishedMetaRenderer.SetPadding(DownloadMetaHorizontalPadding, 12);
-            var finishedMetaCol = new TreeViewColumn
-            {
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = DownloadMetaFinishedWidth
-            };
-            finishedMetaCol.PackStart(finishedMetaRenderer, true);
-            SetFinishedMetaColumn(finishedMetaCol, finishedMetaRenderer, lvFinished);
-            lvFinished.AppendColumn(finishedMetaCol);
+            finishedCardCol.PackEnd(finishedMetaRenderer, false);
+            SetFinishedMetaColumn(finishedCardCol, finishedMetaRenderer, lvFinished);
+
+            lvFinished.AppendColumn(finishedCardCol);
 
             lvFinished.Selection.Changed += (_, _) =>
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
+            };
+
+            lvFinished.MotionNotifyEvent += (o, args) =>
+            {
+                if (lvFinished.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath path, out _, out _, out _))
+                {
+                    if (hoveredFinishedPath == null || hoveredFinishedPath.Compare(path) != 0)
+                    {
+                        hoveredFinishedPath = path;
+                        lvFinished.QueueDraw();
+                    }
+                }
+                else if (hoveredFinishedPath != null)
+                {
+                    hoveredFinishedPath = null;
+                    lvFinished.QueueDraw();
+                }
+            };
+
+            lvFinished.LeaveNotifyEvent += (o, args) =>
+            {
+                if (hoveredFinishedPath != null)
+                {
+                    hoveredFinishedPath = null;
+                    lvFinished.QueueDraw();
+                }
             };
 
             lvFinished.ButtonReleaseEvent += (a, b) =>
@@ -1306,22 +1432,18 @@ namespace XDM.GtkUI
         }
 
         // Rich two-line renderer for completed downloads
-        private static void SetFinishedNameColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
+        private void SetFinishedNameColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
         {
             column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
+                var path = model.GetPath(iter);
+                var selected = view.Selection.PathIsSelected(path);
+                var isHovered = !selected && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0;
+
+                ((CellRendererText)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+
                 var name = model.GetValue(iter, 0) as string ?? string.Empty;
                 var item = model.GetValue(iter, FINISHED_DATA_INDEX) as FinishedDownloadItem;
-
-                var selected = false;
-                foreach (var path in view.Selection.GetSelectedRows())
-                {
-                    if (path.Compare(model.GetPath(iter)) == 0)
-                    {
-                        selected = true;
-                        break;
-                    }
-                }
 
                 var title = GLib.Markup.EscapeText(name);
                 var metaParts = new List<string>();
@@ -1352,8 +1474,8 @@ namespace XDM.GtkUI
                 if (selected)
                 {
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
-                        ? $"<span weight=\"bold\">{title}</span>"
-                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"9000\" alpha=\"55000\">{metaLine}</span>";
+                        ? $"<span weight=\"bold\" color=\"#ffffff\">{title}</span>"
+                        : $"<span weight=\"bold\" color=\"#ffffff\">{title}</span>\n<span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">{metaLine}</span>";
                 }
                 else
                 {
@@ -1365,22 +1487,18 @@ namespace XDM.GtkUI
         }
 
         // Rich two-line renderer for in-progress downloads
-        private static void SetInProgressNameColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
+        private void SetInProgressNameColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
         {
             column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
+                var path = model.GetPath(iter);
+                var selected = view.Selection.PathIsSelected(path);
+                var isHovered = !selected && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0;
+
+                ((CellRendererText)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+
                 var name = model.GetValue(iter, 0) as string ?? string.Empty;
                 var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
-
-                var selected = false;
-                foreach (var path in view.Selection.GetSelectedRows())
-                {
-                    if (path.Compare(model.GetPath(iter)) == 0)
-                    {
-                        selected = true;
-                        break;
-                    }
-                }
 
                 var title = GLib.Markup.EscapeText(name);
                 var metaParts = new List<string>();
@@ -1405,8 +1523,8 @@ namespace XDM.GtkUI
                 if (selected)
                 {
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
-                        ? $"<span weight=\"bold\">{title}</span>"
-                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"9000\" alpha=\"55000\">{metaLine}</span>";
+                        ? $"<span weight=\"bold\" color=\"#ffffff\">{title}</span>"
+                        : $"<span weight=\"bold\" color=\"#ffffff\">{title}</span>\n<span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">{metaLine}</span>";
                 }
                 else
                 {
@@ -1418,26 +1536,24 @@ namespace XDM.GtkUI
         }
 
         // Right-aligned card metadata for finished downloads (Size on top, Date on bottom)
-        private static void SetFinishedMetaColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
+        private void SetFinishedMetaColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
         {
             column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
+                var path = model.GetPath(iter);
+                var selected = view.Selection.PathIsSelected(path);
+                var isHovered = !selected && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0;
+
+                ((CellRendererText)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
                 var dateText = model.GetValue(iter, 1) as string ?? string.Empty;
 
-                var selected = false;
-                foreach (var path in view.Selection.GetSelectedRows())
-                {
-                    if (path.Compare(model.GetPath(iter)) == 0)
-                    {
-                        selected = true;
-                        break;
-                    }
-                }
-
-                var sizeMarkup = $"<span weight=\"bold\">{GLib.Markup.EscapeText(sizeText)}</span>";
+                var sizeMarkup = selected
+                    ? $"<span weight=\"bold\" color=\"#ffffff\">{GLib.Markup.EscapeText(sizeText)}</span>"
+                    : $"<span weight=\"bold\">{GLib.Markup.EscapeText(sizeText)}</span>";
                 var dateMarkup = selected
-                    ? $"<span size=\"9000\" alpha=\"55000\">{GLib.Markup.EscapeText(dateText)}</span>"
+                    ? $"<span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">{GLib.Markup.EscapeText(dateText)}</span>"
                     : $"<span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">{GLib.Markup.EscapeText(dateText)}</span>";
 
                 ((CellRendererText)cell).Markup = $"{sizeMarkup}\n{dateMarkup}";
@@ -1445,28 +1561,26 @@ namespace XDM.GtkUI
         }
 
         // Right-aligned card metadata for in-progress downloads (Progress % on top, Live Status/Speed on bottom)
-        private static void SetInProgressMetaColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
+        private void SetInProgressMetaColumn(TreeViewColumn column, CellRendererText renderer, TreeView view)
         {
             column.SetCellDataFunc(renderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
+                var path = model.GetPath(iter);
+                var selected = view.Selection.PathIsSelected(path);
+                var isHovered = !selected && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0;
+
+                ((CellRendererText)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+
                 var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
                 var progress = item?.Progress ?? 0;
                 var statusText = model.GetValue(iter, 4) as string ?? string.Empty;
 
-                var selected = false;
-                foreach (var path in view.Selection.GetSelectedRows())
-                {
-                    if (path.Compare(model.GetPath(iter)) == 0)
-                    {
-                        selected = true;
-                        break;
-                    }
-                }
-
-                var line1 = $"<span weight=\"bold\">{progress}%</span>  <span size=\"9000\" alpha=\"{(selected ? 55000 : SecondaryTextAlpha)}\">({GLib.Markup.EscapeText(sizeText)})</span>";
+                var line1 = selected
+                    ? $"<span weight=\"bold\" color=\"#ffffff\">{progress}%</span>  <span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">({GLib.Markup.EscapeText(sizeText)})</span>"
+                    : $"<span weight=\"bold\">{progress}%</span>  <span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">({GLib.Markup.EscapeText(sizeText)})</span>";
                 var line2 = selected
-                    ? $"<span size=\"9000\" alpha=\"55000\">{GLib.Markup.EscapeText(statusText)}</span>"
+                    ? $"<span size=\"9000\" alpha=\"55000\" color=\"#ffffff\">{GLib.Markup.EscapeText(statusText)}</span>"
                     : $"<span size=\"9000\" color=\"#38bdf8\">{GLib.Markup.EscapeText(statusText)}</span>";
 
                 ((CellRendererText)cell).Markup = $"{line1}\n{line2}";
@@ -1481,10 +1595,16 @@ namespace XDM.GtkUI
             var (r, g, b) = GetCategoryColorForFileType(name);
             var svgName = IconResource.GetSVGNameForFileType(name);
             var rawPix = LoadSvg(svgName, 28);
+            var path = tree_model.GetPath(iter);
+            var view = (cell_layout as TreeViewColumn)?.TreeView as TreeView;
+            var isSelected = view != null && view.Selection.PathIsSelected(path);
+            var isHovered = !isSelected && ((view == lvFinished && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0) ||
+                                            (view == lvInprogress && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0));
+
+            ((CellRendererPixbuf)cell).CellBackground = isHovered ? (ThemeManager.IsDarkActive ? "#262c36" : "#f0f4f9") : null;
+
             if (rawPix != null)
             {
-                var view = (cell_layout as TreeViewColumn)?.TreeView as TreeView;
-                var isSelected = view != null && view.Selection.PathIsSelected(tree_model.GetPath(iter));
                 ((CellRendererPixbuf)cell).Pixbuf = isSelected
                     ? GtkHelper.TintPixbuf(rawPix, 255, 255, 255)
                     : GtkHelper.TintPixbuf(rawPix, r, g, b);
