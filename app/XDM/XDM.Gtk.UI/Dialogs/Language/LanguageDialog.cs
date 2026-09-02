@@ -56,7 +56,7 @@ namespace XDM.GtkUI.Dialogs.Language
             PopulateLanguageList();
         }
 
-        // Resolves index.txt path and populates combo box with available locales
+        // Resolves index.txt path and populates combo box with available locales with flag indicators
         private void PopulateLanguageList()
         {
             var searchPaths = new[]
@@ -115,8 +115,55 @@ namespace XDM.GtkUI.Dialogs.Language
                 items.Add("Hinglish (Hindi - Latin)");
             }
 
-            GtkHelper.PopulateComboBoxGeneric<string>(CmbLanguage, items.ToArray());
+            // Populate combo box with visual flags while storing internal key in column 1
+            var store = new ListStore(typeof(string), typeof(string));
+            foreach (var name in items)
+            {
+                var flag = GetLanguageFlag(name);
+                var displayText = string.IsNullOrEmpty(flag) ? name : $"{flag}  {name}";
+                var iter = store.Append();
+                store.SetValue(iter, 0, displayText);
+                store.SetValue(iter, 1, name);
+            }
+
+            CmbLanguage.Model = store;
+            var cell = new CellRendererText { Ellipsize = Pango.EllipsizeMode.End };
+            CmbLanguage.PackStart(cell, true);
+            CmbLanguage.AddAttribute(cell, "text", 0);
             CmbLanguage.Active = selectedIndex >= 0 && selectedIndex < items.Count ? selectedIndex : 0;
+        }
+
+        // Returns regional flag emoji or regional indicator for given language name
+        private static string GetLanguageFlag(string name)
+        {
+            if (name.StartsWith("English", StringComparison.OrdinalIgnoreCase)) return "🇬🇧";
+            if (name.StartsWith("Hindi", StringComparison.OrdinalIgnoreCase)) return "🇮🇳";
+            if (name.StartsWith("Hinglish", StringComparison.OrdinalIgnoreCase)) return "🇮🇳";
+            if (name.StartsWith("Arabic", StringComparison.OrdinalIgnoreCase)) return "🇸🇦";
+            if (name.StartsWith("Chinese simplified", StringComparison.OrdinalIgnoreCase)) return "🇨🇳";
+            if (name.StartsWith("Chinese Traditional", StringComparison.OrdinalIgnoreCase)) return "🇨🇳";
+            if (name.StartsWith("Traditional Chinese", StringComparison.OrdinalIgnoreCase)) return "🇹🇼";
+            if (name.StartsWith("Czech", StringComparison.OrdinalIgnoreCase)) return "🇨🇿";
+            if (name.StartsWith("Farsi", StringComparison.OrdinalIgnoreCase)) return "🇮🇷";
+            if (name.StartsWith("French", StringComparison.OrdinalIgnoreCase)) return "🇫🇷";
+            if (name.StartsWith("German", StringComparison.OrdinalIgnoreCase)) return "🇩🇪";
+            if (name.StartsWith("Hungarian", StringComparison.OrdinalIgnoreCase)) return "🇭🇺";
+            if (name.StartsWith("Indonesian", StringComparison.OrdinalIgnoreCase)) return "🇮🇩";
+            if (name.StartsWith("Italian", StringComparison.OrdinalIgnoreCase)) return "🇮🇹";
+            if (name.StartsWith("Korea", StringComparison.OrdinalIgnoreCase)) return "🇰🇷";
+            if (name.StartsWith("Malagasy", StringComparison.OrdinalIgnoreCase)) return "🇲🇬";
+            if (name.StartsWith("Malayalam", StringComparison.OrdinalIgnoreCase)) return "🇮🇳";
+            if (name.StartsWith("Nepali", StringComparison.OrdinalIgnoreCase)) return "🇳🇵";
+            if (name.StartsWith("Polish", StringComparison.OrdinalIgnoreCase)) return "🇵🇱";
+            if (name.StartsWith("Portuguese", StringComparison.OrdinalIgnoreCase)) return "🇧🇷";
+            if (name.StartsWith("Romanian", StringComparison.OrdinalIgnoreCase)) return "🇷🇴";
+            if (name.StartsWith("Russian", StringComparison.OrdinalIgnoreCase)) return "🇷🇺";
+            if (name.StartsWith("Serbian", StringComparison.OrdinalIgnoreCase)) return "🇷🇸";
+            if (name.StartsWith("Spanish", StringComparison.OrdinalIgnoreCase)) return "🇪🇸";
+            if (name.StartsWith("Turkish", StringComparison.OrdinalIgnoreCase)) return "🇹🇷";
+            if (name.StartsWith("Ukrainian", StringComparison.OrdinalIgnoreCase)) return "🇺🇦";
+            if (name.StartsWith("Vietnamese", StringComparison.OrdinalIgnoreCase)) return "🇻🇳";
+            return "🌐";
         }
 
         // Closes dialog on cancel click

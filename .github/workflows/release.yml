@@ -31,7 +31,7 @@ jobs:
 
       - name: Run automated test suite
         run: |
-          xvfb-run dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
+          xvfb-run bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
 
       - name: Build and package release artifacts
         env:

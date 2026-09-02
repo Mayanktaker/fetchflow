@@ -27,6 +27,15 @@ done
 # Single source of truth for the version
 source app/XDM/XDM.Linux.Installer/version.env
 
+# Pre-release verification gate: compile and run full automated test suite
+echo "=== Running pre-release verification tests ==="
+dotnet build app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
+"$DOTNET_ROOT/dotnet" app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll || {
+    echo "ERROR: Pre-release verification test suite failed. Aborting release build." >&2
+    exit 1
+}
+echo "=== Pre-release tests passed successfully ==="
+
 # Create and clean output directory
 OUT_DIR="$(pwd)/xdm-release"
 rm -rf "$OUT_DIR"
