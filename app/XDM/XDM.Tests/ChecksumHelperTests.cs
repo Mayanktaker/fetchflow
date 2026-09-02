@@ -99,5 +99,32 @@ namespace XDM.Tests
             Assert.IsFalse(ChecksumHelper.IsProbableHash("", out _));
             Assert.IsFalse(ChecksumHelper.IsProbableHash(null, out _));
         }
+
+        [TestMethod]
+        public void TestTryExtractHashFromChecksumFile()
+        {
+            var checksumFile = Path.GetTempFileName();
+            try
+            {
+                var content = "# SHA256 checksums\n" +
+                              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  app-x86_64.AppImage\n" +
+                              "d41d8cd98f00b204e9800998ecf8427e  package.deb\n" +
+                              "SHA256 (archive.zip) = ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\n";
+                File.WriteAllText(checksumFile, content);
+
+                Assert.IsTrue(ChecksumHelper.TryExtractHashFromChecksumFile(checksumFile, "app-x86_64.AppImage", out var hash1));
+                Assert.AreEqual("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", hash1);
+
+                Assert.IsTrue(ChecksumHelper.TryExtractHashFromChecksumFile(checksumFile, "archive.zip", out var hash2));
+                Assert.AreEqual("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", hash2);
+
+                Assert.IsTrue(ChecksumHelper.TryExtractHashFromChecksumFile(checksumFile, null, out var firstHash));
+                Assert.AreEqual("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", firstHash);
+            }
+            finally
+            {
+                if (File.Exists(checksumFile)) File.Delete(checksumFile);
+            }
+        }
     }
 }

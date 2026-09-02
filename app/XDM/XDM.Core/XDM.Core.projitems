@@ -28,6 +28,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Util\FileHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\FormattingHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\MimeTypes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\ThemePaletteHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\ParsingHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\PlatformHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)YDLWrapper\YtBinary.cs" />

@@ -340,11 +340,11 @@ namespace XDM.GtkUI
             menuInProgress.ShowAll();
 
             newDownloadMenu = new Menu();
-            var menuNewDownload = CreateIconMenuItem("file-download-line", TextResource.GetText("LBL_NEW_DOWNLOAD") ?? "New download", out var imgNewDl, out _);
+            var menuNewDownload = CreateIconMenuItem("file-download-line", TextResource.GetText("LBL_NEW_DOWNLOAD") ?? "New Download", out var imgNewDl, out _);
             menuNewDownload.Activated += MenuNewDownload_Click;
-            var menuVideoDownload = CreateIconMenuItem("movie-line", TextResource.GetText("LBL_VIDEO_DOWNLOAD") ?? "Video download", out var imgVideoDl, out _);
+            var menuVideoDownload = CreateIconMenuItem("movie-line", TextResource.GetText("LBL_VIDEO_DOWNLOAD") ?? "Video Download", out var imgVideoDl, out _);
             menuVideoDownload.Activated += MenuVideoDownload_Click;
-            var menuBatchDownload = CreateIconMenuItem("list-settings-line", TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch download", out var imgBatchDl, out _);
+            var menuBatchDownload = CreateIconMenuItem("list-settings-line", TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch Download", out var imgBatchDl, out _);
             menuBatchDownload.Activated += MenuBatchDownload_Click;
             newDownloadMenu.Append(menuNewDownload);
             newDownloadMenu.Append(menuVideoDownload);
@@ -353,16 +353,13 @@ namespace XDM.GtkUI
 
             mainMenu = new Menu();
             var menuSettings = CreateIconMenuItem("settings-3-line", TextResource.GetText("TITLE_SETTINGS") ?? "Settings", out var imgSettings, out _);
-            var menuBrowserMonitor = CreateIconMenuItem("links-line", TextResource.GetText("SETTINGS_MONITORING") ?? "Browser monitoring", out var imgBrowserMonitor, out _);
-            var menuMediaGrabber = CreateIconMenuItem("movie-line", TextResource.GetText("MSG_MEDIA_CAPTURE") ?? "Media grabber", out var imgMediaGrabber, out _);
-            var menuClearFinished = CreateIconMenuItem("delete-bin-7-line", TextResource.GetText("MENU_DELETE_COMPLETED") ?? "Remove finished downloads", out var imgClearFinished, out _);
-            var menuExport = CreateIconMenuItem("upload-2-line", TextResource.GetText("MENU_EXPORT") ?? "Export", out var imgExport, out _);
-            var menuImport = CreateIconMenuItem("download-2-line", TextResource.GetText("MENU_IMPORT") ?? "Import", out var imgImport, out _);
-            var menuToggleTheme = CreateIconMenuItem(ThemeManager.IsDarkActive ? "sun-line" : "moon-line", ThemeManager.IsDarkActive ? "Switch to Light Theme" : "Switch to Dark Theme", out var imgToggleTheme, out var lblToggleTheme);
+            var menuMediaGrabber = CreateIconMenuItem("movie-line", TextResource.GetText("MSG_MEDIA_CAPTURE") ?? "Media Grabber", out var imgMediaGrabber, out _);
+            var menuClearFinished = CreateIconMenuItem("delete-bin-7-line", TextResource.GetText("MENU_DELETE_COMPLETED") ?? "Remove Finished Downloads", out var imgClearFinished, out _);
+            var menuImportExport = CreateIconMenuItem("folder-shared-line", TextResource.GetText("MENU_IMPORT_EXPORT") ?? "Import / Export", out var imgImportExport, out _);
             var menuLanguage = CreateIconMenuItem("global-line", TextResource.GetText("MENU_LANG") ?? "Language", out var imgLanguage, out _);
-            var menuHelpAndSupport = CreateIconMenuItem("question-line", TextResource.GetText("LBL_SUPPORT_PAGE") ?? "Help and support", out var imgHelp, out _);
-            var menuReportProblem = CreateIconMenuItem("feedback-line", TextResource.GetText("LBL_REPORT_PROBLEM") ?? "Report a problem", out var imgReport, out _);
-            var menuCheckForUpdate = CreateIconMenuItem("refresh-line", TextResource.GetText("MENU_UPDATE") ?? "Check for update", out var imgUpdate, out _);
+            var menuHelpAndSupport = CreateIconMenuItem("question-line", TextResource.GetText("LBL_SUPPORT_PAGE") ?? "Help And Support", out var imgHelp, out _);
+            var menuReportProblem = CreateIconMenuItem("feedback-line", TextResource.GetText("LBL_REPORT_PROBLEM") ?? "Report A Problem", out var imgReport, out _);
+            var menuCheckForUpdate = CreateIconMenuItem("refresh-line", TextResource.GetText("MENU_UPDATE") ?? "Check For Update", out var imgUpdate, out _);
             var menuAbout = CreateIconMenuItem("fetchflow-mark", TextResource.GetText("MENU_ABOUT") ?? "About FetchFlow", out var imgAbout, out _);
             var menuExit = CreateIconMenuItem("logout-box-r-line", TextResource.GetText("MENU_EXIT") ?? "Exit", out var imgExit, out _);
 
@@ -377,13 +374,9 @@ namespace XDM.GtkUI
                     }
                 }
                 UpdateIcon(imgSettings, "settings-3-line");
-                UpdateIcon(imgBrowserMonitor, "links-line");
                 UpdateIcon(imgMediaGrabber, "movie-line");
                 UpdateIcon(imgClearFinished, "delete-bin-7-line");
-                UpdateIcon(imgExport, "upload-2-line");
-                UpdateIcon(imgImport, "download-2-line");
-                UpdateIcon(imgToggleTheme, isDark ? "sun-line" : "moon-line");
-                lblToggleTheme.Text = isDark ? "Switch to Light Theme" : "Switch to Dark Theme";
+                UpdateIcon(imgImportExport, "folder-shared-line");
                 UpdateIcon(imgLanguage, "global-line");
                 UpdateIcon(imgHelp, "question-line");
                 UpdateIcon(imgReport, "feedback-line");
@@ -415,11 +408,8 @@ namespace XDM.GtkUI
 
             menuSettings.Activated += MenuSettings_Activated;
             menuClearFinished.Activated += MenuClearFinished_Activated;
-            menuExport.Activated += MenuExport_Activated;
-            menuImport.Activated += MenuImport_Activated;
-            menuToggleTheme.Activated += (_, _) => ThemeManager.ToggleTheme();
+            menuImportExport.Activated += MenuImportExport_Activated;
             menuLanguage.Activated += MenuLanguage_Activated;
-            menuBrowserMonitor.Activated += MenuBrowserMonitor_Activated;
             menuHelpAndSupport.Activated += MenuHelpAndSupport_Activated;
             menuReportProblem.Activated += MenuReportProblem_Activated;
             menuCheckForUpdate.Activated += MenuCheckForUpdate_Activated;
@@ -427,12 +417,9 @@ namespace XDM.GtkUI
             menuExit.Activated += MenuExit_Activated;
             menuMediaGrabber.Activated += MenuMediaGrabber_Activated;
             mainMenu.Append(menuSettings);
-            mainMenu.Append(menuBrowserMonitor);
             mainMenu.Append(menuMediaGrabber);
             mainMenu.Append(menuClearFinished);
-            mainMenu.Append(menuExport);
-            mainMenu.Append(menuImport);
-            mainMenu.Append(menuToggleTheme);
+            mainMenu.Append(menuImportExport);
             mainMenu.Append(menuLanguage);
             mainMenu.Append(menuHelpAndSupport);
             mainMenu.Append(menuReportProblem);
@@ -446,10 +433,10 @@ namespace XDM.GtkUI
         private static MenuItem CreateIconMenuItem(string iconName, string text, out Image iconImage, out Label label)
         {
             var item = new MenuItem();
-            var box = new HBox(false, 10)
+            var box = new HBox(false, 8)
             {
-                MarginStart = 2,
-                MarginEnd = 6,
+                MarginStart = 0,
+                MarginEnd = 4,
                 MarginTop = 2,
                 MarginBottom = 2
             };
@@ -502,9 +489,10 @@ namespace XDM.GtkUI
             SupportPageClicked?.Invoke(sender, e);
         }
 
-        private void MenuBrowserMonitor_Activated(object? sender, EventArgs e)
+        private void MenuImportExport_Activated(object? sender, EventArgs e)
         {
-            this.BrowserMonitoringSettingsClicked?.Invoke(this, e);
+            using var win = new XDM.GtkUI.Dialogs.ImportExport.ImportExportDialog(this);
+            win.Run();
         }
 
         private void MenuLanguage_Activated(object? sender, EventArgs e)
@@ -514,14 +502,16 @@ namespace XDM.GtkUI
             win.Destroy();
         }
 
-        private void MenuImport_Activated(object? sender, EventArgs e)
+        // Triggers import flow programmatically
+        public void TriggerImport()
         {
-            ImportClicked?.Invoke(sender, e);
+            ImportClicked?.Invoke(this, EventArgs.Empty);
         }
 
-        private void MenuExport_Activated(object? sender, EventArgs e)
+        // Triggers export flow programmatically
+        public void TriggerExport()
         {
-            ExportClicked?.Invoke(sender, e);
+            ExportClicked?.Invoke(this, EventArgs.Empty);
         }
 
         private void MenuClearFinished_Activated(object? sender, EventArgs e)
@@ -837,29 +827,52 @@ namespace XDM.GtkUI
             OpenMainMenu();
         }
 
-        private Widget CreateCategoryTree()
+        private (string iconName, byte r, byte g, byte b) GetCategoryIconConfig(Category cat)
         {
-            (string iconName, byte r, byte g, byte b) GetCategoryIconConfig(string name)
+            string iconName = !string.IsNullOrEmpty(cat.CustomIcon) ? cat.CustomIcon : cat.Name switch
             {
-                switch (name)
+                "CAT_DOCUMENTS" => "file-text-line",
+                "CAT_MUSIC" => "file-music-line",
+                "CAT_VIDEOS" => "movie-line",
+                "CAT_COMPRESSED" => "file-zip-line",
+                "CAT_PROGRAMS" => "function-line",
+                "CAT_IMAGES" => "image-line",
+                _ => "folder-shared-line"
+            };
+
+            if (!string.IsNullOrEmpty(cat.CustomColor) && cat.CustomColor.StartsWith("#") && cat.CustomColor.Length == 7)
+            {
+                try
                 {
-                    case "CAT_DOCUMENTS":
-                        return ("file-text-line", AmberR, AmberG, AmberB);    // Amber / Orange
-                    case "CAT_MUSIC":
-                        return ("file-music-line", PurpleR, PurpleG, PurpleB);   // Purple / Violet
-                    case "CAT_VIDEOS":
-                        return ("movie-line", DestructR, DestructG, DestructB);         // Coral / Red
-                    case "CAT_COMPRESSED":
-                        return ("file-zip-line", TealR, TealG, TealB);     // Teal / Cyan
-                    case "CAT_PROGRAMS":
-                        return ("function-line", IndigoR, IndigoG, IndigoB);     // Indigo / Blue
-                    case "CAT_IMAGES":
-                        return ("image-line", RoseR, RoseG, RoseB);             // Rose / Pink
-                    default:
-                        return ("file-line", SkyR, SkyG, SkyB);         // Sky Blue
+                    byte cr = Convert.ToByte(cat.CustomColor.Substring(1, 2), 16);
+                    byte cg = Convert.ToByte(cat.CustomColor.Substring(3, 2), 16);
+                    byte cb = Convert.ToByte(cat.CustomColor.Substring(5, 2), 16);
+                    return (iconName, cr, cg, cb);
                 }
+                catch { }
             }
 
+            switch (cat.Name)
+            {
+                case "CAT_DOCUMENTS":
+                    return (iconName, AmberR, AmberG, AmberB);    // Amber / Orange
+                case "CAT_MUSIC":
+                    return (iconName, PurpleR, PurpleG, PurpleB);   // Purple / Violet
+                case "CAT_VIDEOS":
+                    return (iconName, DestructR, DestructG, DestructB);         // Coral / Red
+                case "CAT_COMPRESSED":
+                    return (iconName, TealR, TealG, TealB);     // Teal / Cyan
+                case "CAT_PROGRAMS":
+                    return (iconName, IndigoR, IndigoG, IndigoB);     // Indigo / Blue
+                case "CAT_IMAGES":
+                    return (iconName, RoseR, RoseG, RoseB);             // Rose / Pink
+                default:
+                    return (iconName, IndigoR, IndigoG, IndigoB);
+            }
+        }
+
+        private Widget CreateCategoryTree()
+        {
             // Top status section (Active & Complete)
             statusTree = new TreeView()
             {
@@ -961,7 +974,7 @@ namespace XDM.GtkUI
             categoryTreeStore = new TreeStore(typeof(Gdk.Pixbuf), typeof(string), typeof(Category));
             foreach (var cat in Config.Instance.Categories)
             {
-                var (iconName, r, g, b) = GetCategoryIconConfig(cat.Name);
+                var (iconName, r, g, b) = GetCategoryIconConfig(cat);
                 var rawIcon = LoadSvg(iconName, 20);
                 var coloredIcon = rawIcon != null ? GtkHelper.TintPixbuf(rawIcon, r, g, b) : null;
                 categoryTreeStore.AppendValues(coloredIcon, cat.DisplayName, cat);
@@ -1074,7 +1087,20 @@ namespace XDM.GtkUI
             }
         }
 
-        
+        // Reloads the sidebar categories store from configuration dynamically
+        public void ReloadCategories()
+        {
+            if (categoryTreeStore == null) return;
+            categoryTreeStore.Clear();
+            foreach (var cat in Config.Instance.Categories)
+            {
+                var (iconName, r, g, b) = GetCategoryIconConfig(cat);
+                var rawIcon = LoadSvg(iconName, 20);
+                var coloredIcon = rawIcon != null ? GtkHelper.TintPixbuf(rawIcon, r, g, b) : null;
+                categoryTreeStore.AppendValues(coloredIcon, cat.DisplayName, cat);
+            }
+        }
+
         private void ShowCategoryContextMenu(Category cat, Gdk.EventButton ev)
         {
             var menu = new Menu();
@@ -1087,8 +1113,15 @@ namespace XDM.GtkUI
                 System.IO.Directory.CreateDirectory(dir);
                 PlatformHelper.OpenFolder(dir);
             };
-            
             menu.Add(openFolderItem);
+
+            var manageCatItem = new MenuItem(TextResource.GetText("SETTINGS_CAT") ?? "Manage Categories...");
+            manageCatItem.Activated += (s, e) =>
+            {
+                ApplicationContext.PlatformUIService.ShowSettingsDialog(1);
+            };
+            menu.Add(manageCatItem);
+            
             menu.ShowAll();
             menu.Popup();
         }

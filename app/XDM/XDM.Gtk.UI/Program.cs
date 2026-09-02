@@ -204,47 +204,64 @@ namespace XDM.GtkUI
             args.ExitApplication = false;
         }
 
+        // Loads configured language dictionary with graceful English fallback
         private static void LoadLanguageTexts()
         {
             Log.Debug("Language loading ...");
             try
             {
-                var langDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Lang");
-                var indexFile = System.IO.Path.Combine(langDir, "index.txt");
-                var langFile = System.IO.Path.Combine(langDir, "English.txt");
-
-                if (System.IO.File.Exists(indexFile))
+                var langDirCandidates = new[]
                 {
-                    var lines = System.IO.File.ReadAllLines(indexFile);
-                    foreach (var line in lines)
+                    System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Lang"),
+                    System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "Lang"),
+                    "/opt/fetchflow/Lang"
+                };
+
+                string? langDir = null;
+                foreach (var dir in langDirCandidates)
+                {
+                    if (System.IO.Directory.Exists(dir))
                     {
-                        var index = line.IndexOf("=");
-                        if (index > 0)
+                        langDir = dir;
+                        break;
+                    }
+                }
+
+                var targetLang = Config.Instance.Language ?? "English";
+                var targetFileName = "English.txt";
+
+                if (langDir != null)
+                {
+                    var indexFile = System.IO.Path.Combine(langDir, "index.txt");
+                    if (System.IO.File.Exists(indexFile))
+                    {
+                        var lines = System.IO.File.ReadAllLines(indexFile);
+                        foreach (var rawLine in lines)
                         {
-                            var name = line.Substring(0, index).Trim();
-                            var value = line.Substring(index + 1).Trim();
-                            if (string.Equals(name, Config.Instance.Language, StringComparison.OrdinalIgnoreCase))
+                            var line = rawLine.Trim();
+                            if (string.IsNullOrEmpty(line) || line.StartsWith("#")) continue;
+
+                            var eqIdx = line.IndexOf('=');
+                            if (eqIdx > 0)
                             {
-                                langFile = System.IO.Path.Combine(langDir, value);
-                                break;
+                                var name = line.Substring(0, eqIdx).Trim();
+                                var file = line.Substring(eqIdx + 1).Trim();
+
+                                if (string.Equals(name, targetLang, StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(file, targetLang, StringComparison.OrdinalIgnoreCase) ||
+                                    name.StartsWith(targetLang + " ", StringComparison.OrdinalIgnoreCase) ||
+                                    targetLang.StartsWith(name + " ", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    targetFileName = file;
+                                    break;
+                                }
                             }
                         }
                     }
                 }
 
-                if (System.IO.File.Exists(langFile))
-                {
-                    TextResource.Load(langFile);
-                }
-                else
-                {
-                    var fallback = System.IO.Path.Combine(langDir, "English.txt");
-                    if (System.IO.File.Exists(fallback))
-                    {
-                        TextResource.Load(fallback);
-                    }
-                }
-                Log.Debug("Language loaded.");
+                TextResource.Load(targetFileName);
+                Log.Debug($"Language loaded: {targetFileName}");
             }
             catch (Exception ex)
             {

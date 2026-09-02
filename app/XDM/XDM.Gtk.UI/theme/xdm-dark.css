@@ -590,8 +590,8 @@ menu {
 
 menuitem {
   border-radius: 4px;
-  margin: 1px 4px;
-  padding: 6px 10px;
+  margin: 1px 2px;
+  padding: 4px 8px;
 }
 
 menuitem:hover {
@@ -606,6 +606,24 @@ menuitem:hover label {
 
 menuitem:disabled {
   color: #757575;
+}
+
+/* Card buttons for modal selection dialogs */
+button.card-button {
+  background-color: #262626;
+  border: 1px solid #383838;
+  border-radius: 7px;
+  padding: 4px;
+}
+
+button.card-button:hover {
+  background-color: #303030;
+  border-color: #484848;
+}
+
+button.card-button:active {
+  background-color: #222222;
+  border-color: #3584e4;
 }
 
 /* Notebook tabs — active tab gets accent underline */

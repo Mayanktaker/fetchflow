@@ -17,7 +17,18 @@
         <span class="popup-subtitle">Download Accelerator</span>
       </div>
     </div>
-    <div class="header-status">
+    <div class="header-actions">
+      <button id="soundToggle" class="sound-toggle-btn" title="Toggle audio notification chime" aria-label="Toggle sound chime">
+        <svg id="soundIconOn" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg id="soundIconOff" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+      </button>
       <span class="status-pill" id="statusPill" title="Connected to FetchFlow Core">
         <span class="status-dot"></span>
         <span class="status-text">Active</span>
@@ -37,9 +48,15 @@
       </div>
       <div id="list" class="media-list"></div>
       <div class="toolbar-row">
+        <button id="downloadAll" class="btn btn-primary" title="Download all displayed streams">
+          <svg class="btn-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          Download All
+        </button>
         <button id="format" class="btn btn-secondary">
           <svg class="btn-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-          More Formats
+          Formats
         </button>
         <button id="clear" class="btn btn-ghost btn-danger-text">
           <svg class="btn-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>

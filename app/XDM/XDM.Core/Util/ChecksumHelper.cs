@@ -152,5 +152,73 @@ namespace XDM.Core.Util
             cleanHash = trimmed;
             return true;
         }
+
+        // Extracts a cryptographic hash from a checksum manifest file (.sha256, .md5, SHA256SUMS, etc.)
+        public static bool TryExtractHashFromChecksumFile(string checksumFilePath, string? targetFileName, out string extractedHash)
+        {
+            extractedHash = string.Empty;
+            if (!File.Exists(checksumFilePath)) return false;
+
+            try
+            {
+                var lines = File.ReadAllLines(checksumFilePath);
+                string? firstCandidate = null;
+
+                foreach (var rawLine in lines)
+                {
+                    var line = rawLine.Trim();
+                    if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
+
+                    // BSD format: SHA256 (filename.iso) = <hash>
+                    if (line.Contains("=") && line.Contains("(") && line.Contains(")"))
+                    {
+                        var eqIdx = line.LastIndexOf('=');
+                        if (eqIdx >= 0 && eqIdx < line.Length - 1)
+                        {
+                            var hashPart = line.Substring(eqIdx + 1).Trim();
+                            if (IsProbableHash(hashPart, out var h))
+                            {
+                                if (!string.IsNullOrEmpty(targetFileName) && line.IndexOf(targetFileName, StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    extractedHash = h;
+                                    return true;
+                                }
+                                firstCandidate ??= h;
+                            }
+                        }
+                    }
+
+                    // GNU format: <hash>  <filename> or bare hash
+                    var tokens = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (tokens.Length > 0 && IsProbableHash(tokens[0], out var gnuHash))
+                    {
+                        if (tokens.Length > 1 && !string.IsNullOrEmpty(targetFileName))
+                        {
+                            var nameToken = tokens[tokens.Length - 1].TrimStart('*');
+                            if (nameToken.Equals(targetFileName, StringComparison.OrdinalIgnoreCase) ||
+                                nameToken.EndsWith("/" + targetFileName, StringComparison.OrdinalIgnoreCase) ||
+                                nameToken.EndsWith("\\" + targetFileName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                extractedHash = gnuHash;
+                                return true;
+                            }
+                        }
+                        firstCandidate ??= gnuHash;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(firstCandidate))
+                {
+                    extractedHash = firstCandidate;
+                    return true;
+                }
+            }
+            catch
+            {
+                // Ignore file read exceptions
+            }
+
+            return false;
+        }
     }
 }

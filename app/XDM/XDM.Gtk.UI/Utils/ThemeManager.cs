@@ -115,6 +115,64 @@ namespace XDM.GtkUI.Utils
             return schemes[index];
         }
 
+        // Exports all available color scheme definitions to a formatted JSON string
+        public static string ExportPalettesJson()
+        {
+            var data = new
+            {
+                Version = "1.0",
+                DarkSchemes = System.Linq.Enumerable.Select(DarkSchemes, s => new
+                {
+                    s.Id,
+                    s.DisplayName,
+                    s.CssFileName,
+                    AccentR = s.AccentRgb.R,
+                    AccentG = s.AccentRgb.G,
+                    AccentB = s.AccentRgb.B,
+                    s.AccentHex,
+                    s.HoverBackgroundHex,
+                    s.AlternateBackgroundHex
+                }),
+                LightSchemes = System.Linq.Enumerable.Select(LightSchemes, s => new
+                {
+                    s.Id,
+                    s.DisplayName,
+                    s.CssFileName,
+                    AccentR = s.AccentRgb.R,
+                    AccentG = s.AccentRgb.G,
+                    AccentB = s.AccentRgb.B,
+                    s.AccentHex,
+                    s.HoverBackgroundHex,
+                    s.AlternateBackgroundHex
+                })
+            };
+            return Newtonsoft.Json.JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.Indented);
+        }
+
+        // Validates and parses a custom scheme definition from a JSON string
+        public static ColorSchemeDefinition? ParsePaletteJson(string json)
+        {
+            try
+            {
+                var dict = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.Dictionary<string, object>>(json);
+                if (dict != null && dict.TryGetValue("Id", out var idObj) && dict.TryGetValue("DisplayName", out var nameObj))
+                {
+                    string id = idObj?.ToString() ?? "custom";
+                    string displayName = nameObj?.ToString() ?? "Custom Scheme";
+                    string css = dict.TryGetValue("CssFileName", out var cssObj) ? cssObj?.ToString() ?? "xdm-dark.css" : "xdm-dark.css";
+                    string accent = dict.TryGetValue("AccentHex", out var accObj) ? accObj?.ToString() ?? "#3584e4" : "#3584e4";
+                    string hover = dict.TryGetValue("HoverBackgroundHex", out var hovObj) ? hovObj?.ToString() ?? "#262c36" : "#262c36";
+                    string alt = dict.TryGetValue("AlternateBackgroundHex", out var altObj) ? altObj?.ToString() ?? "#1f1f1f" : "#1f1f1f";
+                    return new ColorSchemeDefinition(id, displayName, css, 53, 132, 228, accent, hover, alt);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Palette JSON parsing error: " + ex.Message);
+            }
+            return null;
+        }
+
         // Toggles between Dark and Light mode, persisting choice to Config
         public static void ToggleTheme()
         {

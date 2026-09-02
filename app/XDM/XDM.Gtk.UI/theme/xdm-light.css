@@ -593,8 +593,8 @@ menu {
 
 menuitem {
   border-radius: 4px;
-  margin: 1px 4px;
-  padding: 6px 10px;
+  margin: 1px 2px;
+  padding: 4px 8px;
 }
 
 menuitem:hover {
@@ -609,6 +609,24 @@ menuitem:hover label {
 
 menuitem:disabled {
   color: #a0a0a0;
+}
+
+/* Card buttons for modal selection dialogs */
+button.card-button {
+  background-color: #f7f7f7;
+  border: 1px solid #e0e0e0;
+  border-radius: 7px;
+  padding: 4px;
+}
+
+button.card-button:hover {
+  background-color: #f0f0f0;
+  border-color: #c8c8c8;
+}
+
+button.card-button:active {
+  background-color: #e8e8e8;
+  border-color: #3584e4;
 }
 
 /* Notebook tabs */

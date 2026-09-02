@@ -343,6 +343,8 @@ namespace XDM.GtkUI.Dialogs.Settings
                         Name = cat.Value.Name,
                         DisplayName = dlg.DisplayName!,
                         DefaultFolder = dlg.Folder!,
+                        CustomIcon = dlg.CustomIcon,
+                        CustomColor = dlg.CustomColor,
                         FileExtensions = new HashSet<string>(dlg.FileTypes!.Replace("\r\n", "")
                         .Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
                     };
@@ -366,6 +368,8 @@ namespace XDM.GtkUI.Dialogs.Settings
                     Name = Guid.NewGuid().ToString(),
                     DisplayName = dlg.DisplayName!,
                     DefaultFolder = dlg.Folder!,
+                    CustomIcon = dlg.CustomIcon,
+                    CustomColor = dlg.CustomColor,
                     FileExtensions = new HashSet<string>(dlg.FileTypes!.Replace("\r\n", "")
                     .Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
                 };
@@ -442,6 +446,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             UpdateAdvancedSettingsConfig();
             Config.SaveConfig();
             ApplicationContext.BroadcastConfigChange();
+            (ApplicationContext.MainWindow as MainWindow)?.ReloadCategories();
             Destroy();
             Helpers.RunGC();
         }

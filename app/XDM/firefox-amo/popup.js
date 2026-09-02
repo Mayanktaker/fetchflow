@@ -2,7 +2,9 @@
 class VideoPopup {
     constructor() {
         this.rawList = [];
+        this.filteredList = [];
         this.filterQuery = "";
+        this.soundEnabled = false;
     }
 
     run() {
@@ -11,6 +13,27 @@ class VideoPopup {
 
     onLoad() {
         chrome.runtime.sendMessage({ type: "stat" }, this.onMsg.bind(this));
+
+        // Load sound setting
+        chrome.storage.local.get(["fetchflowSoundEnabled"], (res) => {
+            this.soundEnabled = !!res.fetchflowSoundEnabled;
+            this.updateSoundIcon();
+        });
+
+        const soundToggle = document.getElementById("soundToggle");
+        if (soundToggle) {
+            soundToggle.addEventListener('click', () => {
+                this.soundEnabled = !this.soundEnabled;
+                chrome.storage.local.set({ "fetchflowSoundEnabled": this.soundEnabled });
+                this.updateSoundIcon();
+                if (this.soundEnabled) {
+                    this.playAudioChime();
+                    this.showToast("Sound chime enabled");
+                } else {
+                    this.showToast("Sound chime muted");
+                }
+            });
+        }
 
         const chk = document.getElementById("chk");
         if (chk) {
@@ -43,6 +66,65 @@ class VideoPopup {
                 }
             });
         }
+
+        const downloadAllBtn = document.getElementById("downloadAll");
+        if (downloadAllBtn) {
+            downloadAllBtn.addEventListener('click', () => {
+                this.downloadAllFiltered();
+            });
+        }
+    }
+
+    updateSoundIcon() {
+        const onIcon = document.getElementById("soundIconOn");
+        const offIcon = document.getElementById("soundIconOff");
+        if (onIcon && offIcon) {
+            onIcon.style.display = this.soundEnabled ? "block" : "none";
+            offIcon.style.display = this.soundEnabled ? "none" : "block";
+        }
+    }
+
+    playAudioChime() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(523.25, now); // C5
+            osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.23);
+            osc.onended = () => ctx.close();
+        } catch (_) {}
+    }
+
+    downloadAllFiltered() {
+        const items = this.filteredList;
+        if (!items || items.length === 0) {
+            this.showToast("No media streams to download");
+            return;
+        }
+
+        this.showToast(`Starting ${items.length} download${items.length > 1 ? 's' : ''}...`);
+
+        // Trigger downloads with a staggered 120ms interval to ensure smooth IPC transmission
+        items.forEach((item, idx) => {
+            setTimeout(() => {
+                chrome.runtime.sendMessage({ type: "vid", itemId: item.id });
+            }, idx * 120);
+        });
     }
 
     onMsg(response) {
@@ -83,7 +165,7 @@ class VideoPopup {
     }
 
     applyFilter() {
-        const filtered = this.filterQuery
+        this.filteredList = this.filterQuery
             ? this.rawList.filter(item => {
                 const text = (item.text || "").toLowerCase();
                 const info = (item.info || "").toLowerCase();
@@ -91,7 +173,18 @@ class VideoPopup {
             })
             : this.rawList;
 
-        this.renderList(filtered);
+        const downloadAllBtn = document.getElementById("downloadAll");
+        if (downloadAllBtn) {
+            downloadAllBtn.disabled = this.filteredList.length === 0;
+            downloadAllBtn.innerHTML = `
+                <svg class="btn-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                ${this.filterQuery ? `Download (${this.filteredList.length})` : 'Download All'}
+            `;
+        }
+
+        this.renderList(this.filteredList);
     }
 
     getFormatBadge(text, info) {
@@ -107,10 +200,10 @@ class VideoPopup {
         return "VIDEO";
     }
 
-    showCopyToast(msg) {
+    showToast(msg) {
         const toast = document.getElementById("copyToast");
         if (!toast) return;
-        toast.textContent = msg || "Link copied to clipboard!";
+        toast.textContent = msg || "Done";
         toast.style.display = "block";
         toast.style.opacity = "1";
         setTimeout(() => {
@@ -183,7 +276,7 @@ class VideoPopup {
                 e.stopPropagation();
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(text);
-                    this.showCopyToast("Link copied to clipboard!");
+                    this.showToast("Link copied to clipboard!");
                 }
             });
 

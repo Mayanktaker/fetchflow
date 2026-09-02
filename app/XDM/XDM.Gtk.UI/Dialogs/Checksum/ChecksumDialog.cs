@@ -15,10 +15,10 @@ using GtkApp = Gtk.Application;
 
 namespace XDM.GtkUI.Dialogs.Checksum
 {
-    // Standalone checksum computation and verification dialog
+    // Standalone checksum computation and verification dialog with Drag & Drop support
     public class ChecksumDialog : Dialog
     {
-        private readonly string filePath;
+        private string filePath;
         private ChecksumResult? currentResult;
         private CancellationTokenSource? cts;
 
@@ -57,7 +57,92 @@ namespace XDM.GtkUI.Dialogs.Checksum
             SetSizeRequest(520, 440);
 
             BuildUI();
+            SetupDragAndDrop();
             StartCalculation();
+        }
+
+        // Configures Drag and Drop file target
+        private void SetupDragAndDrop()
+        {
+            var targets = new TargetEntry[]
+            {
+                new TargetEntry("text/uri-list", TargetFlags.OtherApp, 0)
+            };
+            Gtk.Drag.DestSet(this, DestDefaults.All, targets, Gdk.DragAction.Copy);
+            DragDataReceived += ChecksumDialog_DragDataReceived;
+        }
+
+        // Handles dropped files or checksum manifests
+        private void ChecksumDialog_DragDataReceived(object o, DragDataReceivedArgs args)
+        {
+            try
+            {
+                var rawData = args.SelectionData.Text;
+                if (!string.IsNullOrEmpty(rawData))
+                {
+                    var lines = rawData.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var rawUri in lines)
+                    {
+                        if (rawUri.StartsWith("#")) continue;
+                        var target = rawUri.Trim();
+                        if (Uri.TryCreate(target, UriKind.Absolute, out var uri) && uri.IsFile)
+                        {
+                            target = uri.LocalPath;
+                        }
+
+                        if (System.IO.File.Exists(target))
+                        {
+                            HandleDroppedPath(target);
+                            break;
+                        }
+                    }
+                }
+                Gtk.Drag.Finish(args.Context, true, false, args.Time);
+            }
+            catch
+            {
+                Gtk.Drag.Finish(args.Context, false, false, args.Time);
+            }
+        }
+
+        // Processes a dropped path as a checksum file or new target file
+        private void HandleDroppedPath(string droppedPath)
+        {
+            var ext = IoPath.GetExtension(droppedPath).ToLowerInvariant();
+            var fileName = IoPath.GetFileName(filePath);
+
+            if (ext == ".sha256" || ext == ".sha512" || ext == ".md5" || ext == ".sha1" || ext == ".sums" || ext == ".digest" ||
+                IoPath.GetFileName(droppedPath).IndexOf("checksum", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                IoPath.GetFileName(droppedPath).IndexOf("sha256sum", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                if (ChecksumHelper.TryExtractHashFromChecksumFile(droppedPath, fileName, out var extractedHash))
+                {
+                    txtExpected.Text = extractedHash;
+                    lblMatchBadge.Markup = $"<span size=\"9500\" alpha=\"50000\">(Auto-extracted from {GLib.Markup.EscapeText(IoPath.GetFileName(droppedPath))})</span>";
+                    ValidateComparison();
+                    return;
+                }
+            }
+
+            filePath = droppedPath;
+            UpdateFileSummary();
+            StartCalculation();
+        }
+
+        // Updates file summary card when active file changes
+        private void UpdateFileSummary()
+        {
+            var fileName = IoPath.GetFileName(filePath);
+            var svgName = IconResource.GetSVGNameForFileType(fileName);
+            var (r, g, b) = IconMapHelper.GetFileTypeColor(fileName);
+            var rawIcon = GtkHelper.LoadSvg(svgName, 44);
+            imgFileIcon.Pixbuf = rawIcon != null ? GtkHelper.TintPixbuf(rawIcon, r, g, b) : null;
+
+            lblFileName.Markup = $"<span weight=\"bold\" size=\"11500\">{GLib.Markup.EscapeText(fileName)}</span>";
+
+            long fileSize = System.IO.File.Exists(filePath) ? new SysFileInfo(filePath).Length : 0;
+            var friendlyPath = FormatFriendlyPath(filePath);
+            lblFileMeta.Markup = $"<span size=\"9000\" alpha=\"45000\">{FormattingHelper.FormatSize(fileSize)}   ·   {GLib.Markup.EscapeText(friendlyPath)}</span>";
         }
 
         // Constructs the layout, cards, and input controls
@@ -121,13 +206,13 @@ namespace XDM.GtkUI.Dialogs.Checksum
 
             txtExpected = new Entry
             {
-                PlaceholderText = TextResource.GetText("LBL_HASH_PLACEHOLDER") ?? "Paste checksum from download source (SHA-256, MD5, SHA-512, SHA-1)..."
+                PlaceholderText = TextResource.GetText("LBL_HASH_PLACEHOLDER") ?? "Paste checksum or drop checksum file (SHA-256, MD5, SHA-512, SHA-1)..."
             };
             txtExpected.Changed += TxtExpected_Changed;
             contentArea.PackStart(txtExpected, false, false, 0);
 
             lblMatchBadge = new Label { Xalign = 0, UseMarkup = true };
-            lblMatchBadge.Markup = "<span size=\"9500\" alpha=\"40000\">Paste a checksum above to verify file authenticity</span>";
+            lblMatchBadge.Markup = "<span size=\"9500\" alpha=\"40000\">Paste a checksum or drop a checksum file to verify authenticity</span>";
             contentArea.PackStart(lblMatchBadge, false, false, 0);
 
             // --- Action Buttons ---
@@ -151,7 +236,27 @@ namespace XDM.GtkUI.Dialogs.Checksum
             actionBox.PackStart(btnClose, false, false, 0);
 
             contentArea.PackStart(actionBox, false, false, 0);
+            InspectClipboardForHash();
             ShowAll();
+        }
+
+        // Checks clipboard for a valid hash string and pre-fills the expected hash box
+        private void InspectClipboardForHash()
+        {
+            try
+            {
+                var cb = Clipboard.Get(Gdk.Selection.Clipboard);
+                var text = cb.WaitForText();
+                if (ChecksumHelper.IsProbableHash(text, out var cleanHash))
+                {
+                    txtExpected.Text = cleanHash;
+                    lblMatchBadge.Markup = "<span size=\"9500\" alpha=\"50000\">(Auto-detected hash from clipboard)</span>";
+                }
+            }
+            catch
+            {
+                // Non-blocking clipboard inspection
+            }
         }
 
         // Helper to construct a label + monospace Entry + copy button row
@@ -284,7 +389,7 @@ namespace XDM.GtkUI.Dialogs.Checksum
                     break;
                 case ChecksumMatchStatus.Empty:
                 default:
-                    lblMatchBadge.Markup = "<span size=\"9500\" alpha=\"40000\">Paste a checksum above to verify file authenticity</span>";
+                    lblMatchBadge.Markup = "<span size=\"9500\" alpha=\"40000\">Paste a checksum or drop a checksum file to verify authenticity</span>";
                     txtExpected.StyleContext.RemoveClass("success-entry");
                     txtExpected.StyleContext.RemoveClass("error-entry");
                     break;

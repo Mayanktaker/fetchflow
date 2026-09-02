@@ -147,6 +147,7 @@ namespace XDM.Core.Clients.Http
             catch (HttpRequestException we)
             {
                 Log.Debug(we, we.Message);
+                throw;
             }
             session.Response = response;
             return new HttpResponse { Session = session };

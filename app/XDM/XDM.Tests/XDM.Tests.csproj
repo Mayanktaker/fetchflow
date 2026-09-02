@@ -28,6 +28,8 @@
     <Compile Include="..\XDM.Core\UI\IconMap.cs" Link="UI\IconMap.cs" />
     <Compile Include="..\XDM.Core\Util\MimeTypes.cs" Link="Util\MimeTypes.cs" />
     <Compile Include="..\XDM.Core\Util\ChecksumHelper.cs" Link="Util\ChecksumHelper.cs" />
+    <Compile Include="..\XDM.Core\Util\ThemePaletteHelper.cs" Link="Util\ThemePaletteHelper.cs" />
+    <Compile Include="..\XDM.Core\Translations\TextResource.cs" Link="Translations\TextResource.cs" />
   </ItemGroup>
 
 </Project>

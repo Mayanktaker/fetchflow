@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace XDM.Core
 {
@@ -9,6 +9,8 @@ namespace XDM.Core
         public string DisplayName { get; set; }
         public bool IsPredefined { get; set; }
         public string DefaultFolder { get; set; }
+        public string? CustomIcon { get; set; }
+        public string? CustomColor { get; set; }
         public override string ToString()
         {
             return DisplayName;

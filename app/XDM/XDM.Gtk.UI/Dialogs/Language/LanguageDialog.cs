@@ -1,19 +1,18 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 using Gtk;
-using Application = Gtk.Application;
-using IoPath = System.IO.Path;
-using XDM.Core;
 using Translations;
 using UI = Gtk.Builder.ObjectAttribute;
+using XDM.Core;
 using XDM.GtkUI.Utils;
-using System.IO;
+using IoPath = System.IO.Path;
 
 namespace XDM.GtkUI.Dialogs.Language
 {
+    // Modal dialog allowing the user to select the UI display language
     public class LanguageDialog : Dialog
     {
         [UI] private Label Label1, Label2;
@@ -24,12 +23,12 @@ namespace XDM.GtkUI.Dialogs.Language
 
         private WindowGroup group;
 
+        // Initializes language chooser dialog and populates available languages
         private LanguageDialog(Builder builder, Window parent, WindowGroup group) : base(builder.GetRawOwnedObject("dialog"))
         {
             builder.Autoconnect(this);
 
             Modal = true;
-            // Wayland/Phase1.4: compositor places windows; client centering removed (no-op on Wayland)
             TransientFor = parent;
             this.group = group;
             this.group.AddWindow(this);
@@ -54,42 +53,81 @@ namespace XDM.GtkUI.Dialogs.Language
             SetSizeRequest(400, 200);
             Resizable = true;
 
-            var indexFile = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Lang\index.txt");
-            var items = new List<string>();
-            var n = 0;
-            var c = 0;
-            if (File.Exists(indexFile))
-            {
-                var lines = File.ReadAllLines(indexFile);
-                foreach (var line in lines)
-                {
-                    var index = line.IndexOf("=");
-                    if (index > 0)
-                    {
-                        var name = line.Substring(0, index);
-                        items.Add(name);
-                        if (name == Config.Instance.Language)
-                        {
-                            c = n;
-                        }
-                        n++;
-                    }
-                }
-                if (items.Count > 0)
-                {
-                    GtkHelper.PopulateComboBoxGeneric<string>(CmbLanguage, items.ToArray());
-                    CmbLanguage.Active = c;
-                }
-            }
+            PopulateLanguageList();
         }
 
+        // Resolves index.txt path and populates combo box with available locales
+        private void PopulateLanguageList()
+        {
+            var searchPaths = new[]
+            {
+                IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "Lang", "index.txt"),
+                IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "Lang", "index.txt"),
+                "/opt/fetchflow/Lang/index.txt"
+            };
+
+            var items = new List<string>();
+            string? indexFile = null;
+            foreach (var path in searchPaths)
+            {
+                if (File.Exists(path))
+                {
+                    indexFile = path;
+                    break;
+                }
+            }
+
+            var selectedIndex = 0;
+            var currentIndex = 0;
+            var currentLang = Config.Instance.Language ?? "English";
+
+            if (indexFile != null && File.Exists(indexFile))
+            {
+                var lines = File.ReadAllLines(indexFile);
+                foreach (var rawLine in lines)
+                {
+                    var line = rawLine.Trim();
+                    if (string.IsNullOrEmpty(line) || line.StartsWith("#")) continue;
+
+                    var eqIdx = line.IndexOf('=');
+                    if (eqIdx > 0)
+                    {
+                        var name = line.Substring(0, eqIdx).Trim();
+                        items.Add(name);
+
+                        // Match active language by exact name, prefix, or filename stem
+                        if (string.Equals(name, currentLang, StringComparison.OrdinalIgnoreCase) ||
+                            name.StartsWith(currentLang + " ", StringComparison.OrdinalIgnoreCase) ||
+                            currentLang.StartsWith(name + " ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            selectedIndex = currentIndex;
+                        }
+                        currentIndex++;
+                    }
+                }
+            }
+
+            // Fallback to core default languages if index.txt is unavailable
+            if (items.Count == 0)
+            {
+                items.Add("English");
+                items.Add("Hindi (हिन्दी)");
+                items.Add("Hinglish (Hindi - Latin)");
+            }
+
+            GtkHelper.PopulateComboBoxGeneric<string>(CmbLanguage, items.ToArray());
+            CmbLanguage.Active = selectedIndex >= 0 && selectedIndex < items.Count ? selectedIndex : 0;
+        }
+
+        // Closes dialog on cancel click
         private void BtnCancel_Clicked(object? sender, EventArgs e)
         {
             Result = false;
             this.group.RemoveWindow(this);
-            Dispose();
+            Visible = false;
         }
 
+        // Saves selected language to configuration and closes dialog
         private void BtnOk_Clicked(object? sender, EventArgs e)
         {
             Result = true;
@@ -100,9 +138,10 @@ namespace XDM.GtkUI.Dialogs.Language
                 Config.SaveConfig();
             }
             this.group.RemoveWindow(this);
-            Dispose();
+            Visible = false;
         }
 
+        // Factory method building the dialog from Glade template
         public static LanguageDialog CreateFromGladeFile(Window parent, WindowGroup group)
         {
             var builder = new Builder();

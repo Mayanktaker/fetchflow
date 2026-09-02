@@ -1,4 +1,4 @@
-﻿#if NET5_0_OR_GREATER
+#if NET5_0_OR_GREATER
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -65,7 +65,8 @@ namespace XDM.Core.Clients.Http
 
         public Stream GetResponseStream()
         {
-            return Response!.Content.ReadAsStreamAsync(this.CancellationToken).Result;
+            if (Response?.Content == null) return Stream.Null;
+            return Response.Content.ReadAsStreamAsync(this.CancellationToken).Result;
         }
 
         public string? ReadAsString(CancelFlag cancellationToken)
@@ -75,12 +76,13 @@ namespace XDM.Core.Clients.Http
 
         public void EnsureSuccessStatusCode()
         {
-            WebRequestExtensions.EnsureSuccessStatusCode(Response!.StatusCode, Response!.ReasonPhrase);
+            if (Response == null) throw new InvalidOperationException("No HTTP response received");
+            WebRequestExtensions.EnsureSuccessStatusCode(Response.StatusCode, Response.ReasonPhrase);
         }
 
         private string? GetContentDisposition()
         {
-            if (Response!.Content.Headers.TryGetValues("Content-Disposition", out IEnumerable<string>? values) && values != null)
+            if (Response?.Content?.Headers != null && Response.Content.Headers.TryGetValues("Content-Disposition", out IEnumerable<string>? values) && values != null)
             {
                 var cd = values.FirstOrDefault();
                 if (!string.IsNullOrWhiteSpace(cd))
