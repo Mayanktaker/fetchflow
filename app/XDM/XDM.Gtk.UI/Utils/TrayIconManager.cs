@@ -187,6 +187,7 @@ namespace XDM.GtkUI.Utils
                 Menu = new ObjectPath("/MenuBar"),
                 // Provide both IconName (for hosts that prefer theme) and multi-size IconPixmap (ARGB32)
                 IconName = "com.mayanktaker.fetchflow",
+                IconThemePath = AppDomain.CurrentDomain.BaseDirectory,
                 IconPixmap = BuildSniPixmaps(icon),
                 ToolTip = (0, 0, Array.Empty<byte>(), appName, ""),
             };

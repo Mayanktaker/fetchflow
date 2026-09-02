@@ -45,6 +45,7 @@ namespace XDM.GtkUI
         private Label lblExtensionStatus;
         private Label? lblTotalSpeed;
         private readonly Dictionary<string, double> activeSpeeds = new();
+        private readonly Dictionary<string, long> activeEtas = new();
         private bool isUpdateAvailable;
         private Image helpImage;
         private Label helpLabel;
@@ -688,6 +689,13 @@ namespace XDM.GtkUI
 
             btnSpeedLimit = CreateButtonWithContent("time-line", null, DimR, DimG, DimB);
             btnSpeedLimit.Clicked += BtnSpeedLimit_Clicked;
+            btnSpeedLimit.ButtonPressEvent += (o, args) =>
+            {
+                if (args.Event.Button == 3)
+                {
+                    ShowSpeedLimiterMenu(args.Event);
+                }
+            };
             btnSpeedLimit.StyleContext.AddClass("bottombar-button");
             btnSpeedLimit.MarginStart = 6;
             hbox.PackStart(btnSpeedLimit, false, false, 0);
@@ -778,6 +786,50 @@ namespace XDM.GtkUI
                     btnSpeedLimit.Image = new Image(GtkHelper.TintPixbuf(pix, DimR, DimG, DimB));
                 }
             }
+        }
+
+        // Displays context menu with quick speed limit presets
+        private void ShowSpeedLimiterMenu(Gdk.EventButton ev)
+        {
+            var menu = new Menu();
+            var titleItem = new MenuItem("⚡ Bandwidth Limit");
+            titleItem.Sensitive = false;
+            menu.Append(titleItem);
+            menu.Append(new SeparatorMenuItem());
+
+            int currentLimit = Config.Instance.EnableSpeedLimit ? Config.Instance.DefaltDownloadSpeed : 0;
+
+            var offItem = new MenuItem(currentLimit == 0 ? "● Unlimited (Off)" : "Unlimited (Off)");
+            offItem.Activated += (_, _) =>
+            {
+                Config.Instance.EnableSpeedLimit = false;
+                Config.SaveConfig();
+                ApplicationContext.BroadcastConfigChange();
+                UpdateSpeedLimitButton();
+            };
+            menu.Append(offItem);
+            menu.Append(new SeparatorMenuItem());
+
+            int[] presets = { 256, 512, 1024, 2048, 5120, 10240 };
+            foreach (var preset in presets)
+            {
+                var label = FormattingHelper.FormatSize(preset * 1024.0) + "/s";
+                var isSelected = Config.Instance.EnableSpeedLimit && Config.Instance.DefaltDownloadSpeed == preset;
+                var item = new MenuItem(isSelected ? $"● {label}" : label);
+                var p = preset;
+                item.Activated += (_, _) =>
+                {
+                    Config.Instance.EnableSpeedLimit = true;
+                    Config.Instance.DefaltDownloadSpeed = p;
+                    Config.SaveConfig();
+                    ApplicationContext.BroadcastConfigChange();
+                    UpdateSpeedLimitButton();
+                };
+                menu.Append(item);
+            }
+
+            menu.ShowAll();
+            menu.PopupAtPointer((Gdk.Event)ev);
         }
 
         private void BtnScheduler_Clicked(object? sender, EventArgs e)
@@ -962,16 +1014,31 @@ namespace XDM.GtkUI
             statusCard.MarginBottom = 8;
             statusCard.Add(statusTree);
 
-            // Categories section header label
+            // Categories section collapsible header toggle
+            var catHeaderBox = new EventBox();
+            catHeaderBox.StyleContext.AddClass("sidebar-heading-box");
+            var catTitle = TextResource.GetText("SETTINGS_CAT") ?? "Categories";
             var catHeaderLabel = new Label
             {
-                Text = TextResource.GetText("SETTINGS_CAT") ?? "Categories",
+                Text = $"▾  {catTitle}",
                 Halign = Align.Start,
                 MarginStart = 16,
                 MarginTop = 8,
                 MarginBottom = 4
             };
             catHeaderLabel.StyleContext.AddClass("sidebar-heading");
+            catHeaderBox.Add(catHeaderLabel);
+
+            bool isCategoriesExpanded = true;
+            catHeaderBox.ButtonPressEvent += (o, args) =>
+            {
+                if (args.Event.Button == 1)
+                {
+                    isCategoriesExpanded = !isCategoriesExpanded;
+                    categoryTree.Visible = isCategoriesExpanded;
+                    catHeaderLabel.Text = isCategoriesExpanded ? $"▾  {catTitle}" : $"▸  {catTitle}";
+                }
+            };
 
             // Categories TreeView
             categoryTree = new TreeView()
@@ -1039,7 +1106,7 @@ namespace XDM.GtkUI
             // Pack into a sidebar vertical box with a ScrolledWindow wrapper
             var vbSidebar = new VBox(false, 0);
             vbSidebar.PackStart(statusCard, false, false, 0);
-            vbSidebar.PackStart(catHeaderLabel, false, false, 0);
+            vbSidebar.PackStart(catHeaderBox, false, false, 0);
             vbSidebar.PackStart(categoryTree, true, true, 0);
 
             var scrolledWindow = new ScrolledWindow
@@ -1956,12 +2023,12 @@ namespace XDM.GtkUI
             Application.Invoke((a, b) =>
             {
                 action.Invoke(id, progress, speed, eta);
-                UpdateSpeedTracking(id, progress >= 100 ? 0 : speed);
+                UpdateSpeedTracking(id, progress >= 100 ? 0 : speed, eta);
             });
         }
 
-        // Updates aggregate download throughput across all active transfers
-        private void UpdateSpeedTracking(string id, double speed)
+        // Updates aggregate download throughput across all active transfers and tracks shortest ETA
+        private void UpdateSpeedTracking(string id, double speed, long eta = 0)
         {
             lock (activeSpeeds)
             {
@@ -1970,10 +2037,19 @@ namespace XDM.GtkUI
                     if (speed > 0)
                     {
                         activeSpeeds[id] = speed;
+                        if (eta > 0)
+                        {
+                            activeEtas[id] = eta;
+                        }
+                        else
+                        {
+                            activeEtas.Remove(id);
+                        }
                     }
                     else
                     {
                         activeSpeeds.Remove(id);
+                        activeEtas.Remove(id);
                     }
                 }
 
@@ -1989,10 +2065,18 @@ namespace XDM.GtkUI
                 if (total > 0 && count > 0)
                 {
                     var formatted = FormattingHelper.FormatSize(total) + "/s";
-                    lblTotalSpeed.Markup = $"<span color='#f97316'><b>⚡ {formatted}</b></span> <span color='#888888' size='small'>({count} active)</span>";
-                    lblTotalSpeed.TooltipText = $"Aggregate live download speed: {formatted} across {count} transfer(s)";
+                    long minEta = 0;
+                    foreach (var e in activeEtas.Values)
+                    {
+                        if (e > 0 && (minEta == 0 || e < minEta))
+                            minEta = e;
+                    }
+                    var etaText = minEta > 0 ? $" · ETA: {FormattingHelper.ToHMS(minEta)}" : "";
+
+                    lblTotalSpeed.Markup = $"<span color='#f97316'><b>⚡ {formatted}</b></span>{etaText} <span color='#888888' size='small'>({count} active)</span>";
+                    lblTotalSpeed.TooltipText = $"Aggregate live download speed: {formatted}{etaText} across {count} transfer(s)";
                     lblTotalSpeed.Visible = true;
-                    trayManager?.UpdateSpeedStatus($"{formatted} ({count} active)");
+                    trayManager?.UpdateSpeedStatus($"{formatted}{etaText} ({count} active)");
                 }
                 else
                 {

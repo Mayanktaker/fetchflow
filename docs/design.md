@@ -26,7 +26,7 @@ Spec: docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.m
 | Role | Dark | Light |
 |---|---|---|
 | window | #1d1d1d | #fcfcfc |
-| sidebar | #161616 | #ececec |
+| sidebar / main-toolbar | #161616 | #ececec |
 | view | #232323 | #ffffff |
 | view-finished | #2a2a2a | #f8f8f8 |
 | headerbar | #1a1a1a | #f0f0f0 |
