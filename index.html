@@ -374,7 +374,7 @@
 
   <!-- Hero -->
   <header class="hero">
-    <div class="hero-badge" id="live-version-badge">⚡ Linux &bull; Windows &bull; v9.1.4</div>
+    <div class="hero-badge" id="live-version-badge">⚡ Linux &bull; Windows &bull; v9.1.8</div>
     <img class="hero-logo" src="fetchflow-logo.png" alt="FetchFlow App Icon">
     <h1>High-Speed Download Acceleration<br>For Linux &amp; Windows.</h1>
     <p>
@@ -389,7 +389,7 @@
     </div>
 
     <div class="cta-group">
-      <a href="#downloads" class="btn-primary" id="btn-hero-download">Download FetchFlow</a>
+      <a href="#downloads" class="btn-primary" id="btn-hero-download">Download FetchFlow v9.1.8</a>
       <a href="https://github.com/Mayanktaker/fetchflow" class="btn-secondary" target="_blank">View on GitHub</a>
     </div>
   </header>
@@ -508,7 +508,7 @@
   <section class="download-section" id="downloads">
     <div class="section-title" style="margin-bottom: 20px;">
       <h2>Distribution Packages</h2>
-      <p id="release-info-text">Self-contained, AOT-compiled binaries for Windows and Linux.</p>
+      <p id="release-info-text">Latest stable release (v9.1.8). Self-contained, AOT-compiled binaries for Linux and Windows.</p>
     </div>
 
     <table class="download-table">
@@ -533,12 +533,12 @@
         <tr>
           <td><strong>🐧 Fedora / RHEL / CentOS / openSUSE</strong></td>
           <td><span class="pkg-tag">RPM</span></td>
-          <td><a class="btn-dl-small" id="dl-rpm" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download .RPM</a></td>
+          <td><a class="btn-dl-small" id="dl-rpm" href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow-9.1.8-1.fc44.x86_64.rpm">Download .RPM (v9.1.8)</a></td>
         </tr>
         <tr>
           <td><strong>🐧 Debian / Ubuntu / Mint / Pop!_OS</strong></td>
           <td><span class="pkg-tag">DEB</span></td>
-          <td><a class="btn-dl-small" id="dl-deb" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download .DEB</a></td>
+          <td><a class="btn-dl-small" id="dl-deb" href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow_9.1.8_amd64.deb">Download .DEB (v9.1.8)</a></td>
         </tr>
         <tr>
           <td><strong>🐧 Arch Linux / Manjaro / EndeavourOS</strong></td>
@@ -548,7 +548,7 @@
         <tr>
           <td><strong>🐧 Universal Linux x64</strong></td>
           <td><span class="pkg-tag">TAR.GZ</span></td>
-          <td><a class="btn-dl-small" id="dl-targz" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Portable .tar.gz</a></td>
+          <td><a class="btn-dl-small" id="dl-targz" href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow-linux-x64-9.1.8.tar.gz">Download Portable .tar.gz (v9.1.8)</a></td>
         </tr>
       </tbody>
     </table>
@@ -570,14 +570,14 @@
         <div class="card-icon" style="margin: 0 auto 16px;">🌐</div>
         <h3>Chromium Browsers</h3>
         <p style="margin-bottom: 20px;">For Chrome, Brave, Microsoft Edge, Opera, and Vivaldi.</p>
-        <a href="https://github.com/Mayanktaker/fetchflow/releases/latest" id="dl-chrome" class="btn-secondary" style="display: inline-block;">Download Chrome MV3 Zip</a>
+        <a href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow-chrome-extension-9.1.8.zip" id="dl-chrome" class="btn-secondary" style="display: inline-block;">Download Chrome MV3 Zip (v9.1.8)</a>
       </div>
 
       <div class="card" style="text-align: center;">
         <div class="card-icon" style="margin: 0 auto 16px;">🦊</div>
         <h3>Firefox & Gecko</h3>
         <p style="margin-bottom: 20px;">For Firefox, Floorp, LibreWolf, and Waterfox.</p>
-        <a href="https://github.com/Mayanktaker/fetchflow/releases/latest" id="dl-firefox" class="btn-secondary" style="display: inline-block;">Download Firefox XPI</a>
+        <a href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow-firefox-extension-9.1.8.xpi" id="dl-firefox" class="btn-secondary" style="display: inline-block;">Download Firefox XPI (v9.1.8)</a>
       </div>
     </div>
   </section>
@@ -598,7 +598,7 @@
         const response = await fetch('https://api.github.com/repos/Mayanktaker/fetchflow/releases/latest');
         if (!response.ok) return;
         const release = await response.json();
-        const tag = release.tag_name || 'v9.1.4';
+        const tag = release.tag_name || 'v9.1.8';
         
         // 1. Update version badge & hero button in real-time
         const badge = document.getElementById('live-version-badge');
