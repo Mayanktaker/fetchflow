@@ -4,7 +4,10 @@
   <PropertyGroup>
     <!-- Match XDM.Core's TFM so shared sources compile cleanly -->
     <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <StartupObject>XDM.Tests.Program</StartupObject>
     <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
   <ItemGroup>

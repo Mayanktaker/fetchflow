@@ -132,6 +132,73 @@ namespace XDM.Tests
 #pragma warning restore CS0649, CS0169
         }
 
+        // Minimal stub wired to language-dialog.glade
+        private class LanguageSmokeStub
+        {
+#pragma warning disable CS0649, CS0169
+            [UI] private Label Label1 = null!;
+            [UI] private Label Label2 = null!;
+            [UI] private ComboBox CmbLanguage = null!;
+            [UI] private Button BtnOk = null!;
+            [UI] private Button BtnCancel = null!;
+#pragma warning restore CS0649, CS0169
+        }
+
+        [TestMethod]
+        [TestCategory("GtkSmoke")]
+        public void Builder_ShouldLoadLanguageDialog_AndAutoconnect_StubWithoutThrowing()
+        {
+            if (!IsDisplayAvailable(out var skipReason))
+                Assert.Inconclusive(skipReason);
+
+            try
+            {
+                Application.Init();
+            }
+            catch (Exception ex)
+            {
+                Assert.Inconclusive($"Skipped GtkSmoke: GTK init failed: {ex.GetType().Name}: {ex.Message}");
+            }
+
+            var gladePath = Path.Combine(RepoRoot, "app", "XDM", "XDM.Gtk.UI", "glade", "language-dialog.glade");
+            Assert.IsTrue(File.Exists(gladePath), $"language-dialog.glade not found at {gladePath}");
+
+            Exception? builderEx = null;
+            Builder? builder = null;
+            try
+            {
+                builder = new Builder();
+                builder.AddFromFile(gladePath);
+
+                var dialogObj = builder.GetObject("dialog");
+                Assert.IsNotNull(dialogObj, "Builder.GetObject('dialog') should not be null for language-dialog.glade");
+
+                var stub = new LanguageSmokeStub();
+                builder.Autoconnect(stub);
+
+                AssertFieldWired(stub, "Label1");
+                AssertFieldWired(stub, "Label2");
+                AssertFieldWired(stub, "CmbLanguage");
+                AssertFieldWired(stub, "BtnOk");
+                AssertFieldWired(stub, "BtnCancel");
+            }
+            catch (Exception ex) when (IsDisplayRelatedException(ex))
+            {
+                Assert.Inconclusive($"Skipped GtkSmoke: display-related failure: {ex.GetType().Name}: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                builderEx = ex;
+            }
+            finally
+            {
+                try { builder?.Dispose(); } catch { }
+            }
+
+            if (builderEx != null)
+                Assert.Fail($"GtkSmoke failed for language dialog: {builderEx.GetType().Name}: {builderEx.Message}\n{builderEx.StackTrace}");
+        }
+
         [TestMethod]
         [TestCategory("GtkSmoke")]
         public void Builder_ShouldLoadDownloadCompleteDialog_AndAutoconnect_StubWithoutThrowing()

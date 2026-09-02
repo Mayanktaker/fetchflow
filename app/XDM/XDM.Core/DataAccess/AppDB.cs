@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SQLite;
@@ -16,6 +16,41 @@ namespace XDM.Core.DataAccess
         private static object lockObj = new();
         private bool init = false;
         private SQLiteConnection db;
+        
+        static AppDB()
+        {
+            try
+            {
+                System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(SQLiteConnection).Assembly, (libraryName, assembly, searchPath) =>
+                {
+                    if (libraryName.Equals("SQLite.Interop.dll", StringComparison.OrdinalIgnoreCase) ||
+                        libraryName.Equals("SQLite.Interop", StringComparison.OrdinalIgnoreCase) ||
+                        libraryName.Equals("libSQLite.Interop.so", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var localDir = AppDomain.CurrentDomain.BaseDirectory;
+                        var candidates = new[]
+                        {
+                            Path.Combine(localDir, "SQLite.Interop.dll"),
+                            Path.Combine(localDir, "libSQLite.Interop.so"),
+                            Path.Combine(localDir, "runtimes", "linux-x64", "native", "SQLite.Interop.dll")
+                        };
+                        foreach (var c in candidates)
+                        {
+                            if (File.Exists(c) && System.Runtime.InteropServices.NativeLibrary.TryLoad(c, out var handle))
+                            {
+                                return handle;
+                            }
+                        }
+                    }
+                    return IntPtr.Zero;
+                });
+            }
+            catch
+            {
+                // Non-fatal if already registered
+            }
+        }
+
         private AppDB() { }
         private DownloadList downloadsDB;
         public DownloadList Downloads => downloadsDB;
