@@ -5,6 +5,7 @@ CAT_COMPRESSED=Zapakovano
 CAT_MUSIC=Muzika
 CAT_VIDEOS=Video
 CAT_PROGRAMS=Programi
+CAT_IMAGES=Image
 MENU_BATCH_DOWNLOAD=Grupno preuzimanje
 MENU_DELETE_DWN=Obriši preuzimanja
 MENU_DELETE_COMPLETED=Obriši završena

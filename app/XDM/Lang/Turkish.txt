@@ -5,6 +5,7 @@ CAT_COMPRESSED=Sıkıştırılmış
 CAT_MUSIC=Müzikler
 CAT_VIDEOS=Videolar
 CAT_PROGRAMS=Programlar
+CAT_IMAGES=Image
 MENU_BATCH_DOWNLOAD=Toplu indirme
 MENU_DELETE_DWN=İndirmeleri sil
 MENU_DELETE_COMPLETED=Bitenleri temizle

@@ -64,16 +64,23 @@ namespace XDM.Core
 
         public static string[] DefaultVideoExtensions => new string[]
             {
-                "MP4", "M3U8", "F4M", "WEBM", "OGG", "MP3", "AAC", "FLV", "MKV", "DIVX",
-                "MOV", "MPG", "MPEG","OPUS", "MPD"
+                "MP4", "MKV", "WEBM", "M3U8", "F4M", "MPD", "TS", "MTS", "M2TS", "FLV", "F4V",
+                "AVI", "MOV", "WMV", "MPG", "MPEG", "VOB", "DIVX", "XVID", "3GP", "3G2", "OGV", "RMVB"
             };
 
         public string[] VideoExtensions { get; set; }
 
         public static string[] DefaultFileExtensions => new string[]
             {
-                "3GP", "7Z", "AVI", "BZ2", "DEB", "DOC", "DOCX", "EXE", "ISO",
-                "MSI", "PDF", "PPT", "PPTX", "RAR", "RPM", "XLS", "XLSX", "SIT", "SITX", "TAR", "JAR", "ZIP", "XZ"
+                "3GP", "7Z", "AAC", "ACE", "AI", "AIFF", "ALAC", "APK", "APPIMAGE", "AVI", "AVIF", "AZW3",
+                "BIN", "BMP", "BZ2", "CAB", "CBR", "CBZ", "CSV", "DEB", "DJVU", "DMG", "DOC", "DOCX",
+                "EPUB", "EXE", "F4V", "FLAC", "FLATPAK", "FLATPAKREF", "FLV", "GIF", "GZ", "HEIC", "HEIF",
+                "ICO", "IMG", "ISO", "JAR", "JPEG", "JPG", "KEY", "M2TS", "M4A", "M4V", "MD", "MID",
+                "MIDI", "MKV", "MOBI", "MOV", "MP3", "MP4", "MPEG", "MPG", "MSI", "MSIX", "ODP", "ODS",
+                "ODT", "OGA", "OGG", "OGV", "OPUS", "PAGES", "PDF", "PKG", "PNG", "PPT", "PPTX", "PSD",
+                "QCOW2", "RAR", "RAW", "RPM", "RTF", "RUN", "SH", "SIT", "SITX", "SNAP", "SVG", "TAR",
+                "TGZ", "TIFF", "TS", "TXT", "VHD", "VHDX", "VMDK", "VOB", "WAV", "WEBM", "WEBP", "WMA",
+                "WMV", "XLS", "XLSX", "XZ", "ZIP", "ZIPX", "ZST"
             };
 
         public string[] FileExtensions { get; set; }
@@ -183,7 +190,11 @@ namespace XDM.Core
                 DisplayName="Document",
                 FileExtensions=new HashSet<string>
                 {
-                    ".DOC", ".DOCX", ".PDF", ".MD", ".XLSX",".XLS", ".CBZ"
+                    ".DOC", ".DOCX", ".DOCM", ".DOT", ".DOTX", ".PDF", ".ODT", ".OTT",
+                    ".RTF", ".TXT", ".MD", ".TEX", ".LOG", ".PAGES", ".XLS", ".XLSX",
+                    ".XLSM", ".XLSB", ".ODS", ".OTS", ".CSV", ".TSV", ".NUMBERS",
+                    ".PPT", ".PPTX", ".PPS", ".PPSX", ".ODP", ".OTP", ".KEY",
+                    ".EPUB", ".MOBI", ".AZW", ".AZW3", ".FB2", ".CBZ", ".CBR", ".DJVU"
                 },
                 DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),
                     "Documents"),
@@ -195,7 +206,9 @@ namespace XDM.Core
                 DisplayName="Music",
                 FileExtensions=new HashSet<string>
                 {
-                    ".MP3", ".AAC",".MPA",".WMA",".MIDI"
+                    ".MP3", ".AAC", ".FLAC", ".ALAC", ".WAV", ".AIFF", ".AIF", ".APE",
+                    ".M4A", ".OGG", ".OGA", ".OPUS", ".WMA", ".MPA", ".AMR", ".AC3",
+                    ".DTS", ".EAC3", ".MKA", ".MID", ".MIDI", ".WV", ".TTA"
                 },
                 DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Music"),
                 IsPredefined=true
@@ -206,8 +219,10 @@ namespace XDM.Core
                 DisplayName="Video",
                 FileExtensions=new HashSet<string>
                 {
-                    ".MP4",  ".WEBM", ".OGG",  ".FLV", ".MKV", ".DIVX",
-                    ".MOV", ".MPG", ".MPEG",".OPUS",".AVI",".WMV",".TS"
+                    ".MP4", ".MKV", ".WEBM", ".AVI", ".MOV", ".WMV", ".FLV", ".M4V",
+                    ".F4V", ".TS", ".MTS", ".M2TS", ".TP", ".TRP", ".MPG", ".MPEG",
+                    ".M2V", ".MPV", ".VOB", ".DIVX", ".XVID", ".3GP", ".3G2", ".OGV",
+                    ".RM", ".RMVB", ".ASF"
                 },
                 DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Video"),
                 IsPredefined=true
@@ -218,7 +233,10 @@ namespace XDM.Core
                 DisplayName="Compressed",
                 FileExtensions=new HashSet<string>
                 {
-                    ".7Z", ".ZIP", ".RAR", ".BZ2", ".GZ",".XZ", ".TAR"
+                    ".7Z", ".ZIP", ".ZIPX", ".RAR", ".TAR", ".GZ", ".TGZ", ".BZ2",
+                    ".TBZ2", ".XZ", ".TXZ", ".ZST", ".TZST", ".LZ", ".LZ4", ".LZH",
+                    ".CAB", ".SIT", ".SITX", ".ACE", ".ARJ", ".Z", ".ISO", ".IMG",
+                    ".MDF", ".NRG", ".VHD", ".VHDX", ".VMDK", ".QCOW2"
                 },
                 DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Compressed"),
                 IsPredefined=true
@@ -229,19 +247,26 @@ namespace XDM.Core
                 DisplayName="Application",
                 FileExtensions=new HashSet<string>
                 {
-                    ".EXE", ".DEB", ".RPM", ".MSI"
+                    ".APPIMAGE", ".DEB", ".RPM", ".FLATPAKREF", ".FLATPAK", ".SNAP",
+                    ".APK", ".RUN", ".BIN", ".SH", ".EXE", ".MSI", ".MSIX", ".APPX",
+                    ".BAT", ".CMD", ".PKG", ".DMG", ".JAR", ".WAR"
                 },
                 DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Programs"),
                 IsPredefined=true
             },
-            //new Category
-            //{
-            //    Name="Other",
-            //    DisplayName="Other",
-            //    FileExtensions=new HashSet<string>
-            //    {
-            //    }
-            //}
+            new Category
+            {
+                Name="CAT_IMAGES",
+                DisplayName="Image",
+                FileExtensions=new HashSet<string>
+                {
+                    ".JPG", ".JPEG", ".PNG", ".GIF", ".WEBP", ".SVG", ".SVGZ", ".BMP",
+                    ".ICO", ".TIFF", ".TIF", ".AVIF", ".HEIC", ".HEIF", ".PSD", ".AI",
+                    ".EPS", ".RAW", ".CR2", ".NEF", ".DNG", ".XCF"
+                },
+                DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Pictures"),
+                IsPredefined=true
+            }
         };
 
         public IEnumerable<Category> Categories = DefaultCategories;

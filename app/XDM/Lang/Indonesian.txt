@@ -25,6 +25,7 @@ CAT_COMPRESSED=Terkompresi
 CAT_MUSIC=Musik
 CAT_VIDEOS=Vidio
 CAT_PROGRAMS=Aplikasi
+CAT_IMAGES=Image
 LBL_VIDEO_DOWNLOAD=Unduh vidio
 MENU_BATCH_DOWNLOAD=Unduh batch
 DESC_Q_TITLE=Antrian dan penjadwal

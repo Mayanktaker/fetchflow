@@ -14,6 +14,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 DOTNET="${HOME}/.dotnet8/dotnet"
 if [ ! -x "$DOTNET" ]; then DOTNET="dotnet"; fi
+export DOTNET_ROOT="${HOME}/.dotnet8"
+export PATH="${HOME}/.dotnet8:$PATH"
 
 DISPLAY_NUM=":99"
 EXTRA_ARGS=()

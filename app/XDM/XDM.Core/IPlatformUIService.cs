@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using XDM.Core.Downloader;
@@ -51,5 +51,7 @@ namespace XDM.Core
         void CreateAndShowMediaGrabber();
 
         void ShowExtensionRegistrationWindow();
+
+        void ShowChecksumDialog(object? window, string filePath);
     }
 }

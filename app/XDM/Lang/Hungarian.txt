@@ -5,6 +5,7 @@ CAT_COMPRESSED=Tömörített
 CAT_MUSIC=Zene
 CAT_VIDEOS=Videó
 CAT_PROGRAMS=Programok
+CAT_IMAGES=Image
 MENU_BATCH_DOWNLOAD=Kötegelt letöltés
 MENU_DELETE_DWN=Letöltések törlése
 MENU_DELETE_COMPLETED=Törlés befejeződött

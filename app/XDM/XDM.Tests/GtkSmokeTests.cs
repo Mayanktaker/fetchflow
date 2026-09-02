@@ -127,6 +127,7 @@ namespace XDM.Tests
             [UI] private Label TxtLocation = null!;
             [UI] private Button BtnOpenFolder = null!;
             [UI] private Button BtnOpen = null!;
+            [UI] private Button BtnChecksum = null!;
             [UI] private LinkButton TxtDontShowCompleteDialog = null!;
 #pragma warning restore CS0649, CS0169
         }

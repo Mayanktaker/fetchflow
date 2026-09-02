@@ -5,6 +5,7 @@ CAT_COMPRESSED=थिचिएको
 CAT_MUSIC=गाना
 CAT_VIDEOS=मुभि
 CAT_PROGRAMS=प्रोग्राम
+CAT_IMAGES=Image
 SORT_STATUS=Status
 LBL_SEARCH=Search
 LBL_VIDEO_DOWNLOAD=Video download

@@ -222,5 +222,12 @@ namespace XDM.GtkUI
             var win = RegisterExtensionWindow.CreateFromGladeFile();
             win.Show();
         }
+
+        public void ShowChecksumDialog(object? window, string filePath)
+        {
+            var parent = window as Window ?? GetMainWindow();
+            var dlg = new XDM.GtkUI.Dialogs.Checksum.ChecksumDialog(parent, filePath);
+            dlg.ShowAll();
+        }
     }
 }

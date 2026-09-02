@@ -46,6 +46,7 @@ namespace XDM.GtkUI.Dialogs.DownloadComplete
         [UI] private Label TxtLocation;
         [UI] private Button BtnOpenFolder;
         [UI] private Button BtnOpen;
+        [UI] private Button BtnChecksum;
         [UI] private LinkButton TxtDontShowCompleteDialog;
 
         private uint autoCloseTimerId = 0;
@@ -66,10 +67,12 @@ namespace XDM.GtkUI.Dialogs.DownloadComplete
 
             BtnOpen.Label = TextResource.GetText("CTX_OPEN_FILE");
             BtnOpenFolder.Label = TextResource.GetText("CTX_OPEN_FOLDER");
+            BtnChecksum.Label = TextResource.GetText("CTX_CHECKSUM") ?? "Verify Checksum";
             TxtDontShowCompleteDialog.Label = TextResource.GetText("MSG_DONT_SHOW_AGAIN");
 
             BtnOpen.Clicked += BtnOpen_Click;
             BtnOpenFolder.Clicked += BtnOpenFolder_Click;
+            BtnChecksum.Clicked += BtnChecksum_Click;
             TxtDontShowCompleteDialog.Clicked += TxtDontShowCompleteDialog_Clicked;
             TxtDontShowCompleteDialog.ActivateLink += TxtDontShowCompleteDialog_ActivateLink;
 
@@ -79,8 +82,20 @@ namespace XDM.GtkUI.Dialogs.DownloadComplete
             LeaveNotifyEvent += (_, _) => isMouseHovering = false;
             Destroyed += (_, _) => StopAutoCloseTimer();
 
-            SetDefaultSize(520, 200);
+            SetDefaultSize(560, 200);
             GtkHelper.AttachSafeDispose(this);
+        }
+
+        // Opens the Checksum Verification dialog for the downloaded file
+        private void BtnChecksum_Click(object? sender, EventArgs e)
+        {
+            StopAutoCloseTimer();
+            var fullPath = IoPath.Combine(TxtLocation.Text, TxtFileName.Text);
+            if (System.IO.File.Exists(fullPath))
+            {
+                var dlg = new XDM.GtkUI.Dialogs.Checksum.ChecksumDialog(this, fullPath);
+                dlg.ShowAll();
+            }
         }
 
         // Starts the auto-close countdown timer if enabled in configuration

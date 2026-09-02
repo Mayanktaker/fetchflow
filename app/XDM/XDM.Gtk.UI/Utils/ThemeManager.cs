@@ -25,9 +25,11 @@ namespace XDM.GtkUI.Utils
         public string AccentHex { get; }
         // TreeView row hover highlight hex code
         public string HoverBackgroundHex { get; }
+        // TreeView alternating row subtle background hex code
+        public string AlternateBackgroundHex { get; }
 
         // Constructs a new immutable color scheme definition
-        public ColorSchemeDefinition(string id, string displayName, string cssFileName, byte r, byte g, byte b, string accentHex, string hoverHex)
+        public ColorSchemeDefinition(string id, string displayName, string cssFileName, byte r, byte g, byte b, string accentHex, string hoverHex, string alternateHex)
         {
             Id = id;
             DisplayName = displayName;
@@ -35,6 +37,7 @@ namespace XDM.GtkUI.Utils
             AccentRgb = (r, g, b);
             AccentHex = accentHex;
             HoverBackgroundHex = hoverHex;
+            AlternateBackgroundHex = alternateHex;
         }
     }
 
@@ -53,25 +56,25 @@ namespace XDM.GtkUI.Utils
         // Curated dark theme color schemes (1 Default + 6 Curated)
         public static readonly ColorSchemeDefinition[] DarkSchemes = new[]
         {
-            new ColorSchemeDefinition("charcoal_blue", "Charcoal Blue (Default)", "xdm-dark.css", 53, 132, 228, "#3584e4", "#262c36"),
-            new ColorSchemeDefinition("midnight_violet", "Midnight Violet", "xdm-dark-violet.css", 139, 92, 246, "#8b5cf6", "#282038"),
-            new ColorSchemeDefinition("nord_emerald", "Nord Emerald", "xdm-dark-emerald.css", 16, 185, 129, "#10b981", "#1b302a"),
-            new ColorSchemeDefinition("sunset_amber", "Sunset Amber", "xdm-dark-sunset.css", 244, 63, 94, "#f43f5e", "#332128"),
-            new ColorSchemeDefinition("dracula_orchid", "Dracula Orchid", "xdm-dark-orchid.css", 236, 72, 153, "#ec4899", "#301e38"),
-            new ColorSchemeDefinition("cyberpunk_matrix", "Cyberpunk Matrix", "xdm-dark-matrix.css", 6, 182, 212, "#06b6d4", "#162a3d"),
-            new ColorSchemeDefinition("espresso_mocha", "Espresso Mocha", "xdm-dark-mocha.css", 245, 158, 11, "#f59e0b", "#30241b")
+            new ColorSchemeDefinition("charcoal_blue", "Charcoal Blue (Default)", "xdm-dark.css", 53, 132, 228, "#3584e4", "#262c36", "#212121"),
+            new ColorSchemeDefinition("midnight_violet", "Midnight Violet", "xdm-dark-violet.css", 139, 92, 246, "#8b5cf6", "#282038", "#1c1928"),
+            new ColorSchemeDefinition("nord_emerald", "Nord Emerald", "xdm-dark-emerald.css", 16, 185, 129, "#10b981", "#1b302a", "#172421"),
+            new ColorSchemeDefinition("sunset_amber", "Sunset Amber", "xdm-dark-sunset.css", 244, 63, 94, "#f43f5e", "#332128", "#231c20"),
+            new ColorSchemeDefinition("dracula_orchid", "Dracula Orchid", "xdm-dark-orchid.css", 236, 72, 153, "#ec4899", "#301e38", "#1c1726"),
+            new ColorSchemeDefinition("cyberpunk_matrix", "Cyberpunk Matrix", "xdm-dark-matrix.css", 6, 182, 212, "#06b6d4", "#162a3d", "#121b2b"),
+            new ColorSchemeDefinition("espresso_mocha", "Espresso Mocha", "xdm-dark-mocha.css", 245, 158, 11, "#f59e0b", "#30241b", "#201b18")
         };
 
         // Curated light theme color schemes (1 Default + 6 Curated)
         public static readonly ColorSchemeDefinition[] LightSchemes = new[]
         {
-            new ColorSchemeDefinition("classic_blue", "Classic Blue (Default)", "xdm-light.css", 53, 132, 228, "#3584e4", "#f0f4f9"),
-            new ColorSchemeDefinition("nordic_frost", "Nordic Frost", "xdm-light-frost.css", 8, 145, 178, "#0891b2", "#e6f4f8"),
-            new ColorSchemeDefinition("solarized_sand", "Solarized Sand", "xdm-light-sand.css", 217, 119, 6, "#d97706", "#f7eee0"),
-            new ColorSchemeDefinition("rose_garden", "Rose Garden", "xdm-light-rose.css", 225, 29, 72, "#e11d48", "#fbe8ee"),
-            new ColorSchemeDefinition("matcha_forest", "Matcha Forest", "xdm-light-matcha.css", 5, 150, 105, "#059669", "#e3f3eb"),
-            new ColorSchemeDefinition("lavender_bloom", "Lavender Bloom", "xdm-light-lavender.css", 124, 58, 237, "#7c3aed", "#ede7fa"),
-            new ColorSchemeDefinition("citrus_peach", "Citrus Peach", "xdm-light-peach.css", 234, 88, 12, "#ea580c", "#fdece0")
+            new ColorSchemeDefinition("classic_blue", "Classic Blue (Default)", "xdm-light.css", 53, 132, 228, "#3584e4", "#f0f4f9", "#f4f6f9"),
+            new ColorSchemeDefinition("nordic_frost", "Nordic Frost", "xdm-light-frost.css", 8, 145, 178, "#0891b2", "#e6f4f8", "#edf3f6"),
+            new ColorSchemeDefinition("solarized_sand", "Solarized Sand", "xdm-light-sand.css", 217, 119, 6, "#d97706", "#f7eee0", "#f4eedd"),
+            new ColorSchemeDefinition("rose_garden", "Rose Garden", "xdm-light-rose.css", 225, 29, 72, "#e11d48", "#fbe8ee", "#f8ecf1"),
+            new ColorSchemeDefinition("matcha_forest", "Matcha Forest", "xdm-light-matcha.css", 5, 150, 105, "#059669", "#e3f3eb", "#edf6f1"),
+            new ColorSchemeDefinition("lavender_bloom", "Lavender Bloom", "xdm-light-lavender.css", 124, 58, 237, "#7c3aed", "#ede7fa", "#f1ecf8"),
+            new ColorSchemeDefinition("citrus_peach", "Citrus Peach", "xdm-light-peach.css", 234, 88, 12, "#ea580c", "#fdece0", "#fbeee4")
         };
 
         // Provider currently attached to the default screen
@@ -94,6 +97,9 @@ namespace XDM.GtkUI.Utils
 
         // Active TreeView row hover background color
         public static string ActiveHoverColor => ActiveScheme.HoverBackgroundHex;
+
+        // Active TreeView alternating row subtle background color
+        public static string ActiveAlternateRowColor => ActiveScheme.AlternateBackgroundHex;
 
         // Event raised whenever the active theme or color scheme changes
         public static event Action<bool>? ThemeChanged;

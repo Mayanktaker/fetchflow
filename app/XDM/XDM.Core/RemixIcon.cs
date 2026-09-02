@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace XDM.Core
 {
@@ -163,6 +163,16 @@ namespace XDM.Core
         /// ri-alarm-fill
         /// </summary>
         public static readonly string ScheduledFileIconLine = "ea1b";
+
+        /// <summary>
+        /// ri-image-fill
+        /// </summary>
+        public static readonly string ImageIcon = "ed26";
+
+        /// <summary>
+        /// ri-image-line
+        /// </summary>
+        public static readonly string ImageIconLine = "ed27";
 
         /// <summary>
         /// ri-refresh-fill

@@ -716,6 +716,10 @@ namespace XDM.Core
                 peer.MenuItemMap["properties"].Clicked += (_, _) => UIActions.ShowSeletectedItemProperties(peer, App);
                 peer.MenuItemMap["open"].Clicked += (_, _) => UIActions.OpenSelectedFile(peer);
                 peer.MenuItemMap["openFolder"].Clicked += (_, _) => UIActions.OpenSelectedFolder(peer);
+                if (peer.MenuItemMap.ContainsKey("verifyChecksum"))
+                {
+                    peer.MenuItemMap["verifyChecksum"].Clicked += (_, _) => UIActions.VerifySelectedFileChecksum();
+                }
                 peer.MenuItemMap["deleteDownloads"].Clicked += (_, _) => DeleteDownloads();
                 peer.MenuItemMap["copyFile"].Clicked += (_, _) => UIActions.CopyFile(peer);
                 peer.MenuItemMap["properties1"].Clicked += (_, _) => UIActions.ShowSeletectedItemProperties(peer, App);

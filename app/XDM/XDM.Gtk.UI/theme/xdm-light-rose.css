@@ -128,6 +128,12 @@ treeview.finished row {
   transition: all 120ms ease;
 }
 
+treeview.unfinished row:nth-child(even),
+treeview.finished row:nth-child(even) {
+  background-color: #f8ecf1;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
 treeview.unfinished row:hover,
 treeview.finished row:hover {
   background-color: #f5f5f5;

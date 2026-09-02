@@ -25,6 +25,7 @@ CAT_COMPRESSED=संपीड़ित
 CAT_MUSIC=संगीत
 CAT_VIDEOS=वीडियो
 CAT_PROGRAMS=अनुप्रयोग
+CAT_IMAGES=Image
 LBL_VIDEO_DOWNLOAD=वीडियो डाउनलोड
 MENU_BATCH_DOWNLOAD=बैच डाउनलोड
 DESC_Q_TITLE=कतार और अनुसूचक

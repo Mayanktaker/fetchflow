@@ -21,7 +21,7 @@ document.getElementById("size").textContent = formatSize(size);
 
 document.getElementById("btn-ok").addEventListener("click", () => {
     browser.runtime.sendMessage({
-        type: "xdm-blob-download-confirmed",
+        type: "fetchflow-blob-download-confirmed",
         blobUrl, filename, mime, size, tabId: tabId + ""
     });
     window.close();

@@ -5,6 +5,7 @@ CAT_COMPRESSED=Compressés
 CAT_MUSIC=Musiques
 CAT_VIDEOS=Vidéos
 CAT_PROGRAMS=Programmes
+CAT_IMAGES=Image
 MENU_BATCH_DOWNLOAD=Téléchargement par lot
 MENU_DELETE_DWN=Supprimer le(s) téléchargement(s)
 MENU_DELETE_COMPLETED=Supprimer téléchargement(s) terminé(s)

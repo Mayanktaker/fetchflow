@@ -5,6 +5,7 @@ CAT_COMPRESSED=Voatsindry
 CAT_MUSIC=Hira
 CAT_VIDEOS=Horonan-tsary
 CAT_PROGRAMS=Programa
+CAT_IMAGES=Image
 MENU_BATCH_DOWNLOAD=Fakana aminy tokony
 MENU_DELETE_DWN=Fafana ny nalaina
 MENU_DELETE_COMPLETED=Fafana ny efa azo

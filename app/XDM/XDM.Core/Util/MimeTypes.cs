@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -63,8 +63,63 @@ namespace XDM.Core.Util
             mimeBuilder["audio/mp4"] = "mp4";
             mimeBuilder["audio/mp2t"] = "ts";
             mimeBuilder["audio/x-matroska"] = "mkv";
-            mimeBuilder["video/webm"] = "mkv";
-            mimeBuilder["audio/webm"] = "mkv";
+            mimeBuilder["video/webm"] = "webm";
+            mimeBuilder["audio/webm"] = "webm";
+            // Linux and packaging
+            mimeBuilder["application/vnd.appimage"] = "appimage";
+            mimeBuilder["application/x-appimage"] = "appimage";
+            mimeBuilder["application/vnd.debian.binary-package"] = "deb";
+            mimeBuilder["application/x-debian-package"] = "deb";
+            mimeBuilder["application/x-deb"] = "deb";
+            mimeBuilder["application/x-rpm"] = "rpm";
+            mimeBuilder["application/x-redhat-package-manager"] = "rpm";
+            mimeBuilder["application/vnd.flatpak"] = "flatpak";
+            mimeBuilder["application/vnd.flatpak.ref"] = "flatpakref";
+            mimeBuilder["application/vnd.snap"] = "snap";
+            mimeBuilder["application/vnd.android.package-archive"] = "apk";
+            mimeBuilder["application/x-msdos-program"] = "exe";
+            mimeBuilder["application/x-msi"] = "msi";
+            mimeBuilder["application/x-sh"] = "sh";
+            mimeBuilder["application/java-archive"] = "jar";
+            // Modern images
+            mimeBuilder["image/png"] = "png";
+            mimeBuilder["image/webp"] = "webp";
+            mimeBuilder["image/avif"] = "avif";
+            mimeBuilder["image/heic"] = "heic";
+            mimeBuilder["image/heif"] = "heif";
+            mimeBuilder["image/vnd.adobe.photoshop"] = "psd";
+            mimeBuilder["image/x-xcf"] = "xcf";
+            // Modern archives
+            mimeBuilder["application/x-7z-compressed"] = "7z";
+            mimeBuilder["application/x-rar-compressed"] = "rar";
+            mimeBuilder["application/vnd.rar"] = "rar";
+            mimeBuilder["application/x-xz"] = "xz";
+            mimeBuilder["application/x-bzip2"] = "bz2";
+            mimeBuilder["application/zstd"] = "zst";
+            mimeBuilder["application/x-iso9660-image"] = "iso";
+            // Modern audio & video
+            mimeBuilder["audio/flac"] = "flac";
+            mimeBuilder["audio/x-flac"] = "flac";
+            mimeBuilder["audio/ogg"] = "ogg";
+            mimeBuilder["audio/opus"] = "opus";
+            mimeBuilder["audio/aac"] = "aac";
+            mimeBuilder["audio/x-m4a"] = "m4a";
+            mimeBuilder["video/ogg"] = "ogv";
+            mimeBuilder["video/3gpp2"] = "3g2";
+            // Documents
+            mimeBuilder["application/vnd.openxmlformats-officedocument.wordprocessingml.document"] = "docx";
+            mimeBuilder["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] = "xlsx";
+            mimeBuilder["application/vnd.openxmlformats-officedocument.presentationml.presentation"] = "pptx";
+            mimeBuilder["application/vnd.oasis.opendocument.text"] = "odt";
+            mimeBuilder["application/vnd.oasis.opendocument.spreadsheet"] = "ods";
+            mimeBuilder["application/vnd.oasis.opendocument.presentation"] = "odp";
+            mimeBuilder["application/epub+zip"] = "epub";
+            mimeBuilder["application/x-mobipocket-ebook"] = "mobi";
+            mimeBuilder["application/x-cbr"] = "cbr";
+            mimeBuilder["application/x-cbz"] = "cbz";
+            mimeBuilder["image/vnd.djvu"] = "djvu";
+            mimeBuilder["text/markdown"] = "md";
+            mimeBuilder["text/csv"] = "csv";
         }
     }
 }

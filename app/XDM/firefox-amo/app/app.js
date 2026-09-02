@@ -22,9 +22,10 @@ class App {
     start() {
         this.logger.log("starting...");
         // Load cached config to prevent missing requests on wakeup
-        chrome.storage.local.get("xdmConfig", (res) => {
-            if (res.xdmConfig) {
-                this.updateConfig(res.xdmConfig);
+        chrome.storage.local.get(["fetchflowConfig", "xdmConfig"], (res) => {
+            const cfg = res.fetchflowConfig || res.xdmConfig;
+            if (cfg) {
+                this.updateConfig(cfg);
             }
         });
         this.starAppConnector();
@@ -39,7 +40,7 @@ class App {
     onMessage(msg) {
         this.logger.log("message from FetchFlow");
         this.logger.log(msg);
-        chrome.storage.local.set({ "xdmConfig": msg });
+        chrome.storage.local.set({ "fetchflowConfig": msg, "xdmConfig": msg });
         this.updateConfig(msg);
         this.flushPendingDownloads();
     }
@@ -262,7 +263,7 @@ class App {
         }
         try {
             const response = await browser.tabs.sendMessage(tabIds[0], {
-                type: "xdm-capture-blob",
+                type: "fetchflow-capture-blob",
                 blobUrl,
                 filename
             });
@@ -468,10 +469,10 @@ class App {
         else if (request.type === "clear") {
             this.connector.postMessage("/clear", {});
         }
-        else if (request.type === "xdm-blob-download-confirmed") {
+        else if (request.type === "fetchflow-blob-download-confirmed" || request.type === "xdm-blob-download-confirmed") {
             this.captureAndStreamBlob(request.blobUrl, request.filename, request.mime, request.tabId);
         }
-        else if (request.type === "xdm-blob-download-data") {
+        else if (request.type === "fetchflow-blob-download-data" || request.type === "xdm-blob-download-data") {
             // Page context captured blob data at intent time — stream directly
             this.logger.log("=== Blob download data received ===");
             this.logger.log("Filename: " + request.filename);
@@ -492,7 +493,7 @@ class App {
                     .then(result => {
                         if (tabId) {
                             browser.tabs.sendMessage(tabId, {
-                                type: "xdm-stream-result",
+                                type: "fetchflow-stream-result",
                                 success: !result?.error,
                                 error: result?.error || null,
                                 detail: result
@@ -500,11 +501,11 @@ class App {
                         }
                     });
             } else {
-                this.logger.log("ERROR: No base64 data in xdm-blob-download-data message!");
+                this.logger.log("ERROR: No base64 data in blob-download-data message!");
                 sendResponse({ error: "No base64 data" });
             }
         }
-        else if (request.type === "xdm-blob-download-intent") {
+        else if (request.type === "fetchflow-blob-download-intent" || request.type === "xdm-blob-download-intent") {
             // Content script detected a blob download action (click/programmatic)
             this.logger.log("Blob download intent: " + request.blobUrl);
             const tabId = sender.tab?.id || null;

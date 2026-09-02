@@ -5,6 +5,7 @@ CAT_COMPRESSED=مضغوط
 CAT_MUSIC=موسيقى
 CAT_VIDEOS=فيديو
 CAT_PROGRAMS=برامج
+CAT_IMAGES=Image
 MENU_BATCH_DOWNLOAD=باتش التحميل
 MENU_DELETE_DWN=حذف التنزيلات
 MENU_DELETE_COMPLETED=تم الانتهاء من الحذف

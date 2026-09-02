@@ -143,6 +143,8 @@ namespace XDM.GtkUI
         private const byte TealR = 20, TealG = 184, TealB = 166;           // #14b8a6
         // Indigo — programs category icon
         private const byte IndigoR = 99, IndigoG = 102, IndigoB = 241;     // #6366f1
+        // Rose / Pink — images category icon
+        private const byte RoseR = 244, RoseG = 63, RoseB = 94;          // #f43f5e
         // Sky blue — default/other file category
         private const byte SkyR = 56, SkyG = 189, SkyB = 248;             // #38bdf8
 
@@ -295,6 +297,7 @@ namespace XDM.GtkUI
 
                 new MenuItemWrapper("open", TextResource.GetText("CTX_OPEN_FILE"), true, "file-line"),
                 new MenuItemWrapper("openFolder", TextResource.GetText("CTX_OPEN_FOLDER"), true, "folder-shared-line"),
+                new MenuItemWrapper("verifyChecksum", TextResource.GetText("CTX_CHECKSUM") ?? "Verify Checksum", true, "check-line"),
                 new MenuItemWrapper("deleteDownloads", TextResource.GetText("MENU_DELETE_DWN"), true, "delete-bin-7-line"),
                 new MenuItemWrapper("copyURL1", TextResource.GetText("CTX_COPY_URL"), true, "links-line"),
                 new MenuItemWrapper("copyFile", TextResource.GetText("CTX_COPY_FILE"), true, "file-copy-line"),
@@ -314,6 +317,7 @@ namespace XDM.GtkUI
             menuFinished = new Menu();
             menuFinished.Append(((MenuItemWrapper)dict["open"]).MenuItem);
             menuFinished.Append(((MenuItemWrapper)dict["openFolder"]).MenuItem);
+            menuFinished.Append(((MenuItemWrapper)dict["verifyChecksum"]).MenuItem);
             menuFinished.Append(((MenuItemWrapper)dict["deleteDownloads"]).MenuItem);
             menuFinished.Append(((MenuItemWrapper)dict["downloadAgain"]).MenuItem);
             menuFinished.Append(((MenuItemWrapper)dict["copyURL1"]).MenuItem);
@@ -849,6 +853,8 @@ namespace XDM.GtkUI
                         return ("file-zip-line", TealR, TealG, TealB);     // Teal / Cyan
                     case "CAT_PROGRAMS":
                         return ("function-line", IndigoR, IndigoG, IndigoB);     // Indigo / Blue
+                    case "CAT_IMAGES":
+                        return ("image-line", RoseR, RoseG, RoseB);             // Rose / Pink
                     default:
                         return ("file-line", SkyR, SkyG, SkyB);         // Sky Blue
                 }
@@ -1396,7 +1402,8 @@ namespace XDM.GtkUI
                 "Music" => (PurpleR, PurpleG, PurpleB),
                 "Document" => (AmberR, AmberG, AmberB),
                 "Compressed" => (TealR, TealG, TealB),
-                "ApplicationContext.Core" => (IndigoR, IndigoG, IndigoB),
+                "Application" or "ApplicationContext.Core" => (IndigoR, IndigoG, IndigoB),
+                "Image" => (RoseR, RoseG, RoseB),
                 _ => (SkyR, SkyG, SkyB)
             };
         }
@@ -1445,8 +1452,9 @@ namespace XDM.GtkUI
                 var path = model.GetPath(iter);
                 var selected = view.Selection.PathIsSelected(path);
                 var isHovered = !selected && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0;
+                var isAlternate = !selected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
+                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
 
                 var name = model.GetValue(iter, 0) as string ?? string.Empty;
                 var item = model.GetValue(iter, FINISHED_DATA_INDEX) as FinishedDownloadItem;
@@ -1500,8 +1508,9 @@ namespace XDM.GtkUI
                 var path = model.GetPath(iter);
                 var selected = view.Selection.PathIsSelected(path);
                 var isHovered = !selected && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0;
+                var isAlternate = !selected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
+                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
 
                 var name = model.GetValue(iter, 0) as string ?? string.Empty;
                 var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
@@ -1549,8 +1558,9 @@ namespace XDM.GtkUI
                 var path = model.GetPath(iter);
                 var selected = view.Selection.PathIsSelected(path);
                 var isHovered = !selected && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0;
+                var isAlternate = !selected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
+                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
 
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
                 var dateText = model.GetValue(iter, 1) as string ?? string.Empty;
@@ -1574,8 +1584,9 @@ namespace XDM.GtkUI
                 var path = model.GetPath(iter);
                 var selected = view.Selection.PathIsSelected(path);
                 var isHovered = !selected && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0;
+                var isAlternate = !selected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
+                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
 
                 var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
@@ -1606,8 +1617,9 @@ namespace XDM.GtkUI
             var isSelected = view != null && view.Selection.PathIsSelected(path);
             var isHovered = !isSelected && ((view == lvFinished && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0) ||
                                             (view == lvInprogress && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0));
+            var isAlternate = !isSelected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-            ((CellRendererPixbuf)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : null;
+            ((CellRendererPixbuf)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
 
             if (rawPix != null)
             {

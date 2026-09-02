@@ -1,5 +1,10 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 class VideoPopup {
+    constructor() {
+        this.rawList = [];
+        this.filterQuery = "";
+    }
+
     run() {
         document.addEventListener('DOMContentLoaded', this.onLoad.bind(this), false);
     }
@@ -11,6 +16,31 @@ class VideoPopup {
         if (chk) {
             chk.addEventListener('change', () => {
                 chrome.runtime.sendMessage({ type: "cmd", enabled: chk.checked });
+            });
+        }
+
+        const searchInput = document.getElementById("searchInput");
+        const clearSearchBtn = document.getElementById("clearSearch");
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.filterQuery = (e.target.value || "").trim().toLowerCase();
+                if (clearSearchBtn) {
+                    clearSearchBtn.style.display = this.filterQuery ? "inline-flex" : "none";
+                }
+                this.applyFilter();
+            });
+        }
+
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                if (searchInput) {
+                    searchInput.value = "";
+                    this.filterQuery = "";
+                    clearSearchBtn.style.display = "none";
+                    this.applyFilter();
+                    searchInput.focus();
+                }
             });
         }
     }
@@ -38,21 +68,32 @@ class VideoPopup {
             });
         }
 
-        const list = response.list || [];
+        this.rawList = response.list || [];
         const mediaContainer = document.getElementById('mediaContainer');
         const emptyState = document.getElementById('emptyState');
 
-        if (list.length > 0) {
+        if (this.rawList.length > 0) {
             if (mediaContainer) mediaContainer.style.display = 'block';
             if (emptyState) emptyState.style.display = 'none';
-            this.renderList(list);
+            this.applyFilter();
         } else {
             if (mediaContainer) mediaContainer.style.display = 'none';
             if (emptyState) emptyState.style.display = 'flex';
         }
     }
 
-    // Helper to determine format badge from filename or stream metadata
+    applyFilter() {
+        const filtered = this.filterQuery
+            ? this.rawList.filter(item => {
+                const text = (item.text || "").toLowerCase();
+                const info = (item.info || "").toLowerCase();
+                return text.includes(this.filterQuery) || info.includes(this.filterQuery);
+            })
+            : this.rawList;
+
+        this.renderList(filtered);
+    }
+
     getFormatBadge(text, info) {
         const combined = (text + " " + info).toUpperCase();
         if (combined.includes("M3U8") || combined.includes("HLS")) return "HLS";
@@ -66,10 +107,30 @@ class VideoPopup {
         return "VIDEO";
     }
 
+    showCopyToast(msg) {
+        const toast = document.getElementById("copyToast");
+        if (!toast) return;
+        toast.textContent = msg || "Link copied to clipboard!";
+        toast.style.display = "block";
+        toast.style.opacity = "1";
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => { toast.style.display = "none"; }, 200);
+        }, 1800);
+    }
+
     renderList(arr) {
         const listContainer = document.getElementById("list");
         if (!listContainer) return;
         listContainer.innerHTML = '';
+
+        if (arr.length === 0) {
+            const noMatch = document.createElement('div');
+            noMatch.className = 'no-match-message';
+            noMatch.textContent = "No media matching search filter.";
+            listContainer.appendChild(noMatch);
+            return;
+        }
 
         // Render in reverse order (newest captured stream on top)
         for (let i = arr.length - 1; i >= 0; i--) {
@@ -104,18 +165,45 @@ class VideoPopup {
                 detailsElem.appendChild(infoElem);
             }
 
-            const actionBtn = document.createElement('button');
-            actionBtn.className = 'media-card-action';
-            actionBtn.setAttribute('aria-label', `Download ${text}`);
-            actionBtn.innerHTML = `
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+            const actionsWrap = document.createElement('div');
+            actionsWrap.className = 'media-card-actions';
+
+            // Quick Copy Link button
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'media-card-btn-copy';
+            copyBtn.setAttribute('title', 'Copy link to clipboard');
+            copyBtn.setAttribute('aria-label', `Copy link for ${text}`);
+            copyBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            `;
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text);
+                    this.showCopyToast("Link copied to clipboard!");
+                }
+            });
+
+            // Download Trigger button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'media-card-action';
+            downloadBtn.setAttribute('title', 'Download with FetchFlow');
+            downloadBtn.setAttribute('aria-label', `Download ${text}`);
+            downloadBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                 </svg>
             `;
 
+            actionsWrap.appendChild(copyBtn);
+            actionsWrap.appendChild(downloadBtn);
+
             card.appendChild(badgeElem);
             card.appendChild(detailsElem);
-            card.appendChild(actionBtn);
+            card.appendChild(actionsWrap);
 
             card.addEventListener('click', () => {
                 chrome.runtime.sendMessage({ type: "vid", itemId: id });

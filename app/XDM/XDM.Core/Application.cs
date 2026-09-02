@@ -651,6 +651,10 @@ namespace XDM.Core
                 ApplicationContext.MainWindow.MenuItemMap["properties"].Clicked += (_, _) => UIActions.ShowSeletectedItemProperties();
                 ApplicationContext.MainWindow.MenuItemMap["open"].Clicked += (_, _) => UIActions.OpenSelectedFile();
                 ApplicationContext.MainWindow.MenuItemMap["openFolder"].Clicked += (_, _) => UIActions.OpenSelectedFolder();
+                if (ApplicationContext.MainWindow.MenuItemMap.ContainsKey("verifyChecksum"))
+                {
+                    ApplicationContext.MainWindow.MenuItemMap["verifyChecksum"].Clicked += (_, _) => UIActions.VerifySelectedFileChecksum();
+                }
                 ApplicationContext.MainWindow.MenuItemMap["deleteDownloads"].Clicked += (_, _) => DeleteDownloads();
                 ApplicationContext.MainWindow.MenuItemMap["copyFile"].Clicked += (_, _) => UIActions.CopyFile();
                 ApplicationContext.MainWindow.MenuItemMap["properties1"].Clicked += (_, _) => UIActions.ShowSeletectedItemProperties();

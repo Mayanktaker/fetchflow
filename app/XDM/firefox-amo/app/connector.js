@@ -142,10 +142,10 @@ class Connector {
         return response.json();
     }
 
-    // Wayland/Phase2.4: open the OS-registered xdm-app:// scheme so the desktop launches FetchFlow
+    // Launches FetchFlow via OS-registered fetchflow:// URL scheme
     launchApp() {
         try {
-            chrome.tabs.create({ url: "xdm-app://launch" });
+            chrome.tabs.create({ url: "fetchflow://launch" });
         } catch (e) {
             this.logger.log("launchApp failed: " + e);
         }

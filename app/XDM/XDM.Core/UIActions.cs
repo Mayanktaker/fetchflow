@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -110,6 +110,28 @@ namespace XDM.Core
                 else
                 {
                     Log.Debug("Path is null");
+                }
+            }
+            ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, TextResource.GetText("NO_ITEM_SELECTED"));
+        }
+
+        public static void VerifySelectedFileChecksum()
+        {
+            var selectedRows = ApplicationContext.MainWindow.SelectedFinishedRows;
+            if (selectedRows.Count > 0)
+            {
+                var row = selectedRows[0];
+                var ent = row.DownloadEntry;
+                if (!string.IsNullOrEmpty(ent.TargetDir))
+                {
+                    var file = Path.Combine(ent.TargetDir, ent.Name);
+                    if (File.Exists(file))
+                    {
+                        ApplicationContext.PlatformUIService.ShowChecksumDialog(ApplicationContext.MainWindow, file);
+                        return;
+                    }
+                    ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, TextResource.GetText("ERR_MSG_FILE_NOT_FOUND_MSG"));
+                    return;
                 }
             }
             ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, TextResource.GetText("NO_ITEM_SELECTED"));

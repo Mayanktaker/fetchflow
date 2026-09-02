@@ -23,6 +23,11 @@
   <ItemGroup>
     <Compile Include="..\XDM.Core\YDLWrapper\YDLOutputParser.cs" Link="YDLWrapper\YDLOutputParser.cs" />
     <Compile Include="..\XDM.Core\YDLWrapper\Structs.cs" Link="YDLWrapper\Structs.cs" />
+    <Compile Include="..\XDM.Core\IconResource.cs" Link="IconResource.cs" />
+    <Compile Include="..\XDM.Core\RemixIcon.cs" Link="RemixIcon.cs" />
+    <Compile Include="..\XDM.Core\UI\IconMap.cs" Link="UI\IconMap.cs" />
+    <Compile Include="..\XDM.Core\Util\MimeTypes.cs" Link="Util\MimeTypes.cs" />
+    <Compile Include="..\XDM.Core\Util\ChecksumHelper.cs" Link="Util\ChecksumHelper.cs" />
   </ItemGroup>
 
 </Project>

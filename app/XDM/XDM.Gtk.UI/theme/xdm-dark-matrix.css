@@ -126,6 +126,12 @@ treeview.finished row {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+treeview.unfinished row:nth-child(even),
+treeview.finished row:nth-child(even) {
+  background-color: #121b2b;
+  border: 1px solid rgba(255, 255, 255, 0.035);
+}
+
 treeview.unfinished row:hover,
 treeview.finished row:hover {
   background-color: #293a5c;

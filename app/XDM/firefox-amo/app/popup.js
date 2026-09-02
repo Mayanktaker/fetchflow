@@ -1,72 +1,218 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 class VideoPopup {
+    constructor() {
+        this.rawList = [];
+        this.filterQuery = "";
+    }
+
     run() {
         document.addEventListener('DOMContentLoaded', this.onLoad.bind(this), false);
     }
 
     onLoad() {
-        document.getElementById('content').style.display = 'none';
         chrome.runtime.sendMessage({ type: "stat" }, this.onMsg.bind(this));
 
-        document.getElementById("chk").addEventListener('click', (e) => {
-            chrome.runtime.sendMessage({ type: "cmd", enabled: document.getElementById("chk").checked });
-            window.close();
-        });
+        const chk = document.getElementById("chk");
+        if (chk) {
+            chk.addEventListener('change', () => {
+                chrome.runtime.sendMessage({ type: "cmd", enabled: chk.checked });
+            });
+        }
+
+        const searchInput = document.getElementById("searchInput");
+        const clearSearchBtn = document.getElementById("clearSearch");
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.filterQuery = (e.target.value || "").trim().toLowerCase();
+                if (clearSearchBtn) {
+                    clearSearchBtn.style.display = this.filterQuery ? "inline-flex" : "none";
+                }
+                this.applyFilter();
+            });
+        }
+
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                if (searchInput) {
+                    searchInput.value = "";
+                    this.filterQuery = "";
+                    clearSearchBtn.style.display = "none";
+                    this.applyFilter();
+                    searchInput.focus();
+                }
+            });
+        }
     }
 
     onMsg(response) {
-        document.getElementById("chk").checked = response.enabled;
-        let button = document.getElementById('clear');
-        button.addEventListener('click', e => {
-            chrome.runtime.sendMessage({ type: "clear" });
-            window.close();
-        });
-        document.getElementById('format').addEventListener('click', e => {
-            alert("Please play the video in desired format in web player")
-        });
-        if (response.list.length > 0) {
-            document.getElementById('content').style.display = 'block';
+        if (!response) return;
+
+        const chk = document.getElementById("chk");
+        if (chk) {
+            chk.checked = !!response.enabled;
         }
-        this.renderList(response.list);
+
+        const clearBtn = document.getElementById('clear');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                chrome.runtime.sendMessage({ type: "clear" });
+                window.close();
+            });
+        }
+
+        const formatBtn = document.getElementById('format');
+        if (formatBtn) {
+            formatBtn.addEventListener('click', () => {
+                alert("Please select and play the video in your desired quality in the web player to capture it.");
+            });
+        }
+
+        this.rawList = response.list || [];
+        const mediaContainer = document.getElementById('mediaContainer');
+        const emptyState = document.getElementById('emptyState');
+
+        if (this.rawList.length > 0) {
+            if (mediaContainer) mediaContainer.style.display = 'block';
+            if (emptyState) emptyState.style.display = 'none';
+            this.applyFilter();
+        } else {
+            if (mediaContainer) mediaContainer.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'flex';
+        }
+    }
+
+    applyFilter() {
+        const filtered = this.filterQuery
+            ? this.rawList.filter(item => {
+                const text = (item.text || "").toLowerCase();
+                const info = (item.info || "").toLowerCase();
+                return text.includes(this.filterQuery) || info.includes(this.filterQuery);
+            })
+            : this.rawList;
+
+        this.renderList(filtered);
+    }
+
+    getFormatBadge(text, info) {
+        const combined = (text + " " + info).toUpperCase();
+        if (combined.includes("M3U8") || combined.includes("HLS")) return "HLS";
+        if (combined.includes("MP4")) return "MP4";
+        if (combined.includes("WEBM")) return "WEBM";
+        if (combined.includes("MKV")) return "MKV";
+        if (combined.includes("MP3") || combined.includes("M4A") || combined.includes("AAC")) return "AUDIO";
+        if (combined.includes("1080P") || combined.includes("1080")) return "1080P";
+        if (combined.includes("720P") || combined.includes("720")) return "720P";
+        if (combined.includes("4K") || combined.includes("2160")) return "4K";
+        return "VIDEO";
+    }
+
+    showCopyToast(msg) {
+        const toast = document.getElementById("copyToast");
+        if (!toast) return;
+        toast.textContent = msg || "Link copied to clipboard!";
+        toast.style.display = "block";
+        toast.style.opacity = "1";
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => { toast.style.display = "none"; }, 200);
+        }, 1800);
     }
 
     renderList(arr) {
-        let table = document.getElementById("table");
-        console.log("total element: " + arr.length);
-        arr.forEach(listItem => {
-            let text = listItem.text;
+        const listContainer = document.getElementById("list");
+        if (!listContainer) return;
+        listContainer.innerHTML = '';
 
-            let info = listItem.info;
-            let id = listItem.id;
+        if (arr.length === 0) {
+            const noMatch = document.createElement('div');
+            noMatch.className = 'no-match-message';
+            noMatch.textContent = "No media matching search filter.";
+            listContainer.appendChild(noMatch);
+            return;
+        }
 
-            let row = table.insertRow(0);
-            let cell = row.insertCell(0);
+        // Render in reverse order (newest captured stream on top)
+        for (let i = arr.length - 1; i >= 0; i--) {
+            const listItem = arr[i];
+            const text = listItem.text || "Untitled Media";
+            const info = listItem.info || "";
+            const id = listItem.id;
+            const badge = this.getFormatBadge(text, info);
 
-            let div = document.createElement('div');
-            div.className = 'media-item';
+            const card = document.createElement('div');
+            card.className = 'media-card';
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('title', text);
 
-            let button = document.createElement('button');
-            button.className = 'media-item-title';
-            button.innerText = text;
-            button.id = listItem.id;
+            const badgeElem = document.createElement('div');
+            badgeElem.className = 'media-card-badge';
+            badgeElem.textContent = badge;
 
-            let p2 = document.createElement('span');
-            p2.className = 'media-item-info';
-            let node = document.createTextNode(info);
-            p2.appendChild(node);
+            const detailsElem = document.createElement('div');
+            detailsElem.className = 'media-card-details';
 
-            div.appendChild(button);
-            div.appendChild(p2);
+            const titleElem = document.createElement('div');
+            titleElem.className = 'media-card-title';
+            titleElem.textContent = text;
+            detailsElem.appendChild(titleElem);
 
-            cell.appendChild(div);
+            if (info) {
+                const infoElem = document.createElement('div');
+                infoElem.className = 'media-card-info';
+                infoElem.textContent = info;
+                detailsElem.appendChild(infoElem);
+            }
 
-            button.addEventListener('click', e => {
-                chrome.runtime.sendMessage({ type: "vid", itemId: e.target.id });
+            const actionsWrap = document.createElement('div');
+            actionsWrap.className = 'media-card-actions';
+
+            // Quick Copy Link button
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'media-card-btn-copy';
+            copyBtn.setAttribute('title', 'Copy link to clipboard');
+            copyBtn.setAttribute('aria-label', `Copy link for ${text}`);
+            copyBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            `;
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text);
+                    this.showCopyToast("Link copied to clipboard!");
+                }
             });
-        });
+
+            // Download Trigger button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'media-card-action';
+            downloadBtn.setAttribute('title', 'Download with FetchFlow');
+            downloadBtn.setAttribute('aria-label', `Download ${text}`);
+            downloadBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+            `;
+
+            actionsWrap.appendChild(copyBtn);
+            actionsWrap.appendChild(downloadBtn);
+
+            card.appendChild(badgeElem);
+            card.appendChild(detailsElem);
+            card.appendChild(actionsWrap);
+
+            card.addEventListener('click', () => {
+                chrome.runtime.sendMessage({ type: "vid", itemId: id });
+            });
+
+            listContainer.appendChild(card);
+        }
     }
 }
 
-var popup = new VideoPopup();
+const popup = new VideoPopup();
 popup.run();
-
-

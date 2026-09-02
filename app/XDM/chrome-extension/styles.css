@@ -75,7 +75,7 @@
 html, body {
   width: 360px;
   min-height: 220px;
-  max-height: 540px;
+  max-height: 560px;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 13px;
   line-height: 1.4;
@@ -187,6 +187,64 @@ body.popup {
   background-color: var(--bg);
 }
 
+/* Search Bar */
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--s2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 8px;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 28px;
+  padding: 0 24px 0 28px;
+  font-size: 11px;
+  color: var(--text);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+  background-color: var(--bg-card-hover);
+}
+
+.search-input::placeholder {
+  color: var(--text-faint);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.search-clear-btn:hover {
+  color: var(--text);
+  background-color: var(--border);
+}
+
 /* Media Cards */
 .media-container {
   display: none;
@@ -196,16 +254,23 @@ body.popup {
   display: flex;
   flex-direction: column;
   gap: var(--s2);
-  max-height: 280px;
+  max-height: 260px;
   overflow-y: auto;
   padding-right: 2px;
+}
+
+.no-match-message {
+  text-align: center;
+  padding: var(--s4) var(--s2);
+  font-size: 11px;
+  color: var(--text-dim);
 }
 
 .media-card {
   display: flex;
   align-items: center;
-  gap: var(--s3);
-  padding: 8px 10px;
+  gap: var(--s2);
+  padding: 7px 9px;
   background-color: var(--bg-card);
   border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
@@ -224,9 +289,9 @@ body.popup {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 38px;
-  padding: 3px 6px;
-  font-size: 10px;
+  min-width: 36px;
+  padding: 3px 5px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.3px;
   color: #ffffff;
@@ -249,21 +314,46 @@ body.popup {
 }
 
 .media-card-info {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-dim);
-  margin-top: 2px;
+  margin-top: 1px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.media-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.media-card-btn-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.media-card-btn-copy:hover {
+  background-color: var(--border);
+  color: var(--text);
 }
 
 .media-card-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--r-md);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-sm);
   background: transparent;
   border: none;
   color: var(--accent);
@@ -432,4 +522,24 @@ body.popup {
 .btn-danger-text:hover {
   color: var(--destructive-text);
   background-color: rgba(224, 27, 36, 0.12);
+}
+
+/* Toast Feedback */
+.toast-feedback {
+  position: fixed;
+  bottom: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(38, 38, 38, 0.95);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+  white-space: nowrap;
 }

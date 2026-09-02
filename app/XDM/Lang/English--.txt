@@ -25,6 +25,7 @@ CAT_COMPRESSED=*Compressed
 CAT_MUSIC=*Music
 CAT_VIDEOS=*Video
 CAT_PROGRAMS=*Application
+CAT_IMAGES=*Image
 LBL_VIDEO_DOWNLOAD=*Video download
 MENU_BATCH_DOWNLOAD=*Batch download
 DESC_Q_TITLE=*Queue and scheduler

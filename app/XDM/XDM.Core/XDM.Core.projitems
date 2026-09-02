@@ -183,6 +183,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\QueueListEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\QueueSelectionEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\BrowserLauncher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\ChecksumHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\Helpers.cs" />
     <Compile Include="..\XDM.Core\IO\ConfigIO.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\TimeHelper.cs" />

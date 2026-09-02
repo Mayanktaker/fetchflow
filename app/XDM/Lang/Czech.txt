@@ -5,6 +5,7 @@ CAT_COMPRESSED=Archivy
 CAT_MUSIC=Hudba
 CAT_VIDEOS=Video
 CAT_PROGRAMS=Programy
+CAT_IMAGES=Image
 MENU_BATCH_DOWNLOAD=Dávkové stahování
 MENU_DELETE_DWN=Smazat stahování
 MENU_DELETE_COMPLETED=Vymazat dokonèené

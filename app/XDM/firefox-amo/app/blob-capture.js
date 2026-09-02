@@ -20,11 +20,12 @@ setInterval(() => {
 
 // --- Inject page-context hooks: URL.createObjectURL + anchor.click + window.open ---
 function injectCreatorHook() {
-    if (document.getElementById("xdm-blob-hook")) return;
+    if (document.getElementById("fetchflow-blob-hook") || document.getElementById("xdm-blob-hook")) return;
     const script = document.createElement("script");
-    script.id = "xdm-blob-hook";
+    script.id = "fetchflow-blob-hook";
     script.textContent = `(() => {
-        if (window.__xdmBlobHooked) return;
+        if (window.__fetchflowBlobHooked || window.__xdmBlobHooked) return;
+        window.__fetchflowBlobHooked = true;
         window.__xdmBlobHooked = true;
 
         // Helper: capture blob data in page context and post intent with data
@@ -33,7 +34,7 @@ function injectCreatorHook() {
                 const reader = new FileReader();
                 reader.onload = () => {
                     window.postMessage({
-                        type: "__xdm_blob_download_intent",
+                        type: "__fetchflow_blob_download_intent",
                         blobUrl, filename,
                         base64: reader.result.split(",")[1],
                         size: blob.size,
@@ -44,7 +45,7 @@ function injectCreatorHook() {
             }).catch(() => {
                 // Fallback: send intent without data
                 window.postMessage({
-                    type: "__xdm_blob_download_intent",
+                    type: "__fetchflow_blob_download_intent",
                     blobUrl, filename,
                     base64: null, size: 0, mime: ""
                 }, "*");
@@ -58,7 +59,7 @@ function injectCreatorHook() {
             if (obj instanceof Blob) {
                 try {
                     window.postMessage({
-                        type: "__xdm_blob_created",
+                        type: "__fetchflow_blob_created",
                         blobUrl: url,
                         size: obj.size,
                         mime: obj.type || "application/octet-stream"
@@ -113,12 +114,12 @@ window.addEventListener("message", (event) => {
     const data = event.data;
     if (!data) return;
 
-    if (data.type === "__xdm_blob_created") {
+    if (data.type === "__fetchflow_blob_created" || data.type === "__xdm_blob_created") {
         blobRefs.set(data.blobUrl, {
             size: data.size, mime: data.mime, createdAt: Date.now()
         });
     }
-    else if (data.type === "__xdm_blob_download_intent") {
+    else if (data.type === "__fetchflow_blob_download_intent" || data.type === "__xdm_blob_download_intent") {
         // Blob download intent with pre-captured data (or fallback without)
         handleBlobDownloadIntent(data);
     }
@@ -165,9 +166,9 @@ function handleBlobDownloadIntent(data) {
     }
 }
 
-// --- Handle xdm-capture-blob requests from background (fallback re-fetch) ---
+// --- Handle fetchflow-capture-blob requests from background (fallback re-fetch) ---
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === "xdm-capture-blob") {
+    if (message.type === "fetchflow-capture-blob" || message.type === "xdm-capture-blob") {
         console.log("[FetchFlow] Background requesting blob capture:", message.blobUrl);
         fetch(message.blobUrl).then(r => r.blob()).then(blob => {
             const reader = new FileReader();
@@ -185,7 +186,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         return true; // async response
     }
-    else if (message.type === "xdm-stream-result") {
+    else if (message.type === "fetchflow-stream-result" || message.type === "xdm-stream-result") {
         // Background forwarded the streaming result — show in page console
         if (message.success) {
             console.log("[FetchFlow] ✅ Stream complete!", message.detail);
@@ -198,7 +199,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // --- Send blob data to background for chunked upload ---
 async function sendBlobToBackground(blobUrl, filename, mime, size, base64) {
     try {
-        const msgType = base64 ? "xdm-blob-download-data" : "xdm-blob-download-intent";
+        const msgType = base64 ? "fetchflow-blob-download-data" : "fetchflow-blob-download-intent";
         console.log("[FetchFlow] Sending to background:", msgType, filename, size, "bytes");
         const reply = await browser.runtime.sendMessage({
             type: msgType,

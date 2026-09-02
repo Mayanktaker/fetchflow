@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -8,11 +8,12 @@ namespace XDM.Core.UI
     {
         private static Dictionary<string, HashSet<string>> imageTypes = new()
         {
-            ["CAT_COMPRESSED"] = new HashSet<string> { ".zip", ".gz", ".tar", ".xz", ".7z", ".rar", ".bz2" },
-            ["CAT_MUSIC"] = new HashSet<string> { ".mp3", ".aac", ".ac3", ".wma", ".m4a", ".ogg", ".mka" },
-            ["CAT_VIDEOS"] = new HashSet<string> { ".mp4", ".mkv", ".ts", ".webm", ".avi", ".divx", ".mov", ".m4v" },
-            ["CAT_DOCUMENTS"] = new HashSet<string> { ".docx", ".doc", ".pdf", ".txt", ".xlsx", ".xls", ".html" },
-            ["CAT_PROGRAMS"] = new HashSet<string> { ".exe", ".bin", ".appx", ".ApplicationContext.Core", ".msi", ".rpm", ".deb" }
+            ["CAT_COMPRESSED"] = new HashSet<string> { ".zip", ".zipx", ".gz", ".tgz", ".tar", ".xz", ".txz", ".7z", ".rar", ".bz2", ".tbz2", ".zst", ".tzst", ".lz", ".lz4", ".lzh", ".cab", ".sit", ".sitx", ".ace", ".arj", ".z", ".iso", ".img", ".mdf", ".nrg", ".vhd", ".vhdx", ".vmdk", ".qcow2" },
+            ["CAT_MUSIC"] = new HashSet<string> { ".mp3", ".aac", ".flac", ".alac", ".wav", ".aiff", ".aif", ".ape", ".m4a", ".ogg", ".oga", ".opus", ".wma", ".mpa", ".amr", ".ac3", ".dts", ".eac3", ".mka", ".mid", ".midi", ".wv", ".tta" },
+            ["CAT_VIDEOS"] = new HashSet<string> { ".mp4", ".mkv", ".webm", ".avi", ".mov", ".wmv", ".flv", ".m4v", ".f4v", ".ts", ".mts", ".m2ts", ".tp", ".trp", ".mpg", ".mpeg", ".m2v", ".mpv", ".vob", ".divx", ".xvid", ".3gp", ".3g2", ".ogv", ".rm", ".rmvb", ".asf" },
+            ["CAT_DOCUMENTS"] = new HashSet<string> { ".doc", ".docx", ".docm", ".dot", ".dotx", ".pdf", ".odt", ".ott", ".rtf", ".txt", ".md", ".tex", ".log", ".pages", ".xls", ".xlsx", ".xlsm", ".xlsb", ".ods", ".ots", ".csv", ".tsv", ".numbers", ".ppt", ".pptx", ".pps", ".ppsx", ".odp", ".otp", ".key", ".epub", ".mobi", ".azw", ".azw3", ".fb2", ".cbz", ".cbr", ".djvu", ".html" },
+            ["CAT_PROGRAMS"] = new HashSet<string> { ".appimage", ".deb", ".rpm", ".flatpakref", ".flatpak", ".snap", ".apk", ".run", ".bin", ".sh", ".exe", ".msi", ".msix", ".appx", ".bat", ".cmd", ".pkg", ".dmg", ".jar", ".war", ".ApplicationContext.Core" },
+            ["CAT_IMAGES"] = new HashSet<string> { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".svgz", ".bmp", ".ico", ".tiff", ".tif", ".avif", ".heic", ".heif", ".psd", ".ai", ".eps", ".raw", ".cr2", ".nef", ".dng", ".xcf" }
         };
 
         public static string GetVectorNameForCategory(string categoryname)
@@ -24,6 +25,7 @@ namespace XDM.Core.UI
                 "CAT_VIDEOS" => "ri-movie-line",
                 "CAT_DOCUMENTS" => "ri-file-text-line",
                 "CAT_PROGRAMS" => "ri-microsoft-line",
+                "CAT_IMAGES" => "ri-image-line",
                 _ => "ri-file-line",
             };
         }
@@ -52,6 +54,7 @@ namespace XDM.Core.UI
                 "CAT_VIDEOS" => "ri-movie-fill",
                 "CAT_DOCUMENTS" => "ri-file-text-fill",
                 "CAT_PROGRAMS" => "ri-microsoft-fill",
+                "CAT_IMAGES" => "ri-image-fill",
                 _ => "ri-file-fill",
             };
         }
