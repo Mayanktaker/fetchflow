@@ -35,7 +35,7 @@ User-facing details live in [README.md](README.md); design system tokens live in
 | Command | Purpose |
 |:---|:---|
 | `bash build_all.sh` | Build complete release with unskippable pre-release test gate: Chrome ZIP, Firefox XPI, portable tarball, RPM, DEB & SHA256SUMS |
-| `dotnet app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll` | Run 35-test automated suite (MSTest, YDL parser, JSON, Glade wiring, Language, GTK smoke) |
+| `dotnet app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll` | Run 38-test automated suite (MSTest, YDL parser, JSON, Glade wiring, Language, Branding, GTK smoke) |
 | `scripts/run-gtk-smoke.sh` | Run headless GTK builder/autoconnect smoke tests under virtual Xvfb display |
 
 ## Release & Store Compliance Rules (2026)

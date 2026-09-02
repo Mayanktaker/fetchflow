@@ -1,5 +1,6 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using Gtk;
+using Pixbuf = Gdk.Pixbuf;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -569,16 +570,54 @@ namespace XDM.GtkUI.Utils
             return hb;
         }
 
-        // Applies the FetchFlow app icon to a specific window/dialog
+        private static Pixbuf[]? cachedAppIconList;
+
+        // Returns cached multi-resolution list of Pixbufs for window icons
+        public static Pixbuf[] GetAppIconList()
+        {
+            if (cachedAppIconList != null && cachedAppIconList.Length > 0)
+            {
+                return cachedAppIconList;
+            }
+
+            var list = new System.Collections.Generic.List<Pixbuf>();
+            int[] iconSizes = { 16, 22, 24, 32, 48, 64, 128, 256, 512 };
+            foreach (var sz in iconSizes)
+            {
+                var pngFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"fetchflow-logo-{sz}.png");
+                if (File.Exists(pngFile))
+                {
+                    try { list.Add(new Pixbuf(pngFile)); continue; } catch { }
+                }
+                var p = LoadSvg("fetchflow-logo", sz);
+                if (p != null) list.Add(p);
+            }
+
+            var fallback512 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo-512.png");
+            if (File.Exists(fallback512) && !list.Any(x => x.Width == 512))
+            {
+                try { list.Add(new Pixbuf(fallback512)); } catch { }
+            }
+
+            cachedAppIconList = list.ToArray();
+            return cachedAppIconList;
+        }
+
+        // Applies the FetchFlow app icon and multi-resolution icon list to a specific window/dialog
         public static void SetWindowAppIcon(Window window)
         {
             try
             {
                 window.IconName = "com.mayanktaker.fetchflow";
-                var icon = LoadSvg("fetchflow-logo", 64);
-                if (icon != null)
+                var icons = GetAppIconList();
+                if (icons != null && icons.Length > 0)
                 {
-                    window.Icon = icon;
+                    window.IconList = icons;
+                }
+                else
+                {
+                    var icon = LoadSvg("fetchflow-logo", 64);
+                    if (icon != null) window.Icon = icon;
                 }
             }
             catch { }

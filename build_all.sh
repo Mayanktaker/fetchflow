@@ -72,7 +72,7 @@ cp -r app/XDM/XDM.Gtk.UI/theme build_output/xdm-app/
 cp -r app/XDM/XDM.Gtk.UI/images build_output/xdm-app/
 cp -r app/XDM/Lang build_output/xdm-app/
 cp app/XDM/fetchflow-logo.svg build_output/xdm-app/ 2>/dev/null || :
-cp app/XDM/XDM.Gtk.UI/fetchflow-logo-512.png build_output/xdm-app/ 2>/dev/null || :
+cp app/XDM/XDM.Gtk.UI/fetchflow-logo-*.png build_output/xdm-app/ 2>/dev/null || :
 cp app/XDM/XDM.Gtk.UI/fetchflow-logo.png build_output/xdm-app/ 2>/dev/null || :
 
 echo "Packaging Portable Tarball..."

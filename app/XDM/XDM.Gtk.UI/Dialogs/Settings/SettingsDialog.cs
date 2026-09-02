@@ -40,7 +40,7 @@ namespace XDM.GtkUI.Dialogs.Settings
         [UI] Button BtnChrome, BtnFirefox, BtnEdge, BtnOpera, BtnBrave, BtnVivaldi, BtnDefault1, BtnDefault2,
             BtnDefault3, CatAdd, CatEdit, CatDel, CatDef, AddPass, EditPass, DelPass, BtnUserAgentReset,
             BtnCopy1, BtnCopy2, BtnCancel, BtnOK, BtnDownloadFolderBrowse, BtnTempFolderBrowse, BtnBrowse,
-            BtnRestartIpc, BtnExportPalette, BtnImportPalette;
+            BtnRestartIpc, BtnExportPalette, BtnImportPalette, BtnExtensionShortcuts;
         private Button BtnChromium, BtnYandex;
         [UI]
         private Label LblTheme, LblColorScheme, LblIpcStatus, LblExtensionShortcutTip;
@@ -189,6 +189,10 @@ namespace XDM.GtkUI.Dialogs.Settings
             {
                 BtnRestartIpc.Clicked += BtnRestartIpc_Clicked;
             }
+            if (BtnExtensionShortcuts != null)
+            {
+                BtnExtensionShortcuts.Clicked += BtnExtensionShortcuts_Clicked;
+            }
             UpdateIpcStatus();
         }
 
@@ -291,6 +295,19 @@ namespace XDM.GtkUI.Dialogs.Settings
             catch (Exception ex)
             {
                 GtkHelper.ShowMessageBox(this, "Failed to import palette: " + ex.Message);
+            }
+        }
+
+        // Opens the FetchFlow browser shortcut documentation and setup guide
+        private void BtnExtensionShortcuts_Clicked(object? sender, EventArgs e)
+        {
+            try
+            {
+                PlatformHelper.OpenBrowser("https://github.com/Mayanktaker/fetchflow#browser-shortcuts");
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Error opening shortcuts guide: " + ex.Message);
             }
         }
 

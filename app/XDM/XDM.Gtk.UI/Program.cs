@@ -102,21 +102,10 @@ namespace XDM.GtkUI
             try
             {
                 Gtk.Window.DefaultIconName = "com.mayanktaker.fetchflow";
-                var iconList = new List<Gdk.Pixbuf>();
-                int[] iconSizes = { 16, 32, 48, 64, 128, 256, 512 };
-                foreach (var sz in iconSizes)
+                var iconList = GtkHelper.GetAppIconList();
+                if (iconList != null && iconList.Length > 0)
                 {
-                    var p = GtkHelper.LoadSvg("fetchflow-logo", sz);
-                    if (p != null) iconList.Add(p);
-                }
-                var png512 = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo-512.png");
-                if (System.IO.File.Exists(png512))
-                {
-                    try { iconList.Add(new Gdk.Pixbuf(png512)); } catch { }
-                }
-                if (iconList.Count > 0)
-                {
-                    Gtk.Window.DefaultIconList = iconList.ToArray();
+                    Gtk.Window.DefaultIconList = iconList;
                 }
             }
             catch (Exception iconEx)

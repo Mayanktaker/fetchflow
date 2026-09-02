@@ -185,10 +185,9 @@ namespace XDM.GtkUI.Utils
                 // Provide the DBusMenu path so KDE can render the right-click menu natively
                 ItemIsMenu = false,
                 Menu = new ObjectPath("/MenuBar"),
-                // Provide both IconName (for hosts that prefer theme) and IconPixmap (our FetchFlow icon)
-                // so stale "xdm-app" theme lookup is avoided but GNOME AppIndicator still renders.
+                // Provide both IconName (for hosts that prefer theme) and multi-size IconPixmap (ARGB32)
                 IconName = "com.mayanktaker.fetchflow",
-                IconPixmap = new[] { PixbufToRgba(icon) },
+                IconPixmap = BuildSniPixmaps(icon),
                 ToolTip = (0, 0, Array.Empty<byte>(), appName, ""),
             };
             sniItem = new XdmSniItem(
@@ -339,12 +338,12 @@ namespace XDM.GtkUI.Utils
             ActiveKind = TrayKind.None;
         }
 
-        // Convert a Gdk.Pixbuf to the SNI IconPixmap RGBA byte[] (handles RGB->RGBA + rowstride).
-        private static (int, int, byte[]) PixbufToRgba(Pixbuf pb)
+        // Convert a Gdk.Pixbuf to SNI IconPixmap ARGB32 network byte order (Alpha, Red, Green, Blue)
+        private static (int, int, byte[]) PixbufToSniArgb32(Pixbuf pb)
         {
             int w = pb.Width, h = pb.Height;
             int chans = pb.NChannels, rowstride = pb.Rowstride, hasAlpha = pb.HasAlpha ? 1 : 0;
-            var rgba = new byte[w * h * 4];
+            var argb = new byte[w * h * 4];
             var row = new byte[rowstride];
             for (int y = 0; y < h; y++)
             {
@@ -352,13 +351,51 @@ namespace XDM.GtkUI.Utils
                 for (int x = 0; x < w; x++)
                 {
                     int si = x * chans, di = (y * w + x) * 4;
-                    rgba[di] = row[si];
-                    rgba[di + 1] = row[si + 1];
-                    rgba[di + 2] = row[si + 2];
-                    rgba[di + 3] = hasAlpha != 0 ? row[si + 3] : (byte)255;
+                    argb[di + 0] = hasAlpha != 0 ? row[si + 3] : (byte)255; // Alpha
+                    argb[di + 1] = row[si];                                 // Red
+                    argb[di + 2] = row[si + 1];                             // Green
+                    argb[di + 3] = row[si + 2];                             // Blue
                 }
             }
-            return (w, h, rgba);
+            return (w, h, argb);
+        }
+
+        // Builds multi-resolution SNI pixmaps (16, 22, 24, 32, 48) for crisp rendering across all tray hosts
+        private static (int, int, byte[])[] BuildSniPixmaps(Pixbuf? baseIcon)
+        {
+            var list = new System.Collections.Generic.List<(int, int, byte[])>();
+            int[] sizes = { 16, 22, 24, 32, 48 };
+            foreach (var sz in sizes)
+            {
+                try
+                {
+                    var pb = GtkHelper.LoadSvg("fetchflow-logo", sz);
+                    if (pb != null)
+                    {
+                        list.Add(PixbufToSniArgb32(pb));
+                        continue;
+                    }
+                }
+                catch { }
+
+                if (baseIcon != null)
+                {
+                    try
+                    {
+                        using var scaled = baseIcon.ScaleSimple(sz, sz, InterpType.Bilinear);
+                        if (scaled != null)
+                        {
+                            list.Add(PixbufToSniArgb32(scaled));
+                        }
+                    }
+                    catch { }
+                }
+            }
+            if (list.Count == 0 && baseIcon != null)
+            {
+                list.Add(PixbufToSniArgb32(baseIcon));
+            }
+            return list.ToArray();
         }
     }
 }

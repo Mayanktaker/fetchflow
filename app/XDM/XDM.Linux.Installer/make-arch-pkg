@@ -20,6 +20,9 @@ mkdir -p "${SOURCE_NAME}/opt/fetchflow"
 mkdir -p "${SOURCE_NAME}/usr/bin"
 mkdir -p "${SOURCE_NAME}/usr/share/applications"
 mkdir -p "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps"
+for sz in 16 22 24 32 48 64 128 256 512; do
+    mkdir -p "${SOURCE_NAME}/usr/share/icons/hicolor/${sz}x${sz}/apps"
+done
 mkdir -p "${SOURCE_NAME}/usr/share/mime/packages"
 
 cp -r "${SRC_DIR}/." "${SOURCE_NAME}/opt/fetchflow"
@@ -40,7 +43,7 @@ Terminal=false
 Name=FetchFlow Download Manager
 Comment=Fast, modern download accelerator and video downloader
 Categories=Network;FileTransfer;
-Icon=fetchflow
+Icon=com.mayanktaker.fetchflow
 MimeType=application/fetchflow;x-scheme-handler/fetchflow;x-scheme-handler/fetchflow+app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
 StartupNotify=true
 StartupWMClass=com.mayanktaker.fetchflow
@@ -66,6 +69,14 @@ EOF
 
 cp "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.desktop" "${SOURCE_NAME}/usr/share/applications"
 cp "${SRC_DIR}/fetchflow-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg" 2>/dev/null || cp "${SOURCE_NAME}/opt/fetchflow/fetchflow-logo.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg"
+cp "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg" "${SOURCE_NAME}/usr/share/icons/hicolor/scalable/apps/com.mayanktaker.fetchflow.svg"
+
+for sz in 16 22 24 32 48 64 128 256 512; do
+    if [ -f "${SRC_DIR}/fetchflow-logo-${sz}.png" ]; then
+        cp "${SRC_DIR}/fetchflow-logo-${sz}.png" "${SOURCE_NAME}/usr/share/icons/hicolor/${sz}x${sz}/apps/fetchflow.png"
+        cp "${SRC_DIR}/fetchflow-logo-${sz}.png" "${SOURCE_NAME}/usr/share/icons/hicolor/${sz}x${sz}/apps/com.mayanktaker.fetchflow.png"
+    fi
+done
 
 cat <<EOF > "${SOURCE_NAME}/usr/share/mime/packages/com.mayanktaker.fetchflow.xml"
 <?xml version="1.0" encoding="UTF-8"?>

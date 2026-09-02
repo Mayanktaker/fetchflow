@@ -43,6 +43,8 @@ namespace XDM.GtkUI
         private WindowGroup windowGroup;
         private CheckButton btnMonitoring;
         private Label lblExtensionStatus;
+        private Label? lblTotalSpeed;
+        private readonly Dictionary<string, double> activeSpeeds = new();
         private bool isUpdateAvailable;
         private Image helpImage;
         private Label helpLabel;
@@ -165,23 +167,10 @@ namespace XDM.GtkUI
 
         public MainWindow() : base("FetchFlow Download Manager")
         {
-            // Set window icon — crash-safe: missing file must never abort startup
+            // Set window app icon and multi-resolution icon list
             try
             {
-                var iconPath = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo-512.png");
-                if (System.IO.File.Exists(iconPath))
-                {
-                    SetDefaultIconFromFile(iconPath);
-                }
-                else
-                {
-                    // Fallback to embedded SVG logo if PNG is absent
-                    var svgPath = IoPath.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo.svg");
-                    if (System.IO.File.Exists(svgPath))
-                    {
-                        SetDefaultIconFromFile(svgPath);
-                    }
-                }
+                GtkHelper.SetWindowAppIcon(this);
             }
             catch (Exception) { /* Icon is non-critical; continue without it */ }
             // Wayland: compositor places windows; client-side centering is a no-op (Phase1.4)
@@ -692,6 +681,10 @@ namespace XDM.GtkUI
             lblExtensionStatus.StyleContext.AddClass("extension-status-label");
             hbox.PackStart(lblExtensionStatus, false, false, 0);
             UpdateExtensionStatus();
+
+            lblTotalSpeed = new Label { MarginStart = 15, Visible = false };
+            lblTotalSpeed.StyleContext.AddClass("total-speed-label");
+            hbox.PackStart(lblTotalSpeed, false, false, 0);
 
             btnScheduler = CreateButtonWithContent("list-settings-line", TextResource.GetText("DESC_Q_TITLE"), CyanR, CyanG, CyanB);
             btnScheduler.Clicked += BtnScheduler_Clicked;
@@ -1882,12 +1875,57 @@ namespace XDM.GtkUI
 
         public void RunOnUIThread(Action<string, int, double, long> action, string id, int progress, double speed, long eta)
         {
-            Application.Invoke((a, b) => action.Invoke(id, progress, speed, eta));
+            Application.Invoke((a, b) =>
+            {
+                action.Invoke(id, progress, speed, eta);
+                UpdateSpeedTracking(id, progress >= 100 ? 0 : speed);
+            });
+        }
+
+        // Updates aggregate download throughput across all active transfers
+        private void UpdateSpeedTracking(string id, double speed)
+        {
+            lock (activeSpeeds)
+            {
+                if (!string.IsNullOrEmpty(id))
+                {
+                    if (speed > 0)
+                    {
+                        activeSpeeds[id] = speed;
+                    }
+                    else
+                    {
+                        activeSpeeds.Remove(id);
+                    }
+                }
+
+                if (lblTotalSpeed == null) return;
+
+                double total = 0;
+                foreach (var s in activeSpeeds.Values)
+                {
+                    total += s;
+                }
+                var count = activeSpeeds.Count;
+
+                if (total > 0 && count > 0)
+                {
+                    var formatted = FormattingHelper.FormatSize(total) + "/s";
+                    lblTotalSpeed.Markup = $"<span color='#f97316'><b>⚡ {formatted}</b></span> <span color='#888888' size='small'>({count} active)</span>";
+                    lblTotalSpeed.TooltipText = $"Aggregate live download speed: {formatted} across {count} transfer(s)";
+                    lblTotalSpeed.Visible = true;
+                }
+                else
+                {
+                    lblTotalSpeed.Visible = false;
+                }
+            }
         }
 
         public void Delete(IInProgressDownloadRow row)
         {
             var id = row.DownloadEntry.Id;
+            UpdateSpeedTracking(id, 0);
             var modelIter = FindInProgressItemIterById(id);
             if (modelIter.HasValue)
             {
