@@ -40,10 +40,10 @@ namespace XDM.GtkUI.Dialogs.Settings
         [UI] Button BtnChrome, BtnFirefox, BtnEdge, BtnOpera, BtnBrave, BtnVivaldi, BtnDefault1, BtnDefault2,
             BtnDefault3, CatAdd, CatEdit, CatDel, CatDef, AddPass, EditPass, DelPass, BtnUserAgentReset,
             BtnCopy1, BtnCopy2, BtnCancel, BtnOK, BtnDownloadFolderBrowse, BtnTempFolderBrowse, BtnBrowse,
-            BtnRestartIpc;
+            BtnRestartIpc, BtnExportPalette, BtnImportPalette;
         private Button BtnChromium, BtnYandex;
         [UI]
-        private Label LblTheme, LblColorScheme, LblIpcStatus;
+        private Label LblTheme, LblColorScheme, LblIpcStatus, LblExtensionShortcutTip;
         [UI]
         private ComboBoxText CmbTheme, CmbColorScheme;
         // Builder.Autoconnect only wires fields marked [UI]; missing annotation leaves the
@@ -175,6 +175,15 @@ namespace XDM.GtkUI.Dialogs.Settings
                     ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), CmbColorScheme.Active);
                 }
             };
+ 
+            if (BtnExportPalette != null)
+            {
+                BtnExportPalette.Clicked += BtnExportPalette_Clicked;
+            }
+            if (BtnImportPalette != null)
+            {
+                BtnImportPalette.Clicked += BtnImportPalette_Clicked;
+            }
 
             if (BtnRestartIpc != null)
             {
@@ -229,6 +238,59 @@ namespace XDM.GtkUI.Dialogs.Settings
             catch (Exception ex)
             {
                 Log.Debug(ex, "Error restarting IPC server from settings: " + ex.Message);
+            }
+        }
+
+        // Exports current theme palettes to a user-selected JSON file
+        private void BtnExportPalette_Clicked(object? sender, EventArgs e)
+        {
+            try
+            {
+                var targetFile = GtkHelper.SaveFile(this, IoPath.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "fetchflow-palettes.json"));
+                if (!string.IsNullOrEmpty(targetFile))
+                {
+                    var json = ThemeManager.ExportPalettesJson();
+                    System.IO.File.WriteAllText(targetFile, json);
+                    GtkHelper.ShowMessageBox(this, $"Theme palettes successfully exported to:\n{targetFile}");
+                }
+            }
+            catch (Exception ex)
+            {
+                GtkHelper.ShowMessageBox(this, "Failed to export palettes: " + ex.Message);
+            }
+        }
+
+        // Imports and validates custom theme palettes from a user-selected JSON file
+        private void BtnImportPalette_Clicked(object? sender, EventArgs e)
+        {
+            try
+            {
+                var sourceFile = GtkHelper.SelectFile(this);
+                if (!string.IsNullOrEmpty(sourceFile) && System.IO.File.Exists(sourceFile))
+                {
+                    var json = System.IO.File.ReadAllText(sourceFile);
+                    var imported = ThemePaletteHelper.ImportPalettes(json);
+                    if (imported != null && imported.Count > 0)
+                    {
+                        GtkHelper.ShowMessageBox(this, $"Successfully validated and loaded {imported.Count} custom theme palette(s) from:\n{IoPath.GetFileName(sourceFile)}");
+                    }
+                    else
+                    {
+                        var single = ThemeManager.ParsePaletteJson(json);
+                        if (single != null)
+                        {
+                            GtkHelper.ShowMessageBox(this, $"Successfully validated custom theme palette:\n{single.Value.DisplayName}");
+                        }
+                        else
+                        {
+                            GtkHelper.ShowMessageBox(this, "The selected file is not a valid FetchFlow palette JSON file.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                GtkHelper.ShowMessageBox(this, "Failed to import palette: " + ex.Message);
             }
         }
 

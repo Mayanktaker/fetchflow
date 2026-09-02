@@ -265,6 +265,36 @@
                                     <property name="position">3</property>
                                   </packing>
                                 </child>
+                                <child>
+                                  <object class="GtkButton" id="BtnExportPalette">
+                                    <property name="label" translatable="yes">Export</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">False</property>
+                                    <property name="margin-start">10</property>
+                                    <property name="tooltip-text" translatable="yes">Export theme palettes to JSON</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="BtnImportPalette">
+                                    <property name="label" translatable="yes">Import</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">False</property>
+                                    <property name="margin-start">4</property>
+                                    <property name="tooltip-text" translatable="yes">Import custom theme palettes from JSON</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">5</property>
+                                  </packing>
+                                </child>
                               </object>
                               <packing>
                               <property name="position">1</property></packing>
@@ -1176,6 +1206,21 @@
                                 </child>
                               </object>
                               <packing>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="LblExtensionShortcutTip">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="wrap">True</property>
+                                <property name="margin-top">6</property>
+                                <property name="margin-bottom">4</property>
+                                <property name="label" translatable="yes">💡 Shortcut: Press Alt+Shift+F in Chrome or Firefox to inspect captured media. Remap via browser extension shortcut settings.</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
                               </packing>
                             </child>
                             <child>
