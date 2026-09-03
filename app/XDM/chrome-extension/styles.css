@@ -712,3 +712,55 @@ body.popup {
 .health-dot-offline {
   background-color: #ef4444;
 }
+
+/* Section Toggle Chevron */
+.section-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--r-sm);
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.section-toggle-btn:hover {
+  color: var(--text);
+  background-color: var(--bg-card-hover);
+}
+
+.media-section-collapsed .section-toggle-btn svg {
+  transform: rotate(-90deg);
+}
+
+.media-section-collapsed .media-card {
+  display: none !important;
+}
+
+/* High Latency / Lag Warning */
+.health-pill.health-lag {
+  background-color: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+.health-dot.health-dot-lag {
+  background-color: #f59e0b;
+  box-shadow: 0 0 5px #f59e0b;
+}
+
+/* Card Downloading Animation */
+.media-card-downloading {
+  border-color: var(--brand-from) !important;
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.35);
+  animation: cardPulse 0.4s ease;
+}
+
+@keyframes cardPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}

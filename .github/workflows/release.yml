@@ -122,7 +122,7 @@ jobs:
         shell: pwsh
         run: |
           $verLine = Get-Content app/XDM/XDM.Linux.Installer/version.env | Where-Object { $_ -match '^VERSION=(.+)$' }
-          $version = if ($verLine) { $Matches[1].Trim() } else { "9.1.8" }
+          $version = if ($verLine) { $Matches[1].Trim() } else { "9.1.9" }
           Write-Host "Resolved Version: $version"
           "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 

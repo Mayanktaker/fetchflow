@@ -647,6 +647,10 @@ namespace XDM.Core.BrowserMonitoring
         {
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
             if (msg == null) return;
+            if (msg.TabId != null)
+            {
+                VideoUrlHelper.ClearTabState(msg.TabId);
+            }
             ApplicationContext.VideoTracker.UpdateMediaTitle(msg.TabUrl, msg.TabTitle);
             if (msg.TabUrl != null && msg.TabId != null)
             {

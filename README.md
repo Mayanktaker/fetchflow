@@ -72,22 +72,22 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 
 ### Windows 11 / 10 (64-bit)
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-9.1.8.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-9.1.9.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.8-1.fc44.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.9-1.fc44.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.8_amd64.deb
+sudo apt install ./fetchflow_9.1.9_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS
 ```bash
 # Using prebuilt package:
-sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.8-1-x86_64.pkg.tar.zst
+sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.9-1-x86_64.pkg.tar.zst
 
 # Or build via PKGBUILD:
 cd app/XDM/XDM.Linux.Installer && makepkg -si
@@ -95,7 +95,7 @@ cd app/XDM/XDM.Linux.Installer && makepkg -si
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.8.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.9.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
@@ -112,8 +112,8 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 
 | Browser Family | Supported Browsers | Package | Features |
 |---|---|---|---|
-| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.8.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
-| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | `fetchflow-firefox-extension-9.1.8.xpi` | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.9.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | `fetchflow-firefox-extension-9.1.9.xpi` | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
 
 ### Manual Installation
 - **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.

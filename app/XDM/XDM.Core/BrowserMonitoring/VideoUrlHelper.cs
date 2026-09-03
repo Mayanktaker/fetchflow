@@ -33,9 +33,50 @@ namespace XDM.Core.BrowserMonitoring
         private static List<DashInfo> videoQueue = new();
         private static List<DashInfo> audioQueue = new();
         // referersToSkip has been moved to NetworkHelper
-        private static HashSet<string> m3u8MpdTabs = new(); //Keep track of tab id which triggered m3u8 or mpd manifest
+        private static Dictionary<string, DateTime> m3u8MpdTabs = new(); // Time-expiring tab tracker for manifest suppression
         private static Dictionary<string, (DateTime Timestamp, List<YDLVideoEntry> Result)> ydlCache = new();
         private static System.Timers.Timer ydlCacheEvictionTimer;
+
+        // Checks whether a tab is actively streaming an HLS/DASH manifest within the last 15 seconds
+        private static bool IsTabLockedForManifest(string tabId)
+        {
+            if (string.IsNullOrEmpty(tabId)) return false;
+            lock (m3u8MpdTabs)
+            {
+                if (m3u8MpdTabs.TryGetValue(tabId, out var timestamp))
+                {
+                    if ((DateTime.UtcNow - timestamp).TotalSeconds < 15)
+                    {
+                        return true;
+                    }
+                    m3u8MpdTabs.Remove(tabId);
+                }
+                return false;
+            }
+        }
+
+        // Marks a tab as currently receiving an HLS/DASH manifest
+        private static void MarkTabManifest(string tabId)
+        {
+            if (string.IsNullOrEmpty(tabId)) return;
+            lock (m3u8MpdTabs)
+            {
+                m3u8MpdTabs[tabId] = DateTime.UtcNow;
+            }
+        }
+
+        // Resets tab lockouts when a tab navigates or changes media
+        public static void ClearTabState(string tabId)
+        {
+            if (!string.IsNullOrEmpty(tabId))
+            {
+                lock (m3u8MpdTabs)
+                {
+                    m3u8MpdTabs.Remove(tabId);
+                }
+            }
+            lastProcessedYtUrl = string.Empty;
+        }
 
         // Supported streaming domains for yt-dlp multi-site capture
         private static readonly HashSet<string> SupportedYdlDomains = new(StringComparer.OrdinalIgnoreCase)
@@ -108,7 +149,7 @@ namespace XDM.Core.BrowserMonitoring
             {
                 return false;
             }
-            if (!string.IsNullOrEmpty(tabId) && m3u8MpdTabs.Contains(tabId))
+            if (IsTabLockedForManifest(tabId))
             {
                 return false;
             }
@@ -224,7 +265,7 @@ namespace XDM.Core.BrowserMonitoring
             Log.Debug("Downloading MPD manifest: " + message.Url);
             if (!string.IsNullOrEmpty(message.TabId))
             {
-                m3u8MpdTabs.Add(message.TabId);
+                MarkTabManifest(message.TabId);
             }
             NetworkHelper.AddToSkippedRefererList(message.GetRequestHeaderFirstValue("Referer"));
 
@@ -374,7 +415,7 @@ namespace XDM.Core.BrowserMonitoring
 
             if (!string.IsNullOrEmpty(message.TabId))
             {
-                m3u8MpdTabs.Add(message.TabId);
+                MarkTabManifest(message.TabId);
             }
             NetworkHelper.AddToSkippedRefererList(message.GetRequestHeaderFirstValue("Referer"));
 
@@ -721,7 +762,16 @@ namespace XDM.Core.BrowserMonitoring
                 ContentLength = len
             };
 
-            var size = long.Parse(message.GetResponseHeaderFirstValue("Content-Length"));
+            long size = 0L;
+            var clHeader = message.GetResponseHeaderFirstValue("Content-Length");
+            if (!string.IsNullOrEmpty(clHeader) && long.TryParse(clHeader, out var parsedSize))
+            {
+                size = parsedSize;
+            }
+            else if (len > 0)
+            {
+                size = len;
+            }
             var displayText = $"[{ext.ToUpperInvariant()}] {(size > 0 ? FormattingHelper.FormatSize(size) : string.Empty)}";
             ApplicationContext.VideoTracker.AddVideoNotification(new StreamingVideoDisplayInfo
             {
@@ -729,7 +779,7 @@ namespace XDM.Core.BrowserMonitoring
                 Size = size,
                 CreationTime = DateTime.Now,
                 TabId = message.TabId
-            }, video); ;
+            }, video);
         }
 
         public static bool IsNormalVideo(int itag)

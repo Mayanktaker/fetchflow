@@ -221,16 +221,17 @@ class VideoPopup {
         }
 
         if (health.useWebSocket) {
-            pill.className = "health-pill health-ws";
-            dot.className = "health-dot health-dot-ws";
+            const isLag = health.latency != null && health.latency > 100;
+            pill.className = `health-pill health-ws${isLag ? ' health-lag' : ''}`;
+            dot.className = `health-dot ${isLag ? 'health-dot-lag' : 'health-dot-ws'}`;
             const latencyStr = health.latency != null ? `${health.latency}ms` : "Active";
-            text.textContent = `WS · ${latencyStr}`;
-            pill.title = `WebSocket connected on port ${health.port || 8597} | Latency: ${latencyStr}`;
+            text.textContent = isLag ? `WS · ${latencyStr} (lag)` : `WS · ${latencyStr}`;
+            pill.title = `WebSocket Port ${health.port || 8597} | Latency: ${latencyStr}${isLag ? ' (high latency detected)' : ''}`;
         } else {
             pill.className = "health-pill health-http";
             dot.className = "health-dot health-dot-http";
             text.textContent = "HTTP · Polling";
-            pill.title = `Connected via HTTP fallback on port ${health.port || 8597}`;
+            pill.title = `Connected via HTTP fallback on Port ${health.port || 8597}`;
         }
     }
 
@@ -283,7 +284,7 @@ class VideoPopup {
         }, 1800);
     }
 
-    createSectionHeader(title, iconSvg, count) {
+    createSectionHeader(title, iconSvg, count, onToggle) {
         const header = document.createElement('div');
         header.className = 'media-section-header';
 
@@ -301,13 +302,47 @@ class VideoPopup {
         titleWrap.appendChild(iconSpan);
         titleWrap.appendChild(titleSpan);
 
+        const badgeWrap = document.createElement('div');
+        badgeWrap.style.display = 'inline-flex';
+        badgeWrap.style.alignItems = 'center';
+        badgeWrap.style.gap = '6px';
+
         const badgeSpan = document.createElement('span');
         badgeSpan.className = 'media-section-badge';
         badgeSpan.textContent = count + '';
+        badgeWrap.appendChild(badgeSpan);
+
+        // If items exceed 6, provide collapsible chevron toggle
+        if (count > 6 && onToggle) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'section-toggle-btn';
+            toggleBtn.setAttribute('title', 'Collapse/expand section');
+            toggleBtn.setAttribute('aria-label', `Collapse or expand ${title}`);
+            toggleBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            `;
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                onToggle();
+            });
+            badgeWrap.appendChild(toggleBtn);
+        }
 
         header.appendChild(titleWrap);
-        header.appendChild(badgeSpan);
+        header.appendChild(badgeWrap);
         return header;
+    }
+
+    triggerDownloadItem(card, id, text) {
+        if (card) {
+            card.classList.add('media-card-downloading');
+            setTimeout(() => card.classList.remove('media-card-downloading'), 600);
+        }
+        const shortName = text && text.length > 28 ? text.substring(0, 25) + '...' : (text || 'Media');
+        this.showToast(`Starting download: ${shortName}`);
+        chrome.runtime.sendMessage({ type: "vid", itemId: id });
     }
 
     createCard(listItem, isAudio) {
@@ -363,7 +398,7 @@ class VideoPopup {
             }
         });
 
-        // Download Trigger button
+        // Download Trigger button with active feedback
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'media-card-action';
         downloadBtn.setAttribute('title', 'Download with FetchFlow');
@@ -373,6 +408,10 @@ class VideoPopup {
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
         `;
+        downloadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.triggerDownloadItem(card, id, text);
+        });
 
         actionsWrap.appendChild(copyBtn);
         actionsWrap.appendChild(downloadBtn);
@@ -382,7 +421,7 @@ class VideoPopup {
         card.appendChild(actionsWrap);
 
         card.addEventListener('click', () => {
-            chrome.runtime.sendMessage({ type: "vid", itemId: id });
+            this.triggerDownloadItem(card, id, text);
         });
 
         return card;
@@ -417,26 +456,41 @@ class VideoPopup {
         const videoIconSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>`;
         const audioIconSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`;
 
-        // If both video and audio streams exist, display distinct group headers
+        // If both video and audio streams exist, display distinct group headers with collapsible capability
         if (videoItems.length > 0 && audioItems.length > 0) {
             // Group 1: Video Streams
             const videoSection = document.createElement('div');
             videoSection.className = 'media-section';
-            videoSection.appendChild(this.createSectionHeader("Video Streams", videoIconSvg, videoItems.length));
+            let videoCollapsed = false;
+            const videoHeader = this.createSectionHeader("Video Streams", videoIconSvg, videoItems.length, () => {
+                videoCollapsed = !videoCollapsed;
+                videoSection.classList.toggle('media-section-collapsed', videoCollapsed);
+            });
+            videoSection.appendChild(videoHeader);
             videoItems.forEach(item => videoSection.appendChild(this.createCard(item, false)));
             listContainer.appendChild(videoSection);
 
             // Group 2: Audio Streams
             const audioSection = document.createElement('div');
             audioSection.className = 'media-section';
-            audioSection.appendChild(this.createSectionHeader("Audio Streams", audioIconSvg, audioItems.length));
+            let audioCollapsed = false;
+            const audioHeader = this.createSectionHeader("Audio Streams", audioIconSvg, audioItems.length, () => {
+                audioCollapsed = !audioCollapsed;
+                audioSection.classList.toggle('media-section-collapsed', audioCollapsed);
+            });
+            audioSection.appendChild(audioHeader);
             audioItems.forEach(item => audioSection.appendChild(this.createCard(item, true)));
             listContainer.appendChild(audioSection);
         } else if (audioItems.length > 0) {
             // Only audio streams exist
             const audioSection = document.createElement('div');
             audioSection.className = 'media-section';
-            audioSection.appendChild(this.createSectionHeader("Audio Streams", audioIconSvg, audioItems.length));
+            let audioCollapsed = false;
+            const audioHeader = this.createSectionHeader("Audio Streams", audioIconSvg, audioItems.length, () => {
+                audioCollapsed = !audioCollapsed;
+                audioSection.classList.toggle('media-section-collapsed', audioCollapsed);
+            });
+            audioSection.appendChild(audioHeader);
             audioItems.forEach(item => audioSection.appendChild(this.createCard(item, true)));
             listContainer.appendChild(audioSection);
         } else {

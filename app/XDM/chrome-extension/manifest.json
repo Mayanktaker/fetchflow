@@ -9,7 +9,7 @@
         }
     },
     "manifest_version": 3,
-    "version": "9.1.8",
+    "version": "9.1.9",
     "description": "Download files and capture videos with FetchFlow Download Manager",
     "commands": {
         "_execute_action": {
