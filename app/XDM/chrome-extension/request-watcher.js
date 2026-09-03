@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 "use strict";
 import Logger from './logger.js';
 
@@ -56,11 +57,11 @@ export default class RequestWatcher {
 
         let path = u.pathname;
         let upath = path.toUpperCase();
-        if (this.mediaExts.find(e => upath.endsWith(e))) {
+        if (this.mediaExts.find(e => upath.endsWith("." + e))) {
             return true;
         }
 
-        if (this.requestFileExts.find(e => upath.endsWith(e))) {
+        if (this.requestFileExts.find(e => upath.endsWith("." + e))) {
             return true;
         }
 
@@ -185,7 +186,8 @@ export default class RequestWatcher {
             });
         }
         if (cookies.length > 0) {
-            data.cookie = cookies.join(";");
+            data.cookie = cookies.join("; ");
+            data.cookies = data.cookie;
         }
         return data;
     }

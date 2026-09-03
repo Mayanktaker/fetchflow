@@ -49,6 +49,17 @@ namespace XDM.Core.BrowserMonitoring
             // Start periodic cleanup of abandoned blob transfers (every 5 min)
             blobPurgeTimer = new Timer(_ => blobReceiver.PurgeStaleTransfers(),
                 null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+
+            // Push config & video list updates to all connected WebSockets immediately on change
+            ApplicationContext.ApplicationEvent += OnApplicationEvent;
+        }
+
+        private void OnApplicationEvent(object? sender, ApplicationEvent e)
+        {
+            if (e.EventType == "ConfigChanged")
+            {
+                BroadcastConfig();
+            }
         }
 
         // Starts the IPC HTTP/WebSocket listener on the first available port in the range
@@ -84,6 +95,7 @@ namespace XDM.Core.BrowserMonitoring
         // Stops the active server and terminates active sessions
         public void Stop()
         {
+            ApplicationContext.ApplicationEvent -= OnApplicationEvent;
             try
             {
                 server?.Stop();
@@ -232,7 +244,17 @@ namespace XDM.Core.BrowserMonitoring
             dmsg.TabUrl = msg.TabUrl;
             dmsg.TabId = msg.TabId;
             RemoveBlockedHeaders(dmsg);
-            VideoUrlHelper.ProcessMediaMessage(dmsg);
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    VideoUrlHelper.ProcessMediaMessage(dmsg);
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug("ProcessMediaMessage background error: " + ex.Message);
+                }
+            });
         }
 
         private void OnBatchMessage(RequestContext context)
@@ -405,13 +427,13 @@ namespace XDM.Core.BrowserMonitoring
                 writer.WriteStartArray();
                 // All yt-dlp supported domains — must match SupportedYdlDomains in VideoUrlHelper
                 foreach (var ext in new string[] {
-                    ".youtube.", "youtu.be", "/watch?v=",
-                    ".vimeo.", ".dailymotion.",
-                    ".facebook.", "fb.watch",
-                    ".instagram.",
-                    ".twitter.", ".x.com",
-                    ".twitch.tv",
-                    ".bilibili.", ".tiktok.", ".reddit." })
+                    "youtube.com", "youtu.be", "/watch?v=",
+                    "vimeo.com", "dailymotion.com",
+                    "facebook.com", "fb.watch",
+                    "instagram.com",
+                    "twitter.com", "x.com",
+                    "twitch.tv",
+                    "bilibili.com", "tiktok.com", "reddit.com" })
                 {
                     writer.WriteValue(ext);
                 }
@@ -608,7 +630,17 @@ namespace XDM.Core.BrowserMonitoring
             dmsg.TabUrl = msg.TabUrl;
             dmsg.TabId = msg.TabId;
             RemoveBlockedHeaders(dmsg);
-            VideoUrlHelper.ProcessMediaMessage(dmsg);
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    VideoUrlHelper.ProcessMediaMessage(dmsg);
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug("ProcessMediaMessage background error: " + ex.Message);
+                }
+            });
         }
 
         private void OnTabUpdateMessage(byte[] body)

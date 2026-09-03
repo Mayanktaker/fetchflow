@@ -130,7 +130,7 @@ export default class App {
                 referrer = download.url;
             }
             this.triggerDownload(url, download.filename,
-                referrer, download.fileSize, download.mime);
+                referrer, download.fileSize || download.totalBytes || 0, download.mime);
             return;
         }
         suggest({ filename: download.filename });
@@ -150,7 +150,7 @@ export default class App {
         let tabTitle = changeInfo.title || tab.title || "";
         if (changeInfo.url || changeInfo.title) {
             if (this.tabsWatcher &&
-                this.tabsWatcher.find(t => tabUrl.indexOf(t) > 0)) {
+                this.tabsWatcher.some(t => tabUrl.includes(t))) {
                 // Deduplicate — don't re-send the same URL
                 if (this.lastSentTabUrl === tabUrl && !changeInfo.title) {
                     return;
@@ -179,7 +179,7 @@ export default class App {
         if (details.frameId !== 0) return; // Only top-level frame
         let url = details.url;
         if (this.tabsWatcher &&
-            this.tabsWatcher.find(t => url.indexOf(t) > 0)) {
+            this.tabsWatcher.some(t => url.includes(t))) {
             // Deduplicate — don't re-send the same URL
             if (this.lastSentTabUrl === url) {
                 return;
@@ -480,8 +480,10 @@ export default class App {
             let data = {
                 url: url,
                 cookie: cookieStr,
+                cookies: cookieStr,
                 requestHeaders: requestHeaders,
                 responseHeaders: responseHeaders,
+                file: file,
                 filename: file,
                 fileSize: size,
                 mimeType: mime
@@ -497,7 +499,13 @@ export default class App {
         };
         try {
             chrome.cookies.getAll({ "url": url }, cookies => {
-                let cookieStr = cookies ? cookies.map(cookie => cookie.name + "=" + cookie.value).join("; ") : undefined;
+                if (chrome.runtime.lastError) {
+                    sendDownload(undefined);
+                    return;
+                }
+                let cookieStr = cookies && cookies.length > 0
+                    ? cookies.map(cookie => cookie.name + "=" + cookie.value).join("; ")
+                    : undefined;
                 sendDownload(cookieStr);
             });
         } catch (e) {

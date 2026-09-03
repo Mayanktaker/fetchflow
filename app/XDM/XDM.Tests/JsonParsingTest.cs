@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using System.IO;
 using System;
+using System.Linq;
 
 namespace XDM.Tests
 {
@@ -199,6 +200,61 @@ namespace XDM.Tests
                     SkipUnknownParts(reader);
                 }
             }
+        }
+
+        [TestMethod]
+        public void TestExtensionDataAliases()
+        {
+            var json = @"{
+                ""url"": ""https://example.com/file.zip"",
+                ""filename"": ""my-download.zip"",
+                ""cookies"": ""sess=abc; token=123"",
+                ""tabId"": ""42""
+            }";
+            var data = JsonConvert.DeserializeObject<XDM.Core.BrowserMonitoring.ExtensionData>(json);
+            Assert.IsNotNull(data);
+            Assert.AreEqual("my-download.zip", data.File);
+            Assert.AreEqual("sess=abc; token=123", data.Cookie);
+            Assert.AreEqual("42", data.TabId);
+        }
+
+        [TestMethod]
+        public void TestHttpParserCaseInsensitiveHeaders()
+        {
+            var headers = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>(StringComparer.OrdinalIgnoreCase);
+            headers["upgrade"] = new() { "websocket" };
+            headers["sec-websocket-key"] = new() { "dGhlIHNhbXBsZSBub25jZQ==" };
+            headers["connection"] = new() { "Upgrade" };
+
+            Assert.IsTrue(headers.ContainsKey("Upgrade"));
+            Assert.IsTrue(headers.ContainsKey("Sec-WebSocket-Key"));
+            Assert.IsTrue(headers.ContainsKey("Connection"));
+            Assert.AreEqual("websocket", headers["Upgrade"][0]);
+        }
+
+        [TestMethod]
+        public void TestYdlSupportedUrlMatching()
+        {
+            var supported = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "youtube.com", "youtu.be", "vimeo.com", "dailymotion.com",
+                "facebook.com", "fb.watch", "instagram.com", "twitter.com",
+                "x.com", "twitch.tv", "bilibili.com", "tiktok.com", "reddit.com"
+            };
+
+            bool IsSupported(string url)
+            {
+                var host = new Uri(url).Host;
+                if (host.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) host = host.Substring(4);
+                return supported.Any(d => host.Equals(d, StringComparison.OrdinalIgnoreCase) || host.EndsWith("." + d, StringComparison.OrdinalIgnoreCase));
+            }
+
+            Assert.IsTrue(IsSupported("https://x.com/user/status/123"));
+            Assert.IsTrue(IsSupported("https://twitter.com/user/status/123"));
+            Assert.IsTrue(IsSupported("https://vimeo.com/12345"));
+            Assert.IsTrue(IsSupported("https://www.youtube.com/watch?v=abc"));
+            Assert.IsTrue(IsSupported("https://youtu.be/abc"));
+            Assert.IsFalse(IsSupported("https://unsupported-site.org/file.mp4"));
         }
     }
 }

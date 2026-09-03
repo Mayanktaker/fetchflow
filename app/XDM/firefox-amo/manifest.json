@@ -3,7 +3,15 @@
     "manifest_version": 3,
     "version": "9.1.8",
     "description": "Download files and capture videos with FetchFlow Download Manager",
-    "action": {},
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icon16.png",
+            "32": "icon32.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+        }
+    },
     "commands": {
         "_execute_action": {
             "suggested_key": {
@@ -31,17 +39,17 @@
     ],
     "background": {
         "scripts": [
-            "app/logger.js",
-            "app/connector.js",
-            "app/request-watcher.js",
-            "app/app.js",
+            "logger.js",
+            "connector.js",
+            "request-watcher.js",
+            "app.js",
             "main.js"
         ]
     },
     "content_scripts": [
         {
             "matches": ["http://*/*", "https://*/*"],
-            "js": ["app/blob-capture.js"],
+            "js": ["blob-capture.js"],
             "run_at": "document_start"
         }
     ],

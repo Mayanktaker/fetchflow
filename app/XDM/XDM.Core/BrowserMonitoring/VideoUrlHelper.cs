@@ -920,8 +920,12 @@ namespace XDM.Core.BrowserMonitoring
             if (string.IsNullOrEmpty(url)) return false;
             try
             {
-                var host = new Uri(url).Host.TrimStart('w', '.');
-                return SupportedYdlDomains.Any(d => host.EndsWith(d, StringComparison.OrdinalIgnoreCase));
+                var host = new Uri(url).Host;
+                if (host.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+                {
+                    host = host.Substring(4);
+                }
+                return SupportedYdlDomains.Any(d => host.Equals(d, StringComparison.OrdinalIgnoreCase) || host.EndsWith("." + d, StringComparison.OrdinalIgnoreCase));
             }
             catch { return false; }
         }

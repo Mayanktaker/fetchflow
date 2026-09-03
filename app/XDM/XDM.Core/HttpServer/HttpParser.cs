@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -62,7 +63,7 @@ namespace XDM.Core.HttpServer
         internal static RequestContext ParseContext(TcpClient tcp)
         {
             string path = "/";
-            Dictionary<string, List<string>> headers = new();
+            Dictionary<string, List<string>> headers = new(StringComparer.OrdinalIgnoreCase);
             byte[]? body = null;
             var io = tcp.GetStream();
             var first = true;

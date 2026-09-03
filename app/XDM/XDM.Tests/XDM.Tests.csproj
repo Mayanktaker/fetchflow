@@ -33,6 +33,7 @@
     <Compile Include="..\XDM.Core\Util\ChecksumHelper.cs" Link="Util\ChecksumHelper.cs" />
     <Compile Include="..\XDM.Core\Util\ThemePaletteHelper.cs" Link="Util\ThemePaletteHelper.cs" />
     <Compile Include="..\XDM.Core\Translations\TextResource.cs" Link="Translations\TextResource.cs" />
+    <Compile Include="..\XDM.Core\BrowserMonitoring\ExtensionData.cs" Link="BrowserMonitoring\ExtensionData.cs" />
   </ItemGroup>
 
 </Project>

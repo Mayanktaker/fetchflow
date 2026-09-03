@@ -18,10 +18,18 @@ class App {
         this.activeTabId = -1;
         this.connector = new Connector(this.onMessage.bind(this), this.onDisconnect.bind(this));
         this.pendingDownloads = [];
+        this.handledDownloadIds = new Set();
+        this.pendingDownloadsMap = new Map();
     }
 
     start() {
         this.logger.log("starting...");
+        // Query the active tab immediately so activeTabId is known on startup
+        chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+            if (tabs && tabs[0]) {
+                this.activeTabId = tabs[0].id + "";
+            }
+        });
         // Load cached config to prevent missing requests on wakeup
         chrome.storage.local.get(["fetchflowConfig", "xdmConfig"], (res) => {
             const cfg = res.fetchflowConfig || res.xdmConfig;
@@ -100,33 +108,67 @@ class App {
     }
 
     // Firefox download interception via the downloads API.
-    // downloads.onCreated only fires while the background is alive — the
-    // fetchflow-keepalive alarm keeps the event page awake (see register()).
+    // Listens to onCreated for immediate matches, and onChanged for Content-Disposition names.
     onDownloadCreated(download) {
         this.logger.log("onDownloadCreated");
         this.logger.log(download);
         if (!this.isMonitoringEnabled()) {
             return;
         }
-        // Blob URLs are handled by blob-capture.js DOM hooks — never cancel them here
-        // (the content script turns them into a chunked upload to the app).
         let url = download.url || "";
         if (this.isBlobUrl(url) || !this.isSupportedProtocol(url)) {
             return;
         }
-        // Give the content script (blob-capture.js) a moment to claim blob downloads.
-        // For normal HTTP(S) file downloads, cancel and hand the URL to FetchFlow.
-        if (this.shouldTakeOver(url, download.filename)) {
-            this.logger.log("Taking over download: " + url);
-            // Cancel the browser download so it does not also save to disk.
-            chrome.downloads.cancel(download.id, () => {
-                try {
-                    chrome.downloads.erase({ id: download.id }, () => { });
-                } catch (e) { }
-            });
-            this.triggerDownload(url, download.filename, download.referrer,
-                download.fileSize, download.mime);
+        if (url.indexOf("127.0.0.1") >= 0) {
+            return;
         }
+        if (this.shouldTakeOver(url, download.filename)) {
+            this.interceptDownload(download, download.filename);
+        } else {
+            this.pendingDownloadsMap.set(download.id, download);
+        }
+    }
+
+    onDownloadChanged(delta) {
+        if (!this.isMonitoringEnabled() || !delta) {
+            return;
+        }
+        if (delta.state && (delta.state.current === "complete" || delta.state.current === "interrupted")) {
+            this.handledDownloadIds.delete(delta.id);
+            this.pendingDownloadsMap.delete(delta.id);
+            return;
+        }
+        if (delta.filename && delta.filename.current) {
+            if (this.handledDownloadIds.has(delta.id)) {
+                return;
+            }
+            let item = this.pendingDownloadsMap.get(delta.id);
+            let url = item ? item.url : null;
+            let filename = delta.filename.current;
+            if (url && this.shouldTakeOver(url, filename)) {
+                this.interceptDownload(item || { id: delta.id, url: url }, filename);
+            }
+        }
+    }
+
+    interceptDownload(download, filename) {
+        if (this.handledDownloadIds.has(download.id)) {
+            return;
+        }
+        this.handledDownloadIds.add(download.id);
+        this.pendingDownloadsMap.delete(download.id);
+        this.logger.log("Taking over download: " + download.url);
+        chrome.downloads.cancel(download.id, () => {
+            try {
+                chrome.downloads.erase({ id: download.id }, () => { });
+            } catch (e) { }
+        });
+        let referrer = download.referrer;
+        if (!referrer && download.finalUrl && download.finalUrl !== download.url) {
+            referrer = download.url;
+        }
+        let size = download.fileSize || download.totalBytes || 0;
+        this.triggerDownload(download.url, filename, referrer, size, download.mime);
     }
 
     onTabUpdate(tabId, changeInfo, tab) {
@@ -138,7 +180,7 @@ class App {
         let tabTitle = changeInfo.title || tab.title || "";
         if (changeInfo.url || changeInfo.title) {
             if (this.tabsWatcher &&
-                this.tabsWatcher.find(t => tabUrl.indexOf(t) > 0)) {
+                this.tabsWatcher.some(t => tabUrl.includes(t))) {
                 // Deduplicate — don't re-send the same URL
                 if (this.lastSentTabUrl === tabUrl && !changeInfo.title) {
                     return;
@@ -167,7 +209,7 @@ class App {
         if (details.frameId !== 0) return; // Only top-level frame
         let url = details.url;
         if (this.tabsWatcher &&
-            this.tabsWatcher.find(t => url.indexOf(t) > 0)) {
+            this.tabsWatcher.some(t => url.includes(t))) {
             // Deduplicate — don't re-send the same URL
             if (this.lastSentTabUrl === url) {
                 return;
@@ -193,6 +235,9 @@ class App {
         // Firefox download interception via downloads API (cancel + send to app)
         chrome.downloads.onCreated.addListener(
             this.onDownloadCreatedCallback
+        );
+        chrome.downloads.onChanged.addListener(
+            this.onDownloadChanged.bind(this)
         );
         // SPA navigation detection via History API (YouTube, etc.)
         if (chrome.webNavigation && chrome.webNavigation.onHistoryStateUpdated) {
@@ -232,15 +277,16 @@ class App {
         try { u = new URL(url); } catch { return false; }
         if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
         let hostName = u.host;
-        if (this.blockedHosts && this.blockedHosts.find(item => hostName.indexOf(item) >= 0)) {
+        if (this.blockedHosts && this.blockedHosts.some(item => hostName.includes(item))) {
             return false;
         }
-        let path = file || u.pathname;
+        let cleanFile = file ? file.replace(/\.part$/i, "") : "";
+        let path = cleanFile || u.pathname;
         let upath = path.toUpperCase();
-        if (file && !this.fileExts.find(ext => upath.endsWith(ext))) {
+        if (cleanFile && !this.fileExts.some(ext => upath.endsWith(ext))) {
             upath = u.pathname.toUpperCase();
         }
-        if (this.fileExts && this.fileExts.find(ext => upath.endsWith(ext))) {
+        if (this.fileExts && this.fileExts.some(ext => upath.endsWith(ext))) {
             return true;
         }
         return false;
@@ -401,31 +447,20 @@ class App {
         chrome.action.setIcon({ path: this.getActionIcon() });
         let vc = "";
         if (this.videoList && this.videoList.length > 0) {
-            let len = this.videoList.filter(vid => {
-                if (!vid.tabId) {
-                    return true;
-                }
-                if (vid.tabId == '-1') {
-                    return true;
-                }
-                return (vid.tabId == this.activeTabId);
-            }).length;
-            if (len > 0) {
-                vc = len + "";
-            }
+            vc = this.videoList.length + "";
         }
         chrome.action.setBadgeText({ text: vc });
         if (!this.connector.isConnected()) {
             this.logger.log("Not connected...");
-            chrome.action.setPopup({ popup: "./app/error.html" });
+            chrome.action.setPopup({ popup: "error.html" });
             return;
         }
         if (!this.appEnabled) {
-            chrome.action.setPopup({ popup: "./app/disabled.html" });
+            chrome.action.setPopup({ popup: "disabled.html" });
             return;
         }
         else {
-            chrome.action.setPopup({ popup: "./app/popup.html" });
+            chrome.action.setPopup({ popup: "popup.html" });
             return;
         }
     }
@@ -461,8 +496,10 @@ class App {
             let data = {
                 url: url,
                 cookie: cookieStr,
+                cookies: cookieStr,
                 requestHeaders: requestHeaders,
                 responseHeaders: responseHeaders,
+                file: file,
                 filename: file,
                 fileSize: size,
                 mimeType: mime
@@ -478,7 +515,13 @@ class App {
         };
         try {
             chrome.cookies.getAll({ "url": url }, cookies => {
-                let cookieStr = cookies ? cookies.map(cookie => cookie.name + "=" + cookie.value).join("; ") : undefined;
+                if (chrome.runtime.lastError) {
+                    sendDownload(undefined);
+                    return;
+                }
+                let cookieStr = cookies && cookies.length > 0
+                    ? cookies.map(cookie => cookie.name + "=" + cookie.value).join("; ")
+                    : undefined;
                 sendDownload(cookieStr);
             });
         } catch (e) {
@@ -494,14 +537,14 @@ class App {
     onPopupMessage(request, sender, sendResponse) {
         this.logger.log(request.type);
         if (request.type === "stat") {
+            let list = (this.videoList || []).slice().sort((a, b) => {
+                let aMatches = (a.tabId && a.tabId == this.activeTabId) ? 1 : 0;
+                let bMatches = (b.tabId && b.tabId == this.activeTabId) ? 1 : 0;
+                return bMatches - aMatches;
+            });
             let resp = {
                 enabled: this.isMonitoringEnabled(),
-                list: this.videoList.filter(vid => {
-                    if (!vid.tabId) {
-                        return true;
-                    }
-                    return (vid.tabId == this.activeTabId);
-                })
+                list: list
             };
             sendResponse(resp);
         }

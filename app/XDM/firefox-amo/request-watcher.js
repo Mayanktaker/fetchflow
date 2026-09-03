@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 "use strict";
 
 class RequestWatcher {
@@ -60,11 +61,11 @@ class RequestWatcher {
 
         let path = u.pathname;
         let upath = path.toUpperCase();
-        if (this.mediaExts.find(e => upath.endsWith(e))) {
+        if (this.mediaExts.find(e => upath.endsWith("." + e))) {
             return true;
         }
 
-        if (this.requestFileExts.find(e => upath.endsWith(e))) {
+        if (this.requestFileExts.find(e => upath.endsWith("." + e))) {
             return true;
         }
 
@@ -74,7 +75,8 @@ class RequestWatcher {
             }
         } catch { }
 
-        let mediaType = res.responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-TYPE");
+        const responseHeaders = res.responseHeaders || [];
+        let mediaType = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-TYPE");
         if (mediaType && this.mediaTypes.find(m => mediaType["value"].indexOf(m) >= 0)) {
             return true;
         }
@@ -83,7 +85,7 @@ class RequestWatcher {
             return true;
         }
 
-        let contentDisposition = res.responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
+        let contentDisposition = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
         if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
             return true;
         }
@@ -115,7 +117,13 @@ class RequestWatcher {
                 if (req.tabId !== -1) {
                     chrome.tabs.get(
                         req.tabId,
-                        tab => this.postMedia(req, res, tab)
+                        tab => {
+                            if (chrome.runtime.lastError) {
+                                this.postMedia(req, res, null);
+                                return;
+                            }
+                            this.postMedia(req, res, tab);
+                        }
                     );
                 } else {
                     this.postMedia(req, res, null);
@@ -198,7 +206,8 @@ class RequestWatcher {
             });
         }
         if (cookies.length > 0) {
-            data.cookie = cookies.join(";");
+            data.cookie = cookies.join("; ");
+            data.cookies = data.cookie;
         }
         return data;
     }

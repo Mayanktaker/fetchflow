@@ -1,6 +1,13 @@
 {
     "name": "FetchFlow Browser Helper",
-    "action": {},
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icon16.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+        }
+    },
     "manifest_version": 3,
     "version": "9.1.8",
     "description": "Download files and capture videos with FetchFlow Download Manager",
