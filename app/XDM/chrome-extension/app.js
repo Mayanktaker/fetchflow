@@ -522,17 +522,21 @@ export default class App {
     onPopupMessage(request, sender, sendResponse) {
         this.logger.log(request.type);
         if (request.type === "stat") {
+            let list = (this.videoList || []).slice().sort((a, b) => {
+                let aMatches = (a.tabId && a.tabId == this.activeTabId) ? 1 : 0;
+                let bMatches = (b.tabId && b.tabId == this.activeTabId) ? 1 : 0;
+                return bMatches - aMatches;
+            });
             let resp = {
                 enabled: this.isMonitoringEnabled(),
-                list: this.videoList
-                // list: this.videoList.filter(vid => {
-                //     if (!vid.tabId) {
-                //         return true;
-                //     }
-                //     return (vid.tabId == this.activeTabId);
-                // })
+                list: list,
+                health: this.connector.getHealthInfo()
             };
             sendResponse(resp);
+        }
+        else if (request.type === "ping") {
+            this.connector.pingNow();
+            sendResponse({ health: this.connector.getHealthInfo() });
         }
         else if (request.type === "cmd") {
             this.userDisabled = request.enabled === false;

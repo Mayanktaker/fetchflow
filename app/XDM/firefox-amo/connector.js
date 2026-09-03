@@ -18,11 +18,31 @@ class Connector {
         this.reconnectTimer = null;
         this.pollingStarted = false;
         this.pollingTimer = null;
+        this.lastPingSentTime = null;
+        this.latency = null;
     }
 
     connect() {
         // Phase6: try WebSocket first on each port, then fall back to HTTP polling
         this.tryConnectWebSocket();
+    }
+
+    // Measure live WebSocket latency on demand
+    pingNow() {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.lastPingSentTime = Date.now();
+            this.ws.send(JSON.stringify({ path: "/ping", body: "" }));
+        }
+    }
+
+    // Returns current connection health metrics for popup consumption
+    getHealthInfo() {
+        return {
+            connected: !!this.connected,
+            useWebSocket: !!this.useWebSocket,
+            latency: this.latency,
+            port: APP_BASE_PORTS[this.portIndex]
+        };
     }
 
     // Phase6: attempt a WebSocket connection to ws://127.0.0.1:{port}/ws
@@ -37,17 +57,23 @@ class Connector {
                 // CRITICAL: update httpBaseUrl so postBlobChunk uses the correct port
                 httpBaseUrl = "http://127.0.0.1:" + port;
                 this.logger.log("WebSocket connected on port " + port + " | httpBaseUrl: " + httpBaseUrl);
-                // Send initial sync
+                // Send initial sync and measure round-trip latency
+                this.lastPingSentTime = Date.now();
                 this.ws.send(JSON.stringify({ path: "/sync", body: "" }));
-                // Keep alive ping
+                // Keep alive ping every 5 seconds for fresh latency readings
                 this.pingInterval = setInterval(() => {
                     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.lastPingSentTime = Date.now();
                         this.ws.send(JSON.stringify({ path: "/ping", body: "" }));
                     }
-                }, 10000);
+                }, 5000);
             };
 
             this.ws.onmessage = (event) => {
+                if (this.lastPingSentTime) {
+                    this.latency = Math.max(1, Date.now() - this.lastPingSentTime);
+                    this.lastPingSentTime = null;
+                }
                 try {
                     const json = JSON.parse(event.data);
                     this.onMessage(json);
@@ -62,12 +88,14 @@ class Connector {
                 this.useWebSocket = false;
                 this.connected = false;
                 this.ws = null;
+                this.latency = null;
                 // Fall back to HTTP polling
                 this.startHttpPolling();
             };
 
             this.ws.onerror = (err) => {
                 this.logger.log("WebSocket error on port " + port);
+                this.latency = null;
                 // Try next port, then fall back to HTTP
                 this.portIndex = (this.portIndex + 1) % APP_BASE_PORTS.length;
                 if (this.portIndex !== 0) {
@@ -78,6 +106,7 @@ class Connector {
             };
         } catch (e) {
             this.logger.log("WebSocket connect failed: " + e);
+            this.latency = null;
             this.startHttpPolling();
         }
     }

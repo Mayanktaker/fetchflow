@@ -544,9 +544,14 @@ class App {
             });
             let resp = {
                 enabled: this.isMonitoringEnabled(),
-                list: list
+                list: list,
+                health: this.connector.getHealthInfo()
             };
             sendResponse(resp);
+        }
+        else if (request.type === "ping") {
+            this.connector.pingNow();
+            sendResponse({ health: this.connector.getHealthInfo() });
         }
         else if (request.type === "cmd") {
             this.userDisabled = request.enabled === false;

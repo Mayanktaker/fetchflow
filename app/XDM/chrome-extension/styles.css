@@ -588,3 +588,127 @@ body.popup {
   z-index: 100;
   white-space: nowrap;
 }
+
+/* Media Section Headers (Video / Audio Grouping) */
+.media-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--s3);
+}
+
+.media-section:last-child {
+  margin-bottom: 0;
+}
+
+.media-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px var(--s1);
+  margin-top: 2px;
+}
+
+.media-section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.media-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+}
+
+.media-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+
+.media-section-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  color: var(--text-faint);
+}
+
+/* Audio Distinct Styling */
+.media-card-badge.media-card-badge-audio {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+}
+
+.media-card.media-card-audio:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+/* Footer Connection Health Row */
+.footer-health-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.health-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background-color: var(--bg-view);
+  border: 1px solid var(--border-soft);
+  color: var(--text-dim);
+  transition: all 0.2s ease;
+}
+
+.health-pill.health-ws {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.25);
+  color: var(--success);
+}
+
+.health-pill.health-http {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+}
+
+.health-pill.health-offline {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+
+.health-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--text-faint);
+}
+
+.health-dot-ws {
+  background-color: var(--success);
+  box-shadow: 0 0 5px var(--success);
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.health-dot-http {
+  background-color: #f59e0b;
+}
+
+.health-dot-offline {
+  background-color: #ef4444;
+}
