@@ -332,6 +332,39 @@
       background: var(--accent);
       border-color: var(--accent);
     }
+    .dl-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-sha-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .btn-sha-copy:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn-sha-copy.copied {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--green);
+      color: var(--green);
+    }
 
     /* Footer */
     footer {
@@ -374,7 +407,7 @@
 
   <!-- Hero -->
   <header class="hero">
-    <div class="hero-badge" id="live-version-badge">⚡ Linux &bull; Windows &bull; v9.1.4</div>
+    <div class="hero-badge" id="live-version-badge">⚡ Linux &bull; Windows &bull; v9.1.8</div>
     <img class="hero-logo" src="fetchflow-logo.png" alt="FetchFlow App Icon">
     <h1>High-Speed Download Acceleration<br>For Linux &amp; Windows.</h1>
     <p>
@@ -389,7 +422,7 @@
     </div>
 
     <div class="cta-group">
-      <a href="#downloads" class="btn-primary" id="btn-hero-download">Download FetchFlow</a>
+      <a href="#downloads" class="btn-primary" id="btn-hero-download">Download FetchFlow v9.1.8</a>
       <a href="https://github.com/Mayanktaker/fetchflow" class="btn-secondary" target="_blank">View on GitHub</a>
     </div>
   </header>
@@ -508,7 +541,7 @@
   <section class="download-section" id="downloads">
     <div class="section-title" style="margin-bottom: 20px;">
       <h2>Distribution Packages</h2>
-      <p id="release-info-text">Self-contained, AOT-compiled binaries for Windows and Linux.</p>
+      <p id="release-info-text">Latest stable release (v9.1.8). Self-contained, AOT-compiled binaries for Linux and Windows.</p>
     </div>
 
     <table class="download-table">
@@ -523,32 +556,62 @@
         <tr>
           <td><strong>🪟 Windows 11 / 10 (64-bit)</strong></td>
           <td><span class="pkg-tag">EXE / MSI</span></td>
-          <td><a class="btn-dl-small" id="dl-win-exe" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Windows Installer</a></td>
+          <td>
+            <div class="dl-actions">
+              <a class="btn-dl-small" id="dl-win-exe" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Windows Installer</a>
+              <button class="btn-sha-copy" data-target="dl-win-exe" data-hash="" title="Copy SHA-256 checksum">📋 SHA-256</button>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><strong>🪟 Windows Portable (64-bit)</strong></td>
           <td><span class="pkg-tag">ZIP</span></td>
-          <td><a class="btn-dl-small" id="dl-win-zip" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Windows .ZIP</a></td>
+          <td>
+            <div class="dl-actions">
+              <a class="btn-dl-small" id="dl-win-zip" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Windows .ZIP</a>
+              <button class="btn-sha-copy" data-target="dl-win-zip" data-hash="" title="Copy SHA-256 checksum">📋 SHA-256</button>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><strong>🐧 Fedora / RHEL / CentOS / openSUSE</strong></td>
           <td><span class="pkg-tag">RPM</span></td>
-          <td><a class="btn-dl-small" id="dl-rpm" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download .RPM</a></td>
+          <td>
+            <div class="dl-actions">
+              <a class="btn-dl-small" id="dl-rpm" href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow-9.1.8-1.fc44.x86_64.rpm">Download .RPM (v9.1.8)</a>
+              <button class="btn-sha-copy" data-target="dl-rpm" data-hash="99a7021ac4af8ebb34602c5fc892b0f0285909e4e9b00f2a7ab3b32cf18e482e" title="Copy SHA-256 checksum">📋 SHA-256</button>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><strong>🐧 Debian / Ubuntu / Mint / Pop!_OS</strong></td>
           <td><span class="pkg-tag">DEB</span></td>
-          <td><a class="btn-dl-small" id="dl-deb" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download .DEB</a></td>
+          <td>
+            <div class="dl-actions">
+              <a class="btn-dl-small" id="dl-deb" href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow_9.1.8_amd64.deb">Download .DEB (v9.1.8)</a>
+              <button class="btn-sha-copy" data-target="dl-deb" data-hash="0f2843b9510fe413d237826c5e893f050e1cf468c9dcded30e52507d326db1dd" title="Copy SHA-256 checksum">📋 SHA-256</button>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><strong>🐧 Arch Linux / Manjaro / EndeavourOS</strong></td>
           <td><span class="pkg-tag">PKG.TAR.ZST</span></td>
-          <td><a class="btn-dl-small" id="dl-arch" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Arch Pkg</a></td>
+          <td>
+            <div class="dl-actions">
+              <a class="btn-dl-small" id="dl-arch" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Arch Pkg</a>
+              <button class="btn-sha-copy" data-target="dl-arch" data-hash="" title="Copy SHA-256 checksum">📋 SHA-256</button>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><strong>🐧 Universal Linux x64</strong></td>
           <td><span class="pkg-tag">TAR.GZ</span></td>
-          <td><a class="btn-dl-small" id="dl-targz" href="https://github.com/Mayanktaker/fetchflow/releases/latest">Download Portable .tar.gz</a></td>
+          <td>
+            <div class="dl-actions">
+              <a class="btn-dl-small" id="dl-targz" href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow-linux-x64-9.1.8.tar.gz">Download Portable .tar.gz (v9.1.8)</a>
+              <button class="btn-sha-copy" data-target="dl-targz" data-hash="703e70808c7226514849034ffe23269dccaa64805e2d892cc9bca10dabb5adef" title="Copy SHA-256 checksum">📋 SHA-256</button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -570,14 +633,20 @@
         <div class="card-icon" style="margin: 0 auto 16px;">🌐</div>
         <h3>Chromium Browsers</h3>
         <p style="margin-bottom: 20px;">For Chrome, Brave, Microsoft Edge, Opera, and Vivaldi.</p>
-        <a href="https://github.com/Mayanktaker/fetchflow/releases/latest" id="dl-chrome" class="btn-secondary" style="display: inline-block;">Download Chrome MV3 Zip</a>
+        <div class="dl-actions" style="justify-content: center;">
+          <a href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow-chrome-extension-9.1.8.zip" id="dl-chrome" class="btn-secondary">Download Chrome MV3 Zip (v9.1.8)</a>
+          <button class="btn-sha-copy" data-target="dl-chrome" data-hash="5c94226cf19bd4364d8eaaa32afe3c23a97241ac089d39fc3c791c6bdd3e08a6" title="Copy SHA-256 checksum">📋 SHA-256</button>
+        </div>
       </div>
 
       <div class="card" style="text-align: center;">
         <div class="card-icon" style="margin: 0 auto 16px;">🦊</div>
         <h3>Firefox & Gecko</h3>
         <p style="margin-bottom: 20px;">For Firefox, Floorp, LibreWolf, and Waterfox.</p>
-        <a href="https://github.com/Mayanktaker/fetchflow/releases/latest" id="dl-firefox" class="btn-secondary" style="display: inline-block;">Download Firefox XPI</a>
+        <div class="dl-actions" style="justify-content: center;">
+          <a href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.8/fetchflow-firefox-extension-9.1.8.xpi" id="dl-firefox" class="btn-secondary">Download Firefox XPI (v9.1.8)</a>
+          <button class="btn-sha-copy" data-target="dl-firefox" data-hash="660933e468c308bc01c7195ffc1e5275a93afbfdd6f61063d9475fac7e8a3548" title="Copy SHA-256 checksum">📋 SHA-256</button>
+        </div>
       </div>
     </div>
   </section>
@@ -594,13 +663,50 @@
   <!-- Real-time GitHub Releases API Live Auto-Updater -->
   <script>
     (async function() {
+      // 1. Copy-to-clipboard handler for SHA-256 buttons
+      document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-sha-copy');
+        if (!btn) return;
+        const hash = btn.getAttribute('data-hash');
+        if (!hash) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '⚠️ No Hash';
+          setTimeout(() => { btn.innerHTML = orig; }, 2000);
+          return;
+        }
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(hash);
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = hash;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          }
+          const originalText = btn.innerHTML;
+          btn.classList.add('copied');
+          btn.innerHTML = '✓ Copied!';
+          setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = originalText;
+          }, 2000);
+        } catch (err) {
+          prompt('Copy SHA-256 checksum:', hash);
+        }
+      });
+
+      // 2. Fetch latest release metadata and SHA256SUMS.txt
       try {
         const response = await fetch('https://api.github.com/repos/Mayanktaker/fetchflow/releases/latest');
         if (!response.ok) return;
         const release = await response.json();
-        const tag = release.tag_name || 'v9.1.4';
+        const tag = release.tag_name || 'v9.1.8';
         
-        // 1. Update version badge & hero button in real-time
+        // Update version badge & hero button in real-time
         const badge = document.getElementById('live-version-badge');
         if (badge) badge.textContent = `⚡ Linux &bull; Windows &bull; ${tag}`;
         
@@ -613,12 +719,15 @@
           infoText.textContent = `Latest stable release (${tag} — ${pubDate}). Available for Windows & Linux.`;
         }
 
-        // 2. Wire direct asset download URLs from GitHub Release assets
+        // Wire direct asset download URLs from GitHub Release assets
         if (Array.isArray(release.assets)) {
+          let checksumUrl = null;
           release.assets.forEach(asset => {
             const name = asset.name.toLowerCase();
             const url = asset.browser_download_url;
-            if (name.endsWith('.exe') || name.endsWith('.msi')) {
+            if (name === 'sha256sums.txt') {
+              checksumUrl = url;
+            } else if (name.endsWith('.exe') || name.endsWith('.msi')) {
               const el = document.getElementById('dl-win-exe');
               if (el) el.href = url;
             } else if (name.includes('win') && name.endsWith('.zip')) {
@@ -626,24 +735,53 @@
               if (el) el.href = url;
             } else if (name.endsWith('.rpm')) {
               const el = document.getElementById('dl-rpm');
-              if (el) el.href = url;
+              if (el) { el.href = url; el.textContent = `Download .RPM (${tag})`; }
             } else if (name.endsWith('.deb')) {
               const el = document.getElementById('dl-deb');
-              if (el) el.href = url;
+              if (el) { el.href = url; el.textContent = `Download .DEB (${tag})`; }
             } else if (name.endsWith('.pkg.tar.zst') || (name.includes('arch') && name.endsWith('.zst'))) {
               const el = document.getElementById('dl-arch');
-              if (el) el.href = url;
+              if (el) { el.href = url; el.textContent = `Download Arch Pkg (${tag})`; }
             } else if (name.endsWith('.tar.gz') && !name.includes('source')) {
               const el = document.getElementById('dl-targz');
-              if (el) el.href = url;
+              if (el) { el.href = url; el.textContent = `Download Portable .tar.gz (${tag})`; }
             } else if (name.includes('chrome') && name.endsWith('.zip')) {
               const el = document.getElementById('dl-chrome');
-              if (el) el.href = url;
+              if (el) { el.href = url; el.textContent = `Download Chrome MV3 Zip (${tag})`; }
             } else if (name.includes('firefox') && (name.endsWith('.xpi') || name.endsWith('.zip'))) {
               const el = document.getElementById('dl-firefox');
-              if (el) el.href = url;
+              if (el) { el.href = url; el.textContent = `Download Firefox XPI (${tag})`; }
             }
           });
+
+          // Dynamically fetch and parse SHA256SUMS.txt
+          if (checksumUrl) {
+            try {
+              const sumRes = await fetch(checksumUrl);
+              if (sumRes.ok) {
+                const sumText = await sumRes.text();
+                const hashMap = {};
+                sumText.split(/\r?\n/).forEach(line => {
+                  const parts = line.trim().split(/\s+/);
+                  if (parts.length >= 2 && parts[0].length === 64) {
+                    hashMap[parts[1].trim().toLowerCase()] = parts[0];
+                  }
+                });
+                document.querySelectorAll('.btn-sha-copy').forEach(btn => {
+                  const targetId = btn.getAttribute('data-target');
+                  const targetEl = document.getElementById(targetId);
+                  if (targetEl && targetEl.href) {
+                    const filename = targetEl.href.split('/').pop().toLowerCase();
+                    if (hashMap[filename]) {
+                      btn.setAttribute('data-hash', hashMap[filename]);
+                    }
+                  }
+                });
+              }
+            } catch (e) {
+              // Retain fallback static hashes
+            }
+          }
         }
       } catch (err) {
         // Quiet fallback to default static values

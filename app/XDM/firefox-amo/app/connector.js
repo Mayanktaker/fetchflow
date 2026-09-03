@@ -16,6 +16,8 @@ class Connector {
         this.ws = null;             // Phase6: WebSocket instance
         this.useWebSocket = false;  // Phase6: true when WebSocket is active
         this.reconnectTimer = null;
+        this.pollingStarted = false;
+        this.pollingTimer = null;
     }
 
     connect() {
@@ -84,7 +86,14 @@ class Connector {
     startHttpPolling() {
         this.useWebSocket = false;
         httpBaseUrl = "http://127.0.0.1:" + APP_BASE_PORTS[this.portIndex];
-        setInterval(this.onTimer.bind(this), 5000);
+        if (this.pollingStarted) {
+            return;
+        }
+        this.pollingStarted = true;
+        this.pollingTimer = setInterval(this.onTimer.bind(this), 5000);
+        // Poll immediately — a cold-woken background must not wait out the first
+        // interval before it can deliver queued downloads.
+        this.onTimer();
     }
 
     onTimer() {

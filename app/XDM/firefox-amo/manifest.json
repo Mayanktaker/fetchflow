@@ -26,7 +26,8 @@
         "storage",
         "contextMenus",
         "scripting",
-        "cookies"
+        "cookies",
+        "alarms"
     ],
     "background": {
         "scripts": [

@@ -27,6 +27,7 @@ User-facing details live in [README.md](README.md); design system tokens live in
 | [`CHROMEWEBSTORE.md`](CHROMEWEBSTORE.md) | Chrome Web Store listing metadata, permission justifications & 2026 Limited Use policies |
 | [`docs/privacy.html`](docs/privacy.html) | HTTPS Privacy Policy certifying zero telemetry, zero ad tracking, and local loopback IPC |
 | [`.github/workflows/release.yml`](.github/workflows/release.yml) | Automated CI/CD release workflow for tarballs, RPM, DEB, extensions & SHA256SUMS |
+| [`.github/workflows/sync-gh-pages.yml`](.github/workflows/sync-gh-pages.yml) | Automated release sync for `gh-pages` download links, hero badges & SHA-256 checksums |
 | [`docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.md`](docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.md) | UI/UX design tokens, GTK styling rules, and layout specifications |
 | [`docs/design.md`](docs/design.md) | Canonical single source of truth for UI tokens, radius/spacing scale, theme colors & typography |
 

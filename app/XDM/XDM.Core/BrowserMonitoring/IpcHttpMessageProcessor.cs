@@ -205,8 +205,8 @@ namespace XDM.Core.BrowserMonitoring
             var dmsg = new Message();
             dmsg.Url = msg.Url;
             dmsg.RequestMethod = msg.Method;
-            dmsg.RequestHeaders = msg.RequestHeaders;
-            dmsg.ResponseHeaders = msg.ResponseHeaders;
+            dmsg.RequestHeaders = msg.RequestHeaders ?? new Dictionary<string, List<string>>();
+            dmsg.ResponseHeaders = msg.ResponseHeaders ?? new Dictionary<string, List<string>>();
             dmsg.Cookies = msg.Cookie;
             dmsg.File = FileHelper.SanitizeFileName(msg.File)!;
             dmsg.TabUrl = msg.TabUrl;
@@ -225,8 +225,8 @@ namespace XDM.Core.BrowserMonitoring
             var dmsg = new Message();
             dmsg.Url = msg.Url;
             dmsg.RequestMethod = msg.Method;
-            dmsg.RequestHeaders = msg.RequestHeaders;
-            dmsg.ResponseHeaders = msg.ResponseHeaders;
+            dmsg.RequestHeaders = msg.RequestHeaders ?? new Dictionary<string, List<string>>();
+            dmsg.ResponseHeaders = msg.ResponseHeaders ?? new Dictionary<string, List<string>>();
             dmsg.Cookies = msg.Cookie;
             dmsg.File = FileHelper.SanitizeFileName(msg.File)!;
             dmsg.TabUrl = msg.TabUrl;
@@ -536,6 +536,9 @@ namespace XDM.Core.BrowserMonitoring
                         // Extension requesting config → send config JSON back
                         session.Send(CreateConfigJson() ?? "{}");
                         break;
+                    case "/ping":
+                        session.Send(CreateConfigJson() ?? "{}");
+                        break;
                     case "/download":
                         if (bodyBytes != null) OnDownloadMessage(bodyBytes);
                         session.Send(CreateConfigJson() ?? "{}");
@@ -581,8 +584,8 @@ namespace XDM.Core.BrowserMonitoring
             var dmsg = new Message();
             dmsg.Url = msg.Url;
             dmsg.RequestMethod = msg.Method;
-            dmsg.RequestHeaders = msg.RequestHeaders;
-            dmsg.ResponseHeaders = msg.ResponseHeaders;
+            dmsg.RequestHeaders = msg.RequestHeaders ?? new Dictionary<string, List<string>>();
+            dmsg.ResponseHeaders = msg.ResponseHeaders ?? new Dictionary<string, List<string>>();
             dmsg.Cookies = msg.Cookie;
             dmsg.File = FileHelper.SanitizeFileName(msg.File)!;
             dmsg.TabUrl = msg.TabUrl;
@@ -598,8 +601,8 @@ namespace XDM.Core.BrowserMonitoring
             var dmsg = new Message();
             dmsg.Url = msg.Url;
             dmsg.RequestMethod = msg.Method;
-            dmsg.RequestHeaders = msg.RequestHeaders;
-            dmsg.ResponseHeaders = msg.ResponseHeaders;
+            dmsg.RequestHeaders = msg.RequestHeaders ?? new Dictionary<string, List<string>>();
+            dmsg.ResponseHeaders = msg.ResponseHeaders ?? new Dictionary<string, List<string>>();
             dmsg.Cookies = msg.Cookie;
             dmsg.File = FileHelper.SanitizeFileName(msg.File)!;
             dmsg.TabUrl = msg.TabUrl;

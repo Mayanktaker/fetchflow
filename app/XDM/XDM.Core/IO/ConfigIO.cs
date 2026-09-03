@@ -215,6 +215,9 @@ namespace XDM.Core.IO
                     case "PlayCompletionSound":
                         instance.PlayCompletionSound = r.ReadBoolean();
                         break;
+                    case "CategoriesExpanded":
+                        instance.CategoriesExpanded = r.ReadBoolean();
+                        break;
                     case "ShowProgressWindow":
                         instance.ShowProgressWindow = r.ReadBoolean();
                         break;
@@ -379,6 +382,8 @@ namespace XDM.Core.IO
             WriteBoolean(w, instance.ShowDownloadCompleteWindow, "ShowDownloadCompleteWindow");
             count++;
             WriteBoolean(w, instance.PlayCompletionSound, "PlayCompletionSound");
+            count++;
+            WriteBoolean(w, instance.CategoriesExpanded, "CategoriesExpanded");
             count++;
             WriteInt32(w, instance.AutoDismissCompleteDialogSeconds, "AutoDismissCompleteDialogSeconds");
             count++;

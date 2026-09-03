@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using TraceLog;
 #if !NET5_0_OR_GREATER
@@ -42,13 +43,15 @@ namespace XDM.Core.HttpServer
 
         internal static long ParseContentLength(Dictionary<string, List<string>> headers)
         {
-            var value = headers.GetValueOrDefault("Content-Length")?[0];
+            var value = headers.FirstOrDefault(pair =>
+                pair.Key.Equals("Content-Length", StringComparison.InvariantCultureIgnoreCase)).Value?[0];
             return Int64.Parse(value ?? "-1");
         }
 
         private static bool ShouldKeepAlive(Dictionary<string, List<string>> headers)
         {
-            var value = headers.GetValueOrDefault("Connection")?[0] ?? "close";
+            var value = headers.FirstOrDefault(pair =>
+                pair.Key.Equals("Connection", StringComparison.InvariantCultureIgnoreCase)).Value?[0] ?? "close";
             if (value.Equals("keep-alive", StringComparison.InvariantCultureIgnoreCase))
             {
                 return true;

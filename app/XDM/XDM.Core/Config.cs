@@ -133,6 +133,9 @@ namespace XDM.Core
         // Plays system sound on download completion
         public bool PlayCompletionSound { get; set; } = true;
 
+        // Whether the sidebar categories section is expanded
+        public bool CategoriesExpanded { get; set; } = true;
+
         public bool StartDownloadAutomatically { get; set; } = false;
 
         public bool FetchServerTimeStamp { get; set; } = false;

@@ -17,6 +17,8 @@ export default class Connector {
         this.ws = null;             // Phase6: WebSocket instance
         this.useWebSocket = false;  // Phase6: true when WebSocket is active
         this.reconnectTimer = null;
+        this.pollingStarted = false;
+        this.pollingTimer = null;
     }
 
     connect() {
@@ -85,6 +87,10 @@ export default class Connector {
     startHttpPolling() {
         this.useWebSocket = false;
         httpBaseUrl = "http://127.0.0.1:" + APP_BASE_PORTS[this.portIndex];
+        if (this.pollingStarted) {
+            return;
+        }
+        this.pollingStarted = true;
         for (let i = 0; i < 12; i++) {
             chrome.alarms.create("alerm-" + i, {
                 periodInMinutes: 1,

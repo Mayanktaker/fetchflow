@@ -715,7 +715,11 @@ namespace XDM.GtkUI
         {
             if (e.EventType == "ExtensionConnectionChanged" || e.EventType == "ConfigChanged")
             {
-                Application.Invoke((_, _) => UpdateExtensionStatus());
+                Application.Invoke((_, _) =>
+                {
+                    UpdateExtensionStatus();
+                    UpdateSpeedLimitButton();
+                });
             }
         }
 
@@ -827,6 +831,19 @@ namespace XDM.GtkUI
                 };
                 menu.Append(item);
             }
+
+            menu.Append(new SeparatorMenuItem());
+
+            var isCustom = Config.Instance.EnableSpeedLimit && !presets.Contains(Config.Instance.DefaltDownloadSpeed) && Config.Instance.DefaltDownloadSpeed > 0;
+            var customLabel = isCustom
+                ? $"● Custom ({FormattingHelper.FormatSize(Config.Instance.DefaltDownloadSpeed * 1024.0)}/s)..."
+                : "Custom Limit...";
+            var customItem = new MenuItem(customLabel);
+            customItem.Activated += (_, _) =>
+            {
+                ApplicationContext.PlatformUIService.ShowSpeedLimiterWindow();
+            };
+            menu.Append(customItem);
 
             menu.ShowAll();
             menu.PopupAtPointer((Gdk.Event)ev);
@@ -1018,9 +1035,10 @@ namespace XDM.GtkUI
             var catHeaderBox = new EventBox();
             catHeaderBox.StyleContext.AddClass("sidebar-heading-box");
             var catTitle = TextResource.GetText("SETTINGS_CAT") ?? "Categories";
+            bool isCategoriesExpanded = Config.Instance.CategoriesExpanded;
             var catHeaderLabel = new Label
             {
-                Text = $"▾  {catTitle}",
+                Text = isCategoriesExpanded ? $"▾  {catTitle}" : $"▸  {catTitle}",
                 Halign = Align.Start,
                 MarginStart = 16,
                 MarginTop = 8,
@@ -1029,7 +1047,6 @@ namespace XDM.GtkUI
             catHeaderLabel.StyleContext.AddClass("sidebar-heading");
             catHeaderBox.Add(catHeaderLabel);
 
-            bool isCategoriesExpanded = true;
             catHeaderBox.ButtonPressEvent += (o, args) =>
             {
                 if (args.Event.Button == 1)
@@ -1037,12 +1054,15 @@ namespace XDM.GtkUI
                     isCategoriesExpanded = !isCategoriesExpanded;
                     categoryTree.Visible = isCategoriesExpanded;
                     catHeaderLabel.Text = isCategoriesExpanded ? $"▾  {catTitle}" : $"▸  {catTitle}";
+                    Config.Instance.CategoriesExpanded = isCategoriesExpanded;
+                    Config.SaveConfig();
                 }
             };
 
             // Categories TreeView
             categoryTree = new TreeView()
             {
+                Visible = isCategoriesExpanded,
                 HeadersVisible = false,
                 ShowExpanders = false,
                 LevelIndentation = 0,

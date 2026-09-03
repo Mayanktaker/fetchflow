@@ -109,27 +109,25 @@ class RequestWatcher {
             if (res.url.indexOf("127.0.0.1") >= 0) {
                 return;
             }
+            // Media/streaming detection only — file downloads are intercepted in
+            // app.js via downloads.onCreated (Firefox MV3 reliable path).
             if (this.callback && this.isMatchingRequest(res) && this.statusCallback()) {
-                let intercept = this.shouldIntercept(res);
                 if (req.tabId !== -1) {
                     chrome.tabs.get(
                         req.tabId,
-                        tab => this.postMediaOrDownload(req, res, tab, intercept)
+                        tab => this.postMedia(req, res, tab)
                     );
                 } else {
-                    this.postMediaOrDownload(req, res, null, intercept);
-                }
-                if (intercept) {
-                    return { cancel: true };
+                    this.postMedia(req, res, null);
                 }
             }
         }
     }
 
-    postMediaOrDownload(req, res, tab, intercept) {
-        let file = intercept ? null : (tab ? tab.title : null);
+    postMedia(req, res, tab) {
+        let file = tab ? tab.title : null;
         let tabUrl = tab ? tab.url : null;
-        this.callback(this.createRequestData(req, res, file, tabUrl, req.tabId, intercept));
+        this.callback(this.createRequestData(req, res, file, tabUrl, req.tabId));
     }
 
     onErrorOccurredEvent(info) {
@@ -147,7 +145,7 @@ class RequestWatcher {
         chrome.webRequest.onHeadersReceived.addListener(
             this.onHeadersReceivedEventCallback,
             { urls: ["http://*/*", "https://*/*"] },
-            ["blocking", "responseHeaders"]
+            ["responseHeaders"]
         );
 
         chrome.webRequest.onErrorOccurred.addListener(
@@ -162,7 +160,7 @@ class RequestWatcher {
         chrome.webRequest.onErrorOccurred.removeListener(this.onErrorOccurredEventCallback);
     }
 
-    createRequestData(req, res, title, tabUrl, tabId, intercept) {
+    createRequestData(req, res, title, tabUrl, tabId) {
         var data = {
             url: res.url,
             file: title,
@@ -173,7 +171,7 @@ class RequestWatcher {
             userAgent: navigator.userAgent,
             tabUrl: tabUrl,
             tabId: tabId + "",
-            download: intercept
+            download: false
         };
 
         let cookies = [];
@@ -212,23 +210,6 @@ class RequestWatcher {
         } else {
             dict[key] = [value];
         }
-    }
-
-    shouldIntercept(res) {
-        let u = new URL(res.url);
-
-        let path = u.pathname;
-        let upath = path.toUpperCase();
-
-        if (this.fileExts.find(e => upath.endsWith("." + e))) {
-            return true;
-        }
-
-        let contentDisposition = res.responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
-        if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
-            return true;
-        }
-        return false;
     }
 
     isInValidStatus(res) {

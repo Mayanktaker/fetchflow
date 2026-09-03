@@ -14,6 +14,7 @@ class App {
         this.appEnabled = false;
         this.blobMaxBytes = 256 * 1024 * 1024; // 256 MiB default cap
         this.onTabUpdateCallback = this.onTabUpdate.bind(this);
+        this.onDownloadCreatedCallback = this.onDownloadCreated.bind(this);
         this.activeTabId = -1;
         this.connector = new Connector(this.onMessage.bind(this), this.onDisconnect.bind(this));
         this.pendingDownloads = [];
@@ -57,19 +58,19 @@ class App {
 
     updateConfig(msg) {
         this.appEnabled = msg.enabled === true;
-        this.fileExts = msg.fileExts;
-        this.blockedHosts = msg.blockedHosts;
-        this.tabsWatcher = msg.tabsWatcher;
-        this.videoList = msg.videoList;
+        this.fileExts = msg.fileExts || [];
+        this.blockedHosts = msg.blockedHosts || [];
+        this.tabsWatcher = msg.tabsWatcher || [];
+        this.videoList = msg.videoList || [];
         if (msg.blobMaxBytes && msg.blobMaxBytes > 0) {
             this.blobMaxBytes = msg.blobMaxBytes;
         }
         this.requestWatcher.updateConfig({
-            blockedHosts: msg.blockedHosts,
-            fileExts: msg.fileExts,
-            mediaExts: msg.requestFileExts,
-            matchingHosts: msg.matchingHosts,
-            mediaTypes: msg.mediaTypes
+            blockedHosts: msg.blockedHosts || [],
+            fileExts: msg.fileExts || [],
+            mediaExts: msg.requestFileExts || [],
+            matchingHosts: msg.matchingHosts || [],
+            mediaTypes: msg.mediaTypes || []
         });
         this.updateActionIcon();
     }
@@ -95,6 +96,36 @@ class App {
             } else {
                 this.connector.postMessage("/media", data);
             }
+        }
+    }
+
+    // Firefox download interception via the downloads API.
+    // downloads.onCreated only fires while the background is alive — the
+    // fetchflow-keepalive alarm keeps the event page awake (see register()).
+    onDownloadCreated(download) {
+        this.logger.log("onDownloadCreated");
+        this.logger.log(download);
+        if (!this.isMonitoringEnabled()) {
+            return;
+        }
+        // Blob URLs are handled by blob-capture.js DOM hooks — never cancel them here
+        // (the content script turns them into a chunked upload to the app).
+        let url = download.url || "";
+        if (this.isBlobUrl(url) || !this.isSupportedProtocol(url)) {
+            return;
+        }
+        // Give the content script (blob-capture.js) a moment to claim blob downloads.
+        // For normal HTTP(S) file downloads, cancel and hand the URL to FetchFlow.
+        if (this.shouldTakeOver(url, download.filename)) {
+            this.logger.log("Taking over download: " + url);
+            // Cancel the browser download so it does not also save to disk.
+            chrome.downloads.cancel(download.id, () => {
+                try {
+                    chrome.downloads.erase({ id: download.id }, () => { });
+                } catch (e) { }
+            });
+            this.triggerDownload(url, download.filename, download.referrer,
+                download.fileSize, download.mime);
         }
     }
 
@@ -159,6 +190,10 @@ class App {
         chrome.tabs.onUpdated.addListener(
             this.onTabUpdateCallback
         );
+        // Firefox download interception via downloads API (cancel + send to app)
+        chrome.downloads.onCreated.addListener(
+            this.onDownloadCreatedCallback
+        );
         // SPA navigation detection via History API (YouTube, etc.)
         if (chrome.webNavigation && chrome.webNavigation.onHistoryStateUpdated) {
             chrome.webNavigation.onHistoryStateUpdated.addListener(
@@ -166,12 +201,28 @@ class App {
             );
         }
         chrome.runtime.onMessage.addListener(this.onPopupMessage.bind(this));
-        // In Firefox MV3, webRequestBlocking is still fully supported.
-        // HTTP downloads are intercepted via request-watcher (webRequestBlocking).
+        // Firefox MV3 event pages suspend after ~30s idle and downloads.onCreated
+        // is NOT a waking event — a sub-minute alarm heartbeat keeps the background
+        // alive so download events are never missed (Firefox does not clamp <1min periods).
+        chrome.alarms.create("fetchflow-keepalive", { periodInMinutes: 0.4 });
+        chrome.alarms.onAlarm.addListener(this.onKeepaliveAlarm.bind(this));
+        // request-watcher (webRequest, non-blocking) detects streaming media;
+        // file downloads go through downloads.onCreated above.
         // Blob downloads are intercepted at the DOM level by blob-capture.js content script.
         this.requestWatcher.register();
         this.attachContextMenu();
         chrome.tabs.onActivated.addListener(this.onTabActivated.bind(this));
+    }
+
+    // Alarm heartbeat: its firing wakes the suspended event page (the whole
+    // script re-runs and reconnects); nudge the connector if it is idle.
+    onKeepaliveAlarm(alarm) {
+        if (alarm.name !== "fetchflow-keepalive") {
+            return;
+        }
+        if (!this.connector.isConnected()) {
+            this.connector.connect();
+        }
     }
 
     // MV3/Phase2.1: takeover rule (file-extension based; mirrors chrome-extension/app.js)
@@ -186,12 +237,15 @@ class App {
         }
         let path = file || u.pathname;
         let upath = path.toUpperCase();
+        if (file && !this.fileExts.find(ext => upath.endsWith(ext))) {
+            upath = u.pathname.toUpperCase();
+        }
         if (this.fileExts && this.fileExts.find(ext => upath.endsWith(ext))) {
             return true;
         }
         return false;
     }
-    
+
     isSupportedProtocol(url) {
         if (!url) return false;
         let u = new URL(url);
@@ -294,7 +348,7 @@ class App {
         for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
         this.logger.log("Decoded " + bytes.length + " bytes from base64");
 
-        const totalChunks = Math.ceil(bytes.length / BLOB_CHUNK_SIZE);
+        const totalChunks = Math.max(1, Math.ceil(bytes.length / BLOB_CHUNK_SIZE));
         const transferId = crypto.randomUUID();
         this.logger.log("Transfer ID: " + transferId + " | Total chunks: " + totalChunks);
 

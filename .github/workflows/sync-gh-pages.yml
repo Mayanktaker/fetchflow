@@ -1,0 +1,199 @@
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+name: Sync gh-pages on Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to sync (leave blank for latest)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  sync-gh-pages:
+    name: Sync gh-pages Download Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Sync download links and SHA-256 checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPECIFIC_TAG: ${{ github.event.inputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - << 'EOF'
+          import os, sys, json, re, urllib.request
+
+          repo = os.environ.get('REPO', 'Mayanktaker/fetchflow')
+          token = os.environ.get('GH_TOKEN', '')
+          specific_tag = os.environ.get('SPECIFIC_TAG', '').strip()
+
+          if specific_tag:
+              api_url = f'https://api.github.com/repos/{repo}/releases/tags/{specific_tag}'
+          else:
+              api_url = f'https://api.github.com/repos/{repo}/releases/latest'
+
+          headers = {'User-Agent': 'FetchFlow-Sync-gh-pages'}
+          if token:
+              headers['Authorization'] = f'Bearer {token}'
+
+          print(f"Fetching release metadata from {api_url}...")
+          req = urllib.request.Request(api_url, headers=headers)
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  release = json.loads(resp.read().decode('utf-8'))
+          except Exception as e:
+              print(f"Error fetching release: {e}", file=sys.stderr)
+              sys.exit(1)
+
+          tag = release.get('tag_name', 'v9.1.8')
+          pub_date_raw = release.get('published_at', '')
+          assets = release.get('assets', [])
+          print(f"Syncing for release tag: {tag} ({len(assets)} assets)")
+
+          # Map assets
+          asset_map = {}
+          sums_url = None
+          for a in assets:
+              name = a['name'].lower()
+              url = a['browser_download_url']
+              if name == 'sha256sums.txt':
+                  sums_url = url
+              elif name.endswith('.rpm'):
+                  asset_map['rpm'] = (a['name'], url)
+              elif name.endswith('.deb'):
+                  asset_map['deb'] = (a['name'], url)
+              elif name.endswith('.tar.gz') and 'source' not in name:
+                  asset_map['targz'] = (a['name'], url)
+              elif 'chrome' in name and name.endswith('.zip'):
+                  asset_map['chrome'] = (a['name'], url)
+              elif 'firefox' in name and (name.endswith('.xpi') or name.endswith('.zip')):
+                  asset_map['firefox'] = (a['name'], url)
+              elif name.endswith('.exe') or name.endswith('.msi'):
+                  asset_map['win_exe'] = (a['name'], url)
+              elif 'win' in name and name.endswith('.zip'):
+                  asset_map['win_zip'] = (a['name'], url)
+              elif name.endswith('.pkg.tar.zst') or ('arch' in name and name.endswith('.zst')):
+                  asset_map['arch'] = (a['name'], url)
+
+          # Fetch checksums if available
+          hash_map = {}
+          if sums_url:
+              try:
+                  req_sums = urllib.request.Request(sums_url, headers=headers)
+                  with urllib.request.urlopen(req_sums) as resp_sums:
+                      sums_text = resp_sums.read().decode('utf-8')
+                      for line in sums_text.splitlines():
+                          parts = line.strip().split()
+                          if len(parts) >= 2 and len(parts[0]) == 64:
+                              hash_map[parts[1].strip().lower()] = parts[0]
+                  print(f"Loaded {len(hash_map)} checksums from SHA256SUMS.txt")
+              except Exception as err:
+                  print(f"Warning: could not fetch SHA256SUMS.txt: {err}")
+
+          # Function to update html content
+          def update_html(filepath):
+              if not os.path.isfile(filepath):
+                  return
+              with open(filepath, 'r', encoding='utf-8') as f:
+                  content = f.read()
+
+              # 1. Update hero badge and button
+              content = re.sub(
+                  r'<div class="hero-badge" id="live-version-badge">[^<]+</div>',
+                  f'<div class="hero-badge" id="live-version-badge">⚡ Linux &bull; Windows &bull; {tag}</div>',
+                  content
+              )
+              content = re.sub(
+                  r'<a href="#downloads" class="btn-primary" id="btn-hero-download">[^<]+</a>',
+                  f'<a href="#downloads" class="btn-primary" id="btn-hero-download">Download FetchFlow {tag}</a>',
+                  content
+              )
+              content = re.sub(
+                  r'<p id="release-info-text">[^<]+</p>',
+                  f'<p id="release-info-text">Latest stable release ({tag}). Self-contained, AOT-compiled binaries for Linux and Windows.</p>',
+                  content
+              )
+
+              # 2. Update script default fallback tag
+              content = re.sub(
+                  r"const tag = release\.tag_name \|\| 'v[0-9.]+';",
+                  f"const tag = release.tag_name || '{tag}';",
+                  content
+              )
+
+              # 3. Update distribution package download links and checksum data-hash
+              replacements = [
+                  ('dl-rpm', 'rpm'),
+                  ('dl-deb', 'deb'),
+                  ('dl-targz', 'targz'),
+                  ('dl-chrome', 'chrome'),
+                  ('dl-firefox', 'firefox'),
+                  ('dl-win-exe', 'win_exe'),
+                  ('dl-win-zip', 'win_zip'),
+                  ('dl-arch', 'arch')
+              ]
+
+              for el_id, key in replacements:
+                  if key in asset_map:
+                      filename, url = asset_map[key]
+                      # Update href
+                      content = re.sub(
+                          rf'(<a [^>]*id="{el_id}"[^>]*href=")[^"]+(")',
+                          rf'\g<1>{url}\g<2>',
+                          content
+                      )
+                      # Update button text label if it had version
+                      label_match = re.search(rf'<a [^>]*id="{el_id}"[^>]*>([^<]+)</a>', content)
+                      if label_match:
+                          old_label = label_match.group(1)
+                          new_label = re.sub(r'\(v[0-9.]+\)', f'({tag})', old_label)
+                          if f'({tag})' not in new_label and 'Installer' not in new_label and '.ZIP' not in new_label and 'Arch' not in new_label:
+                              new_label = f"{new_label} ({tag})"
+                          content = content.replace(label_match.group(0), label_match.group(0).replace(old_label, new_label))
+
+                      # Update data-hash on corresponding button
+                      file_hash = hash_map.get(filename.lower(), '')
+                      if file_hash:
+                          content = re.sub(
+                              rf'(<button class="btn-sha-copy" data-target="{el_id}" data-hash=")[^"]*(")',
+                              rf'\g<1>{file_hash}\g<2>',
+                              content
+                          )
+
+              with open(filepath, 'w', encoding='utf-8') as f:
+                  f.write(content)
+              print(f"Updated {filepath}")
+
+          update_html('index.html')
+          update_html('docs/index.html')
+          EOF
+
+      - name: Commit and push changes to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add index.html docs/index.html
+            git commit -m "chore(gh-pages): auto-sync download links and checksums for latest release"
+            git push origin gh-pages
+            echo "Successfully pushed latest release updates to gh-pages."
+          else
+            echo "gh-pages is already up to date with latest release."
+          fi

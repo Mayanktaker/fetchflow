@@ -64,19 +64,19 @@ export default class App {
 
     updateConfig(msg) {
         this.appEnabled = msg.enabled === true;
-        this.fileExts = msg.fileExts;
-        this.blockedHosts = msg.blockedHosts;
-        this.tabsWatcher = msg.tabsWatcher;
-        this.videoList = msg.videoList;
+        this.fileExts = msg.fileExts || [];
+        this.blockedHosts = msg.blockedHosts || [];
+        this.tabsWatcher = msg.tabsWatcher || [];
+        this.videoList = msg.videoList || [];
         if (msg.blobMaxBytes && msg.blobMaxBytes > 0) {
             this.blobMaxBytes = msg.blobMaxBytes;
         }
         this.requestWatcher.updateConfig({
-            blockedHosts: msg.blockedHosts,
-            fileExts: msg.fileExts,
-            mediaExts: msg.requestFileExts,
-            matchingHosts: msg.matchingHosts,
-            mediaTypes: msg.mediaTypes
+            blockedHosts: msg.blockedHosts || [],
+            fileExts: msg.fileExts || [],
+            mediaExts: msg.requestFileExts || [],
+            matchingHosts: msg.matchingHosts || [],
+            mediaTypes: msg.mediaTypes || []
         });
         this.updateActionIcon();
     }
@@ -102,6 +102,7 @@ export default class App {
     onDeterminingFilename(download, suggest) {
         this.logger.log("onDeterminingFilename");
         if (!this.isMonitoringEnabled()) {
+            suggest({ filename: download.filename });
             return;
         }
         this.logger.log(download);
@@ -130,7 +131,9 @@ export default class App {
             }
             this.triggerDownload(url, download.filename,
                 referrer, download.fileSize, download.mime);
+            return;
         }
+        suggest({ filename: download.filename });
     }
 
     onDownloadCreated(download) {
@@ -320,7 +323,7 @@ export default class App {
         for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
         this.logger.log("Decoded " + bytes.length + " bytes from base64");
 
-        const totalChunks = Math.ceil(bytes.length / BLOB_CHUNK_SIZE);
+        const totalChunks = Math.max(1, Math.ceil(bytes.length / BLOB_CHUNK_SIZE));
         const transferId = crypto.randomUUID();
         this.logger.log("Transfer ID: " + transferId + " | Total chunks: " + totalChunks);
 
@@ -395,6 +398,9 @@ export default class App {
         }
         let path = file || u.pathname;
         let upath = path.toUpperCase();
+        if (file && !this.fileExts.find(ext => upath.endsWith(ext))) {
+            upath = u.pathname.toUpperCase();
+        }
         if (this.fileExts.find(ext => upath.endsWith(ext))) {
             return true;
         }
