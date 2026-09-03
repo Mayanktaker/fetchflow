@@ -66,20 +66,14 @@ namespace XDM.GtkUI
         }
         try
         {
-            RotateCrashLogIfNeeded();
-        }
-        catch
-        {
-            // A failed rotation must not swallow the crash record itself.
-        }
-        try
-        {
-            // Local time with log.txt's exact format so both diagnostics align on one clock
+            // Local time with log.txt's exact format so both diagnostics align on one clock;
+            // rotation and append share the lock so rotation can never drop a concurrent line
             var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {label}: {detail}";
             if (detail is Exception ex) line += Environment.NewLine + ex;
             line += Environment.NewLine;
             lock (CrashLogLock)
             {
+                RotateCrashLogIfNeeded();
                 System.IO.File.AppendAllText(CrashLogPath, line);
             }
         }

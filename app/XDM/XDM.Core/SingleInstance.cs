@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using TraceLog;
+using XDM.Core.Util;
 
 namespace XDM.Core
 {
@@ -19,6 +20,7 @@ namespace XDM.Core
         private const string MutexName = @"Global\FetchFlow_Active_Instance";
         private const string TakeoverGateName = @"Global\FetchFlow_Takeover_Gate";
         private const string RelayAckMarker = "\"blockedHosts\"";
+        private const string RelayAckMarker2 = "\"matchingHosts\"";
         private const int MutexWaitTimeoutMs = 500;
         private const int MutexRecoveryAttempts = 3;
         private const int MutexRecoveryDelayMs = 500;
@@ -27,6 +29,7 @@ namespace XDM.Core
         private const int RelayGracePollMs = 200;
         private const int MutexReacquirePollMs = 5000;
         private const int IpcSendTimeoutMs = 800;
+        private const int IpcProbeBudgetMs = 3000;
 
         // Atomically acquires named mutex or forwards command args if another instance is active;
         // recovers by taking over as primary when the mutex holder exists but its IPC is dead
@@ -140,8 +143,8 @@ namespace XDM.Core
 
             try
             {
-                var deadline = Environment.TickCount64 + RelayGraceMs;
-                while (Environment.TickCount64 < deadline)
+                var deadline = Helpers.TickCount() + RelayGraceMs;
+                while (Helpers.TickCount() < deadline)
                 {
                     if (SendArgsToRunningInstance())
                     {
@@ -202,9 +205,16 @@ namespace XDM.Core
                 var args = Environment.GetCommandLineArgs().Skip(1);
                 var postData = JsonConvert.SerializeObject(args.Count() == 0 ? new string[] { "--restore-window" } : args);
                 var data = Encoding.UTF8.GetBytes(postData);
-                // The running instance may have fallen back within the IPC port range
+                // The running instance may have fallen back within the IPC port range;
+                // budget-capped so accept-but-stall foreign servers cannot stall the launch
+                var deadline = Helpers.TickCount() + IpcProbeBudgetMs;
                 for (int p = Config.IpcPort; p < Config.IpcPort + Config.IpcPortRangeSize; p++)
                 {
+                    if (Helpers.TickCount() >= deadline)
+                    {
+                        Log.Debug("IPC probe budget exhausted; treating relay as absent.");
+                        break;
+                    }
                     if (TrySendArgsToPort(p, data))
                     {
                         return true;
@@ -237,7 +247,10 @@ namespace XDM.Core
                 using (var response = request.GetResponse())
                 using (var reader = new StreamReader(response.GetResponseStream() ?? Stream.Null))
                 {
-                    if (!reader.ReadToEnd().Contains(RelayAckMarker))
+                    // Require two distinct relay config keys — raises the accidental-
+                    // collision bar for foreign loopback servers answering /args
+                    var body = reader.ReadToEnd();
+                    if (!body.Contains(RelayAckMarker) || !body.Contains(RelayAckMarker2))
                     {
                         Log.Debug($"Port {port} answered but is not a FetchFlow relay.");
                         return false;
