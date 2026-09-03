@@ -25,13 +25,14 @@ namespace XDM.Core
                 {
                     // Fail loudly instead of showing a confirm dialog that would do nothing
                     Log.Debug("DeleteDownloads: no in-progress rows selected; nothing to delete.");
-                    ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, TextResource.GetText("NO_ITEM_SELECTED"));
+                    ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, "Please select a download first.");
                     return;
                 }
                 Log.Debug($"DeleteDownloads: deleting {selectedItems.Count} in-progress row(s).");
-                ApplicationContext.CoreService.StopDownloads(selectedItems.Select(x => x.DownloadEntry.Id));
                 if (ApplicationContext.MainWindow.Confirm(ApplicationContext.MainWindow, TextResource.GetText("DEL_SEL_TEXT")))
                 {
+                    // Stop only after approval — cancelling must not kill running downloads
+                    ApplicationContext.CoreService.StopDownloads(selectedItems.Select(x => x.DownloadEntry.Id));
                     foreach (var item in selectedItems)
                     {
                         if (item != null)
@@ -51,7 +52,7 @@ namespace XDM.Core
                 if (selectedRows.Count == 0)
                 {
                     Log.Debug("DeleteDownloads: no finished rows selected; nothing to delete.");
-                    ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, TextResource.GetText("NO_ITEM_SELECTED"));
+                    ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, "Please select a download first.");
                     return;
                 }
                 ApplicationContext.MainWindow.ConfirmDelete(TextResource.GetText("DEL_SEL_TEXT"),

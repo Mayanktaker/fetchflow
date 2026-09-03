@@ -2163,20 +2163,24 @@ namespace XDM.GtkUI
             var id = row.DownloadEntry.Id;
             UpdateSpeedTracking(id, 0);
             // Primary: remove via the selection's own iter converted to the child store —
-            // immune to any id mismatch; the id scan below is only a fallback
-            if (row is InProgressEntryWrapper wrapper)
+            // immune to any id mismatch; only selection wrappers carry sort iters (wrappers
+            // from FindInProgressItem hold child iters and must go straight to the id scan)
+            if (row is InProgressEntryWrapper wrapper
+                && ReferenceEquals(wrapper.GetStore(), inprogressDownloadsStoreSorted))
             {
                 try
                 {
                     var childIter = GtkHelper.ConvertViewToModel(wrapper.TreeIter, inprogressDownloadsStoreSorted, inprogressDownloadFilter);
-                    if (inprogressDownloadsStore!.IterIsValid(childIter))
+                    if (inprogressDownloadsStore!.IterIsValid(childIter)
+                        && inprogressDownloadsStore.GetValue(childIter, INPROGRESS_DATA_INDEX) is InProgressDownloadItem verify
+                        && verify.Id == id)
                     {
                         inprogressDownloadsStore.Remove(ref childIter);
                         UpdateStatusListCounts();
                         Log.Debug($"Delete: removed in-progress row {id} via selection iter.");
                         return;
                     }
-                    Log.Debug($"Delete: selection iter invalid for {id}; falling back to id scan.");
+                    Log.Debug($"Delete: selection iter unusable for {id}; falling back to id scan.");
                 }
                 catch (Exception ex)
                 {
@@ -2407,8 +2411,16 @@ namespace XDM.GtkUI
                 {
                     if (model.GetIter(out TreeIter iter, row))
                     {
-                        var ent = (FinishedDownloadItem)model.GetValue(iter, FINISHED_DATA_INDEX);
+                        if (model.GetValue(iter, FINISHED_DATA_INDEX) is not FinishedDownloadItem ent)
+                        {
+                            Log.Debug($"Selection: finished path {row} did not resolve to an item (row skipped).");
+                            continue;
+                        }
                         list.Add(new FinishedEntryWrapper(ent, iter, model));
+                    }
+                    else
+                    {
+                        Log.Debug($"Selection: finished path {row} could not be resolved to an iter (row skipped).");
                     }
                 }
             }
