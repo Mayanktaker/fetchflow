@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -19,6 +20,7 @@ namespace XDM.Core.DataAccess
         
         static AppDB()
         {
+#if NETCOREAPP || NET5_0_OR_GREATER
             try
             {
                 System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(SQLiteConnection).Assembly, (libraryName, assembly, searchPath) =>
@@ -49,6 +51,7 @@ namespace XDM.Core.DataAccess
             {
                 // Non-fatal if already registered
             }
+#endif
         }
 
         private AppDB() { }

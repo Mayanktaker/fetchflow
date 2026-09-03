@@ -40,12 +40,15 @@
 |---|---|
 | **Parallel Stream Chunking** | Dynamic multi-socket segmentation (up to 32 parallel connections per file) with real-time chunk re-assembly |
 | **Native Wayland Architecture** | Zero XWayland dependency; native surface allocation on KDE Plasma 6, GNOME 46+, Sway, Hyprland, and COSMIC |
-| **StatusNotifierItem (SNI) Tray** | Full D-Bus system tray menu (Show / Minimize / Quit) with close-to-tray background daemon persistence |
+| **StatusNotifierItem (SNI) Tray** | Full D-Bus system tray menu with real-time download speed display, remaining ETA, and background persistence |
+| **Bandwidth Throttle & Limiter** | Live toolbar and bottom bar speed limiter presets (50 KB/s to 5 MB/s, custom) to prevent network saturation |
+| **Audio Notification Chimes** | Customizable download completion chime with one-click toggle in main menu and settings |
+| **14 Curated Color Themes** | 7 Dark and 7 Light refined palettes with full JSON palette import and export support |
+| **Collapsible Category Badges** | Interactive category sidebar with live download item counter badges and collapsible sections |
 | **Integrated Media Grabber** | Built-in `yt-dlp` stream extraction engine supporting video/audio ingestion from 1,000+ streaming sites |
-| **Manifest V3 Browser Addons** | High-speed local WebSocket/HTTP IPC (port `8597`) for instant download takeover and in-page blob media capture |
+| **Manifest V3 Browser Addons** | High-speed local loopback IPC (port `8597`) with global shortcut (<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd>) and blob capture |
+| **Multi-Language Desktop UI** | Fully localized interface with Hindi, Hinglish, English, Spanish, French, German, Russian, Chinese, Arabic, and flag indicators |
 | **Android / MTP Sanitizer** | Automatic sanitization of illegal characters (`: ? * " < > \| ( ) [ ] ^ %`) for seamless USB file transfers |
-| **Smart Resumption Engine** | Dynamic URL token refresh, HTTP `Range` request validation, and zero data corruption on network drops |
-| **Multi-Language Desktop UI** | Fully localized interface supporting English, Hindi, Spanish, French, German, Russian, Chinese, Arabic, and more |
 
 ---
 
@@ -68,23 +71,23 @@
 FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linux** with zero runtime prerequisites.
 
 ### Windows 11 / 10 (64-bit)
-- **Installer:** Download `FetchFlow-Setup.exe` or `fetchflow.msi` from [Releases](https://github.com/Mayanktaker/fetchflow/releases/latest) and follow the setup wizard.
-- **Portable ZIP:** Download `fetchflow-win-x64.zip`, extract to any folder, and run `xdm-app.exe`.
+- **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-9.1.8.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `xdm-app.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.4-1.fc44.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.8-1.fc44.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.4_amd64.deb
+sudo apt install ./fetchflow_9.1.8_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS
 ```bash
 # Using prebuilt package:
-sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.4-1-x86_64.pkg.tar.zst
+sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.8-1-x86_64.pkg.tar.zst
 
 # Or build via PKGBUILD:
 cd app/XDM/XDM.Linux.Installer && makepkg -si
@@ -92,7 +95,7 @@ cd app/XDM/XDM.Linux.Installer && makepkg -si
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.4.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.8.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
@@ -109,8 +112,8 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 
 | Browser Family | Supported Browsers | Package | Features |
 |---|---|---|---|
-| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.4.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar |
-| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | `fetchflow-firefox-extension-9.1.4.xpi` | Background streaming listener, seamless takeover, media sniffing |
+| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.8.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | `fetchflow-firefox-extension-9.1.8.xpi` | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
 
 ### Manual Installation
 - **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.
@@ -150,6 +153,7 @@ GTK3 Modern Shell (XDM.Gtk.UI)
 | <kbd>Shift</kbd> + <kbd>Delete</kbd> | Delete Download and Delete File from Disk |
 | <kbd>F5</kbd> | Refresh Download List & Active Speeds |
 | <kbd>Ctrl</kbd> + <kbd>,</kbd> | Open Settings & Preferences |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Open Browser Extension Media & Download Panel |
 
 ---
 

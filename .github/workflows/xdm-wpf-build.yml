@@ -1,4 +1,5 @@
-name: .NET
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+name: Windows Desktop CI
 
 on:
   push:
@@ -8,22 +9,20 @@ on:
 
 jobs:
   build:
-
+    name: Build Windows WPF & WinForms
     runs-on: windows-latest
 
-    defaults:
-      run:
-        working-directory: ./app/XDM/XDM.Wpf.UI/
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build WPF Application
+        run: dotnet build -c Release -f net4.7.2 app/XDM/XDM.Wpf.UI/XDM.Wpf.UI.csproj
+
+      - name: Build WinForms Integration UI
+        run: dotnet build -c Release -f net4.7.2 app/XDM/XDM.WinForms.IntegrationUI/XDM.WinForms.IntegrationUI.csproj

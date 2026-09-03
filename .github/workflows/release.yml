@@ -11,8 +11,8 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
-    name: Build & Publish Release Artifacts
+  build-linux:
+    name: Build & Package Linux Artifacts
     runs-on: ubuntu-latest
 
     steps:
@@ -33,7 +33,7 @@ jobs:
         run: |
           xvfb-run bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
 
-      - name: Build and package release artifacts
+      - name: Build and package Linux release artifacts
         env:
           MOZ_API_KEY: ${{ secrets.MOZ_API_KEY }}
           MOZ_API_SECRET: ${{ secrets.MOZ_API_SECRET }}
@@ -57,7 +57,7 @@ jobs:
           fi
           cd ../../..
 
-          echo "=== 2. Publishing FetchFlow Application ==="
+          echo "=== 2. Publishing FetchFlow Linux Application ==="
           dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 \
             --self-contained true -p:PublishSingleFile=true -o build_output/xdm-app
 
@@ -91,35 +91,126 @@ jobs:
           cp *.deb "$OUT_DIR/" 2>/dev/null || :
           cd ../../..
 
-          echo "=== 5. Generating SHA256 Checksums ==="
-          cd "$OUT_DIR"
-          sha256sum * > SHA256SUMS.txt
-          cd ..
-
-          echo "=== Artifacts summary ==="
+          echo "=== Linux Artifacts summary ==="
           ls -lh "$OUT_DIR"
 
-      - name: Upload Artifacts to Workflow Run
+      - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fetchflow-release-artifacts
+          name: linux-artifacts
           path: |
             xdm-release/*.tar.gz
             xdm-release/*.rpm
             xdm-release/*.deb
             xdm-release/*.zip
             xdm-release/*.xpi
-            xdm-release/SHA256SUMS.txt
+
+  build-windows:
+    name: Build & Package Windows Artifacts
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Resolve Version from Environment
+        shell: pwsh
+        run: |
+          $verLine = Get-Content app/XDM/XDM.Linux.Installer/version.env | Where-Object { $_ -match '^VERSION=(.+)$' }
+          $version = if ($verLine) { $Matches[1].Trim() } else { "9.1.8" }
+          Write-Host "Resolved Version: $version"
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Build Windows Executables
+        shell: pwsh
+        run: |
+          $winDir = "build_output\xdm-win-x64"
+          $outDir = "xdm-release"
+          New-Item -ItemType Directory -Force -Path $winDir, $outDir
+
+          # Compile WPF main UI and WinForms integration guide in Release mode
+          dotnet build -c Release -f net4.7.2 app/XDM/XDM.Wpf.UI/XDM.Wpf.UI.csproj -o $winDir
+          dotnet build -c Release -f net4.7.2 app/XDM/XDM.WinForms.IntegrationUI/XDM.WinForms.IntegrationUI.csproj -o $winDir
+
+          # Copy browser extensions and brand assets
+          Copy-Item -Recurse -Force "app\XDM\chrome-extension" "$winDir\chrome-extension"
+          Copy-Item -Recurse -Force "app\XDM\firefox-amo" "$winDir\firefox-extension"
+          Copy-Item -Force "app\XDM\fetchflow-logo.ico" "$winDir\xdm-logo.ico"
+          Copy-Item -Force "app\XDM\fetchflow-logo.svg" "$winDir\fetchflow-logo.svg"
+          Copy-Item -Force "app\XDM\fetchflow-logo-512.png" "$winDir\fetchflow-logo-512.png"
+
+          # Package Portable Windows ZIP
+          Compress-Archive -Path "$winDir\*" -DestinationPath "$outDir\fetchflow-windows-x64-$env:VERSION.zip" -Force
+          Write-Host "Generated Portable ZIP: $outDir\fetchflow-windows-x64-$env:VERSION.zip"
+
+      - name: Build Inno Setup Installer
+        shell: pwsh
+        run: |
+          # Install Inno Setup compiler
+          choco install innosetup --no-progress
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            $iscc = (Get-Command iscc.exe -ErrorAction SilentlyContinue).Source
+          }
+          Write-Host "Using Inno Setup compiler at: $iscc"
+
+          # Compile standalone Windows installer .exe
+          & $iscc "/DAppVersion=$env:VERSION" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\xdm-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
+          Write-Host "Generated Windows Setup Installer: xdm-release\fetchflow-windows-x64-setup.exe"
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            xdm-release/fetchflow-windows-x64-*.zip
+            xdm-release/fetchflow-windows-x64-setup.exe
+
+  publish-release:
+    name: Publish Release & Checksums
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-artifacts
+          path: xdm-release
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifacts
+          path: xdm-release
+
+      - name: Generate Unified SHA256 Checksums
+        run: |
+          cd xdm-release
+          rm -f SHA256SUMS.txt
+          sha256sum * > SHA256SUMS.txt
+          echo "=== Complete Release Artifacts ==="
+          ls -lh
+          echo "=== SHA256SUMS.txt ==="
+          cat SHA256SUMS.txt
+
+      - name: Upload Complete Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetchflow-complete-release
+          path: xdm-release/*
 
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            xdm-release/*.tar.gz
-            xdm-release/*.rpm
-            xdm-release/*.deb
-            xdm-release/*.zip
-            xdm-release/*.xpi
-            xdm-release/SHA256SUMS.txt
+          files: xdm-release/*
           generate_release_notes: true

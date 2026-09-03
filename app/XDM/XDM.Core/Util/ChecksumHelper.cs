@@ -91,10 +91,17 @@ namespace XDM.Core.Util
 
             progress?.Report(1.0);
 
+#if NET5_0_OR_GREATER
             var sha256Hex = Convert.ToHexString(sha256.GetHashAndReset()).ToLowerInvariant();
             var md5Hex = Convert.ToHexString(md5.GetHashAndReset()).ToLowerInvariant();
             var sha1Hex = Convert.ToHexString(sha1.GetHashAndReset()).ToLowerInvariant();
             var sha512Hex = Convert.ToHexString(sha512.GetHashAndReset()).ToLowerInvariant();
+#else
+            var sha256Hex = BitConverter.ToString(sha256.GetHashAndReset()).Replace("-", "").ToLowerInvariant();
+            var md5Hex = BitConverter.ToString(md5.GetHashAndReset()).Replace("-", "").ToLowerInvariant();
+            var sha1Hex = BitConverter.ToString(sha1.GetHashAndReset()).Replace("-", "").ToLowerInvariant();
+            var sha512Hex = BitConverter.ToString(sha512.GetHashAndReset()).Replace("-", "").ToLowerInvariant();
+#endif
 
             return new ChecksumResult(sha256Hex, md5Hex, sha1Hex, sha512Hex, totalBytes);
         }
