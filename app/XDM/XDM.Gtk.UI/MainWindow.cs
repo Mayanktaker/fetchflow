@@ -1709,16 +1709,16 @@ namespace XDM.GtkUI
                     var isDark = ThemeManager.IsDarkActive;
                     var titleCol = isDark ? "#ffffff" : "#0f172a";
                     var metaCol = isDark ? "#ffffff" : "#334155";
-                    var metaAlpha = isDark ? "55000" : $"{SecondaryTextAlpha}";
+                    var metaAlpha = isDark ? $"{MetaSubLineAlphaDark}" : $"{MetaSubLineAlpha}";
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
                         ? $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>"
-                        : $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>\n<span size=\"9000\" alpha=\"{metaAlpha}\" color=\"{metaCol}\">{metaLine}</span>";
+                        : $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>\n<span size=\"{MetaSubLineSize}\" alpha=\"{metaAlpha}\" color=\"{metaCol}\">{metaLine}</span>";
                 }
                 else
                 {
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
                         ? $"<span weight=\"bold\">{title}</span>"
-                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">{metaLine}</span>";
+                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"{MetaSubLineSize}\" alpha=\"{MetaSubLineAlpha}\">{metaLine}</span>";
                 }
             }));
         }
@@ -1763,16 +1763,16 @@ namespace XDM.GtkUI
                     var isDark = ThemeManager.IsDarkActive;
                     var titleCol = isDark ? "#ffffff" : "#0f172a";
                     var metaCol = isDark ? "#ffffff" : "#334155";
-                    var metaAlpha = isDark ? "55000" : $"{SecondaryTextAlpha}";
+                    var metaAlpha = isDark ? $"{MetaSubLineAlphaDark}" : $"{MetaSubLineAlpha}";
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
                         ? $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>"
-                        : $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>\n<span size=\"9000\" alpha=\"{metaAlpha}\" color=\"{metaCol}\">{metaLine}</span>";
+                        : $"<span weight=\"bold\" color=\"{titleCol}\">{title}</span>\n<span size=\"{MetaSubLineSize}\" alpha=\"{metaAlpha}\" color=\"{metaCol}\">{metaLine}</span>";
                 }
                 else
                 {
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
                         ? $"<span weight=\"bold\">{title}</span>"
-                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">{metaLine}</span>";
+                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"{MetaSubLineSize}\" alpha=\"{MetaSubLineAlpha}\">{metaLine}</span>";
                 }
             }));
         }
@@ -1869,6 +1869,11 @@ namespace XDM.GtkUI
 
         // Pango alpha for secondary list text: 60% opacity on the 0-65535 scale
         private const int SecondaryTextAlpha = 39321;
+        // Domain · folder sub-line under the file title: deliberately smaller and more
+        // faded than the title so the download name stays the visual focus
+        private const string MetaSubLineSize = "8200";
+        private const int MetaSubLineAlpha = 30000;
+        private const int MetaSubLineAlphaDark = 44000;
 
         private void AppWin1_DeleteEvent(object o, DeleteEventArgs args)
         {
@@ -2157,17 +2162,39 @@ namespace XDM.GtkUI
         {
             var id = row.DownloadEntry.Id;
             UpdateSpeedTracking(id, 0);
+            // Primary: remove via the selection's own iter converted to the child store —
+            // immune to any id mismatch; the id scan below is only a fallback
+            if (row is InProgressEntryWrapper wrapper)
+            {
+                try
+                {
+                    var childIter = GtkHelper.ConvertViewToModel(wrapper.TreeIter, inprogressDownloadsStoreSorted, inprogressDownloadFilter);
+                    if (inprogressDownloadsStore!.IterIsValid(childIter))
+                    {
+                        inprogressDownloadsStore.Remove(ref childIter);
+                        UpdateStatusListCounts();
+                        Log.Debug($"Delete: removed in-progress row {id} via selection iter.");
+                        return;
+                    }
+                    Log.Debug($"Delete: selection iter invalid for {id}; falling back to id scan.");
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, $"Delete: iter conversion failed for {id}; falling back to id scan.");
+                }
+            }
             var modelIter = FindInProgressItemIterById(id);
             if (modelIter.HasValue)
             {
                 var iter = modelIter.Value;
                 inprogressDownloadsStore.Remove(ref iter);
                 UpdateStatusListCounts();
+                Log.Debug($"Delete: removed in-progress row {id} via id scan.");
             }
-
-            //var iter = GtkHelper.ConvertViewToModel(((InProgressEntryWrapper)row).TreeIter,
-            //    inprogressDownloadsStoreSorted, inprogressDownloadFilter);
-            //inprogressDownloadsStore.Remove(ref iter);
+            else
+            {
+                Log.Debug($"Delete: in-progress row {id} NOT found in store ({inprogressDownloadsStore.IterNChildren()} rows) — UI row not removed.");
+            }
         }
 
         public void Delete(IFinishedDownloadRow row)
@@ -2353,8 +2380,16 @@ namespace XDM.GtkUI
                 {
                     if (model.GetIter(out TreeIter iter, row))
                     {
-                        var ent = (InProgressDownloadItem)model.GetValue(iter, INPROGRESS_DATA_INDEX);
+                        if (model.GetValue(iter, INPROGRESS_DATA_INDEX) is not InProgressDownloadItem ent)
+                        {
+                            Log.Debug($"Selection: in-progress path {row} did not resolve to an item (row skipped).");
+                            continue;
+                        }
                         list.Add(new InProgressEntryWrapper(ent, iter, model));
+                    }
+                    else
+                    {
+                        Log.Debug($"Selection: in-progress path {row} could not be resolved to an iter (row skipped).");
                     }
                 }
             }

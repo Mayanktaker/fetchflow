@@ -21,6 +21,14 @@ namespace XDM.Core
             if (inProgressOnly)
             {
                 var selectedItems = ApplicationContext.MainWindow.SelectedInProgressRows;
+                if (selectedItems.Count == 0)
+                {
+                    // Fail loudly instead of showing a confirm dialog that would do nothing
+                    Log.Debug("DeleteDownloads: no in-progress rows selected; nothing to delete.");
+                    ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, TextResource.GetText("NO_ITEM_SELECTED"));
+                    return;
+                }
+                Log.Debug($"DeleteDownloads: deleting {selectedItems.Count} in-progress row(s).");
                 ApplicationContext.CoreService.StopDownloads(selectedItems.Select(x => x.DownloadEntry.Id));
                 if (ApplicationContext.MainWindow.Confirm(ApplicationContext.MainWindow, TextResource.GetText("DEL_SEL_TEXT")))
                 {
@@ -31,6 +39,7 @@ namespace XDM.Core
                             ApplicationContext.CoreService.RemoveDownload(item.DownloadEntry, false);
                             ApplicationContext.MainWindow.Delete(item);
                             AppDB.Instance.Downloads.RemoveDownloadById(item.DownloadEntry.Id);
+                            Log.Debug($"DeleteDownloads: removed in-progress download {item.DownloadEntry.Id}.");
                         }
                     }
                     callback?.Invoke(true);
@@ -39,6 +48,12 @@ namespace XDM.Core
             else
             {
                 var selectedRows = ApplicationContext.MainWindow.SelectedFinishedRows;
+                if (selectedRows.Count == 0)
+                {
+                    Log.Debug("DeleteDownloads: no finished rows selected; nothing to delete.");
+                    ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, TextResource.GetText("NO_ITEM_SELECTED"));
+                    return;
+                }
                 ApplicationContext.MainWindow.ConfirmDelete(TextResource.GetText("DEL_SEL_TEXT"),
                     out bool approved, out bool deleteFiles);
                 if (approved)
