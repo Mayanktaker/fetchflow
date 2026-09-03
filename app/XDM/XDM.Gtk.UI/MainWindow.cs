@@ -40,6 +40,7 @@ namespace XDM.GtkUI
         private IMenuItem[] menuItems;
         private Menu newDownloadMenu;
         private Menu mainMenu;
+        private CheckMenuItem? menuCompletionSound;
         private WindowGroup windowGroup;
         private CheckButton btnMonitoring;
         private Label lblExtensionStatus;
@@ -406,7 +407,20 @@ namespace XDM.GtkUI
             menuAbout.Activated += MenuAbout_Activated;
             menuExit.Activated += MenuExit_Activated;
             menuMediaGrabber.Activated += MenuMediaGrabber_Activated;
+
+            menuCompletionSound = new CheckMenuItem(TextResource.GetText("MSG_PLAY_SOUND") ?? "Play sound when download finishes")
+            {
+                Active = Config.Instance.PlayCompletionSound
+            };
+            menuCompletionSound.Toggled += (_, _) =>
+            {
+                Config.Instance.PlayCompletionSound = menuCompletionSound.Active;
+                Config.SaveConfig();
+                ApplicationContext.BroadcastConfigChange();
+            };
+
             mainMenu.Append(menuSettings);
+            mainMenu.Append(menuCompletionSound);
             mainMenu.Append(menuMediaGrabber);
             mainMenu.Append(menuClearFinished);
             mainMenu.Append(menuImportExport);
@@ -719,6 +733,10 @@ namespace XDM.GtkUI
                 {
                     UpdateExtensionStatus();
                     UpdateSpeedLimitButton();
+                    if (menuCompletionSound != null)
+                    {
+                        menuCompletionSound.Active = Config.Instance.PlayCompletionSound;
+                    }
                 });
             }
         }
@@ -834,7 +852,7 @@ namespace XDM.GtkUI
 
             menu.Append(new SeparatorMenuItem());
 
-            var isCustom = Config.Instance.EnableSpeedLimit && !presets.Contains(Config.Instance.DefaltDownloadSpeed) && Config.Instance.DefaltDownloadSpeed > 0;
+            var isCustom = Config.Instance.EnableSpeedLimit && Array.IndexOf(presets, Config.Instance.DefaltDownloadSpeed) < 0 && Config.Instance.DefaltDownloadSpeed > 0;
             var customLabel = isCustom
                 ? $"● Custom ({FormattingHelper.FormatSize(Config.Instance.DefaltDownloadSpeed * 1024.0)}/s)..."
                 : "Custom Limit...";
