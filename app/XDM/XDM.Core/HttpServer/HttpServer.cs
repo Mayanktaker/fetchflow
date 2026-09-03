@@ -11,6 +11,7 @@ namespace XDM.Core.HttpServer
     public class NanoServer
     {
         private readonly TcpListener listener;
+        private const int AcceptRetryDelayMs = 1000;
         public event EventHandler<RequestContextEventArgs>? RequestReceived;
         // Phase6: fired when a client requests a WebSocket upgrade (path, headers, session)
         public event Action<string, Dictionary<string, List<string>>, WebSocketSession>? WebSocketAccepted;
@@ -27,7 +28,12 @@ namespace XDM.Core.HttpServer
             catch { }
         }
 
-        // Starts listening for incoming HTTP and WebSocket connections
+        // Actual bound endpoint (OS-assigned port when constructed with port 0)
+        public IPEndPoint? LocalEndpoint => listener.LocalEndpoint as IPEndPoint;
+
+        // Starts listening and serves the accept loop until Stop(); accept/dispatch
+        // failures are contained so a hostile client can never silently kill the
+        // listener and leave a live process without IPC
         public void Start()
         {
             try
@@ -39,9 +45,33 @@ namespace XDM.Core.HttpServer
             Log.Debug($"NanoServer listening on {listener.LocalEndpoint}");
             while (true)
             {
-                var tcp = listener.AcceptTcpClient();
-                ProcessRequest(tcp);
+                TcpClient tcp;
+                try
+                {
+                    tcp = listener.AcceptTcpClient();
+                }
+                catch (ObjectDisposedException)
+                {
+                    break; // listener stopped via Stop()
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "NanoServer accept error: " + ex.Message);
+                    if (!listener.Server.IsBound) break;
+                    Thread.Sleep(AcceptRetryDelayMs);
+                    continue;
+                }
+                try
+                {
+                    ProcessRequest(tcp);
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "NanoServer dispatch error: " + ex.Message);
+                    try { tcp.Close(); } catch { }
+                }
             }
+            Log.Debug("NanoServer accept loop exited.");
         }
 
         public void Stop()

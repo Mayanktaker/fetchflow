@@ -48,6 +48,9 @@ namespace XDM.Core
         public static int IpcPort =>
             int.TryParse(Environment.GetEnvironmentVariable("FETCHFLOW_IPC_PORT") ?? Environment.GetEnvironmentVariable("XDM_IPC_PORT"), out var p) && p > 0 ? p : 8597;
 
+        // Ports scanned above IpcPort for the relay bind and the instance-forwarding probe
+        public const int IpcPortRangeSize = 7;
+
         public static int DefaultNotificationTimeOut => 30000;
 
         public int NotificationTimeOut { get; set; }

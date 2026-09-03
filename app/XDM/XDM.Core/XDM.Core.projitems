@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Util\ExtensionRegistrationHelper.cs" />
     <Compile Include="..\XDM.Core\Ipc\IpcServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SingleInstance.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SingleInstancePolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Updater\AppUpdater.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ClipboardMonitor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\RequestDataIO.cs" />

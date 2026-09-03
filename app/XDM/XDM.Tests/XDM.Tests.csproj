@@ -34,6 +34,17 @@
     <Compile Include="..\XDM.Core\Util\ThemePaletteHelper.cs" Link="Util\ThemePaletteHelper.cs" />
     <Compile Include="..\XDM.Core\Translations\TextResource.cs" Link="Translations\TextResource.cs" />
     <Compile Include="..\XDM.Core\BrowserMonitoring\ExtensionData.cs" Link="BrowserMonitoring\ExtensionData.cs" />
+    <!-- SingleInstancePolicyTests + NanoServerResilienceTests: arbitration policy and
+         the self-contained IPC HTTP server cluster (TraceLog included once, here) -->
+    <Compile Include="..\XDM.Core\SingleInstancePolicy.cs" Link="SingleInstancePolicy.cs" />
+    <Compile Include="..\XDM.Core\HttpServer\HttpServer.cs" Link="HttpServer\HttpServer.cs" />
+    <Compile Include="..\XDM.Core\HttpServer\HttpParser.cs" Link="HttpServer\HttpParser.cs" />
+    <Compile Include="..\XDM.Core\HttpServer\RequestContext.cs" Link="HttpServer\RequestContext.cs" />
+    <Compile Include="..\XDM.Core\HttpServer\RequestContextEventArgs.cs" Link="HttpServer\RequestContextEventArgs.cs" />
+    <Compile Include="..\XDM.Core\HttpServer\ResponseStatus.cs" Link="HttpServer\ResponseStatus.cs" />
+    <Compile Include="..\XDM.Core\HttpServer\LineReader.cs" Link="HttpServer\LineReader.cs" />
+    <Compile Include="..\XDM.Core\HttpServer\WebSocketSession.cs" Link="HttpServer\WebSocketSession.cs" />
+    <Compile Include="..\XDM.Core\TraceLog\Log.cs" Link="TraceLog\Log.cs" />
   </ItemGroup>
 
 </Project>

@@ -41,6 +41,13 @@ namespace XDM.Core.BrowserMonitoring
         // Periodic cleanup timer for stale blob uploads (every 5 minutes)
         private readonly Timer blobPurgeTimer;
 
+        // Relay supervision: a live process must always answer on the IPC range —
+        // single-instance arbitration treats "all ports dead" as "instance defunct"
+        private volatile bool stopped = false;
+        private int runGeneration = 0;
+        private const int RelayRestartDelayMs = 3000;
+        private const int BindRetryDelayMs = 10000;
+
         public IpcHttpMessageProcessor()
         {
             Instance = this;
@@ -62,39 +69,69 @@ namespace XDM.Core.BrowserMonitoring
             }
         }
 
-        // Starts the IPC HTTP/WebSocket listener on the first available port in the range
+        // Starts the supervised IPC HTTP/WebSocket listener on the first available port in the range
         public void Run()
         {
+            stopped = false;
+            var gen = Interlocked.Increment(ref runGeneration);
             new Thread(() =>
             {
-                for (int p = Config.IpcPort; p < Config.IpcPort + 7; p++)
+                // Supervision loop: if the relay ever ends unexpectedly, re-bind so this
+                // process keeps answering IPC probes (prevents defunct-instance lockouts).
+                // The generation counter invalidates stale loops after Stop()/Restart().
+                while (!stopped && gen == runGeneration)
                 {
-                    try
+                    if (!TryBindAndServe(gen))
                     {
-                        EffectivePort = p;
-                        Log.Debug("IPC HTTP relay starting on 127.0.0.1:" + EffectivePort);
-                        server = new NanoServer(IPAddress.Loopback, EffectivePort);
-                        server.RequestReceived += (sender, args) => HandleRequest(args.RequestContext);
-                        server.WebSocketAccepted += OnWebSocketAccepted;
-                        server.Start();
+                        // Ports may be foreign-occupied for a while — retry instead of giving up
+                        Log.Debug("All IPC ports busy; retrying in " + (BindRetryDelayMs / 1000) + "s...");
+                        Thread.Sleep(BindRetryDelayMs);
+                        continue;
+                    }
+                    if (stopped || gen != runGeneration)
+                    {
                         return;
                     }
-                    catch (Exception ex)
-                    {
-                        Log.Debug($"IPC port {p} start error: {ex.Message}");
-                    }
+                    Log.Debug("IPC relay ended unexpectedly; restarting listener in " + (RelayRestartDelayMs / 1000) + "s...");
+                    Thread.Sleep(RelayRestartDelayMs);
                 }
-
-                Log.Debug("Failed to start IPC server on any port in range.");
             })
             {
                 IsBackground = true
             }.Start();
         }
 
+        // Binds the relay on the first free port and serves until the accept loop stops
+        private bool TryBindAndServe(int gen)
+        {
+            for (int p = Config.IpcPort; p < Config.IpcPort + Config.IpcPortRangeSize; p++)
+            {
+                if (stopped || gen != runGeneration)
+                {
+                    return true; // superseded by a newer Run() — let the loop condition exit it
+                }
+                try
+                {
+                    EffectivePort = p;
+                    Log.Debug("IPC HTTP relay starting on 127.0.0.1:" + EffectivePort);
+                    server = new NanoServer(IPAddress.Loopback, EffectivePort);
+                    server.RequestReceived += (sender, args) => HandleRequest(args.RequestContext);
+                    server.WebSocketAccepted += OnWebSocketAccepted;
+                    server.Start();
+                    return true; // accept loop ended — Stop() or a dead listener
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug($"IPC port {p} start error: {ex.Message}");
+                }
+            }
+            return false;
+        }
+
         // Stops the active server and terminates active sessions
         public void Stop()
         {
+            stopped = true;
             ApplicationContext.ApplicationEvent -= OnApplicationEvent;
             try
             {

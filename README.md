@@ -187,6 +187,10 @@ dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj
 | **Crash & Diagnostic Log** | `~/.fetchflow-app-data/crash.log` (5 MB auto-rotated) | `$XDG_CONFIG_HOME/fetchflow/crash.log` |
 | **Installation Directory** | `/opt/fetchflow/` | `/app/bin/` |
 
+### 🛟 Single-Instance Self-Recovery
+
+FetchFlow allows only one running instance. If a previous instance ever becomes unresponsive (its internal message port stops answering), the next launch detects this within a couple of seconds and automatically takes over as the primary instance — the app always starts instead of silently exiting. The IPC listener is also supervised and rebinds itself if it ever stops unexpectedly, keeping browser-extension connectivity alive.
+
 ---
 
 ## 📜 Credits & License
