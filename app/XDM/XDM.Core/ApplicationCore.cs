@@ -40,6 +40,7 @@ namespace XDM.Core
         private readonly Dictionary<string, DateTime> recentCaptureUrls = new();
         private readonly object dedupLock = new();
         private const int CaptureDedupWindowSeconds = 120;
+        private const int CaptureInFlightSeconds = 15;
         private GenericOrderedDictionary<string, IProgressWindow> activeProgressWindows = new();
         private Scheduler scheduler;
         private Timer awakePingTimer;
@@ -264,15 +265,31 @@ namespace XDM.Core
         {
             existingName = string.Empty;
             if (string.IsNullOrEmpty(url)) return false;
+
+            // Stamp first inside the lock so N simultaneous captures of the same URL
+            // cannot all pass; the stamp is harmless when the capture turns out clean
             lock (dedupLock)
             {
                 if (recentCaptureUrls.TryGetValue(url, out var seen)
                     && (DateTime.UtcNow - seen).TotalSeconds < CaptureDedupWindowSeconds)
                 {
                     var dbEntry = AppDB.Instance.Downloads.GetActiveDownloadByUrl(url);
-                    existingName = dbEntry?.Name ?? string.Empty;
-                    return true;
+                    if (dbEntry != null)
+                    {
+                        existingName = dbEntry.Name;
+                        return true;
+                    }
+                    // No DB row: within the in-flight window the first capture is still
+                    // inserting, so keep blocking; past it the entry is stale (completed
+                    // or removed) and an intentional re-capture is allowed
+                    if ((DateTime.UtcNow - seen).TotalSeconds < CaptureInFlightSeconds)
+                    {
+                        return true;
+                    }
+                    recentCaptureUrls.Remove(url);
+                    return false;
                 }
+                recentCaptureUrls[url] = DateTime.UtcNow;
             }
             var existing = AppDB.Instance.Downloads.GetActiveDownloadByUrl(url);
             if (existing != null)
@@ -280,17 +297,7 @@ namespace XDM.Core
                 existingName = existing.Name;
                 return true;
             }
-            RecordCaptureUrl(url);
             return false;
-        }
-
-        // Marks a URL as freshly captured so rapid re-captures are suppressed
-        private void RecordCaptureUrl(string url)
-        {
-            lock (dedupLock)
-            {
-                recentCaptureUrls[url] = DateTime.UtcNow;
-            }
         }
 
         private void ForgetCaptureUrl(string? url)
