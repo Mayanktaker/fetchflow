@@ -34,6 +34,12 @@ namespace XDM.Core
 
         private Dictionary<string, KeyValuePair<IBaseDownloader, bool>> liveDownloads = new();
         private GenericOrderedDictionary<string, bool> queuedDownloads = new();
+
+        // Recent capture URLs for duplicate suppression — the TTL window covers the gap
+        // between capture acceptance and the DB row becoming visible to the next probe
+        private readonly Dictionary<string, DateTime> recentCaptureUrls = new();
+        private readonly object dedupLock = new();
+        private const int CaptureDedupWindowSeconds = 120;
         private GenericOrderedDictionary<string, IProgressWindow> activeProgressWindows = new();
         private Scheduler scheduler;
         private Timer awakePingTimer;
@@ -209,6 +215,17 @@ namespace XDM.Core
         {
             if (ApplicationContext.LinkRefresher.LinkAccepted(message)) return;
 
+            // Duplicate capture guard: the same URL already sits in the active list
+            if (IsDuplicateCapture(message.Url, out var existingName))
+            {
+                Log.Debug($"Dedup: capture skipped, URL already in active list ({existingName})");
+                var notifyText = string.IsNullOrEmpty(existingName)
+                    ? TextResource.GetText("MSG_ALREADY_IN_LIST")
+                    : $"{TextResource.GetText("MSG_ALREADY_IN_LIST")}: {existingName}";
+                ApplicationContext.PlatformUIService.ShowDesktopNotification(notifyText);
+                return;
+            }
+
             if (Config.Instance.StartDownloadAutomatically)
             {
                 var url = message.Url;
@@ -238,6 +255,50 @@ namespace XDM.Core
             {
                 Log.Debug("Adding download");
                 ApplicationContext.Application.ShowNewDownloadDialog(message);
+            }
+        }
+
+        // True when this URL was captured within the dedup window or already exists
+        // as an unfinished download; existingName carries the display name when known
+        private bool IsDuplicateCapture(string? url, out string existingName)
+        {
+            existingName = string.Empty;
+            if (string.IsNullOrEmpty(url)) return false;
+            lock (dedupLock)
+            {
+                if (recentCaptureUrls.TryGetValue(url, out var seen)
+                    && (DateTime.UtcNow - seen).TotalSeconds < CaptureDedupWindowSeconds)
+                {
+                    var dbEntry = AppDB.Instance.Downloads.GetActiveDownloadByUrl(url);
+                    existingName = dbEntry?.Name ?? string.Empty;
+                    return true;
+                }
+            }
+            var existing = AppDB.Instance.Downloads.GetActiveDownloadByUrl(url);
+            if (existing != null)
+            {
+                existingName = existing.Name;
+                return true;
+            }
+            RecordCaptureUrl(url);
+            return false;
+        }
+
+        // Marks a URL as freshly captured so rapid re-captures are suppressed
+        private void RecordCaptureUrl(string url)
+        {
+            lock (dedupLock)
+            {
+                recentCaptureUrls[url] = DateTime.UtcNow;
+            }
+        }
+
+        private void ForgetCaptureUrl(string? url)
+        {
+            if (string.IsNullOrEmpty(url)) return;
+            lock (dedupLock)
+            {
+                recentCaptureUrls.Remove(url);
             }
         }
 
@@ -733,6 +794,7 @@ namespace XDM.Core
             try
             {
                 if (entry == null) return;
+                ForgetCaptureUrl(entry.PrimaryUrl);
                 string? tempDir = null;
                 var validEntry = false;
                 switch (entry.DownloadType)

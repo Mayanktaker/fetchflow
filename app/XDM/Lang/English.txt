@@ -272,6 +272,7 @@ MSG_FIELD_BLANK=The field is blank
 MSG_DOWNLOAD_VIDEO=Download Video
 MSG_DWN_VID_DESC=Please click here to download streaming video
 MSG_VID_CAP=Streaming video detected, please open Media Grabber
+MSG_ALREADY_IN_LIST=Already in the download list
 MSG_KILL_BROWSER=Browser will be terminated
 MSG_COPY_PASTE_EXT_URL=Please copy paste following address in {0} to open Extension page
 MSG_EXT_INSTALL_SUCCESS=The extension was installed successfully.

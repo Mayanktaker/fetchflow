@@ -211,6 +211,16 @@ namespace XDM.GtkUI
             catch { }
         }
 
+        public void ShowDesktopNotification(string message)
+        {
+            try
+            {
+                if (!Config.Instance.ShowNotification) return;
+                PlatformHelper.SpawnSubProcess("notify-send", new string[] { "FetchFlow", message });
+            }
+            catch { }
+        }
+
         public void CreateAndShowMediaGrabber()
         {
             var win = XDM.GtkUI.Dialogs.MediaGrabber.MediaGrabberWindow.CreateFromGladeFile();

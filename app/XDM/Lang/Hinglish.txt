@@ -272,6 +272,7 @@ MSG_FIELD_BLANK=Yeh field khali hai
 MSG_DOWNLOAD_VIDEO=Video Download karein
 MSG_DWN_VID_DESC=Streaming video download karne ke liye yahan click karein
 MSG_VID_CAP=Streaming video mili hai, kripya Media Grabber kholein
+MSG_ALREADY_IN_LIST=Download list mein pehle se maujood hai
 MSG_KILL_BROWSER=Browser band (terminate) kiya jayega
 MSG_COPY_PASTE_EXT_URL=Extension page kholne ke liye {0} address bar mein paste karein
 MSG_EXT_INSTALL_SUCCESS=Extension successfully install ho gaya hai.

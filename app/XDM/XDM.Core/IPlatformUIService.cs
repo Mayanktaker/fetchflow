@@ -20,6 +20,9 @@ namespace XDM.Core
 
         void ShowMessageBox(object? window, string message);
 
+        // Best-effort desktop notification (tray balloon / notify-send)
+        void ShowDesktopNotification(string message);
+
         string? SaveFileDialog(string? initialPath, string? defaultExt, string? filter);
 
         string? OpenFileDialog(string? initialPath, string? defaultExt, string? filter);

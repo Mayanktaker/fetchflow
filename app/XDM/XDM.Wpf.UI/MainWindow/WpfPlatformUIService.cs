@@ -229,6 +229,11 @@ namespace XDM.Wpf.UI
             AppTrayIcon.ShowNotification();
         }
 
+        public void ShowDesktopNotification(string message)
+        {
+            AppTrayIcon.ShowTextNotification(message);
+        }
+
         public void CreateAndShowMediaGrabber()
         {
             if (this.mediaGrabberWindow == null)

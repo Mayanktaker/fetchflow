@@ -22,7 +22,8 @@ namespace XDM.Core.DataAccess
         }
 
         private SQLiteCommand cmdFetchAll, cmdFetchConditional, cmdFetchOne, cmdUpdateProgress, cmdUpdateTargetDir,
-            cmdInsertOne, cmdMarkFinished, cmdUpdateStatus, cmdUpdateNameAndSize, cmdUpdateNameAndFolder, cmdUpdateOne, cmdDelete;
+            cmdInsertOne, cmdMarkFinished, cmdUpdateStatus, cmdUpdateNameAndSize, cmdUpdateNameAndFolder, cmdUpdateOne, cmdDelete,
+            cmdFetchByUrl;
 
         public bool LoadDownloads(
             out List<InProgressDownloadItem> inProgressDownloads,
@@ -108,6 +109,33 @@ namespace XDM.Core.DataAccess
                     Log.Debug(ex, ex.Message);
                 }
                 return false;
+            }
+        }
+
+        // Returns the unfinished (active) download sharing this exact primary URL, if any
+        public DownloadItemBase? GetActiveDownloadByUrl(string url)
+        {
+            lock (db)
+            {
+                try
+                {
+                    if (cmdFetchByUrl == null)
+                    {
+                        cmdFetchByUrl = new SQLiteCommand("SELECT id, name FROM downloads WHERE primary_url=@url AND completed=0 LIMIT 1", db);
+                    }
+                    SetParam("@url", url, cmdFetchByUrl.Parameters);
+                    using SQLiteDataReader r = cmdFetchByUrl.ExecuteReader();
+                    if (r.Read())
+                    {
+                        return new InProgressDownloadItem { Id = r.GetSafeString(0), Name = r.GetSafeString(1) };
+                    }
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, ex.Message);
+                    return null;
+                }
             }
         }
 

@@ -272,6 +272,7 @@ MSG_FIELD_BLANK=फ़ील्ड खाली है
 MSG_DOWNLOAD_VIDEO=वीडियो डाउनलोड करें
 MSG_DWN_VID_DESC=स्ट्रीमिंग वीडियो डाउनलोड करने के लिए कृपया यहाँ क्लिक करें
 MSG_VID_CAP=स्ट्रीमिंग वीडियो का पता चला, कृपया Media Grabber खोलें
+MSG_ALREADY_IN_LIST=डाउनलोड सूची में पहले से मौजूद है
 MSG_KILL_BROWSER=ब्राउज़र बंद कर दिया जाएगा
 MSG_COPY_PASTE_EXT_URL=एक्सटेंशन पेज खोलने के लिए कृपया {0} में निम्न पता कॉपी-पेस्ट करें
 MSG_EXT_INSTALL_SUCCESS=एक्सटेंशन सफलतापूर्वक इंस्टॉल हो गया।

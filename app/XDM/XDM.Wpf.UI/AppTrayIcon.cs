@@ -33,6 +33,22 @@ namespace XDM.Wpf.UI
             }
         }
 
+        // Arbitrary-text tray balloon (no click action)
+        public static void ShowTextNotification(string message)
+        {
+            try
+            {
+                if (notifyIcon != null && Config.Instance.ShowNotification)
+                {
+                    notifyIcon.ShowBalloonTip(30000, "FetchFlow", message, ToolTipIcon.Info);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, ex.Message);
+            }
+        }
+
         private static void NotifyIcon_BalloonTipClicked(object sender, EventArgs e)
         {
             XDM.Core.ApplicationContext.PlatformUIService.CreateAndShowMediaGrabber();
