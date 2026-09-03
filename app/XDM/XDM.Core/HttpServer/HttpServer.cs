@@ -11,6 +11,7 @@ namespace XDM.Core.HttpServer
     public class NanoServer
     {
         private readonly TcpListener listener;
+        private const int AcceptPollDelayMs = 200;
         private const int AcceptRetryDelayMs = 1000;
         public event EventHandler<RequestContextEventArgs>? RequestReceived;
         // Phase6: fired when a client requests a WebSocket upgrade (path, headers, session)
@@ -33,7 +34,9 @@ namespace XDM.Core.HttpServer
 
         // Starts listening and serves the accept loop until Stop(); accept/dispatch
         // failures are contained so a hostile client can never silently kill the
-        // listener and leave a live process without IPC
+        // listener and leave a live process without IPC. Uses a polling accept because
+        // close() does not wake a blocked accept on Linux — a closed listener must be
+        // detected so the relay supervisor can rebind.
         public void Start()
         {
             try
@@ -48,6 +51,11 @@ namespace XDM.Core.HttpServer
                 TcpClient tcp;
                 try
                 {
+                    if (!listener.Pending())
+                    {
+                        Thread.Sleep(AcceptPollDelayMs);
+                        continue;
+                    }
                     tcp = listener.AcceptTcpClient();
                 }
                 catch (ObjectDisposedException)
@@ -57,7 +65,7 @@ namespace XDM.Core.HttpServer
                 catch (Exception ex)
                 {
                     Log.Debug(ex, "NanoServer accept error: " + ex.Message);
-                    if (!listener.Server.IsBound) break;
+                    if (!IsListenerAlive()) break;
                     Thread.Sleep(AcceptRetryDelayMs);
                     continue;
                 }
@@ -72,6 +80,13 @@ namespace XDM.Core.HttpServer
                 }
             }
             Log.Debug("NanoServer accept loop exited.");
+        }
+
+        // True while the listening socket is still bound to its port
+        private bool IsListenerAlive()
+        {
+            try { return listener.Server.IsBound; }
+            catch { return false; }
         }
 
         public void Stop()

@@ -36,5 +36,21 @@ namespace XDM.Tests
             Assert.AreEqual(SingleInstanceAction.ProceedAsPrimary,
                 SingleInstancePolicy.Decide(ownsMutex: false, argsDelivered: false, mutexRecovered: true));
         }
+
+        [TestMethod]
+        public void LiveRelayOutranksOwnedMutex()
+        {
+            // Phantom mutex: OS wiped the backing file while a healthy instance serves —
+            // must forward, never start a duplicate primary
+            Assert.AreEqual(SingleInstanceAction.ForwardAndExit,
+                SingleInstancePolicy.Decide(ownsMutex: true, argsDelivered: true, mutexRecovered: false));
+        }
+
+        [TestMethod]
+        public void LiveRelayOutranksRecoveredMutex()
+        {
+            Assert.AreEqual(SingleInstanceAction.ForwardAndExit,
+                SingleInstancePolicy.Decide(ownsMutex: false, argsDelivered: true, mutexRecovered: true));
+        }
     }
 }

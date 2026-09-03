@@ -48,23 +48,32 @@ namespace XDM.Core
                 ownsMutex = true;
             }
 
-            var argsDelivered = false;
+            var argsDelivered = SendArgsToRunningInstance();
             var mutexRecovered = false;
 
-            if (!ownsMutex)
+            if (argsDelivered)
+            {
+                // A verified live relay outranks the mutex hint: covers the case where
+                // the OS wiped the mutex backing file while a healthy instance serves
+                if (!ownsMutex)
+                {
+                    Log.Debug("Another instance appears active; forwarding arguments...");
+                }
+                else
+                {
+                    Log.Debug("SingleInstance: mutex was free but a live relay answered — stale mutex state; forwarding instead of starting a duplicate.");
+                }
+            }
+            else if (!ownsMutex)
             {
                 Log.Debug("Another instance appears active; forwarding arguments...");
-                argsDelivered = SendArgsToRunningInstance();
-                if (!argsDelivered)
+                // Holder may be exiting right now — a brief retry avoids dual primaries
+                mutexRecovered = TryRecoverMutex();
+                if (!mutexRecovered)
                 {
-                    // Holder may be exiting right now — a brief retry avoids dual primaries
-                    mutexRecovered = TryRecoverMutex();
-                    if (!mutexRecovered)
-                    {
-                        // Slow-starting or just-took-over primary may bring its relay up
-                        // within the grace window; the gate serializes concurrent launchers
-                        argsDelivered = WaitForRelayInsideTakeoverGate();
-                    }
+                    // Slow-starting or just-took-over primary may bring its relay up
+                    // within the grace window; the gate serializes concurrent launchers
+                    argsDelivered = WaitForRelayInsideTakeoverGate();
                 }
             }
 

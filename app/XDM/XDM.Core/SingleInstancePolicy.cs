@@ -17,14 +17,19 @@ namespace XDM.Core
     // Pure decision table for single-instance arbitration (dependency-free for testability)
     public static class SingleInstancePolicy
     {
-        // Chooses the launch outcome from mutex ownership, arg delivery and recovery state
+        // Chooses the launch outcome: a verified live relay always outranks the mutex
+        // hint (the mutex backing file can be wiped by the OS while an instance serves)
         public static SingleInstanceAction Decide(bool ownsMutex, bool argsDelivered, bool mutexRecovered)
         {
+            if (argsDelivered)
+            {
+                return SingleInstanceAction.ForwardAndExit;
+            }
             if (ownsMutex || mutexRecovered)
             {
                 return SingleInstanceAction.ProceedAsPrimary;
             }
-            return argsDelivered ? SingleInstanceAction.ForwardAndExit : SingleInstanceAction.TakeOverAsPrimary;
+            return SingleInstanceAction.TakeOverAsPrimary;
         }
     }
 }

@@ -34,45 +34,60 @@ namespace XDM.GtkUI
         private const long CrashLogMaxBytes = 5L * 1024 * 1024;
         private const long CrashLogKeepBytes = 3L * 1024 * 1024;
 
-        private static void RotateCrashLogIfNeeded()
+    private static void RotateCrashLogIfNeeded()
+    {
+        try
         {
-            try
-            {
-                var info = new System.IO.FileInfo(CrashLogPath);
-                if (!info.Exists || info.Length <= CrashLogMaxBytes) return;
-                var text = System.IO.File.ReadAllText(CrashLogPath);
-                if (text.Length <= CrashLogKeepBytes) return;
-                var keep = text.Substring(text.Length - (int)CrashLogKeepBytes);
-                var cut = keep.IndexOf('\n');
-                if (cut >= 0) keep = keep.Substring(cut + 1);
-                var header = $"[{DateTime.UtcNow:O}] crash.log rotated (kept last {CrashLogKeepBytes / (1024 * 1024)} MB)\n";
-                System.IO.File.WriteAllText(CrashLogPath, header + keep);
-            }
-            catch
-            {
-                // Rotation is best-effort; a stale oversized log still contains evidence.
-            }
+            var info = new System.IO.FileInfo(CrashLogPath);
+            if (!info.Exists || info.Length <= CrashLogMaxBytes) return;
+            var text = System.IO.File.ReadAllText(CrashLogPath);
+            if (text.Length <= CrashLogKeepBytes) return;
+            var keep = text.Substring(text.Length - (int)CrashLogKeepBytes);
+            var cut = keep.IndexOf('\n');
+            if (cut >= 0) keep = keep.Substring(cut + 1);
+            var header = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] crash.log rotated (kept last {CrashLogKeepBytes / (1024 * 1024)} MB)\n";
+            System.IO.File.WriteAllText(CrashLogPath, header + keep);
         }
+        catch
+        {
+            // Rotation is best-effort and must never block the append below.
+        }
+    }
 
-        private static void WriteCrashLine(string label, object detail)
+    private static void WriteCrashLine(string label, object detail)
+    {
+        try
         {
-            try
+            System.IO.Directory.CreateDirectory(Config.AppDir);
+        }
+        catch
+        {
+            // Keep going — the append attempt below still surfaces the error path.
+        }
+        try
+        {
+            RotateCrashLogIfNeeded();
+        }
+        catch
+        {
+            // A failed rotation must not swallow the crash record itself.
+        }
+        try
+        {
+            // Local time with log.txt's exact format so both diagnostics align on one clock
+            var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {label}: {detail}";
+            if (detail is Exception ex) line += Environment.NewLine + ex;
+            line += Environment.NewLine;
+            lock (CrashLogLock)
             {
-                System.IO.Directory.CreateDirectory(Config.AppDir);
-                RotateCrashLogIfNeeded();
-                var line = $"[{DateTime.UtcNow:O}] {label}: {detail}";
-                if (detail is Exception ex) line += Environment.NewLine + ex;
-                line += Environment.NewLine;
-                lock (CrashLogLock)
-                {
-                    System.IO.File.AppendAllText(CrashLogPath, line);
-                }
-            }
-            catch
-            {
-                // Never let the crash sink itself crash the process.
+                System.IO.File.AppendAllText(CrashLogPath, line);
             }
         }
+        catch
+        {
+            // Never let the crash sink itself crash the process.
+        }
+    }
 
         static void Main(string[] args)
         {
