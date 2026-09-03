@@ -40,7 +40,7 @@ User-facing details live in [README.md](README.md); design system tokens live in
 | `bash build_all.sh` | Build complete Linux release with test gate: Chrome ZIP, Firefox XPI, portable tarball, RPM, DEB & SHA256SUMS |
 | `dotnet app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll` | Run 41-test automated suite (MSTest, YDL parser, JSON, Glade wiring, Language, Branding, GTK smoke) |
 | `scripts/run-gtk-smoke.sh` | Run headless GTK builder/autoconnect smoke tests under virtual Xvfb display |
-| `dotnet build -c Release -f net4.7.2 app/XDM/XDM.Wpf.UI/XDM.Wpf.UI.csproj` | Compile Windows WPF application binary (`xdm-app.exe`) |
+| `dotnet build -c Release -f net4.7.2 app/XDM/XDM.Wpf.UI/XDM.Wpf.UI.csproj` | Compile Windows WPF application binary (`fetchflow.exe`) |
 | `dotnet build -c Release -f net4.7.2 app/XDM/XDM.WinForms.IntegrationUI/XDM.WinForms.IntegrationUI.csproj` | Compile Windows browser integration guide binary (`xdm-guide.exe`) |
 
 ## Release & Store Compliance Rules (2026)

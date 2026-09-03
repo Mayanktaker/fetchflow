@@ -16,7 +16,7 @@
 #define AppName "FetchFlow Download Manager"
 #define AppPublisher "Mayanktaker Computers & Web Development"
 #define AppURL "https://mayanktaker.com"
-#define AppExeName "xdm-app.exe"
+#define AppExeName "fetchflow.exe"
 
 [Setup]
 AppId={{D387FE84-569A-404B-9DF7-A3508C69298B}

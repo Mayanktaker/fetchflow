@@ -72,7 +72,7 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 
 ### Windows 11 / 10 (64-bit)
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-9.1.8.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `xdm-app.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-9.1.8.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
