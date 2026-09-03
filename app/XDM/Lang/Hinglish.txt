@@ -278,3 +278,4 @@ MSG_EXT_INSTALL_SUCCESS=Extension successfully install ho gaya hai.
 MSG_EXT_PIN=Behtar experience ke liye extension ko browser toolbar par Pin karein
 MSG_EXT_INSTALL_FAIL=Extension install nahi ho paya, fix karne ke liye Help button par click karein
 MSG_COPY=Copy karein
+MSG_PLAY_SOUND=Download poora hone par sound play karein

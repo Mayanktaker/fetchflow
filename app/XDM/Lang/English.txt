@@ -278,3 +278,4 @@ MSG_EXT_INSTALL_SUCCESS=The extension was installed successfully.
 MSG_EXT_PIN=Please pin the extension in browser toolbar for a better user experience
 MSG_EXT_INSTALL_FAIL=The extension was not installed successfully, please click on the Help button to find out how to fix it
 MSG_COPY=Copy
+MSG_PLAY_SOUND=Play sound when download finishes
