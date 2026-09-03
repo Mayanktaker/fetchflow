@@ -18,7 +18,7 @@ User-facing details live in [README.md](README.md); design system tokens live in
 | **Browser Extensions** | Manifest V3 (Vanilla JS) | Chrome (`app/XDM/chrome-extension/`), Firefox (`app/XDM/firefox-amo/`) |
 | **Runtime & Toolchain** | .NET SDK 8.0.424 | Local at `~/.dotnet8` (or `~/.dotnet`); no root/sudo needed |
 | **Packaging Tools** | `rpmbuild`, `dpkg-deb`, `zip`, `tar`, Inno Setup 6 | Windows setup (`fetchflow-setup.iss`), Inno Setup CLI (`ISCC.exe`) |
-| **Version Source of Truth** | `app/XDM/XDM.Linux.Installer/version.env` | Currently `9.1.9` (synced with `AppInfo.cs` and manifests) |
+| **Version Source of Truth** | `app/XDM/XDM.Linux.Installer/version.env` | Currently `9.1.10` (synced with `AppInfo.cs` and manifests) |
 
 ## Related Documentation & Single Sources of Truth
 
@@ -46,8 +46,8 @@ User-facing details live in [README.md](README.md); design system tokens live in
 ## Release & Store Compliance Rules (2026)
 
 1. **Release Trigger:** Run releases only when Mayank asks to **"generate release"** / **"build new release"**, or push a git tag (`v*`) to trigger `.github/workflows/release.yml`.
-2. **Version Bump:** For new releases, bump `version.env` first (e.g. `9.1.4` → `9.1.5`), then sync `AppInfo.cs` and `manifest.json` files.
-3. **Mandatory Artifacts:** Every release **MUST** produce Linux packages (Fedora `.rpm`, Debian `.deb`, portable `.tar.gz`), Windows artifacts (`fetchflow-windows-x64-setup.exe`, `fetchflow-windows-x64-${VERSION}.zip`), browser extensions (`.zip`, `.xpi`), and unified `SHA256SUMS.txt` inside `xdm-release/`.
+2. **Version Bump:** For new releases, bump `version.env` first (e.g. `9.1.9` → `9.1.10`), then sync `AppInfo.cs` and `manifest.json` files.
+3. **Mandatory Artifacts:** Every release **MUST** produce Linux packages (Fedora `.rpm`, Debian `.deb`, portable `.tar.gz`), Windows artifacts (`fetchflow-windows-x64-setup.exe`, `fetchflow-windows-x64-${VERSION}.zip`), browser extensions (`.zip`, `.xpi`), and unified `SHA256SUMS.txt` inside `fetchflow-release/`.
 4. **Chrome Web Store (CWS):** Managed via `CHROMEWEBSTORE.md`. YouTube stream capture is disabled on CWS store builds to prevent policy bans; direct GitHub/website releases retain full multi-site capture.
 5. **Firefox AMO:** Requires `"data_collection_permissions": { "required": ["none"] }` in `app/XDM/firefox-amo/manifest.json`. All JS is unminified vanilla JS.
 6. **Diagnostics:** Always-on rotating crash log at `~/.fetchflow-app-data/crash.log` (capped at 5 MB). Glade UI wiring regressions tested via `GladeWiringTests`.

@@ -720,8 +720,18 @@ namespace XDM.GtkUI
             btnScheduler.StyleContext.AddClass("bottombar-button");
 
             hbox.PackEnd(btnScheduler, false, false, 0);
-            hbox.ShowAll();
-            return hbox;
+
+            // Container card for bottom statusbar matching the top action toolbar surface
+            var bottombarCard = new EventBox
+            {
+                Margin = 6,
+                MarginTop = 2
+            };
+            bottombarCard.StyleContext.AddClass("main-bottombar");
+            bottombarCard.StyleContext.AddClass("main-toolbar");
+            bottombarCard.Add(hbox);
+            bottombarCard.ShowAll();
+            return bottombarCard;
         }
 
         // Handles application-wide broadcast events to refresh UI state

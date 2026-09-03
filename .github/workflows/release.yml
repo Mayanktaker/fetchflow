@@ -40,7 +40,7 @@ jobs:
         run: |
           # Read version from installer environment
           source app/XDM/XDM.Linux.Installer/version.env
-          OUT_DIR="$(pwd)/xdm-release"
+          OUT_DIR="$(pwd)/fetchflow-release"
           mkdir -p "$OUT_DIR" build_output/xdm-app
 
           echo "=== 1. Packaging Browser Extensions ==="
@@ -99,11 +99,11 @@ jobs:
         with:
           name: linux-artifacts
           path: |
-            xdm-release/*.tar.gz
-            xdm-release/*.rpm
-            xdm-release/*.deb
-            xdm-release/*.zip
-            xdm-release/*.xpi
+            fetchflow-release/*.tar.gz
+            fetchflow-release/*.rpm
+            fetchflow-release/*.deb
+            fetchflow-release/*.zip
+            fetchflow-release/*.xpi
 
   build-windows:
     name: Build & Package Windows Artifacts
@@ -122,7 +122,7 @@ jobs:
         shell: pwsh
         run: |
           $verLine = Get-Content app/XDM/XDM.Linux.Installer/version.env | Where-Object { $_ -match '^VERSION=(.+)$' }
-          $version = if ($verLine) { $Matches[1].Trim() } else { "9.1.9" }
+          $version = if ($verLine) { $Matches[1].Trim() } else { "9.1.10" }
           Write-Host "Resolved Version: $version"
           "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
@@ -130,7 +130,7 @@ jobs:
         shell: pwsh
         run: |
           $winDir = "build_output\xdm-win-x64"
-          $outDir = "xdm-release"
+          $outDir = "fetchflow-release"
           New-Item -ItemType Directory -Force -Path $winDir, $outDir
 
           # Compile WPF main UI and WinForms integration guide in Release mode
@@ -160,16 +160,16 @@ jobs:
           Write-Host "Using Inno Setup compiler at: $iscc"
 
           # Compile standalone Windows installer .exe
-          & $iscc "/DAppVersion=$env:VERSION" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\xdm-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
-          Write-Host "Generated Windows Setup Installer: xdm-release\fetchflow-windows-x64-setup.exe"
+          & $iscc "/DAppVersion=$env:VERSION" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\fetchflow-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
+          Write-Host "Generated Windows Setup Installer: fetchflow-release\fetchflow-windows-x64-setup.exe"
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
           path: |
-            xdm-release/fetchflow-windows-x64-*.zip
-            xdm-release/fetchflow-windows-x64-setup.exe
+            fetchflow-release/fetchflow-windows-x64-*.zip
+            fetchflow-release/fetchflow-windows-x64-setup.exe
 
   publish-release:
     name: Publish Release & Checksums
@@ -184,17 +184,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-artifacts
-          path: xdm-release
+          path: fetchflow-release
 
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
           name: windows-artifacts
-          path: xdm-release
+          path: fetchflow-release
 
       - name: Generate Unified SHA256 Checksums
         run: |
-          cd xdm-release
+          cd fetchflow-release
           rm -f SHA256SUMS.txt
           sha256sum * > SHA256SUMS.txt
           echo "=== Complete Release Artifacts ==="
@@ -206,11 +206,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fetchflow-complete-release
-          path: xdm-release/*
+          path: fetchflow-release/*
 
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: xdm-release/*
+          files: fetchflow-release/*
           generate_release_notes: true

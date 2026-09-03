@@ -9,7 +9,7 @@ export PATH="$HOME/.local/rpm-build-root/usr/bin:$PATH"
 source app/XDM/XDM.Linux.Installer/version.env
 
 # Create output directory
-OUT_DIR="$(pwd)/xdm-release"
+OUT_DIR="$(pwd)/fetchflow-release"
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 

@@ -37,7 +37,7 @@ dotnet build app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
 echo "=== Pre-release tests passed successfully ==="
 
 # Create and clean output directory
-OUT_DIR="$(pwd)/xdm-release"
+OUT_DIR="$(pwd)/fetchflow-release"
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
@@ -99,7 +99,7 @@ bash make-rpm-pkg || { echo "ERROR: RPM package build failed — every release M
 bash make-deb-pkg || echo "WARNING: DEB package skipped (dpkg-deb missing or failed) — this release is incomplete."
 bash make-arch-pkg || echo "WARNING: Arch package skipped (makepkg missing or failed) — this release is incomplete."
 
-# Copy the packages back to the root xdm-release folder
+# Copy the packages back to the root fetchflow-release folder
 cp rpmbuild/RPMS/x86_64/fetchflow-${VERSION}*.rpm "$OUT_DIR/" 2>/dev/null || echo "No .rpm packages found to copy"
 cp fetchflow_${VERSION}*.deb "$OUT_DIR/" 2>/dev/null || echo "No .deb packages found to copy"
 cp fetchflow-${VERSION}*.pkg.tar.* "$OUT_DIR/" 2>/dev/null || echo "No .pkg.tar.* packages found to copy"

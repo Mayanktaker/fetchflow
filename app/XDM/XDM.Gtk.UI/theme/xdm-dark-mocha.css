@@ -79,7 +79,8 @@ scrolledwindow.sidebar-scroll {
 }
 
 /* Top action toolbar card styled to match sidebar surface */
-.main-toolbar {
+.main-toolbar,
+.main-bottombar {
   background-color: #0f0c0b;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 7px;

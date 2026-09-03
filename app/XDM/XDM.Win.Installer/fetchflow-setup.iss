@@ -2,7 +2,7 @@
 ; Inno Setup compiler script for FetchFlow Download Manager (Windows x64)
 
 #ifndef AppVersion
-  #define AppVersion "9.1.9"
+  #define AppVersion "9.1.10"
 #endif
 
 #ifndef SourceDir
@@ -10,7 +10,7 @@
 #endif
 
 #ifndef OutputDir
-  #define OutputDir "..\..\..\xdm-release"
+  #define OutputDir "..\..\..\fetchflow-release"
 #endif
 
 #define AppName "FetchFlow Download Manager"
