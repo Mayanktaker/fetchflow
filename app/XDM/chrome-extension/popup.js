@@ -205,18 +205,36 @@ class VideoPopup {
         this.renderList(this.filteredList);
     }
 
-    // Render connection health indicator pill with live WebSocket latency
+    // Render connection health indicator pill with live WebSocket latency and reconnect countdown
     updateHealth(health) {
         const pill = document.getElementById("healthPill");
         const dot = document.getElementById("healthDot");
         const text = document.getElementById("healthText");
         if (!pill || !dot || !text) return;
 
+        // Attach click-to-reconnect listener once
+        if (!pill._hasReconnectHandler) {
+            pill._hasReconnectHandler = true;
+            pill.addEventListener('click', () => {
+                if (pill.classList.contains('health-offline')) {
+                    this.showToast("Retrying connection to FetchFlow...");
+                    chrome.runtime.sendMessage({ type: "reconnect" }, (resp) => {
+                        if (resp && resp.health) this.updateHealth(resp.health);
+                    });
+                }
+            });
+        }
+
         if (!health || !health.connected) {
             pill.className = "health-pill health-offline";
             dot.className = "health-dot health-dot-offline";
-            text.textContent = "Offline";
-            pill.title = "Disconnected from FetchFlow Core";
+            const retryIn = health && health.retryIn != null ? health.retryIn : null;
+            if (retryIn != null && retryIn > 0) {
+                text.textContent = `Offline · Retry ${retryIn}s`;
+            } else {
+                text.textContent = "Offline · Retry";
+            }
+            pill.title = "Disconnected from FetchFlow Core (Click to reconnect immediately)";
             return;
         }
 
@@ -284,7 +302,7 @@ class VideoPopup {
         }, 1800);
     }
 
-    createSectionHeader(title, iconSvg, count, onToggle) {
+    createSectionHeader(title, iconSvg, count, onToggle, onDownloadAll) {
         const header = document.createElement('div');
         header.className = 'media-section-header';
 
@@ -311,6 +329,25 @@ class VideoPopup {
         badgeSpan.className = 'media-section-badge';
         badgeSpan.textContent = count + '';
         badgeWrap.appendChild(badgeSpan);
+
+        // Inline "Download All" quick action for this specific section
+        if (onDownloadAll && count > 0) {
+            const dlAllBtn = document.createElement('button');
+            dlAllBtn.className = 'section-download-all-btn';
+            dlAllBtn.setAttribute('title', `Download all ${count} ${title.toLowerCase()}`);
+            dlAllBtn.setAttribute('aria-label', `Download all ${title}`);
+            dlAllBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                <span>All (${count})</span>
+            `;
+            dlAllBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                onDownloadAll();
+            });
+            badgeWrap.appendChild(dlAllBtn);
+        }
 
         // If items exceed 6, provide collapsible chevron toggle
         if (count > 6 && onToggle) {
@@ -456,7 +493,7 @@ class VideoPopup {
         const videoIconSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>`;
         const audioIconSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`;
 
-        // If both video and audio streams exist, display distinct group headers with collapsible capability
+        // If both video and audio streams exist, display distinct group headers with collapsible & section-download capability
         if (videoItems.length > 0 && audioItems.length > 0) {
             // Group 1: Video Streams
             const videoSection = document.createElement('div');
@@ -465,6 +502,13 @@ class VideoPopup {
             const videoHeader = this.createSectionHeader("Video Streams", videoIconSvg, videoItems.length, () => {
                 videoCollapsed = !videoCollapsed;
                 videoSection.classList.toggle('media-section-collapsed', videoCollapsed);
+            }, () => {
+                this.showToast(`Starting ${videoItems.length} video downloads...`);
+                videoItems.forEach((item, idx) => {
+                    setTimeout(() => {
+                        chrome.runtime.sendMessage({ type: "vid", itemId: item.id });
+                    }, idx * 120);
+                });
             });
             videoSection.appendChild(videoHeader);
             videoItems.forEach(item => videoSection.appendChild(this.createCard(item, false)));
@@ -477,6 +521,13 @@ class VideoPopup {
             const audioHeader = this.createSectionHeader("Audio Streams", audioIconSvg, audioItems.length, () => {
                 audioCollapsed = !audioCollapsed;
                 audioSection.classList.toggle('media-section-collapsed', audioCollapsed);
+            }, () => {
+                this.showToast(`Starting ${audioItems.length} audio downloads...`);
+                audioItems.forEach((item, idx) => {
+                    setTimeout(() => {
+                        chrome.runtime.sendMessage({ type: "vid", itemId: item.id });
+                    }, idx * 120);
+                });
             });
             audioSection.appendChild(audioHeader);
             audioItems.forEach(item => audioSection.appendChild(this.createCard(item, true)));
@@ -489,6 +540,13 @@ class VideoPopup {
             const audioHeader = this.createSectionHeader("Audio Streams", audioIconSvg, audioItems.length, () => {
                 audioCollapsed = !audioCollapsed;
                 audioSection.classList.toggle('media-section-collapsed', audioCollapsed);
+            }, () => {
+                this.showToast(`Starting ${audioItems.length} audio downloads...`);
+                audioItems.forEach((item, idx) => {
+                    setTimeout(() => {
+                        chrome.runtime.sendMessage({ type: "vid", itemId: item.id });
+                    }, idx * 120);
+                });
             });
             audioSection.appendChild(audioHeader);
             audioItems.forEach(item => audioSection.appendChild(this.createCard(item, true)));

@@ -17,6 +17,8 @@ export default class Connector {
         this.ws = null;             // Phase6: WebSocket instance
         this.useWebSocket = false;  // Phase6: true when WebSocket is active
         this.reconnectTimer = null;
+        this.nextRetryTime = null;
+        this.reconnectInterval = 3000; // 3 seconds retry interval
         this.pollingStarted = false;
         this.pollingTimer = null;
         this.lastPingSentTime = null;
@@ -25,6 +27,25 @@ export default class Connector {
 
     connect() {
         // Phase6: try WebSocket first on each port, then fall back to HTTP polling
+        this.tryConnectWebSocket();
+    }
+
+    // Schedule next reconnect attempt with countdown tracking
+    scheduleReconnect() {
+        if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+        this.nextRetryTime = Date.now() + this.reconnectInterval;
+        this.reconnectTimer = setTimeout(() => {
+            this.reconnectTimer = null;
+            this.nextRetryTime = null;
+            this.tryConnectWebSocket();
+        }, this.reconnectInterval);
+    }
+
+    // Force an immediate reconnect attempt
+    reconnectNow() {
+        if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+        this.nextRetryTime = null;
         this.tryConnectWebSocket();
     }
 
@@ -38,11 +59,13 @@ export default class Connector {
 
     // Returns current connection health metrics for popup consumption
     getHealthInfo() {
+        const retryIn = this.nextRetryTime ? Math.max(0, Math.ceil((this.nextRetryTime - Date.now()) / 1000)) : null;
         return {
             connected: !!this.connected,
             useWebSocket: !!this.useWebSocket,
             latency: this.latency,
-            port: APP_BASE_PORTS[this.portIndex]
+            port: APP_BASE_PORTS[this.portIndex],
+            retryIn: retryIn
         };
     }
 
@@ -53,6 +76,9 @@ export default class Connector {
             this.ws = new WebSocket("ws://127.0.0.1:" + port + "/ws");
 
             this.ws.onopen = () => {
+                if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+                this.reconnectTimer = null;
+                this.nextRetryTime = null;
                 this.connected = true;
                 this.useWebSocket = true;
                 // CRITICAL: update httpBaseUrl so postBlobChunk uses the correct port
@@ -90,6 +116,7 @@ export default class Connector {
                 this.connected = false;
                 this.ws = null;
                 this.latency = null;
+                this.scheduleReconnect();
                 // Fall back to HTTP polling
                 this.startHttpPolling();
             };
@@ -102,6 +129,7 @@ export default class Connector {
                 if (this.portIndex !== 0) {
                     this.tryConnectWebSocket();
                 } else {
+                    this.scheduleReconnect();
                     this.startHttpPolling();
                 }
             };

@@ -764,3 +764,37 @@ body.popup {
   50% { transform: scale(0.98); }
   100% { transform: scale(1); }
 }
+
+/* Section Download All Quick Action */
+.section-download-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.section-download-all-btn:hover {
+  background-color: var(--brand-from);
+  border-color: var(--brand-from);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.25);
+}
+
+.health-pill.health-offline {
+  cursor: pointer;
+}
+
+.health-pill.health-offline:hover {
+  background-color: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.45);
+}

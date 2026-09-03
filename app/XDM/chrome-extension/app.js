@@ -538,6 +538,10 @@ export default class App {
             this.connector.pingNow();
             sendResponse({ health: this.connector.getHealthInfo() });
         }
+        else if (request.type === "reconnect") {
+            this.connector.reconnectNow();
+            sendResponse({ health: this.connector.getHealthInfo() });
+        }
         else if (request.type === "cmd") {
             this.userDisabled = request.enabled === false;
             this.logger.log("request.enabled:" + request.enabled);
