@@ -49,7 +49,7 @@ namespace XDM.GtkUI.Dialogs.Settings
         // Builder.Autoconnect only wires fields marked [UI]; missing annotation leaves the
         // field null → NRE in LoadTexts when the dialog is opened (crash in crash.log).
         [UI] private CheckButton ChkMonitorClipboard, ChkTimestamp, ChkAutoCat, ChkShowPrg,
-            ChkShowComplete, ChkStartAuto, ChkOverwrite, ChkEnableSpeedLimit, ChkHalt, ChkKeepAwake,
+            ChkShowComplete, ChkPlaySound, ChkStartAuto, ChkOverwrite, ChkEnableSpeedLimit, ChkHalt, ChkKeepAwake,
             ChkRunCmd, ChkRunAntivirus, ChkAutoRun;
         [UI]
         private ComboBox CmbMinVidSize, CmbDblClickAction, CmbMaxParallalDownloads,
@@ -739,6 +739,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             ChkAutoCat.Label = TextResource.GetText("SETTINGS_ATUO_CAT");
             ChkShowPrg.Label = TextResource.GetText("SHOW_DWN_PRG");
             ChkShowComplete.Label = TextResource.GetText("SHOW_DWN_COMPLETE");
+            ChkPlaySound.Label = TextResource.GetText("MSG_PLAY_SOUND") ?? "Play sound when download finishes";
             ChkStartAuto.Label = TextResource.GetText("LBL_START_AUTO");
             ChkOverwrite.Label = TextResource.GetText("LBL_OVERWRITE_EXISTING");
             CatAdd.Label = TextResource.GetText("SETTINGS_CAT_ADD");
@@ -800,6 +801,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             //General settings
             ChkShowPrg.Active = Config.Instance.ShowProgressWindow;
             ChkShowComplete.Active = Config.Instance.ShowDownloadCompleteWindow;
+            ChkPlaySound.Active = Config.Instance.PlayCompletionSound;
             ChkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
             ChkOverwrite.Active = Config.Instance.FileConflictResolution == FileConflictResolution.Overwrite;
 
@@ -917,6 +919,7 @@ namespace XDM.GtkUI.Dialogs.Settings
         {
             Config.Instance.ShowProgressWindow = ChkShowPrg.Active;
             Config.Instance.ShowDownloadCompleteWindow = ChkShowComplete.Active;
+            Config.Instance.PlayCompletionSound = ChkPlaySound.Active;
             Config.Instance.StartDownloadAutomatically = ChkStartAuto.Active;
             Config.Instance.FileConflictResolution =
                 ChkOverwrite.Active ? FileConflictResolution.Overwrite : FileConflictResolution.AutoRename;
