@@ -1905,14 +1905,15 @@ namespace XDM.GtkUI
                 var isDark = ThemeManager.IsDarkActive;
                 var textCol = isDark ? "#ffffff" : "#0f172a";
                 var dateCol = isDark ? "#ffffff" : "#475569";
-                var dateAlpha = isDark ? "55000" : $"{SecondaryTextAlpha}";
+                // Date matches the meta sub-line treatment: smaller size, faded alpha
+                var dateAlpha = isDark ? $"{MetaSubLineAlphaDark}" : $"{MetaSubLineAlpha}";
 
                 var sizeMarkup = selected
                     ? $"<span weight=\"bold\" color=\"{textCol}\">{GLib.Markup.EscapeText(sizeText)}</span>"
                     : $"<span weight=\"bold\">{GLib.Markup.EscapeText(sizeText)}</span>";
                 var dateMarkup = selected
-                    ? $"<span size=\"9000\" alpha=\"{dateAlpha}\" color=\"{dateCol}\">{GLib.Markup.EscapeText(dateText)}</span>"
-                    : $"<span size=\"9000\" alpha=\"{SecondaryTextAlpha}\">{GLib.Markup.EscapeText(dateText)}</span>";
+                    ? $"<span size=\"7500\" alpha=\"{dateAlpha}\" color=\"{dateCol}\">{GLib.Markup.EscapeText(dateText)}</span>"
+                    : $"<span size=\"7500\" alpha=\"{MetaSubLineAlpha}\">{GLib.Markup.EscapeText(dateText)}</span>";
 
                 ((CellRendererText)cell).Markup = $"{sizeMarkup}\n{dateMarkup}";
             }));
