@@ -142,8 +142,8 @@ treeview.finished row:nth-child(even) {
 
 treeview.unfinished row:hover,
 treeview.finished row:hover {
-  background-color: #302b48;
-  border-color: rgba(255, 255, 255, 0.1);
+  background-color: #3d3560;
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 treeview.unfinished row:selected,
@@ -1021,8 +1021,8 @@ treeview.finished row {
 
 treeview.unfinished row:hover,
 treeview.finished row:hover {
-  background-color: #333333;
-  border-color: rgba(255, 255, 255, 0.12);
+  background-color: #3d3560;
+  border-color: rgba(255, 255, 255, 0.18);
   color: #ffffff;
 }
 
