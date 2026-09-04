@@ -692,6 +692,17 @@ body.popup {
   color: #ef4444;
 }
 
+/* End-to-end capture test trigger beside the health pill */
+.capture-test-btn {
+  cursor: pointer;
+  font: inherit;
+}
+
+.capture-test-btn:hover {
+  border-color: var(--accent, #f97316);
+  color: var(--accent, #f97316);
+}
+
 .health-dot {
   width: 5px;
   height: 5px;

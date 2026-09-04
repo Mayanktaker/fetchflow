@@ -87,6 +87,21 @@ class VideoPopup {
                 this.downloadAllFiltered();
             });
         }
+
+        // End-to-end capture test: triggers a REAL tiny browser download that the
+        // background must intercept (cancel + hand off to FetchFlow).
+        const captureTestBtn = document.getElementById("captureTestBtn");
+        if (captureTestBtn) {
+            captureTestBtn.addEventListener('click', () => {
+                chrome.runtime.sendMessage({ type: "capture-test" }, (res) => {
+                    if (res && res.ok) {
+                        this.showToast("Test download launched — if capture works, FetchFlow opens with it");
+                    } else {
+                        this.showToast((res && res.error) || "Capture test failed — monitoring disabled?");
+                    }
+                });
+            });
+        }
     }
 
     updateSoundIcon() {

@@ -20,6 +20,8 @@ class App {
         this.pendingDownloads = [];
         this.handledDownloadIds = new Set();
         this.pendingDownloadsMap = new Map();
+        this.configLoaded = false;       // true once the app's first /sync arrives this wake
+        this.pendingDownloadEvents = []; // downloads.onCreated seen before config arrived
     }
 
     start() {
@@ -39,6 +41,15 @@ class App {
         });
         this.starAppConnector();
         this.register();
+        // Firefox MV3 event pages idle out after ~30s; an open WebSocket or a plain
+        // setInterval does NOT reset that timer. A periodic extension-API call does
+        // (documented Firefox workaround) — it keeps the background alive so the
+        // WebSocket stays connected and downloads are intercepted in real time.
+        this.keepaliveInterval = setInterval(() => {
+            try {
+                browser.runtime.getPlatformInfo();
+            } catch (e) { }
+        }, 20000);
         this.logger.log("started.");
     }
 
@@ -56,6 +67,13 @@ class App {
 
     // Send downloads that were queued while FetchFlow was offline (called once the relay reconnects)
     flushPendingDownloads() {
+        // Replay browser download events captured before this wake's config arrived —
+        // they must be judged with real fileExts/enabled flags, not the empty defaults.
+        if (this.pendingDownloadEvents.length > 0) {
+            const queued = this.pendingDownloadEvents;
+            this.pendingDownloadEvents = [];
+            queued.forEach(d => this.onDownloadCreated(d));
+        }
         if (!this.connector.isConnected() || !this.pendingDownloads || this.pendingDownloads.length === 0) {
             return;
         }
@@ -66,6 +84,7 @@ class App {
 
     updateConfig(msg) {
         this.appEnabled = msg.enabled === true;
+        this.configLoaded = true;
         this.fileExts = msg.fileExts || [];
         this.blockedHosts = msg.blockedHosts || [];
         this.tabsWatcher = msg.tabsWatcher || [];
@@ -113,6 +132,12 @@ class App {
         this.logger.log("onDownloadCreated");
         this.logger.log(download);
         if (!this.isMonitoringEnabled()) {
+            // Cold-wake race: downloads.onCreated can fire before this wake's first
+            // /sync arrives (config unknown, fileExts empty). Queue and re-judge
+            // once config lands; only a real disabled flag drops the event.
+            if (!this.configLoaded) {
+                this.pendingDownloadEvents.push(download);
+            }
             return;
         }
         let url = download.url || "";
@@ -130,12 +155,22 @@ class App {
     }
 
     onDownloadChanged(delta) {
-        if (!this.isMonitoringEnabled() || !delta) {
+        if (!delta) {
             return;
         }
         if (delta.state && (delta.state.current === "complete" || delta.state.current === "interrupted")) {
             this.handledDownloadIds.delete(delta.id);
             this.pendingDownloadsMap.delete(delta.id);
+            this.pendingDownloadEvents = this.pendingDownloadEvents.filter(d => d.id !== delta.id);
+            return;
+        }
+        // Keep queued pre-config events fresh with their resolved filename
+        const queued = this.pendingDownloadEvents.find(d => d.id === delta.id);
+        if (queued && delta.filename && delta.filename.current) {
+            queued.filename = delta.filename.current;
+            return;
+        }
+        if (!this.isMonitoringEnabled()) {
             return;
         }
         if (delta.filename && delta.filename.current) {
@@ -556,6 +591,30 @@ class App {
         else if (request.type === "reconnect") {
             this.connector.reconnectNow();
             sendResponse({ health: this.connector.getHealthInfo() });
+        }
+        else if (request.type === "capture-test") {
+            // End-to-end diagnostics: start a REAL browser download of a tiny file.
+            // If interception works, this download is cancelled and FetchFlow takes
+            // it over — exercising downloads.onCreated → shouldTakeOver → /download.
+            if (!this.isMonitoringEnabled()) {
+                sendResponse({ error: "Monitoring is disabled — enable it first" });
+                return;
+            }
+            if (!this.connector.isConnected()) {
+                sendResponse({ error: "FetchFlow app is not connected — open it first" });
+                return;
+            }
+            chrome.downloads.download(
+                { url: "https://speed.hetzner.de/100KB.bin", saveAs: false },
+                (downloadId) => {
+                    if (chrome.runtime.lastError || downloadId === undefined) {
+                        sendResponse({ error: "Browser refused the test download: " + (chrome.runtime.lastError?.message || "unknown") });
+                        return;
+                    }
+                    sendResponse({ ok: true });
+                }
+            );
+            return true; // async sendResponse
         }
         else if (request.type === "cmd") {
             this.userDisabled = request.enabled === false;

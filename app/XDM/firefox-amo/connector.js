@@ -13,15 +13,17 @@ class Connector {
         this.onDisconnect = onDisconnect;
         this.connected = undefined;
         this.portIndex = 0;
-        this.ws = null;             // Phase6: WebSocket instance
-        this.useWebSocket = false;  // Phase6: true when WebSocket is active
+        this.lastGoodPortIndex = null;   // prefer the port that last answered
+        this.ws = null;                  // Phase6: WebSocket instance
+        this.useWebSocket = false;       // Phase6: true when WebSocket is active
         this.reconnectTimer = null;
         this.nextRetryTime = null;
-        this.reconnectInterval = 3000; // 3 seconds retry interval
+        this.reconnectInterval = 3000;   // 3 seconds retry interval
         this.pollingStarted = false;
         this.pollingTimer = null;
         this.lastPingSentTime = null;
         this.latency = null;
+        this.attemptId = 0;              // single-flight guard: only the newest socket's callbacks act
     }
 
     connect() {
@@ -40,12 +42,23 @@ class Connector {
         }, this.reconnectInterval);
     }
 
-    // Force an immediate reconnect attempt
+    // Force an immediate reconnect attempt (any live socket is closed safely
+    // inside tryConnectWebSocket AFTER the attempt id is bumped, so its onclose
+    // cannot fire the reconnect dance a second time)
     reconnectNow() {
         if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
         this.nextRetryTime = null;
         this.tryConnectWebSocket();
+    }
+
+    // Close the active WebSocket (if any) so a superseded socket cannot fire stale callbacks
+    closeCurrentSocket() {
+        if (this.ws) {
+            const stale = this.ws;
+            this.ws = null;
+            try { stale.close(); } catch (e) { }
+        }
     }
 
     // Measure live WebSocket latency on demand
@@ -70,32 +83,42 @@ class Connector {
 
     // Phase6: attempt a WebSocket connection to ws://127.0.0.1:{port}/ws
     tryConnectWebSocket() {
+        const attempt = ++this.attemptId;
+        // Single live socket: close any prior attempt; its callbacks are now stale
+        this.closeCurrentSocket();
         try {
             const port = APP_BASE_PORTS[this.portIndex];
-            this.ws = new WebSocket("ws://127.0.0.1:" + port + "/ws");
+            const ws = new WebSocket("ws://127.0.0.1:" + port + "/ws");
+            this.ws = ws;
+            this.logger.log("WebSocket attempt #" + attempt + " on port " + port);
 
-            this.ws.onopen = () => {
+            ws.onopen = () => {
+                if (attempt !== this.attemptId) return; // superseded socket
                 if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
                 this.reconnectTimer = null;
                 this.nextRetryTime = null;
                 this.connected = true;
                 this.useWebSocket = true;
+                this.lastGoodPortIndex = this.portIndex;
                 // CRITICAL: update httpBaseUrl so postBlobChunk uses the correct port
                 httpBaseUrl = "http://127.0.0.1:" + port;
                 this.logger.log("WebSocket connected on port " + port + " | httpBaseUrl: " + httpBaseUrl);
+                // WS is authoritative now — stop the HTTP polling bridge entirely
+                this.stopHttpPolling();
                 // Send initial sync and measure round-trip latency
                 this.lastPingSentTime = Date.now();
-                this.ws.send(JSON.stringify({ path: "/sync", body: "" }));
+                ws.send(JSON.stringify({ path: "/sync", body: "" }));
                 // Keep alive ping every 5 seconds for fresh latency readings
                 this.pingInterval = setInterval(() => {
-                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    if (this.ws === ws && ws.readyState === WebSocket.OPEN) {
                         this.lastPingSentTime = Date.now();
-                        this.ws.send(JSON.stringify({ path: "/ping", body: "" }));
+                        ws.send(JSON.stringify({ path: "/ping", body: "" }));
                     }
                 }, 5000);
             };
 
-            this.ws.onmessage = (event) => {
+            ws.onmessage = (event) => {
+                if (attempt !== this.attemptId) return;
                 if (this.lastPingSentTime) {
                     this.latency = Math.max(1, Date.now() - this.lastPingSentTime);
                     this.lastPingSentTime = null;
@@ -108,29 +131,28 @@ class Connector {
                 }
             };
 
-            this.ws.onclose = () => {
+            ws.onclose = () => {
+                if (attempt !== this.attemptId) return; // stale socket closed — ignore
                 if (this.pingInterval) clearInterval(this.pingInterval);
-                this.logger.log("WebSocket closed");
+                this.pingInterval = null;
+                this.logger.log("WebSocket closed on port " + port);
                 this.useWebSocket = false;
                 this.connected = false;
-                this.ws = null;
+                if (this.ws === ws) this.ws = null;
                 this.latency = null;
+                // Walk the range round-robin, preferring the last port that answered
+                this.portIndex = this.lastGoodPortIndex !== null ? this.lastGoodPortIndex : this.portIndex;
+                this.portIndex = (this.portIndex + 1) % APP_BASE_PORTS.length;
+                httpBaseUrl = "http://127.0.0.1:" + APP_BASE_PORTS[this.portIndex];
                 this.scheduleReconnect();
-                // Fall back to HTTP polling
+                // Bridge with HTTP polling until the WebSocket comes back
                 this.startHttpPolling();
             };
 
-            this.ws.onerror = (err) => {
+            ws.onerror = () => {
+                // Handled by onclose (always follows onerror) — single-flight: no recursion here
                 this.logger.log("WebSocket error on port " + port);
-                this.latency = null;
-                // Try next port, then fall back to HTTP
-                this.portIndex = (this.portIndex + 1) % APP_BASE_PORTS.length;
-                if (this.portIndex !== 0) {
-                    this.tryConnectWebSocket();
-                } else {
-                    this.scheduleReconnect();
-                    this.startHttpPolling();
-                }
+                if (attempt === this.attemptId) this.latency = null;
             };
         } catch (e) {
             this.logger.log("WebSocket connect failed: " + e);
@@ -142,7 +164,7 @@ class Connector {
     // Phase6: legacy HTTP polling fallback (used when WebSocket is unavailable)
     startHttpPolling() {
         this.useWebSocket = false;
-        httpBaseUrl = "http://127.0.0.1:" + APP_BASE_PORTS[this.portIndex];
+        httpBaseUrl = "http://127.0.0.1:" + APP_BASE_PORTS[this.lastGoodPortIndex !== null ? this.lastGoodPortIndex : this.portIndex];
         if (this.pollingStarted) {
             return;
         }
@@ -153,14 +175,24 @@ class Connector {
         this.onTimer();
     }
 
+    // Stop the HTTP polling bridge once the WebSocket is authoritative again
+    stopHttpPolling() {
+        if (this.pollingTimer) clearInterval(this.pollingTimer);
+        this.pollingTimer = null;
+        this.pollingStarted = false;
+    }
+
     onTimer() {
         fetch(httpBaseUrl + "/sync")
             .then(this.onResponse.bind(this))
             .catch(err => {
-                if (!this.connected) {
-                    this.portIndex = (this.portIndex + 1) % APP_BASE_PORTS.length;
-                    httpBaseUrl = "http://127.0.0.1:" + APP_BASE_PORTS[this.portIndex];
+                // Never flip a healthy WebSocket connection offline because one
+                // poll failed — polling is only a bridge while WS is down.
+                if (this.useWebSocket) {
+                    return;
                 }
+                this.portIndex = (this.portIndex + 1) % APP_BASE_PORTS.length;
+                httpBaseUrl = "http://127.0.0.1:" + APP_BASE_PORTS[this.portIndex];
                 this.disconnect();
             });
     }
@@ -188,7 +220,9 @@ class Connector {
         // HTTP fallback
         fetch(httpBaseUrl + url, { method: "POST", body: JSON.stringify(data) })
             .then(this.onResponse.bind(this))
-            .catch(err => this.disconnect());
+            .catch(err => {
+                if (!this.useWebSocket) this.disconnect();
+            });
     }
 
     // Blob chunk upload: raw binary POST to /blob-upload (not JSON)
@@ -208,8 +242,16 @@ class Connector {
         return response.json();
     }
 
-    // Launches FetchFlow via OS-registered fetchflow:// URL scheme
+    // Launches FetchFlow via OS-registered fetchflow:// URL scheme.
+    // Cooldown: each offline download used to spawn another app process (log showed
+    // instance storms every few minutes) — one launch per minute is plenty.
     launchApp() {
+        const now = Date.now();
+        if (this.lastLaunchTime && now - this.lastLaunchTime < 60000) {
+            this.logger.log("launchApp suppressed (cooldown)");
+            return;
+        }
+        this.lastLaunchTime = now;
         try {
             chrome.tabs.create({ url: "fetchflow://launch" });
         } catch (e) {

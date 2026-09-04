@@ -32,7 +32,13 @@ namespace XDM.Core
                 var deleteItems = selectedItems.ToList();
                 var deleteIds = deleteItems.Select(item => item.DownloadEntry.Id).ToArray();
                 Log.Debug($"DeleteDownloads: deleting {deleteItems.Count} in-progress row(s).");
-                if (ApplicationContext.MainWindow.Confirm(ApplicationContext.MainWindow, TextResource.GetText("DEL_SEL_TEXT")))
+                // Surface the count so a collapsed selection is visible before confirming
+                var confirmText = TextResource.GetText("DEL_SEL_TEXT");
+                if (deleteItems.Count > 1)
+                {
+                    confirmText += $" ({deleteItems.Count})";
+                }
+                if (ApplicationContext.MainWindow.Confirm(ApplicationContext.MainWindow, confirmText))
                 {
                     // Stop only after approval — cancelling must not kill running downloads
                     ApplicationContext.CoreService.StopDownloads(deleteIds);
@@ -55,7 +61,13 @@ namespace XDM.Core
                     ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, "Please select a download first.");
                     return;
                 }
-                ApplicationContext.MainWindow.ConfirmDelete(TextResource.GetText("DEL_SEL_TEXT"),
+                // Surface the count so a collapsed selection is visible before confirming
+                var confirmText = TextResource.GetText("DEL_SEL_TEXT");
+                if (selectedRows.Count > 1)
+                {
+                    confirmText += $" ({selectedRows.Count})";
+                }
+                ApplicationContext.MainWindow.ConfirmDelete(confirmText,
                     out bool approved, out bool deleteFiles);
                 if (approved)
                 {

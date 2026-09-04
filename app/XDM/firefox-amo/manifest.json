@@ -37,15 +37,18 @@
         "cookies",
         "alarms"
     ],
-    "background": {
-        "scripts": [
-            "logger.js",
-            "connector.js",
-            "request-watcher.js",
-            "app.js",
-            "main.js"
-        ]
-    },
+  "background": {
+    "scripts": [
+      "logger.js",
+      "connector.js",
+      "request-watcher.js",
+      "app.js",
+      "main.js"
+    ]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
     "content_scripts": [
         {
             "matches": ["http://*/*", "https://*/*"],

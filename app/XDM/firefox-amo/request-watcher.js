@@ -174,7 +174,7 @@ class RequestWatcher {
             file: title,
             requestHeaders: {},
             responseHeaders: {},
-            cookies: {},
+            cookies: "",
             method: req.method,
             userAgent: navigator.userAgent,
             tabUrl: tabUrl,

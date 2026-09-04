@@ -1388,6 +1388,9 @@ namespace XDM.GtkUI
             inprogressDownloadsStoreSorted = sortedStore;
             lvInprogress = new TreeView(sortedStore);
             lvInprogress.Selection.Mode = SelectionMode.Multiple;
+            // Drag-select (rubber band) — GTK defaults OFF, which silently broke
+            // drag-based multi-selection attempts on the Active list.
+            lvInprogress.RubberBanding = true;
             lvInprogress.HeadersVisible = false;
             lvInprogress.EnableGridLines = TreeViewGridLines.None;
             // Per-view surface tint (see treeview.unfinished in the theme layer)
@@ -1400,6 +1403,23 @@ namespace XDM.GtkUI
                 Sizing = TreeViewColumnSizing.Autosize,
                 Spacing = DownloadColumnSpacing
             };
+            // Dedicated selection-checkbox column — click any rows to build a
+            // multi-selection without Ctrl/Shift; state mirrors TreeSelection.
+            var inprogressCheckCol = new TreeViewColumn
+            {
+                Sizing = TreeViewColumnSizing.Fixed,
+                FixedWidth = 38,
+                Resizable = false
+            };
+            var inprogressCheckRenderer = new CellRendererToggle { Activatable = false };
+            inprogressCheckRenderer.SetPadding(6, 8);
+            inprogressCheckCol.PackStart(inprogressCheckRenderer, true);
+            inprogressCheckCol.SetCellDataFunc(inprogressCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
+            {
+                ((CellRendererToggle)cell).Active = lvInprogress.Selection.PathIsSelected(model.GetPath(iter));
+            }));
+            lvInprogress.AppendColumn(inprogressCheckCol);
+
             var fileIconRenderer = new CellRendererPixbuf { };
             fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, 8);
             inprogressCardCol.PackStart(fileIconRenderer, false);
@@ -1453,12 +1473,40 @@ namespace XDM.GtkUI
                 }
             };
 
+            // File-manager semantics for right-click: when the press lands INSIDE the
+            // current multi-selection, claim the event so GTK's default handler cannot
+            // collapse the selection before the context menu opens (menu actions act on
+            // every selected row). Presses outside the selection fall through and GTK
+            // selects just the clicked row, matching Nautilus/Finder behavior.
+            // Checkbox presses are claimed too, so a plain click toggles membership
+            // instead of replacing the whole selection.
+            lvInprogress.ButtonPressEvent += (a, b) =>
+            {
+                if (b.Event.Type == Gdk.EventType.ButtonPress && b.Event.Button == 3
+                    && TreeViewSelectionHelper.ShouldPreserveSelectionOnPress(lvInprogress, b.Event.X, b.Event.Y))
+                {
+                    b.RetVal = true;
+                }
+                if (b.Event.Type == Gdk.EventType.ButtonPress && b.Event.Button == 1
+                    && TreeViewSelectionHelper.HitTestToggleCell(lvInprogress, inprogressCheckCol, b.Event.X, b.Event.Y))
+                {
+                    b.RetVal = true;
+                }
+            };
+
             lvInprogress.ButtonReleaseEvent += (a, b) =>
             {
                 if (b.Event.Type == Gdk.EventType.ButtonRelease && b.Event.Button == 3)
                 {
                     InProgressContextMenuOpening?.Invoke(this, EventArgs.Empty);
                     menuInProgress.PopupAtPointer(b.Event);
+                }
+                // Pure toggle on checkbox release (press+release in the checkbox column)
+                if (b.Event.Type == Gdk.EventType.ButtonRelease && b.Event.Button == 1
+                    && TreeViewSelectionHelper.HitTestToggleCell(lvInprogress, inprogressCheckCol, b.Event.X, b.Event.Y)
+                    && lvInprogress.GetPathAtPos((int)b.Event.X, (int)b.Event.Y, out TreePath togglePath, out _, out _, out _))
+                {
+                    TreeViewSelectionHelper.ToggleSelectionPath(lvInprogress, togglePath);
                 }
             };
 
@@ -1527,6 +1575,8 @@ namespace XDM.GtkUI
             finishedDownloadsStoreSorted = sortedStore;
             lvFinished = new TreeView(sortedStore);
             lvFinished.Selection.Mode = SelectionMode.Multiple;
+            // Drag-select (rubber band) — same as the Active list
+            lvFinished.RubberBanding = true;
             lvFinished.HeadersVisible = false;
             lvFinished.EnableGridLines = TreeViewGridLines.None;
             // Per-view surface tint (see treeview.finished in the theme layer)
@@ -1540,6 +1590,22 @@ namespace XDM.GtkUI
                 Spacing = DownloadColumnSpacing,
                 SortColumnId = 0
             };
+            // Dedicated selection-checkbox column — same pure-toggle semantics as Active
+            var finishedCheckCol = new TreeViewColumn
+            {
+                Sizing = TreeViewColumnSizing.Fixed,
+                FixedWidth = 38,
+                Resizable = false
+            };
+            var finishedCheckRenderer = new CellRendererToggle { Activatable = false };
+            finishedCheckRenderer.SetPadding(6, 8);
+            finishedCheckCol.PackStart(finishedCheckRenderer, true);
+            finishedCheckCol.SetCellDataFunc(finishedCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
+            {
+                ((CellRendererToggle)cell).Active = lvFinished.Selection.PathIsSelected(model.GetPath(iter));
+            }));
+            lvFinished.AppendColumn(finishedCheckCol);
+
             var fileIconRenderer = new CellRendererPixbuf { };
             fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, 8);
             finishedCardCol.PackStart(fileIconRenderer, false);
@@ -1593,12 +1659,33 @@ namespace XDM.GtkUI
                 }
             };
 
+            // Same right-click preservation + checkbox pure-toggle as the in-progress list
+            lvFinished.ButtonPressEvent += (a, b) =>
+            {
+                if (b.Event.Type == Gdk.EventType.ButtonPress && b.Event.Button == 3
+                    && TreeViewSelectionHelper.ShouldPreserveSelectionOnPress(lvFinished, b.Event.X, b.Event.Y))
+                {
+                    b.RetVal = true;
+                }
+                if (b.Event.Type == Gdk.EventType.ButtonPress && b.Event.Button == 1
+                    && TreeViewSelectionHelper.HitTestToggleCell(lvFinished, finishedCheckCol, b.Event.X, b.Event.Y))
+                {
+                    b.RetVal = true;
+                }
+            };
+
             lvFinished.ButtonReleaseEvent += (a, b) =>
             {
                 if (b.Event.Type == Gdk.EventType.ButtonRelease && b.Event.Button == 3)
                 {
                     FinishedContextMenuOpening?.Invoke(this, EventArgs.Empty);
                     menuFinished.PopupAtPointer(b.Event);
+                }
+                if (b.Event.Type == Gdk.EventType.ButtonRelease && b.Event.Button == 1
+                    && TreeViewSelectionHelper.HitTestToggleCell(lvFinished, finishedCheckCol, b.Event.X, b.Event.Y)
+                    && lvFinished.GetPathAtPos((int)b.Event.X, (int)b.Event.Y, out TreePath togglePath, out _, out _, out _))
+                {
+                    TreeViewSelectionHelper.ToggleSelectionPath(lvFinished, togglePath);
                 }
             };
 

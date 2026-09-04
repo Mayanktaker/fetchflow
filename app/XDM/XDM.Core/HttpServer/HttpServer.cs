@@ -102,6 +102,11 @@ namespace XDM.Core.HttpServer
         {
             new Thread(() =>
             {
+                // Ownership transfer flag: once a WebSocket upgrade succeeds, the
+                // session owns the TcpClient — the finally block must NOT close it.
+                // (Closing it here killed every accepted WS session ~1ms after the
+                // 101 handshake, which forced both extensions into HTTP polling.)
+                var connectionHandedOff = false;
                 try
                 {
                     while (true)
@@ -115,10 +120,11 @@ namespace XDM.Core.HttpServer
                             var session = WebSocketSession.Accept(tcp, ctx.RequestHeaders);
                             if (session != null)
                             {
+                                connectionHandedOff = true;
                                 Log.Debug("WebSocket upgrade accepted on " + ctx.RequestPath);
                                 WebSocketAccepted?.Invoke(ctx.RequestPath, ctx.RequestHeaders, session);
                             }
-                            return; // hand off TcpClient lifetime to the WebSocketSession
+                            return; // TcpClient lifetime now belongs to the WebSocketSession
                         }
 
                         this.RequestReceived?.Invoke(this, new RequestContextEventArgs(ctx));
@@ -130,14 +136,26 @@ namespace XDM.Core.HttpServer
                 }
                 catch (Exception ex)
                 {
-                    Log.Debug(ex, ex.Message);
+                    // Non-FetchFlow clients occasionally probe the IPC port with binary
+                    // garbage (TLS handshakes etc.) — log the first few, then only every
+                    // 100th, so the diagnostic log is not dominated by connection noise.
+                    var n = Interlocked.Increment(ref parseNoiseCount);
+                    if (n <= 3 || n % 100 == 0)
+                    {
+                        Log.Debug(ex, $"request parse error #{n}: {ex.Message}");
+                    }
                 }
                 finally
                 {
-                    try { tcp.Close(); } catch { }
+                    if (!connectionHandedOff)
+                    {
+                        try { tcp.Close(); } catch { }
+                    }
                 }
             }).Start();
         }
+
+        private static int parseNoiseCount;
 
         private static bool IsWebSocketUpgrade(Dictionary<string, List<string>> headers)
         {
