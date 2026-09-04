@@ -94,11 +94,11 @@ namespace XDM.Tests
                 var checkCol = new TreeViewColumn
                 {
                     Sizing = TreeViewColumnSizing.Fixed,
-                    FixedWidth = 38,
+                    FixedWidth = 46,
                     Resizable = false
                 };
                 var check = new CellRendererToggle { Activatable = false };
-                check.SetPadding(6, 8);
+                check.SetPadding(8, 8);
                 checkCol.PackStart(check, true);
                 checkCol.SetCellDataFunc(check, new CellLayoutDataFunc((_, cell, model, iter) =>
                 {
@@ -319,6 +319,18 @@ namespace XDM.Tests
             var afterUntoggle = harness.View.Selection.GetSelectedRows(out _);
             Assert.AreEqual(3, afterUntoggle.Length,
                 $"checkbox untoggle must REMOVE the row (expected 3 selected, got {afterUntoggle.Length})");
+
+            // 5) ROUNDED-HOVER contract: hovered rows paint no cell rect (theme CSS
+            // row:hover with radius shows through); only non-hovered alternate rows
+            // get the striping tint.
+            Assert.IsNull(XDM.GtkUI.TreeViewSelectionHelper.RowCellBackground(true, false, "#alt"),
+                "hovered row must paint no cell background (rounded CSS hover)");
+            Assert.IsNull(XDM.GtkUI.TreeViewSelectionHelper.RowCellBackground(true, true, "#alt"),
+                "hovered alternate row must paint no cell background (rounded CSS hover)");
+            Assert.AreEqual("#alt", XDM.GtkUI.TreeViewSelectionHelper.RowCellBackground(false, true, "#alt"),
+                "non-hovered alternate row keeps the striping tint");
+            Assert.IsNull(XDM.GtkUI.TreeViewSelectionHelper.RowCellBackground(false, false, "#alt"),
+                "plain row paints nothing (rounded CSS base)");
         }
     }
 }

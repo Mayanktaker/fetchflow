@@ -60,5 +60,13 @@ namespace XDM.GtkUI
                 view.Selection.SelectPath(path);
             }
         }
+
+        // Row cell background: hovered rows paint NOTHING so the theme's rounded
+        // row:hover CSS shows through (a cell rect would cover it square); only
+        // non-hovered alternate rows get the striping tint.
+        internal static string? RowCellBackground(bool isHovered, bool isAlternate, string alternateColor)
+        {
+            return !isHovered && isAlternate ? alternateColor : null;
+        }
     }
 }

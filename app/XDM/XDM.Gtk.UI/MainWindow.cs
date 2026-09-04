@@ -1408,11 +1408,11 @@ namespace XDM.GtkUI
             var inprogressCheckCol = new TreeViewColumn
             {
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 38,
+                FixedWidth = 46,
                 Resizable = false
             };
             var inprogressCheckRenderer = new CellRendererToggle { Activatable = false };
-            inprogressCheckRenderer.SetPadding(6, 8);
+            inprogressCheckRenderer.SetPadding(8, 8);
             inprogressCheckCol.PackStart(inprogressCheckRenderer, true);
             inprogressCheckCol.SetCellDataFunc(inprogressCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
@@ -1594,11 +1594,11 @@ namespace XDM.GtkUI
             var finishedCheckCol = new TreeViewColumn
             {
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 38,
+                FixedWidth = 46,
                 Resizable = false
             };
             var finishedCheckRenderer = new CellRendererToggle { Activatable = false };
-            finishedCheckRenderer.SetPadding(6, 8);
+            finishedCheckRenderer.SetPadding(8, 8);
             finishedCheckCol.PackStart(finishedCheckRenderer, true);
             finishedCheckCol.SetCellDataFunc(finishedCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
@@ -1761,7 +1761,7 @@ namespace XDM.GtkUI
                 var isHovered = !selected && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0;
                 var isAlternate = !selected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
+                ((CellRendererText)cell).CellBackground = TreeViewSelectionHelper.RowCellBackground(isHovered, isAlternate, ThemeManager.ActiveAlternateRowColor);
 
                 var name = model.GetValue(iter, 0) as string ?? string.Empty;
                 var item = model.GetValue(iter, FINISHED_DATA_INDEX) as FinishedDownloadItem;
@@ -1821,7 +1821,7 @@ namespace XDM.GtkUI
                 var isHovered = !selected && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0;
                 var isAlternate = !selected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
+                ((CellRendererText)cell).CellBackground = TreeViewSelectionHelper.RowCellBackground(isHovered, isAlternate, ThemeManager.ActiveAlternateRowColor);
 
                 var name = model.GetValue(iter, 0) as string ?? string.Empty;
                 var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
@@ -1875,7 +1875,7 @@ namespace XDM.GtkUI
                 var isHovered = !selected && hoveredFinishedPath != null && hoveredFinishedPath.Compare(path) == 0;
                 var isAlternate = !selected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
+                ((CellRendererText)cell).CellBackground = TreeViewSelectionHelper.RowCellBackground(isHovered, isAlternate, ThemeManager.ActiveAlternateRowColor);
 
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
                 var dateText = model.GetValue(iter, 1) as string ?? string.Empty;
@@ -1906,7 +1906,7 @@ namespace XDM.GtkUI
                 var isHovered = !selected && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0;
                 var isAlternate = !selected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-                ((CellRendererText)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
+                ((CellRendererText)cell).CellBackground = TreeViewSelectionHelper.RowCellBackground(isHovered, isAlternate, ThemeManager.ActiveAlternateRowColor);
 
                 var item = model.GetValue(iter, INPROGRESS_DATA_INDEX) as InProgressDownloadItem;
                 var sizeText = model.GetValue(iter, 2) as string ?? string.Empty;
@@ -1944,7 +1944,7 @@ namespace XDM.GtkUI
                                             (view == lvInprogress && hoveredInprogressPath != null && hoveredInprogressPath.Compare(path) == 0));
             var isAlternate = !isSelected && !isHovered && path.Indices != null && path.Indices.Length > 0 && (path.Indices[0] % 2 == 1);
 
-            ((CellRendererPixbuf)cell).CellBackground = isHovered ? ThemeManager.ActiveHoverColor : (isAlternate ? ThemeManager.ActiveAlternateRowColor : null);
+            ((CellRendererPixbuf)cell).CellBackground = TreeViewSelectionHelper.RowCellBackground(isHovered, isAlternate, ThemeManager.ActiveAlternateRowColor);
 
             if (rawPix != null)
             {
