@@ -134,7 +134,8 @@ namespace XDM.Core.Downloader.Progressive
                 if (this.pieceId != null)
                 {
                     this.callback?.PieceDownloadFailed(this.pieceId,
-                        e is DownloadException de ? de.ErrorCode : ErrorCode.Generic);
+                        e is DownloadException de ? de.ErrorCode : ErrorCode.Generic,
+                        e.Message);
                 }
             }
         }

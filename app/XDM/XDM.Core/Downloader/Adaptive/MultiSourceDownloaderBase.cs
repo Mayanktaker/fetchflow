@@ -137,6 +137,20 @@ namespace XDM.Core.Downloader.Adaptive
             Start(false);
         }
 
+        // Recreates cancellation state after a stopped multi-source download is resumed
+        protected void PrepareForResume()
+        {
+            stopRequested = false;
+            _cancellationTokenSource = new CancelFlag();
+            _cancellationTokenSourceStateSaver = new CancelFlag();
+            _cancelRequestor = new CancelRequestor(_cancellationTokenSource);
+            totalDownloadedBytes = 0;
+            downloadedBytesSinceStartOrResume = 0;
+            lastProgress = 0;
+            lastUpdated = Helpers.TickCount();
+            ticksAtDownloadStartOrResume = lastUpdated;
+        }
+
         public virtual void Stop()
         {
             if (stopRequested)
@@ -168,8 +182,9 @@ namespace XDM.Core.Downloader.Adaptive
             {
                 try
                 {
-                    Started?.Invoke(this, EventArgs.Empty);
+                    PrepareForResume();
                     RestoreState();
+                    Started?.Invoke(this, EventArgs.Empty);
                     Directory.CreateDirectory(_state.TempDirectory);
 
                     if (_chunks == null)
@@ -193,9 +208,12 @@ namespace XDM.Core.Downloader.Adaptive
                     Log.Debug(ex, ex.Message);
                     if (this._cancelRequestor.Error != ErrorCode.None)
                     {
-                        OnFailed(new DownloadFailedEventArgs(this._cancelRequestor.Error));
+                        OnFailed(new DownloadFailedEventArgs(this._cancelRequestor.Error, ex.Message));
                     }
-                    OnCancelled();
+                    else
+                    {
+                        OnCancelled();
+                    }
                 }
                 catch (FileNotFoundException ex)
                 {
@@ -270,7 +288,14 @@ namespace XDM.Core.Downloader.Adaptive
             catch (OperationCanceledException ex)
             {
                 Console.WriteLine(ex);
-                OnCancelled();
+                if (_cancelRequestor.Error != ErrorCode.None)
+                {
+                    OnFailed(new DownloadFailedEventArgs(_cancelRequestor.Error, ex.Message));
+                }
+                else
+                {
+                    OnCancelled();
+                }
             }
             //catch (HttpException ex)
             //{
@@ -280,16 +305,16 @@ namespace XDM.Core.Downloader.Adaptive
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                if (ex.InnerException is HttpException)
-                {
-                    var he = ex.InnerException as HttpException;
-                    OnFailed(new DownloadFailedEventArgs(ErrorCode.InvalidResponse));
-                }
-                else
-                {
-                    OnFailed(new DownloadFailedEventArgs(
-                        ex is DownloadException de ? de.ErrorCode : ErrorCode.Generic));
-                }
+                    if (ex.InnerException is HttpException he)
+                    {
+                        OnFailed(new DownloadFailedEventArgs(ErrorCode.InvalidResponse, he.Message));
+                    }
+                    else
+                    {
+                        OnFailed(new DownloadFailedEventArgs(
+                            ex is DownloadException de ? de.ErrorCode : ErrorCode.Generic,
+                            ex.Message));
+                    }
             }
         }
 
@@ -667,7 +692,7 @@ namespace XDM.Core.Downloader.Adaptive
         {
             if (args.ErrorCode == ErrorCode.InvalidResponse && totalDownloadedBytes > 0)
             {
-                Failed?.Invoke(this, new DownloadFailedEventArgs(ErrorCode.SessionExpired));
+                Failed?.Invoke(this, new DownloadFailedEventArgs(ErrorCode.SessionExpired, args.Detail));
             }
             else
             {

@@ -332,15 +332,16 @@ namespace XDM.Core
 
             foreach (var item in list)
             {
-                if (liveDownloads.ContainsKey(item.Key) || queuedDownloads.ContainsKey(item.Key)) return;
+                if (ResumeSelectionPolicy.ShouldSkip(liveDownloads.ContainsKey(item.Key), queuedDownloads.ContainsKey(item.Key)))
+                {
+                    Log.Debug($"Resume: skipping {item.Key}; download is already live or queued.");
+                    continue;
+                }
                 if (liveDownloads.Count >= Config.Instance.MaxParallelDownloads)
                 {
                     queuedDownloads.Add(item.Key, nonInteractive);
-                    ApplicationContext.Application.RunOnUiThread(() =>
-                    {
-                        ApplicationContext.Application.SetDownloadStatusWaiting(item.Key);
-                        Log.Debug("Setting status waiting...");
-                    });
+                    ApplicationContext.Application.SetDownloadStatusWaiting(item.Key);
+                    Log.Debug($"Resume: {item.Key} queued because parallel limit is reached.");
                     continue;
                 }
                 IBaseDownloader? download = null;
@@ -534,15 +535,18 @@ namespace XDM.Core
         {
             lock (this)
             {
-                Log.Debug("Download failed: " + args.ErrorCode);
                 var http = source as IBaseDownloader;
+                var failureDetail = ErrorMessages.SanitizeDetail(args.Detail);
+                Log.Debug("Download failed: " + args.ErrorCode + " (" + (failureDetail ?? "no detail") + ")");
                 DetachEventHandlers(http);
                 liveDownloads.Remove(http.Id);
-                ApplicationContext.Application.DownloadFailed(http.Id);
+                ApplicationContext.Application.DownloadFailed(http.Id, args.ErrorCode, failureDetail);
                 if (activeProgressWindows.ContainsKey(http.Id))
                 {
                     var prgWin = activeProgressWindows[http.Id];
-                    prgWin.DownloadFailed(new ErrorDetails { Message = ErrorMessages.GetLocalizedErrorMessage(args.ErrorCode) });
+                    var message = ErrorMessages.GetLocalizedErrorMessage(args.ErrorCode);
+                    if (!string.IsNullOrWhiteSpace(failureDetail)) message += ": " + failureDetail;
+                    prgWin.DownloadFailed(new ErrorDetails { Message = message });
                 }
 
                 Helpers.RunGC();
@@ -693,7 +697,7 @@ namespace XDM.Core
                 download.Probed -= HandleProbeResult;
                 download.Finished -= DownloadFinished;
                 download.ProgressChanged -= DownloadProgressChanged;
-                download.AssembingProgressChanged += AssembleProgressChanged;
+                download.AssembingProgressChanged -= AssembleProgressChanged;
                 download.Cancelled -= DownloadCancelled;
                 download.Failed -= DownloadFailed;
             }

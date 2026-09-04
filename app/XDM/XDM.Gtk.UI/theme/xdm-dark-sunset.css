@@ -126,7 +126,7 @@ treeview.finished {
 
 treeview.unfinished row,
 treeview.finished row {
-  margin: 3px 6px;
+  margin: 5px 6px;
   padding: 8px 12px;
   border-radius: 6px;
   background-color: #2b2328;
@@ -1014,7 +1014,7 @@ button.titlebutton.close:active {
 
 treeview.unfinished row,
 treeview.finished row {
-  margin: 4px 8px;
+  margin: 5px 8px;
   padding: 8px 12px;
   color: #fff1f2;
 }

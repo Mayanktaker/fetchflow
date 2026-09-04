@@ -23,7 +23,7 @@ namespace XDM.Core.DataAccess
 
         private SQLiteCommand cmdFetchAll, cmdFetchConditional, cmdFetchOne, cmdUpdateProgress, cmdUpdateTargetDir,
             cmdInsertOne, cmdMarkFinished, cmdUpdateStatus, cmdUpdateNameAndSize, cmdUpdateNameAndFolder, cmdUpdateOne, cmdDelete,
-            cmdFetchByUrl;
+            cmdFetchByUrl, cmdUpdateFailure, cmdClearError;
 
         public bool LoadDownloads(
             out List<InProgressDownloadItem> inProgressDownloads,
@@ -89,6 +89,7 @@ namespace XDM.Core.DataAccess
                         proxy.UserName = r.GetSafeString(19);
                         proxy.Password = r.GetSafeString(20);
                         entry.Proxy = proxy;
+                        ApplyStoredError(entry, r);
 
                         if (inProgress)
                         {
@@ -109,6 +110,34 @@ namespace XDM.Core.DataAccess
                     Log.Debug(ex, ex.Message);
                 }
                 return false;
+            }
+        }
+
+        // Applies optional appended error columns by name, tolerating older schemas
+        private static void ApplyStoredError(DownloadItemBase entry, SQLiteDataReader reader)
+        {
+            if (entry is not InProgressDownloadItem inProgress) return;
+            try
+            {
+                var codeIndex = -1;
+                var messageIndex = -1;
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    var name = reader.GetName(i);
+                    if (name.Equals("error_code", StringComparison.OrdinalIgnoreCase)) codeIndex = i;
+                    else if (name.Equals("error_message", StringComparison.OrdinalIgnoreCase)) messageIndex = i;
+                }
+                if (codeIndex < 0) return;
+                inProgress.LastErrorCode = reader.IsDBNull(codeIndex)
+                    ? ErrorCode.None
+                    : (ErrorCode)reader.GetInt32(codeIndex);
+                inProgress.LastErrorMessage = messageIndex >= 0 && !reader.IsDBNull(messageIndex)
+                    ? reader.GetString(messageIndex)
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "ApplyStoredError");
             }
         }
 
@@ -186,6 +215,7 @@ namespace XDM.Core.DataAccess
                         proxy.UserName = r.GetSafeString(19);
                         proxy.Password = r.GetSafeString(20);
                         entry.Proxy = proxy;
+                        ApplyStoredError(entry, r);
 
                         if (inProgress)
                         {
@@ -376,6 +406,57 @@ namespace XDM.Core.DataAccess
                     SetParam("@completed", 1, cmdMarkFinished.Parameters);
                     SetParam("@status", (int)DownloadStatus.Finished, cmdMarkFinished.Parameters);
                     cmdMarkFinished.ExecuteNonQuery();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        // Persists a stopped download's failure code and safe display detail
+        public bool UpdateDownloadFailure(string id, ErrorCode errorCode, string? detail)
+        {
+            lock (db)
+            {
+                try
+                {
+                    if (cmdUpdateFailure == null)
+                    {
+                        cmdUpdateFailure = new SQLiteCommand("UPDATE downloads SET status=@status, error_code=@error_code, error_message=@error_message WHERE id=@id", db);
+                    }
+                    SetParam("@status", (int)DownloadStatus.Stopped, cmdUpdateFailure.Parameters);
+                    SetParam("@error_code", (int)errorCode, cmdUpdateFailure.Parameters);
+                    SetParam("@error_message", detail, cmdUpdateFailure.Parameters);
+                    SetParam("@id", id, cmdUpdateFailure.Parameters);
+                    cmdUpdateFailure.ExecuteNonQuery();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        // Clears a prior failure after a user pause or a successful resume start
+        public bool ClearDownloadError(string id)
+        {
+            lock (db)
+            {
+                try
+                {
+                    if (cmdClearError == null)
+                    {
+                        cmdClearError = new SQLiteCommand("UPDATE downloads SET error_code=@error_code, error_message=@error_message WHERE id=@id", db);
+                    }
+                    SetParam("@error_code", (int)ErrorCode.None, cmdClearError.Parameters);
+                    SetParam<string?>("@error_message", null, cmdClearError.Parameters);
+                    SetParam("@id", id, cmdClearError.Parameters);
+                    cmdClearError.ExecuteNonQuery();
                     return true;
                 }
                 catch (Exception ex)

@@ -55,6 +55,10 @@ namespace XDM.Core
         public string? DownloadSpeed { get; set; }
 
         public string? ETA { get; set; }
+
+        public ErrorCode LastErrorCode { get; set; } = ErrorCode.None;
+
+        public string? LastErrorMessage { get; set; }
     }
 
     public class FinishedDownloadItem : DownloadItemBase

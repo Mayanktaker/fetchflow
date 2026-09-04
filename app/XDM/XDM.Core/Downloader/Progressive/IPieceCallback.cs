@@ -17,7 +17,7 @@ namespace XDM.Core.Downloader.Progressive
         public string GetPieceFile(string pieceId);
         public void UpdateDownloadedBytesCount(string pieceId, long bytes);
         public bool ContinueAdjacentPiece(string pieceId, long maxByteRange);
-        public void PieceDownloadFailed(string pieceId, ErrorCode error);
+        public void PieceDownloadFailed(string pieceId, ErrorCode error, string? detail = null);
         public void PieceDownloadFinished(string pieceId);
         public void ThrottleIfNeeded();
         public bool IsTextRedirectionAllowed();

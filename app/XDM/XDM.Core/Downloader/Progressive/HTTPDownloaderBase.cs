@@ -106,6 +106,18 @@ namespace XDM.Core.Downloader.Progressive
             speedLimiter.ThrottleIfNeeded(this);
         }
 
+        // Resets cancellation state when a downloader instance is resumed directly
+        protected void PrepareForResume()
+        {
+            stopRequested = false;
+            cancelFlag = new CancelFlag();
+            grabberDict.Clear();
+            pieces.Clear();
+            lastStateSavedAt = Helpers.TickCount();
+            lastProgressUpdatedAt = Helpers.TickCount();
+            downloadedBytesSinceStartOrResume = 0;
+        }
+
         public virtual void Stop()
         {
             if (stopRequested)
@@ -221,7 +233,7 @@ namespace XDM.Core.Downloader.Progressive
             return null;
         }
 
-        public void PieceDownloadFailed(string pieceId, ErrorCode error)
+        public void PieceDownloadFailed(string pieceId, ErrorCode error, string? detail = null)
         {
             if (this.cancelFlag.IsCancellationRequested) return;
             try
@@ -231,7 +243,7 @@ namespace XDM.Core.Downloader.Progressive
                 this.SaveChunkState();
                 if (grabberDict.Count == 0)
                 {
-                    OnFailed(error);
+                    OnFailed(error, detail);
                 }
             }
             finally
@@ -493,15 +505,15 @@ namespace XDM.Core.Downloader.Progressive
             this.Probed?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual void OnFailed(ErrorCode error)
+        protected virtual void OnFailed(ErrorCode error, string? detail = null)
         {
             if (error == ErrorCode.InvalidResponse && totalDownloadedBytes > 0)
             {
-                this.Failed?.Invoke(this, new DownloadFailedEventArgs(ErrorCode.SessionExpired));
+                this.Failed?.Invoke(this, new DownloadFailedEventArgs(ErrorCode.SessionExpired, detail));
             }
             else
             {
-                this.Failed?.Invoke(this, new DownloadFailedEventArgs(error));
+                this.Failed?.Invoke(this, new DownloadFailedEventArgs(error, detail));
             }
             Cleanup();
         }

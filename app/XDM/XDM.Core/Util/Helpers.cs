@@ -32,12 +32,22 @@ namespace XDM.Core.Util
         public static bool GetFreeSpace(string path, out long free)
         {
             free = 0;
-            var rootPath = Path.GetPathRoot(path);
-            if (!string.IsNullOrEmpty(rootPath))
+            try
             {
-                var driveInfo = new DriveInfo(rootPath);
-                free = driveInfo.AvailableFreeSpace;
-                return true;
+                var rootPath = Path.GetPathRoot(path);
+                if (!string.IsNullOrEmpty(rootPath))
+                {
+                    var driveInfo = new DriveInfo(rootPath);
+                    free = driveInfo.AvailableFreeSpace;
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Disk-space preflight must not block resume when a trimmed or
+                // single-file runtime cannot load DriveInfo; the actual write path
+                // still reports a precise DiskError if the filesystem rejects it.
+                Log.Debug(ex, "GetFreeSpace unavailable; continuing without preflight");
             }
             return false;
         }
@@ -215,52 +225,13 @@ namespace XDM.Core.Util
                    category.Value.FileExtensions.Contains(extWithDot);
         }
 
-        private static string GetStatusText(DownloadStatus status)
-        {
-            switch (status)
-            {
-                case DownloadStatus.Downloading:
-                    return TextResource.GetText("STAT_DOWNLOADING");
-                case DownloadStatus.Stopped:
-                    return TextResource.GetText("STAT_STOPPED");
-                case DownloadStatus.Finished:
-                    return TextResource.GetText("STAT_FINISHED");
-                case DownloadStatus.Waiting:
-                    return TextResource.GetText("STAT_WAITING");
-                default:
-                    return status.ToString();
-            }
-        }
-
         public static string GenerateStatusText(InProgressDownloadItem ent)
         {
-            var text = string.Empty;
-
-            if (ent.Status == DownloadStatus.Downloading)
-            {
-                if (string.IsNullOrEmpty(ent.ETA) && string.IsNullOrEmpty(ent.DownloadSpeed))
-                {
-                    text = GetStatusText(ent.Status);
-                }
-                else if (string.IsNullOrEmpty(ent.ETA))
-                {
-                    text = ent.DownloadSpeed ?? string.Empty;
-                }
-                else if (string.IsNullOrEmpty(ent.DownloadSpeed))
-                {
-                    text = ent.ETA ?? string.Empty;
-                }
-                else
-                {
-                    text = $"{ent.DownloadSpeed} - {ent.ETA}";
-                }
-            }
-            else
-            {
-                text = GetStatusText(ent.Status);
-            }
-
-            return text;
+            return DownloadStatusText.Build(ent.Status, ent.LastErrorCode, ent.LastErrorMessage,
+                ent.DownloadSpeed, ent.ETA,
+                TextResource.GetText("STAT_DOWNLOADING"), TextResource.GetText("STAT_STOPPED"),
+                TextResource.GetText("STAT_FINISHED"), TextResource.GetText("STAT_WAITING"),
+                ErrorMessages.GetLocalizedErrorMessage);
         }
 
         //public static string GetRunningFrameworkVersion()

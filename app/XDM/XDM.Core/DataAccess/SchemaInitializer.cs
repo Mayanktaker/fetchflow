@@ -32,7 +32,9 @@ namespace XDM.Core.DataAccess
                                             proxy_port INT,
                                             proxy_user TEXT,
                                             proxy_pass TEXT,
-                                            proxy_type INT
+                                            proxy_type INT,
+                                            error_code INT DEFAULT 0,
+                                            error_message TEXT
                                         ) WITHOUT ROWID";
             using var cmd = new SQLiteCommand(c);
             cmd.CommandText = query;
@@ -42,6 +44,30 @@ namespace XDM.Core.DataAccess
         public static void Init(SQLiteConnection c)
         {
             CreateTablesIfNotExists(c);
+            EnsureErrorColumns(c);
+        }
+
+        // Adds failure columns to databases created before failure details were persisted
+        private static void EnsureErrorColumns(SQLiteConnection c)
+        {
+            var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using (var cmd = new SQLiteCommand("PRAGMA table_info(downloads)", c))
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    existing.Add(reader.GetString(1));
+                }
+            }
+
+            // error_code INT DEFAULT 0, error_message TEXT — appended after proxy_type
+            foreach (var definition in new[] { "error_code INT DEFAULT 0", "error_message TEXT" })
+            {
+                var columnName = definition.Split(' ')[0];
+                if (existing.Contains(columnName)) continue;
+                using var cmd = new SQLiteCommand($"ALTER TABLE downloads ADD COLUMN {definition}", c);
+                cmd.ExecuteNonQuery();
+            }
         }
     }
 }

@@ -114,6 +114,7 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
             {
                 try
                 {
+                    PrepareForResume();
                     Log.Debug("SingleSourceHTTPDownloader Resume");
                     RestoreState();
                     Directory.CreateDirectory(state.TempDir);
@@ -145,7 +146,7 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                 catch (Exception e)
                 {
                     Log.Debug(e, e.Message);
-                    base.OnFailed(e is DownloadException de ? de.ErrorCode : ErrorCode.Generic);
+                    base.OnFailed(e is DownloadException de ? de.ErrorCode : ErrorCode.Generic, e.Message);
                 }
             }).Start();
         }
@@ -473,7 +474,7 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                 catch (Exception ex)
                 {
                     Log.Debug(ex, "Error in AssemblePieces");
-                    throw new AssembleFailedException(ex is DownloadException de ? de.ErrorCode : ErrorCode.Generic);
+                    throw new AssembleFailedException(ex is DownloadException de ? de.ErrorCode : ErrorCode.Generic, ex);
                 }
             }
             finally

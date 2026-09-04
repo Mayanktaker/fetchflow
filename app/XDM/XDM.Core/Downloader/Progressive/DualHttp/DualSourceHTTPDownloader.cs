@@ -129,6 +129,7 @@ namespace XDM.Core.Downloader.Progressive.DualHttp
              {
                  try
                  {
+                     PrepareForResume();
                      Log.Debug("DualSourceHTTPDownloader Resume");
 
                      RestoreState();
@@ -161,7 +162,7 @@ namespace XDM.Core.Downloader.Progressive.DualHttp
                  catch (Exception e)
                  {
                      Log.Debug(e, e.Message);
-                     base.OnFailed(e is DownloadException ex ? ex.ErrorCode : ErrorCode.Generic);
+                     base.OnFailed(e is DownloadException ex ? ex.ErrorCode : ErrorCode.Generic, e.Message);
                  }
              }).Start();
         }
@@ -462,8 +463,7 @@ namespace XDM.Core.Downloader.Progressive.DualHttp
                 catch (Exception ex)
                 {
                     Log.Debug(ex, "error");
-                    var aex = new AssembleFailedException(ex is DownloadException de ? de.ErrorCode : ErrorCode.Generic);
-                    throw aex;
+                    throw new AssembleFailedException(ex is DownloadException de ? de.ErrorCode : ErrorCode.Generic, ex);
                 }
                 finally
                 {

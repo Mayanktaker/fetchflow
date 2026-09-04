@@ -21,6 +21,10 @@ Spec: docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.m
 
 4 / 8 / 12 / 16 / 24 px — all margins, paddings and gaps derive from this scale.
 
+Exception: download list rows (Active/Complete TreeViews) use a dedicated 5px
+vertical margin (`margin: 5px 6px;` primary, `margin: 5px 8px;` cascade block)
+in every theme, giving rows consistent breathing room regardless of palette.
+
 ## Color
 
 | Role | Dark | Light |

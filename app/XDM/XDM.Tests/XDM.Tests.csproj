@@ -19,6 +19,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <!-- GtkSmokeTests: real Builder/Autoconnect smoke under Xvfb (DISPLAY). Same GtkSharp as XDM.Gtk.UI -->
     <PackageReference Include="GtkSharp" Version="3.24.24.38" />
+    <!-- DownloadListMigrationTests: real SQLite round-trip for failure persistence -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116" />
   </ItemGroup>
 
   <!-- Surgical include: only the YDLWrapper sources needed by YdlParserTests,
@@ -37,6 +39,20 @@
     <!-- SingleInstancePolicyTests + NanoServerResilienceTests: arbitration policy and
          the self-contained IPC HTTP server cluster (TraceLog included once, here) -->
     <Compile Include="..\XDM.Core\SingleInstancePolicy.cs" Link="SingleInstancePolicy.cs" />
+    <Compile Include="..\XDM.Core\ResumeSelectionPolicy.cs" Link="ResumeSelectionPolicy.cs" />
+    <Compile Include="..\XDM.Core\DownloadStatusText.cs" Link="DownloadStatusText.cs" />
+    <!-- DownloadListMigrationTests: failure persistence against a real SQLite database -->
+    <Compile Include="..\XDM.Core\DataAccess\DownloadList.cs" Link="DataAccess\DownloadList.cs" />
+    <Compile Include="..\XDM.Core\DataAccess\SchemaInitializer.cs" Link="DataAccess\SchemaInitializer.cs" />
+    <Compile Include="..\XDM.Core\DataAccess\Extensions\DataReaderExtensions.cs" Link="DataAccess\Extensions\DataReaderExtensions.cs" />
+    <Compile Include="..\XDM.Core\Downloader\FileNameFetchMode.cs" Link="Downloader\FileNameFetchMode.cs" />
+    <!-- DownloadFailureReportingTests: failure reason pipeline (model + mapper + status text) -->
+    <Compile Include="..\XDM.Core\ErrorCode.cs" Link="ErrorCode.cs" />
+    <Compile Include="..\XDM.Core\DownloadEntries.cs" Link="DownloadEntries.cs" />
+    <Compile Include="..\XDM.Core\AuthenticationInfo.cs" Link="AuthenticationInfo.cs" />
+    <Compile Include="..\XDM.Core\ProxyInfo.cs" Link="ProxyInfo.cs" />
+    <Compile Include="..\XDM.Core\ErrorMessages.cs" Link="ErrorMessages.cs" />
+    <Compile Include="..\XDM.Core\Downloader\DownloadFailedEventArgs.cs" Link="Downloader\DownloadFailedEventArgs.cs" />
     <Compile Include="..\XDM.Core\HttpServer\HttpServer.cs" Link="HttpServer\HttpServer.cs" />
     <Compile Include="..\XDM.Core\HttpServer\HttpParser.cs" Link="HttpServer\HttpParser.cs" />
     <Compile Include="..\XDM.Core\HttpServer\RequestContext.cs" Link="HttpServer\RequestContext.cs" />

@@ -99,15 +99,21 @@ namespace XDM.Core
 
         public void DownloadCanelled(string id)
         {
-            DownloadFailed(id);
-        }
-
-        public void DownloadFailed(string id)
-        {
-            AppDB.Instance.Downloads.UpdateDownloadStatus(id, DownloadStatus.Stopped);
+            AppDB.Instance.Downloads.ClearDownloadError(id);
             RunOnUiThread(() =>
             {
-                CallbackActions.DownloadFailed(id);
+                CallbackActions.DownloadCancelled(id);
+                UpdateToolbarButtonState();
+            });
+        }
+
+        public void DownloadFailed(string id, ErrorCode errorCode = ErrorCode.Generic, string? detail = null)
+        {
+            var safeDetail = ErrorMessages.SanitizeDetail(detail);
+            AppDB.Instance.Downloads.UpdateDownloadFailure(id, errorCode, safeDetail);
+            RunOnUiThread(() =>
+            {
+                CallbackActions.DownloadFailed(id, errorCode, safeDetail);
                 UpdateToolbarButtonState();
             });
         }

@@ -28,7 +28,7 @@ namespace XDM.Core
         /// 
         /// </summary>
         /// <param name="id"></param>
-        void DownloadFailed(string id);
+        void DownloadFailed(string id, ErrorCode errorCode = ErrorCode.Generic, string? detail = null);
         /// <summary>
         /// 
         /// </summary>

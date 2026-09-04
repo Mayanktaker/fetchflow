@@ -400,3 +400,4 @@ firebase-debug.log
 Screenshot_*.png
 screenshot_*.png
 *.log
+.zcode/

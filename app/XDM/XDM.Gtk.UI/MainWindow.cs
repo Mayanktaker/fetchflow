@@ -1,6 +1,7 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Gtk;
@@ -2242,12 +2243,34 @@ namespace XDM.GtkUI
 
         public void Delete(IEnumerable<IInProgressDownloadRow> rows)
         {
-            foreach (var row in rows)
+            var ids = rows
+                .Where(row => row?.DownloadEntry != null)
+                .Select(row => row.DownloadEntry.Id)
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Distinct()
+                .ToList();
+            var removed = 0;
+            foreach (var id in ids)
             {
-                Delete(row);
-                //var iter = ((InProgressEntryWrapper)row).TreeIter;
-                //inprogressDownloadsStore.Remove(ref iter);
+                UpdateSpeedTracking(id, 0);
+                // Re-scan the child store for every ID; selection/sort iters become stale
+                // after the first removal and must never be reused in a batch.
+                var modelIter = FindInProgressItemIterById(id);
+                if (!modelIter.HasValue)
+                {
+                    Log.Debug($"Delete batch: in-progress row {id} not found in store.");
+                    continue;
+                }
+                var iter = modelIter.Value;
+                if (inprogressDownloadsStore!.Remove(ref iter))
+                {
+                    removed++;
+                    Log.Debug($"Delete batch: removed in-progress row {id}.");
+                }
             }
+            UpdateStatusListCounts();
+            lvInprogress?.Selection.UnselectAll();
+            Log.Debug($"Delete batch: removed {removed} of {ids.Count} selected row(s).");
         }
 
         public void Delete(IEnumerable<IFinishedDownloadRow> rows)

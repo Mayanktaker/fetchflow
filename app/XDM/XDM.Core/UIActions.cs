@@ -28,21 +28,21 @@ namespace XDM.Core
                     ApplicationContext.PlatformUIService.ShowMessageBox(ApplicationContext.MainWindow, "Please select a download first.");
                     return;
                 }
-                Log.Debug($"DeleteDownloads: deleting {selectedItems.Count} in-progress row(s).");
+                // Snapshot both rows and IDs before any stop callback can mutate the view.
+                var deleteItems = selectedItems.ToList();
+                var deleteIds = deleteItems.Select(item => item.DownloadEntry.Id).ToArray();
+                Log.Debug($"DeleteDownloads: deleting {deleteItems.Count} in-progress row(s).");
                 if (ApplicationContext.MainWindow.Confirm(ApplicationContext.MainWindow, TextResource.GetText("DEL_SEL_TEXT")))
                 {
                     // Stop only after approval — cancelling must not kill running downloads
-                    ApplicationContext.CoreService.StopDownloads(selectedItems.Select(x => x.DownloadEntry.Id));
-                    foreach (var item in selectedItems)
+                    ApplicationContext.CoreService.StopDownloads(deleteIds);
+                    foreach (var item in deleteItems)
                     {
-                        if (item != null)
-                        {
-                            ApplicationContext.CoreService.RemoveDownload(item.DownloadEntry, false);
-                            ApplicationContext.MainWindow.Delete(item);
-                            AppDB.Instance.Downloads.RemoveDownloadById(item.DownloadEntry.Id);
-                            Log.Debug($"DeleteDownloads: removed in-progress download {item.DownloadEntry.Id}.");
-                        }
+                        ApplicationContext.CoreService.RemoveDownload(item.DownloadEntry, false);
+                        AppDB.Instance.Downloads.RemoveDownloadById(item.DownloadEntry.Id);
                     }
+                    // Remove from the UI once, by fresh IDs, avoiding stale selection iters.
+                    ApplicationContext.MainWindow.Delete(deleteItems);
                     callback?.Invoke(true);
                 }
             }

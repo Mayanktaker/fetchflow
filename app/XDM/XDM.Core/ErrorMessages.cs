@@ -37,5 +37,13 @@ namespace XDM.Core
             var errPrefix = "ERR_";
             return errorMessages.GetValueOrDefault(errPrefix + errorCode, "Download error");
         }
+
+        // Removes newlines and caps server/exception text before it reaches a row or database
+        public static string? SanitizeDetail(string? detail)
+        {
+            if (string.IsNullOrWhiteSpace(detail)) return null;
+            var safe = detail.Replace('\r', ' ').Replace('\n', ' ').Trim();
+            return safe.Length > 240 ? safe.Substring(0, 240) : safe;
+        }
     }
 }

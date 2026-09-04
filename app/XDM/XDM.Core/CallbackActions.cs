@@ -12,13 +12,26 @@ namespace XDM.Core
         {
             var download = ApplicationContext.MainWindow.FindInProgressItem(id);
             if (download == null) return;
+            download.DownloadEntry.LastErrorCode = ErrorCode.None;
+            download.DownloadEntry.LastErrorMessage = null;
             download.Status = DownloadStatus.Downloading;
         }
 
-        public static void DownloadFailed(string id)
+        public static void DownloadFailed(string id, ErrorCode errorCode, string? detail)
         {
             var download = ApplicationContext.MainWindow.FindInProgressItem(id);
             if (download == null) return;
+            download.DownloadEntry.LastErrorCode = errorCode;
+            download.DownloadEntry.LastErrorMessage = detail;
+            download.Status = DownloadStatus.Stopped;
+        }
+
+        public static void DownloadCancelled(string id)
+        {
+            var download = ApplicationContext.MainWindow.FindInProgressItem(id);
+            if (download == null) return;
+            download.DownloadEntry.LastErrorCode = ErrorCode.None;
+            download.DownloadEntry.LastErrorMessage = null;
             download.Status = DownloadStatus.Stopped;
         }
 
