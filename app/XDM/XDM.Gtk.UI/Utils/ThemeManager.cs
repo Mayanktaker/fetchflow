@@ -59,9 +59,9 @@ namespace XDM.GtkUI.Utils
         // Curated dark theme color schemes (1 Default + 6 Curated)
         public static readonly ColorSchemeDefinition[] DarkSchemes = new[]
         {
-            new ColorSchemeDefinition("charcoal_blue", "Charcoal Blue (Default)", "xdm-dark.css", 53, 132, 228, "#3584e4", "#262c36", "#323b4a", "#212121"),
+            new ColorSchemeDefinition("charcoal_blue", "Charcoal Blue", "xdm-dark.css", 53, 132, 228, "#3584e4", "#262c36", "#323b4a", "#212121"),
             new ColorSchemeDefinition("midnight_violet", "Midnight Violet", "xdm-dark-violet.css", 139, 92, 246, "#8b5cf6", "#282038", "#382d4e", "#1c1928"),
-            new ColorSchemeDefinition("nord_emerald", "Nord Emerald", "xdm-dark-emerald.css", 16, 185, 129, "#10b981", "#1b302a", "#27443c", "#172421"),
+            new ColorSchemeDefinition("nord_emerald", "Nord Emerald (Default)", "xdm-dark-emerald.css", 16, 185, 129, "#10b981", "#1b302a", "#27443c", "#172421"),
             new ColorSchemeDefinition("sunset_amber", "Sunset Amber", "xdm-dark-sunset.css", 244, 63, 94, "#f43f5e", "#332128", "#462e37", "#231c20"),
             new ColorSchemeDefinition("dracula_orchid", "Dracula Orchid", "xdm-dark-orchid.css", 236, 72, 153, "#ec4899", "#301e38", "#422b4d", "#1c1726"),
             new ColorSchemeDefinition("cyberpunk_matrix", "Cyberpunk Matrix", "xdm-dark-matrix.css", 6, 182, 212, "#06b6d4", "#162a3d", "#223b55", "#121b2b"),
@@ -71,8 +71,8 @@ namespace XDM.GtkUI.Utils
         // Curated light theme color schemes (1 Default + 6 Curated)
         public static readonly ColorSchemeDefinition[] LightSchemes = new[]
         {
-            new ColorSchemeDefinition("classic_blue", "Classic Blue (Default)", "xdm-light.css", 53, 132, 228, "#3584e4", "#f0f4f9", "#dbe7f7", "#f4f6f9"),
-            new ColorSchemeDefinition("nordic_frost", "Nordic Frost", "xdm-light-frost.css", 8, 145, 178, "#0891b2", "#e6f4f8", "#cfe2ea", "#edf3f6"),
+            new ColorSchemeDefinition("classic_blue", "Classic Blue", "xdm-light.css", 53, 132, 228, "#3584e4", "#f0f4f9", "#dbe7f7", "#f4f6f9"),
+            new ColorSchemeDefinition("nordic_frost", "Nordic Frost (Default)", "xdm-light-frost.css", 8, 145, 178, "#0891b2", "#e6f4f8", "#cfe2ea", "#edf3f6"),
             new ColorSchemeDefinition("solarized_sand", "Solarized Sand", "xdm-light-sand.css", 217, 119, 6, "#d97706", "#f7eee0", "#ecddc5", "#f4eedd"),
             new ColorSchemeDefinition("rose_garden", "Rose Garden", "xdm-light-rose.css", 225, 29, 72, "#e11d48", "#fbe8ee", "#f4d1dc", "#f8ecf1"),
             new ColorSchemeDefinition("matcha_forest", "Matcha Forest", "xdm-light-matcha.css", 5, 150, 105, "#059669", "#e3f3eb", "#cbe7d7", "#edf6f1"),
@@ -85,6 +85,14 @@ namespace XDM.GtkUI.Utils
 
         // Tracks whether the dark theme is actively rendered
         public static bool IsDarkActive { get; private set; }
+
+        // Default scheme per mode (fresh installs / unset choice)
+        public const int DefaultDarkSchemeIndex = 2;   // Nord Emerald
+        public const int DefaultLightSchemeIndex = 1;  // Nordic Frost
+
+        // Resolves the default scheme index for the given mode
+        public static int DefaultSchemeIndex(bool isDark) =>
+            isDark ? DefaultDarkSchemeIndex : DefaultLightSchemeIndex;
 
         // Tracks current active color scheme index (0..3)
         public static int ActiveColorScheme { get; private set; } = 0;
@@ -110,13 +118,14 @@ namespace XDM.GtkUI.Utils
         // Event raised whenever the active theme or color scheme changes
         public static event Action<bool>? ThemeChanged;
 
-        // Gets scheme definition with safe index clamping
+        // Gets scheme definition with safe index clamping (out-of-range falls back
+        // to the mode default, not scheme 0)
         public static ColorSchemeDefinition GetScheme(bool isDark, int index)
         {
             var schemes = isDark ? DarkSchemes : LightSchemes;
             if (index < 0 || index >= schemes.Length)
             {
-                index = 0;
+                index = DefaultSchemeIndex(isDark);
             }
             return schemes[index];
         }
@@ -209,12 +218,12 @@ namespace XDM.GtkUI.Utils
             }
             IsDarkActive = dark;
 
-            // Resolve color scheme index
+            // Resolve color scheme index (-1/unset or out-of-range => mode default)
             int schemeIndex = colorSchemeRequested ?? Config.Instance.ColorScheme;
             var schemes = dark ? DarkSchemes : LightSchemes;
             if (schemeIndex < 0 || schemeIndex >= schemes.Length)
             {
-                schemeIndex = 0;
+                schemeIndex = DefaultSchemeIndex(dark);
             }
             ActiveColorScheme = schemeIndex;
 

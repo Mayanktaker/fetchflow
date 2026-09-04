@@ -101,7 +101,9 @@ namespace XDM.Core
         // ThemeMode: 0 = Light, 1 = Dark, 2 = Follow System
         public int ThemeMode { get; set; } = 2;
         // ColorScheme: 0 = Default, 1 = Palette 1, 2 = Palette 2, 3 = Palette 3
-        public int ColorScheme { get; set; } = 0;
+        // ColorScheme: -1 = unset (per-mode default: Nord Emerald dark, Nordic Frost light);
+        // 0..6 = explicit user choice, persisted as-is.
+        public int ColorScheme { get; set; } = -1;
 
         private Config()
         {
