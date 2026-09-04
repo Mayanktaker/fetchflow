@@ -331,6 +331,15 @@ namespace XDM.Tests
                 "non-hovered alternate row keeps the striping tint");
             Assert.IsNull(XDM.GtkUI.TreeViewSelectionHelper.RowCellBackground(false, false, "#alt"),
                 "plain row paints nothing (rounded CSS base)");
+
+            // 6) GUTTER contract: checkbox rail always shows the plain card base
+            // (even/odd aware), never hover/selected fills — permanent separation.
+            Assert.AreEqual("#card", XDM.GtkUI.TreeViewSelectionHelper.GutterCellBackground(
+                    viewPaths[0], "#card", "#alt"),
+                "even row gutter shows the card base");
+            Assert.AreEqual("#alt", XDM.GtkUI.TreeViewSelectionHelper.GutterCellBackground(
+                    viewPaths[1], "#card", "#alt"),
+                "odd row gutter shows the alternate base");
         }
     }
 }

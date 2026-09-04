@@ -1416,7 +1416,12 @@ namespace XDM.GtkUI
             inprogressCheckCol.PackStart(inprogressCheckRenderer, true);
             inprogressCheckCol.SetCellDataFunc(inprogressCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
-                ((CellRendererToggle)cell).Active = lvInprogress.Selection.PathIsSelected(model.GetPath(iter));
+                var toggle = (CellRendererToggle)cell;
+                var checkPath = model.GetPath(iter);
+                toggle.Active = lvInprogress.Selection.PathIsSelected(checkPath);
+                // Gutter rail: plain card base in every state, never the row fill
+                toggle.CellBackground = TreeViewSelectionHelper.GutterCellBackground(
+                    checkPath, ThemeManager.ActiveCardBackgroundHex, ThemeManager.ActiveAlternateRowColor);
             }));
             lvInprogress.AppendColumn(inprogressCheckCol);
 
@@ -1602,7 +1607,12 @@ namespace XDM.GtkUI
             finishedCheckCol.PackStart(finishedCheckRenderer, true);
             finishedCheckCol.SetCellDataFunc(finishedCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
-                ((CellRendererToggle)cell).Active = lvFinished.Selection.PathIsSelected(model.GetPath(iter));
+                var toggle = (CellRendererToggle)cell;
+                var checkPath = model.GetPath(iter);
+                toggle.Active = lvFinished.Selection.PathIsSelected(checkPath);
+                // Gutter rail: plain card base in every state, never the row fill
+                toggle.CellBackground = TreeViewSelectionHelper.GutterCellBackground(
+                    checkPath, ThemeManager.ActiveCardBackgroundHex, ThemeManager.ActiveAlternateRowColor);
             }));
             lvFinished.AppendColumn(finishedCheckCol);
 
@@ -1774,13 +1784,13 @@ namespace XDM.GtkUI
                     var folder = FormatFriendlyPath(item.TargetDir);
                     if (!string.IsNullOrEmpty(folder))
                     {
-                        metaParts.Add($"📁 {GLib.Markup.EscapeText(folder)}");
+                        metaParts.Add($"◫ {GLib.Markup.EscapeText(folder)}");
                     }
 
                     var domain = ExtractDomain(item.PrimaryUrl);
                     if (!string.IsNullOrEmpty(domain))
                     {
-                        metaParts.Add($"🌐 {GLib.Markup.EscapeText(domain)}");
+                        metaParts.Add($"◉ {GLib.Markup.EscapeText(domain)}");
                     }
 
                     var ext = System.IO.Path.GetExtension(name)?.TrimStart('.')?.ToUpperInvariant();
@@ -1804,9 +1814,15 @@ namespace XDM.GtkUI
                 }
                 else
                 {
+                    // Hover feedback lives in the title (accent color) because GTK3
+                    // TreeView rows never match :hover CSS — a cell fill would render
+                    // square and cover the theme's rounded row shape.
+                    var titleMarkup = isHovered
+                        ? $"<span weight=\"bold\" color=\"{ThemeManager.ActiveAccentHex}\">{title}</span>"
+                        : $"<span weight=\"bold\">{title}</span>";
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
-                        ? $"<span weight=\"bold\">{title}</span>"
-                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"{MetaSubLineSize}\" alpha=\"{MetaSubLineAlpha}\">{metaLine}</span>";
+                        ? titleMarkup
+                        : $"{titleMarkup}\n<span size=\"{MetaSubLineSize}\" alpha=\"{MetaSubLineAlpha}\">{metaLine}</span>";
                 }
             }));
         }
@@ -1834,13 +1850,13 @@ namespace XDM.GtkUI
                     var domain = ExtractDomain(item.PrimaryUrl);
                     if (!string.IsNullOrEmpty(domain))
                     {
-                        metaParts.Add($"🌐 {GLib.Markup.EscapeText(domain)}");
+                        metaParts.Add($"◉ {GLib.Markup.EscapeText(domain)}");
                     }
 
                     var folder = FormatFriendlyPath(item.TargetDir);
                     if (!string.IsNullOrEmpty(folder))
                     {
-                        metaParts.Add($"📁 {GLib.Markup.EscapeText(folder)}");
+                        metaParts.Add($"◫ {GLib.Markup.EscapeText(folder)}");
                     }
                 }
 
@@ -1858,9 +1874,15 @@ namespace XDM.GtkUI
                 }
                 else
                 {
+                    // Hover feedback lives in the title (accent color) because GTK3
+                    // TreeView rows never match :hover CSS — a cell fill would render
+                    // square and cover the theme's rounded row shape.
+                    var titleMarkup = isHovered
+                        ? $"<span weight=\"bold\" color=\"{ThemeManager.ActiveAccentHex}\">{title}</span>"
+                        : $"<span weight=\"bold\">{title}</span>";
                     ((CellRendererText)cell).Markup = string.IsNullOrEmpty(metaLine)
-                        ? $"<span weight=\"bold\">{title}</span>"
-                        : $"<span weight=\"bold\">{title}</span>\n<span size=\"{MetaSubLineSize}\" alpha=\"{MetaSubLineAlpha}\">{metaLine}</span>";
+                        ? titleMarkup
+                        : $"{titleMarkup}\n<span size=\"{MetaSubLineSize}\" alpha=\"{MetaSubLineAlpha}\">{metaLine}</span>";
                 }
             }));
         }
@@ -1958,10 +1980,12 @@ namespace XDM.GtkUI
         // Pango alpha for secondary list text: 60% opacity on the 0-65535 scale
         private const int SecondaryTextAlpha = 39321;
         // Domain · folder sub-line under the file title: deliberately smaller and more
-        // faded than the title so the download name stays the visual focus
-        private const string MetaSubLineSize = "8200";
-        private const int MetaSubLineAlpha = 30000;
-        private const int MetaSubLineAlphaDark = 44000;
+        // faded than the title so the download name stays the visual focus.
+        // Glyphs are monochrome geometric shapes (they inherit the faded span
+        // color) instead of colorful emoji, so the meta line never shouts.
+        private const string MetaSubLineSize = "7500";
+        private const int MetaSubLineAlpha = 22000;
+        private const int MetaSubLineAlphaDark = 33000;
 
         private void AppWin1_DeleteEvent(object o, DeleteEventArgs args)
         {

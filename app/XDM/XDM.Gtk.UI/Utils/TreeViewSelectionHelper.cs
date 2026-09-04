@@ -68,5 +68,15 @@ namespace XDM.GtkUI
         {
             return !isHovered && isAlternate ? alternateColor : null;
         }
+
+        // Checkbox gutter rail: always the plain card base (even/odd aware), never
+        // the hover/selected fill — permanent visual separation between the
+        // checkbox and the card, in every row state.
+        internal static string GutterCellBackground(TreePath path, string cardHex, string alternateHex)
+        {
+            var isEvenRow = path == null || path.Indices == null || path.Indices.Length == 0
+                || (path.Indices[0] % 2 == 0);
+            return isEvenRow ? cardHex : alternateHex;
+        }
     }
 }
