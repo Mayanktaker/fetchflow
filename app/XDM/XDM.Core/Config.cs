@@ -185,8 +185,12 @@ namespace XDM.Core
 
         public string UserSelectedDownloadFolder { get; set; }
 
-        public string DefaultDownloadFolder { get; set; } =
-            PlatformHelper.GetOsDefaultDownloadFolder();
+        // All FetchFlow downloads live under ~/Downloads/FetchFlow (with per-category
+        // subfolders below) so app downloads never mix with the user's other files.
+        public static string FetchFlowDownloadRoot =>
+            Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(), "FetchFlow");
+
+        public string DefaultDownloadFolder { get; set; } = FetchFlowDownloadRoot;
 
         public static IEnumerable<Category> DefaultCategories = new[]
         {
@@ -202,8 +206,7 @@ namespace XDM.Core
                     ".PPT", ".PPTX", ".PPS", ".PPSX", ".ODP", ".OTP", ".KEY",
                     ".EPUB", ".MOBI", ".AZW", ".AZW3", ".FB2", ".CBZ", ".CBR", ".DJVU"
                 },
-                DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),
-                    "Documents"),
+                DefaultFolder=Path.Combine(FetchFlowDownloadRoot, "Documents"),
                 IsPredefined=true
             },
             new Category
@@ -216,7 +219,7 @@ namespace XDM.Core
                     ".M4A", ".OGG", ".OGA", ".OPUS", ".WMA", ".MPA", ".AMR", ".AC3",
                     ".DTS", ".EAC3", ".MKA", ".MID", ".MIDI", ".WV", ".TTA"
                 },
-                DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Music"),
+                DefaultFolder=Path.Combine(FetchFlowDownloadRoot, "Music"),
                 IsPredefined=true
             },
             new Category
@@ -230,7 +233,7 @@ namespace XDM.Core
                     ".M2V", ".MPV", ".VOB", ".DIVX", ".XVID", ".3GP", ".3G2", ".OGV",
                     ".RM", ".RMVB", ".ASF"
                 },
-                DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Video"),
+                DefaultFolder=Path.Combine(FetchFlowDownloadRoot, "Video"),
                 IsPredefined=true
             },
             new Category
@@ -244,7 +247,7 @@ namespace XDM.Core
                     ".CAB", ".SIT", ".SITX", ".ACE", ".ARJ", ".Z", ".ISO", ".IMG",
                     ".MDF", ".NRG", ".VHD", ".VHDX", ".VMDK", ".QCOW2"
                 },
-                DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Compressed"),
+                DefaultFolder=Path.Combine(FetchFlowDownloadRoot, "Compressed"),
                 IsPredefined=true
             },
             new Category
@@ -257,7 +260,7 @@ namespace XDM.Core
                     ".APK", ".RUN", ".BIN", ".SH", ".EXE", ".MSI", ".MSIX", ".APPX",
                     ".BAT", ".CMD", ".PKG", ".DMG", ".JAR", ".WAR"
                 },
-                DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Programs"),
+                DefaultFolder=Path.Combine(FetchFlowDownloadRoot, "Programs"),
                 IsPredefined=true
             },
             new Category
@@ -270,7 +273,7 @@ namespace XDM.Core
                     ".ICO", ".TIFF", ".TIF", ".AVIF", ".HEIC", ".HEIF", ".PSD", ".AI",
                     ".EPS", ".RAW", ".CR2", ".NEF", ".DNG", ".XCF"
                 },
-                DefaultFolder=Path.Combine(PlatformHelper.GetOsDefaultDownloadFolder(),"Pictures"),
+                DefaultFolder=Path.Combine(FetchFlowDownloadRoot, "Pictures"),
                 IsPredefined=true
             }
         };
