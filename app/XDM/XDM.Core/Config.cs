@@ -194,6 +194,11 @@ namespace XDM.Core
 
         public string DefaultDownloadFolder { get; set; } = FetchFlowDownloadRoot;
 
+        // Download list sort: column is Name/Size/Date/Type, applied to both
+        // Active and Complete lists and persisted across restarts
+        public string DownloadSortColumn { get; set; } = "Date";
+        public bool DownloadSortDescending { get; set; } = true;
+
         public static IEnumerable<Category> DefaultCategories = new[]
         {
             new Category

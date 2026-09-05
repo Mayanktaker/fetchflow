@@ -236,6 +236,12 @@ namespace XDM.Core.IO
                     case "DoubleClickOpenFile":
                         instance.DoubleClickOpenFile = r.ReadBoolean();
                         break;
+                    case "DownloadSortColumn":
+                        instance.DownloadSortColumn = r.ReadString();
+                        break;
+                    case "DownloadSortDescending":
+                        instance.DownloadSortDescending = r.ReadBoolean();
+                        break;
                     case "FileExtensions":
                         var fileExtensionsLength = r.ReadInt16();
                         instance.FileExtensions = new string[fileExtensionsLength];
@@ -396,6 +402,10 @@ namespace XDM.Core.IO
             WriteBoolean(w, instance.AllowSystemDarkTheme, "AllowSystemDarkTheme");
             count++;
             WriteBoolean(w, instance.DoubleClickOpenFile, "DoubleClickOpenFile");
+            count++;
+            WriteString(w, instance.DownloadSortColumn ?? "Date", "DownloadSortColumn");
+            count++;
+            WriteBoolean(w, instance.DownloadSortDescending, "DownloadSortDescending");
             count++;
 
             WriteInt32(w, (int)instance.FileConflictResolution, "FileConflictResolution");

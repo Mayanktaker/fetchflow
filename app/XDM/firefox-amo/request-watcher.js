@@ -85,6 +85,14 @@ class RequestWatcher {
             return true;
         }
 
+        // Query-aware fallback for short file-host links (e.g. bzzhr.to/xxxx).
+        try {
+            const ufull = res.url.toUpperCase();
+            if (this.fileExts.find(e => ufull.indexOf("." + e) >= 0)) {
+                return true;
+            }
+        } catch { }
+
         let contentDisposition = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
         if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
             return true;
@@ -96,11 +104,33 @@ class RequestWatcher {
     }
 
     onSendHeadersEvent(info) {
-        if (info.method !== "GET" && !(this.matchingHosts
-            && this.matchingHosts.find(matchingHost => info.url.indexOf(matchingHost) > 0))) {
-            return;
+        // Track GET/POST/HEAD so file-host POST downloads (e.g. bzzhr.to) are not
+        // dropped before response-header matching; other verbs still need matchingHost.
+        const method = (info.method || "GET").toUpperCase();
+        if ((method === "GET" || method === "POST" || method === "HEAD")
+            || (this.matchingHosts
+                && this.matchingHosts.find(matchingHost => info.url.indexOf(matchingHost) > 0))) {
+            this.requestMap.set(info.requestId, info);
         }
-        this.requestMap.set(info.requestId, info);
+    }
+
+    // Attachment fast-path: server explicitly forces a save dialog
+    // (Content-Disposition: attachment; filename="...rar"). Returns the filename
+    // when its extension is a known download type, else null. Inline responses
+    // (video/audio streaming, pages) never match — playback stays untouched.
+    getAttachmentFilename(res) {
+        try {
+            const headers = res.responseHeaders || [];
+            const cd = headers.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
+            if (!cd || !cd["value"] || cd["value"].toLowerCase().indexOf("attachment") < 0) return null;
+            const v = cd["value"];
+            let m = v.match(/filename\*\s*=\s*UTF-8''([^;\s]+)/i) || v.match(/filename\s*=\s*"([^"]+)"/i) || v.match(/filename\s*=\s*([^;\s]+)/i);
+            if (!m) return null;
+            let name = decodeURIComponent(m[1] || m[2] || m[3] || "").trim();
+            if (!name) return null;
+            if (this.fileExts.find(e => name.toUpperCase().endsWith("." + e))) return name;
+            return null;
+        } catch { return null; }
     }
 
     onHeadersReceivedEvent(res) {
@@ -111,8 +141,24 @@ class RequestWatcher {
             if (res.url.indexOf("127.0.0.1") >= 0) {
                 return;
             }
-            // Media/streaming detection only — file downloads are intercepted in
-            // app.js via downloads.onCreated (Firefox MV3 reliable path).
+            // Attachment fast-path: take over the response here and cancel the
+            // browser request, so Firefox never creates a download item and its
+            // save box never opens. downloads.onCreated stays as backup; native
+            // dedup drops the double if both fire.
+            if (this.statusCallback() && !this.isInValidResourceType(res) && !this.isInValidStatus(res)) {
+                const attachFile = this.getAttachmentFilename(res);
+                if (attachFile) {
+                    try {
+                        let data = this.createRequestData(req, res, attachFile, null, req.tabId);
+                        data.download = true;
+                        if (this.callback) this.callback(data);
+                    } catch (e) { }
+                    return { cancel: true };
+                }
+            }
+            // Anything else (media, inline images, pages) goes to /media only —
+            // inline images must never open download dialogs (downloads.onCreated
+            // + attachment fast-path own real file captures).
             if (this.callback && this.isMatchingRequest(res) && this.statusCallback()) {
                 if (req.tabId !== -1) {
                     chrome.tabs.get(
@@ -150,10 +196,12 @@ class RequestWatcher {
             ["requestHeaders"]
         );
 
+        // "blocking" enables the attachment fast-path cancel (Firefox MV3 still
+        // allows blocking webRequest; manifest holds webRequestBlocking).
         chrome.webRequest.onHeadersReceived.addListener(
             this.onHeadersReceivedEventCallback,
             { urls: ["http://*/*", "https://*/*"] },
-            ["responseHeaders"]
+            ["blocking", "responseHeaders"]
         );
 
         chrome.webRequest.onErrorOccurred.addListener(

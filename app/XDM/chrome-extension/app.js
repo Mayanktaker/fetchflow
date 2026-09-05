@@ -120,7 +120,7 @@ export default class App {
             return;
         }
 
-        if (this.isMonitoringEnabled() && this.shouldTakeOver(url, download.filename)) {
+        if (this.isMonitoringEnabled() && this.shouldTakeOver(url, download.filename, download.mime, download.fileSize || download.totalBytes || 0)) {
             chrome.downloads.cancel(
                 download.id,
                 () => chrome.downloads.erase({ id: download.id })
@@ -387,7 +387,7 @@ export default class App {
         }
     }
 
-    shouldTakeOver(url, file) {
+    shouldTakeOver(url, file, mime, size) {
         let u = new URL(url);
         if (!this.isSupportedProtocol(url)) {
             return false;
@@ -402,6 +402,37 @@ export default class App {
             upath = u.pathname.toUpperCase();
         }
         if (this.fileExts.find(ext => upath.endsWith(ext))) {
+            return true;
+        }
+        // Extensionless file-host URLs (e.g. https://bzzhr.to/wjwse1a5544o): the
+        // filename may not carry an extension yet, but the download is real —
+        // fall back to full-URL (query-aware), MIME, and size signals.
+        try {
+            const fullUrl = (url + " " + (file || "")).toUpperCase();
+            if (this.fileExts.find(ext => fullUrl.indexOf("." + ext) >= 0)) {
+                return true;
+            }
+        } catch { }
+        if (mime) {
+            const m = ("" + mime).toLowerCase();
+            if (m.indexOf("application/octet-stream") >= 0
+                || m.indexOf("application/zip") >= 0
+                || m.indexOf("rar") >= 0
+                || m.indexOf("7z") >= 0
+                || m.indexOf("application/pdf") >= 0
+                || m.indexOf("video/") === 0
+                || m.indexOf("audio/") === 0) {
+                return true;
+            }
+            // Never hijack pages/documents the browser should render
+            if (m.indexOf("text/html") >= 0 || m.indexOf("text/plain") >= 0) {
+                return false;
+            }
+        }
+        // Large attachment with no known extension — still offer it to FetchFlow
+        // instead of silently letting the browser keep it (file hosts often hide
+        // the real name behind a short link until Content-Disposition resolves).
+        if (size && +size > 1024 * 1024) {
             return true;
         }
         return false;

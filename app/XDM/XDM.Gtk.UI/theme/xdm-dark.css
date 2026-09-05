@@ -298,7 +298,7 @@ entry.toolbar-search-entry {
   padding: 3px 12px;
   margin: 0;
   border-radius: 999px;
-  background-color: #222222;
+  background-color: #f4f4f4;
   border: 1px solid #3d3d3d;
   font-size: 13px;
   transition: all 150ms ease;
@@ -600,6 +600,11 @@ menuitem {
   border-radius: 4px;
   margin: 1px 2px;
   padding: 4px 8px;
+  color: #f4f4f4;
+}
+
+menuitem label {
+  color: #f4f4f4;
 }
 
 menuitem:hover {
@@ -630,7 +635,7 @@ button.card-button:hover {
 }
 
 button.card-button:active {
-  background-color: #222222;
+  background-color: #f4f4f4;
   border-color: #3584e4;
 }
 
@@ -1140,5 +1145,30 @@ treeview.sidebar-list:selected {
 treeview.sidebar-list row:selected:hover,
 treeview.sidebar-list:selected:hover {
   background-color: #5a9bea;
+  color: #ffffff;
+}
+
+/* Download list sort header strip */
+.list-sort-header label {
+  color: #a0a0a0;
+}
+
+.list-sort-header:hover label {
+  color: #f0f0f0;
+}
+
+/* Download list header strip: theme accent surface, bold white labels */
+.list-header-bar {
+  background-color: #3584e4;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 6px 6px 0 0;
+}
+
+.list-header-bar label {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.list-header-bar .list-sort-header:hover label {
   color: #ffffff;
 }

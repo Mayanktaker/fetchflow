@@ -30,6 +30,7 @@ namespace XDM.GtkUI
         private ListStore inprogressDownloadsStore, finishedDownloadsStore;
         private TreeView lvInprogress, lvFinished;
         private ScrolledWindow swInProgress, swFinished;
+        private Widget? listHostInProgress, listHostFinished;
         private TreeModelFilter finishedDownloadFilter;
         private TreeModelFilter inprogressDownloadFilter;
         private TreeModelSort inprogressDownloadsStoreSorted;
@@ -167,6 +168,14 @@ namespace XDM.GtkUI
         private IPlatformClipboardMonitor clipboarMonitor;
         private TreePath? hoveredInprogressPath;
         private TreePath? hoveredFinishedPath;
+        private TreeViewColumn? inprogressCheckCol, finishedCheckCol;
+        private TreePath[]? inprogressRightClickSnapshot, finishedRightClickSnapshot;
+        private const int SortTypeColumnId = 100;
+        private CheckButton? selectAllInProgress, selectAllFinished;
+        private Label? sortNameHeader, sortSizeHeader;
+        private readonly List<Label> sortArrowNameLabels = new();
+        private readonly List<Label> sortArrowSizeLabels = new();
+        private bool suppressSelectAllSync;
 
         public MainWindow() : base("FetchFlow Download Manager")
         {
@@ -394,6 +403,7 @@ namespace XDM.GtkUI
             ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) =>
             {
                 RefreshMenuIcons(isDark);
+                SyncSortHeaderArrows();
                 lvFinished?.QueueDraw();
                 lvInprogress?.QueueDraw();
             });
@@ -1253,8 +1263,7 @@ namespace XDM.GtkUI
                 ResetSearch();
                 if (index == 0)
                 {
-                    swInProgress.ShowAll();
-                    swFinished.Hide();
+                    ShowListView(true);
                     category = null;
                     btnOpenFile.Visible = btnOpenFolder.Visible = false;
                     btnPause.Visible = btnResume.Visible = true;
@@ -1263,8 +1272,7 @@ namespace XDM.GtkUI
                 }
                 else
                 {
-                    swFinished.ShowAll();
-                    swInProgress.Hide();
+                    ShowListView(false);
                     category = null;
                     btnOpenFile.Visible = btnOpenFolder.Visible = true;
                     btnPause.Visible = btnResume.Visible = false;
@@ -1325,8 +1333,7 @@ namespace XDM.GtkUI
                 statusTree.Selection.UnselectAll();
                 isSelectingSidebar = false;
 
-                swFinished.ShowAll();
-                swInProgress.Hide();
+                ShowListView(false);
                 category = (Category)model.GetValue(iter, 2);
                 btnOpenFile.Visible = btnOpenFolder.Visible = true;
                 btnPause.Visible = btnResume.Visible = false;
@@ -1336,8 +1343,30 @@ namespace XDM.GtkUI
             }
         }
 
+        // Switches Active/Complete views including their header strips
+        private void ShowListView(bool inprogress)
+        {
+            try
+            {
+                if (inprogress)
+                {
+                    (listHostInProgress ?? (Widget)swInProgress).ShowAll();
+                    (listHostFinished ?? (Widget)swFinished).Hide();
+                }
+                else
+                {
+                    (listHostFinished ?? (Widget)swFinished).ShowAll();
+                    (listHostInProgress ?? (Widget)swInProgress).Hide();
+                }
+            }
+            catch { }
+        }
+
         private Widget CreateInProgressListView()
         {
+            var listHost = new VBox();
+            listHost.PackStart(CreateListHeader(true), false, false, 0);
+
             inprogressDownloadsStore = new ListStore(typeof(string),        // file name
                 typeof(string),                                             // date modified
                 typeof(string),                                             // size
@@ -1385,6 +1414,16 @@ namespace XDM.GtkUI
                 return t1.Size.CompareTo(t2.Size);
             });
 
+            sortedStore.SetSortFunc(SortTypeColumnId, (model, iter1, iter2) =>
+            {
+                var t1 = (InProgressDownloadItem)model.GetValue(iter1, 5);
+                var t2 = (InProgressDownloadItem)model.GetValue(iter2, 5);
+                if (t1 == null && t2 == null) return 0;
+                if (t1 == null) return 1;
+                if (t2 == null) return 2;
+                return CompareByTypeThenName(t1.Name, t2.Name);
+            });
+
             inprogressDownloadsStoreSorted = sortedStore;
             lvInprogress = new TreeView(sortedStore);
             lvInprogress.Selection.Mode = SelectionMode.Multiple;
@@ -1405,7 +1444,7 @@ namespace XDM.GtkUI
             };
             // Dedicated selection-checkbox column — click any rows to build a
             // multi-selection without Ctrl/Shift; state mirrors TreeSelection.
-            var inprogressCheckCol = new TreeViewColumn
+            inprogressCheckCol = new TreeViewColumn
             {
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = 46,
@@ -1450,6 +1489,7 @@ namespace XDM.GtkUI
             lvInprogress.Selection.Changed += (_, _) =>
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
+                SyncSelectAllHeader(true);
             };
 
             lvInprogress.MotionNotifyEvent += (o, args) =>
@@ -1478,54 +1518,32 @@ namespace XDM.GtkUI
                 }
             };
 
-            // File-manager semantics for right-click: when the press lands INSIDE the
-            // current multi-selection, claim the event so GTK's default handler cannot
-            // collapse the selection before the context menu opens (menu actions act on
-            // every selected row). Presses outside the selection fall through and GTK
-            // selects just the clicked row, matching Nautilus/Finder behavior.
-            // Checkbox presses are claimed too, so a plain click toggles membership
-            // instead of replacing the whole selection.
-            lvInprogress.ButtonPressEvent += (a, b) =>
-            {
-                if (b.Event.Type == Gdk.EventType.ButtonPress && b.Event.Button == 3
-                    && TreeViewSelectionHelper.ShouldPreserveSelectionOnPress(lvInprogress, b.Event.X, b.Event.Y))
-                {
-                    b.RetVal = true;
-                }
-                if (b.Event.Type == Gdk.EventType.ButtonPress && b.Event.Button == 1
-                    && TreeViewSelectionHelper.HitTestToggleCell(lvInprogress, inprogressCheckCol, b.Event.X, b.Event.Y))
-                {
-                    b.RetVal = true;
-                }
-            };
+            // File-manager semantics for right-click: ConnectBefore press handler claims
+            // the event BEFORE GTK's default selection handler runs (ButtonPress is
+            // RUN_LAST, so a normal handler is already too late and the multi-selection
+            // has collapsed to one row — the reported "Ctrl+A then right-click deletes
+            // only one" bug). Snapshot + restore on release is the safety net.
+            lvInprogress.ButtonPressEvent += OnInprogressButtonPress;
+            lvInprogress.ButtonReleaseEvent += OnInprogressButtonRelease;
+            lvInprogress.KeyPressEvent += OnDownloadListKeyPress;
 
-            lvInprogress.ButtonReleaseEvent += (a, b) =>
-            {
-                if (b.Event.Type == Gdk.EventType.ButtonRelease && b.Event.Button == 3)
-                {
-                    InProgressContextMenuOpening?.Invoke(this, EventArgs.Empty);
-                    menuInProgress.PopupAtPointer(b.Event);
-                }
-                // Pure toggle on checkbox release (press+release in the checkbox column)
-                if (b.Event.Type == Gdk.EventType.ButtonRelease && b.Event.Button == 1
-                    && TreeViewSelectionHelper.HitTestToggleCell(lvInprogress, inprogressCheckCol, b.Event.X, b.Event.Y)
-                    && lvInprogress.GetPathAtPos((int)b.Event.X, (int)b.Event.Y, out TreePath togglePath, out _, out _, out _))
-                {
-                    TreeViewSelectionHelper.ToggleSelectionPath(lvInprogress, togglePath);
-                }
-            };
-
-            sortedStore.SetSortColumnId(1, SortType.Descending);
+            ApplyDownloadSort();
 
             swInProgress = new ScrolledWindow { OverlayScrolling = true, Margin = 6, MarginBottom = 2, MarginTop = 2, ShadowType = ShadowType.None };
             swInProgress.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swInProgress.Add(lvInprogress);
             swInProgress.ShowAll();
-            return swInProgress;
+            listHost.PackStart(swInProgress, true, true, 0);
+            listHost.ShowAll();
+            listHostInProgress = listHost;
+            return listHost;
         }
 
         private Widget CreateFinishedListView()
         {
+            var listHost = new VBox();
+            listHost.PackStart(CreateListHeader(false), false, false, 0);
+
             finishedDownloadsStore = new ListStore(typeof(string),          // file name
                 typeof(string),                                             // date modified
                 typeof(string),                                             // size
@@ -1577,6 +1595,18 @@ namespace XDM.GtkUI
                 return t1.Size.CompareTo(t2.Size);
             });
 
+            sortedStore.SetSortFunc(SortTypeColumnId, (model, iter1, iter2) =>
+            {
+                var t1 = (FinishedDownloadItem)model.GetValue(iter1, 3);
+                var t2 = (FinishedDownloadItem)model.GetValue(iter2, 3);
+
+                if (t1 == null && t2 == null) return 0;
+                if (t1 == null) return 1;
+                if (t2 == null) return 2;
+
+                return CompareByTypeThenName(t1.Name, t2.Name);
+            });
+
             finishedDownloadsStoreSorted = sortedStore;
             lvFinished = new TreeView(sortedStore);
             lvFinished.Selection.Mode = SelectionMode.Multiple;
@@ -1596,7 +1626,7 @@ namespace XDM.GtkUI
                 SortColumnId = 0
             };
             // Dedicated selection-checkbox column — same pure-toggle semantics as Active
-            var finishedCheckCol = new TreeViewColumn
+            finishedCheckCol = new TreeViewColumn
             {
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = 46,
@@ -1641,6 +1671,7 @@ namespace XDM.GtkUI
             lvFinished.Selection.Changed += (_, _) =>
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
+                SyncSelectAllHeader(false);
             };
 
             lvFinished.MotionNotifyEvent += (o, args) =>
@@ -1670,42 +1701,325 @@ namespace XDM.GtkUI
             };
 
             // Same right-click preservation + checkbox pure-toggle as the in-progress list
-            lvFinished.ButtonPressEvent += (a, b) =>
-            {
-                if (b.Event.Type == Gdk.EventType.ButtonPress && b.Event.Button == 3
-                    && TreeViewSelectionHelper.ShouldPreserveSelectionOnPress(lvFinished, b.Event.X, b.Event.Y))
-                {
-                    b.RetVal = true;
-                }
-                if (b.Event.Type == Gdk.EventType.ButtonPress && b.Event.Button == 1
-                    && TreeViewSelectionHelper.HitTestToggleCell(lvFinished, finishedCheckCol, b.Event.X, b.Event.Y))
-                {
-                    b.RetVal = true;
-                }
-            };
+            lvFinished.ButtonPressEvent += OnFinishedButtonPress;
+            lvFinished.ButtonReleaseEvent += OnFinishedButtonRelease;
+            lvFinished.KeyPressEvent += OnDownloadListKeyPress;
 
-            lvFinished.ButtonReleaseEvent += (a, b) =>
-            {
-                if (b.Event.Type == Gdk.EventType.ButtonRelease && b.Event.Button == 3)
-                {
-                    FinishedContextMenuOpening?.Invoke(this, EventArgs.Empty);
-                    menuFinished.PopupAtPointer(b.Event);
-                }
-                if (b.Event.Type == Gdk.EventType.ButtonRelease && b.Event.Button == 1
-                    && TreeViewSelectionHelper.HitTestToggleCell(lvFinished, finishedCheckCol, b.Event.X, b.Event.Y)
-                    && lvFinished.GetPathAtPos((int)b.Event.X, (int)b.Event.Y, out TreePath togglePath, out _, out _, out _))
-                {
-                    TreeViewSelectionHelper.ToggleSelectionPath(lvFinished, togglePath);
-                }
-            };
-
-            sortedStore.SetSortColumnId(1, SortType.Descending);
+            ApplyDownloadSort();
 
             swFinished = new ScrolledWindow { OverlayScrolling = true, Margin = 6, MarginBottom = 2, MarginTop = 2, ShadowType = ShadowType.None };
             swFinished.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swFinished.Add(lvFinished);
             swFinished.ShowAll();
-            return swFinished;
+            listHost.PackStart(swFinished, true, true, 0);
+            listHost.ShowAll();
+            listHostFinished = listHost;
+            return listHost;
+        }
+
+        // Header strip above a download list: select-all checkbox aligned with the
+        // row checkboxes + clickable File name / Size sort labels with direction arrows
+        private Widget CreateListHeader(bool inprogress)
+        {
+            var header = new HBox { MarginStart = 6, MarginEnd = 6, MarginTop = 0, MarginBottom = 0 };
+            header.StyleContext.AddClass("list-header-bar");
+            // Roomy strip: inner top/bottom padding keeps the accent band visible
+            var headerAlign = new Alignment(0, 0.5f, 1, 1) { TopPadding = 9, BottomPadding = 9, LeftPadding = 6, RightPadding = 6 };
+            headerAlign.Add(header);
+            var selectAll = new CheckButton { MarginStart = 8 };
+            selectAll.Toggled += (_, _) =>
+            {
+                if (suppressSelectAllSync) return;
+                var view = inprogress ? lvInprogress : lvFinished;
+                if (view == null) return;
+                if (selectAll.Active)
+                {
+                    view.Selection.SelectAll();
+                }
+                else
+                {
+                    view.Selection.UnselectAll();
+                }
+            };
+            header.PackStart(selectAll, false, false, 0);
+            if (inprogress) { selectAllInProgress = selectAll; }
+            else { selectAllFinished = selectAll; }
+
+            // Spacer matching the checkbox column + icon so File name sits over titles
+            header.PackStart(new Label { WidthRequest = 64 }, false, false, 0);
+
+            var nameHeader = CreateSortHeaderLabel(TextResource.GetText("SORT_NAME") ?? "File name");
+            sortArrowNameLabels.Add(nameHeader.Arrow);
+            nameHeader.Box.PackStart(nameHeader.Arrow, false, false, 2);
+            nameHeader.EventBox.ButtonPressEvent += (_, e) =>
+            {
+                ToggleListSort("Name", e);
+                e.RetVal = true;
+            };
+            header.PackStart(nameHeader.EventBox, true, true, 0);
+
+            var sizeHeader = CreateSortHeaderLabel(TextResource.GetText("SORT_SIZE") ?? "Size");
+            sortArrowSizeLabels.Add(sizeHeader.Arrow);
+            sizeHeader.Box.PackStart(sizeHeader.Arrow, false, false, 2);
+            sizeHeader.EventBox.ButtonPressEvent += (_, e) =>
+            {
+                ToggleListSort("Size", e);
+                e.RetVal = true;
+            };
+            header.PackStart(sizeHeader.EventBox, false, false, 24);
+            sortNameHeader = nameHeader.Label;
+            sortSizeHeader = sizeHeader.Label;
+
+            header.ShowAll();
+            headerAlign.ShowAll();
+            return headerAlign;
+        }
+
+        // Sort header cell: styled text label + its own arrow inside a hoverable event box
+        private (Gtk.EventBox EventBox, HBox Box, Label Label, Label Arrow) CreateSortHeaderLabel(string text)
+        {
+            var label = new Label(text) { Xalign = 0 };
+            var box = new HBox(false, 0);
+            box.PackStart(label, false, false, 0);
+            var arrow = new Label(string.Empty);
+            var eventBox = new Gtk.EventBox();
+            eventBox.Add(box);
+            eventBox.StyleContext.AddClass("list-sort-header");
+            return (eventBox, box, label, arrow);
+        }
+
+        // Clicking File name/Size: switch column or flip direction if already active
+        private void ToggleListSort(string column, ButtonPressEventArgs e)
+        {
+            if (e.Event.Type != Gdk.EventType.ButtonPress || e.Event.Button != 1) return;
+            var descending = Config.Instance.DownloadSortColumn == column
+                ? !Config.Instance.DownloadSortDescending
+                : true;
+            SetDownloadSort(column, descending);
+            e.RetVal = true;
+        }
+
+        // Updates arrows on all sort headers: header strip is the theme accent,
+        // so arrows stay white — active column bold ▾/▴, idle faint ↕
+        private void SyncSortHeaderArrows()
+        {
+            try
+            {
+                var col = Config.Instance.DownloadSortColumn ?? "Date";
+                var desc = Config.Instance.DownloadSortDescending;
+                foreach (var arrow in sortArrowNameLabels)
+                {
+                    arrow.Markup = col == "Name"
+                        ? "<span foreground=\"#ffffff\" weight=\"bold\">" + (desc ? "▾" : "▴") + "</span>"
+                        : "<span foreground=\"#ffffff\">↕</span>";
+                }
+                foreach (var arrow in sortArrowSizeLabels)
+                {
+                    arrow.Markup = col == "Size"
+                        ? "<span foreground=\"#ffffff\" weight=\"bold\">" + (desc ? "▾" : "▴") + "</span>"
+                        : "<span foreground=\"#ffffff\">↕</span>";
+                }
+            }
+            catch { }
+        }
+
+        // Mirrors row selection into the header select-all checkbox (all/some/none)
+        private void SyncSelectAllHeader(bool inprogress)
+        {
+            try
+            {
+                var view = inprogress ? lvInprogress : lvFinished;
+                var box = inprogress ? selectAllInProgress : selectAllFinished;
+                if (view == null || box == null) return;
+                var selected = view.Selection.CountSelectedRows();
+                var total = 0;
+                view.Model.Foreach((model, path, iter) => { total++; return false; });
+                suppressSelectAllSync = true;
+                if (selected == 0)
+                {
+                    box.Inconsistent = false;
+                    box.Active = false;
+                }
+                else if (selected == total && total > 0)
+                {
+                    box.Inconsistent = false;
+                    box.Active = true;
+                }
+                else
+                {
+                    box.Active = false;
+                    box.Inconsistent = true;
+                }
+                suppressSelectAllSync = false;
+            }
+            catch
+            {
+                suppressSelectAllSync = false;
+            }
+        }
+
+        // Runs BEFORE GTK's default TreeView press handler (ButtonPress is RUN_LAST):
+        // claiming the event here is the only way to stop the default handler from
+        // collapsing a Ctrl+A / checkbox multi-selection to the single right-clicked row.
+        [GLib.ConnectBefore]
+        private void OnInprogressButtonPress(object o, ButtonPressEventArgs args)
+        {
+            if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 3
+                && TreeViewSelectionHelper.ShouldPreserveSelectionOnPress(lvInprogress, args.Event.X, args.Event.Y))
+            {
+                inprogressRightClickSnapshot = lvInprogress.Selection.GetSelectedRows(out _);
+                args.RetVal = true;
+            }
+            else if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 1
+                && inprogressCheckCol != null
+                && TreeViewSelectionHelper.HitTestToggleCell(lvInprogress, inprogressCheckCol, args.Event.X, args.Event.Y))
+            {
+                args.RetVal = true;
+            }
+            else
+            {
+                inprogressRightClickSnapshot = null;
+            }
+        }
+
+        private void OnInprogressButtonRelease(object o, ButtonReleaseEventArgs args)
+        {
+            if (args.Event.Type == Gdk.EventType.ButtonRelease && args.Event.Button == 3)
+            {
+                RestoreSnapshotIfCollapsed(lvInprogress, ref inprogressRightClickSnapshot);
+                InProgressContextMenuOpening?.Invoke(this, EventArgs.Empty);
+                menuInProgress.PopupAtPointer(args.Event);
+            }
+            if (args.Event.Type == Gdk.EventType.ButtonRelease && args.Event.Button == 1
+                && inprogressCheckCol != null
+                && TreeViewSelectionHelper.HitTestToggleCell(lvInprogress, inprogressCheckCol, args.Event.X, args.Event.Y)
+                && lvInprogress.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath togglePath, out _, out _, out _))
+            {
+                TreeViewSelectionHelper.ToggleSelectionPath(lvInprogress, togglePath);
+            }
+        }
+
+        [GLib.ConnectBefore]
+        private void OnFinishedButtonPress(object o, ButtonPressEventArgs args)
+        {
+            if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 3
+                && TreeViewSelectionHelper.ShouldPreserveSelectionOnPress(lvFinished, args.Event.X, args.Event.Y))
+            {
+                finishedRightClickSnapshot = lvFinished.Selection.GetSelectedRows(out _);
+                args.RetVal = true;
+            }
+            else if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 1
+                && finishedCheckCol != null
+                && TreeViewSelectionHelper.HitTestToggleCell(lvFinished, finishedCheckCol, args.Event.X, args.Event.Y))
+            {
+                args.RetVal = true;
+            }
+            else
+            {
+                finishedRightClickSnapshot = null;
+            }
+        }
+
+        private void OnFinishedButtonRelease(object o, ButtonReleaseEventArgs args)
+        {
+            if (args.Event.Type == Gdk.EventType.ButtonRelease && args.Event.Button == 3)
+            {
+                RestoreSnapshotIfCollapsed(lvFinished, ref finishedRightClickSnapshot);
+                FinishedContextMenuOpening?.Invoke(this, EventArgs.Empty);
+                menuFinished.PopupAtPointer(args.Event);
+            }
+            if (args.Event.Type == Gdk.EventType.ButtonRelease && args.Event.Button == 1
+                && finishedCheckCol != null
+                && TreeViewSelectionHelper.HitTestToggleCell(lvFinished, finishedCheckCol, args.Event.X, args.Event.Y)
+                && lvFinished.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath togglePath, out _, out _, out _))
+            {
+                TreeViewSelectionHelper.ToggleSelectionPath(lvFinished, togglePath);
+            }
+        }
+
+        // Safety net: if the press claim ever misses (theme hitbox drift, Wayland
+        // coordinate skew), the press collapses to 1 row — reselect the snapshot so
+        // the context menu and Delete act on every row the user had selected.
+        private static void RestoreSnapshotIfCollapsed(TreeView view, ref TreePath[]? snapshot)
+        {
+            try
+            {
+                if (snapshot == null || snapshot.Length < 2) { snapshot = null; return; }
+                var current = view.Selection.GetSelectedRows(out _);
+                if (current != null && current.Length == snapshot.Length) { snapshot = null; return; }
+                view.Selection.UnselectAll();
+                foreach (var path in snapshot)
+                {
+                    try { view.Selection.SelectPath(path); } catch { }
+                }
+            }
+            catch { }
+            finally { snapshot = null; }
+        }
+
+        // Explicit Ctrl+A select-all: GTK's built-in binding is theme/distro dependent,
+        // so guarantee it on both lists. Delete key forwards to the toolbar delete.
+        private void OnDownloadListKeyPress(object o, KeyPressEventArgs args)
+        {
+            try
+            {
+                var isCtrl = (args.Event.State & Gdk.ModifierType.ControlMask) != 0;
+                if (isCtrl && (args.Event.Key == Gdk.Key.a || args.Event.Key == Gdk.Key.A))
+                {
+                    if (o is TreeView view)
+                    {
+                        view.Selection.SelectAll();
+                        args.RetVal = true;
+                    }
+                }
+            }
+            catch { }
+        }
+
+        // Compares by file extension first, then full name — powers "Sort by Type"
+        private static int CompareByTypeThenName(string? a, string? b)
+        {
+            var extA = System.IO.Path.GetExtension(a ?? string.Empty).ToUpperInvariant();
+            var extB = System.IO.Path.GetExtension(b ?? string.Empty).ToUpperInvariant();
+            var cmp = string.Compare(extA, extB, StringComparison.Ordinal);
+            if (cmp != 0) return cmp;
+            return string.Compare(a ?? string.Empty, b ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Applies the saved sort (Name/Size/Date/Type + direction) to both lists
+        private void ApplyDownloadSort()
+        {
+            try
+            {
+                var columnId = Config.Instance.DownloadSortColumn switch
+                {
+                    "Name" => 0,
+                    "Size" => 2,
+                    "Type" => SortTypeColumnId,
+                    _ => 1,
+                };
+                var order = Config.Instance.DownloadSortDescending ? SortType.Descending : SortType.Ascending;
+                inprogressDownloadsStoreSorted?.SetSortColumnId(columnId, order);
+                finishedDownloadsStoreSorted?.SetSortColumnId(columnId, order);
+                SyncSortHeaderArrows();
+            }
+            catch { }
+        }
+
+        // Header sort selection: persist + apply to both lists
+        private void SetDownloadSort(string column, bool? descending = null)
+        {
+            try
+            {
+                Config.Instance.DownloadSortColumn = column;
+                if (descending.HasValue)
+                {
+                    Config.Instance.DownloadSortDescending = descending.Value;
+                }
+                Config.SaveConfig();
+                ApplyDownloadSort();
+            }
+            catch { }
         }
 
         // Resolves design token RGB tint for file type categories

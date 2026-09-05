@@ -66,6 +66,15 @@ namespace XDM.GtkUI
             this.menuItem.Activated += Mi_Click;
         }
 
+        // Updates row text (used for state dots/ticks in custom submenus)
+        public void SetText(string text)
+        {
+            if (textLabel != null)
+            {
+                textLabel.Text = text;
+            }
+        }
+
         // Refreshes icon tint dynamically on theme switch
         public void UpdateTheme(bool isDark)
         {

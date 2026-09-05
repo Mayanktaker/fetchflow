@@ -147,7 +147,7 @@ class App {
         if (url.indexOf("127.0.0.1") >= 0) {
             return;
         }
-        if (this.shouldTakeOver(url, download.filename)) {
+        if (this.shouldTakeOver(url, download.filename, download.mime, download.fileSize || download.totalBytes || 0)) {
             this.interceptDownload(download, download.filename);
         } else {
             this.pendingDownloadsMap.set(download.id, download);
@@ -180,7 +180,22 @@ class App {
             let item = this.pendingDownloadsMap.get(delta.id);
             let url = item ? item.url : null;
             let filename = delta.filename.current;
-            if (url && this.shouldTakeOver(url, filename)) {
+            if (!url) {
+                // onCreated carried no URL (redirect chain / early event) — resolve
+                // the real item instead of dropping the download silently.
+                chrome.downloads.search({ id: delta.id }, (results) => {
+                    if (chrome.runtime.lastError || !results || !results[0]) return;
+                    const r = results[0];
+                    const u = r.url || r.finalUrl;
+                    const fn = (delta.filename && delta.filename.current) || r.filename;
+                    if (u && this.isMonitoringEnabled()
+                        && this.shouldTakeOver(u, fn, r.mime, r.fileSize || r.totalBytes || 0)) {
+                        this.interceptDownload({ id: delta.id, url: u, referrer: r.referrer, mime: r.mime, fileSize: r.fileSize, totalBytes: r.totalBytes }, fn);
+                    }
+                });
+                return;
+            }
+            if (url && this.shouldTakeOver(url, filename, item ? item.mime : undefined, item ? (item.fileSize || item.totalBytes || 0) : 0)) {
                 this.interceptDownload(item || { id: delta.id, url: url }, filename);
             }
         }
@@ -306,7 +321,7 @@ class App {
     }
 
     // MV3/Phase2.1: takeover rule (file-extension based; mirrors chrome-extension/app.js)
-    shouldTakeOver(url, file) {
+    shouldTakeOver(url, file, mime, size) {
         if (!url) return false;
         let u;
         try { u = new URL(url); } catch { return false; }
@@ -322,6 +337,32 @@ class App {
             upath = u.pathname.toUpperCase();
         }
         if (this.fileExts && this.fileExts.some(ext => upath.endsWith(ext))) {
+            return true;
+        }
+        // Extensionless file-host URLs (e.g. https://bzzhr.to/wjwse1a5544o):
+        // fall back to full-URL (query-aware), MIME, and size signals.
+        try {
+            const fullUrl = (url + " " + (cleanFile || "")).toUpperCase();
+            if (this.fileExts && this.fileExts.some(ext => fullUrl.indexOf("." + ext) >= 0)) {
+                return true;
+            }
+        } catch { }
+        if (mime) {
+            const m = ("" + mime).toLowerCase();
+            if (m.indexOf("application/octet-stream") >= 0
+                || m.indexOf("application/zip") >= 0
+                || m.indexOf("rar") >= 0
+                || m.indexOf("7z") >= 0
+                || m.indexOf("application/pdf") >= 0
+                || m.indexOf("video/") === 0
+                || m.indexOf("audio/") === 0) {
+                return true;
+            }
+            if (m.indexOf("text/html") >= 0 || m.indexOf("text/plain") >= 0) {
+                return false;
+            }
+        }
+        if (size && +size > 1024 * 1024) {
             return true;
         }
         return false;

@@ -81,6 +81,15 @@ export default class RequestWatcher {
             return true;
         }
 
+        // File hosts hide the real name in query (?file=game.rar) or short links
+        // (https://bzzhr.to/wjwse1a5544o) — match the extension anywhere in the URL.
+        try {
+            const ufull = res.url.toUpperCase();
+            if (this.fileExts.find(e => ufull.indexOf("." + e) >= 0)) {
+                return true;
+            }
+        } catch { }
+
         let contentDisposition = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
         if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
             return true;
@@ -92,11 +101,17 @@ export default class RequestWatcher {
     }
 
     onSendHeadersEvent(info) {
-        if (info.method !== "GET" && !(this.matchingHosts
-            && this.matchingHosts.find(matchingHost => info.url.indexOf(matchingHost) > 0))) {
+        // File hosts (e.g. bzzhr.to / buzzheavier) issue downloads via POST forms;
+        // dropping non-GET here silently misses those captures. Track GET/POST/HEAD
+        // and let isMatchingRequest decide on response headers; other verbs still
+        // require a matchingHost (YouTube-style segmented fetches).
+        const method = (info.method || "GET").toUpperCase();
+        if ((method === "GET" || method === "POST" || method === "HEAD")
+            || (this.matchingHosts
+                && this.matchingHosts.find(matchingHost => info.url.indexOf(matchingHost) > 0))) {
+            this.requestMap.set(info.requestId, info);
             return;
         }
-        this.requestMap.set(info.requestId, info);
     }
 
     onHeadersReceivedEvent(res) {

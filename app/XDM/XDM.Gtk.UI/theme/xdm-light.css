@@ -603,6 +603,11 @@ menuitem {
   border-radius: 4px;
   margin: 1px 2px;
   padding: 4px 8px;
+  color: #222222;
+}
+
+menuitem label {
+  color: #222222;
 }
 
 menuitem:hover {
@@ -1142,5 +1147,30 @@ treeview.sidebar-list:selected {
 treeview.sidebar-list row:selected:hover,
 treeview.sidebar-list:selected:hover {
   background-color: #5a9bea;
+  color: #ffffff;
+}
+
+/* Download list sort header strip */
+.list-sort-header label {
+  color: #6b6b6b;
+}
+
+.list-sort-header:hover label {
+  color: #222222;
+}
+
+/* Download list header strip: theme accent surface, bold white labels */
+.list-header-bar {
+  background-color: #3584e4;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 6px 6px 0 0;
+}
+
+.list-header-bar label {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.list-header-bar .list-sort-header:hover label {
   color: #ffffff;
 }
