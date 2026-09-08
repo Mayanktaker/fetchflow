@@ -1,6 +1,7 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 "use strict";
 import Logger from './logger.js';
+import { isNoiseUrl, matchesFileExtInUrl } from './noise-filter.js';
 
 export default class RequestWatcher {
     constructor(callback) {
@@ -47,7 +48,22 @@ export default class RequestWatcher {
         }
     }
 
+    isInValidStatus(res) {
+        return res.statusCode && res.statusCode !== 200 && res.statusCode !== 206;
+    }
+
+    isInValidResourceType(res) {
+        return res.type && (res.type === "stylesheet" || res.type === "script" || res.type === "font" || res.type === "websocket");
+    }
+
     isMatchingRequest(res) {
+        if (this.isInValidResourceType(res) || this.isInValidStatus(res)) {
+            return false;
+        }
+        if (isNoiseUrl(res.url)) {
+            return false;
+        }
+
         let u = new URL(res.url);
 
         let hostName = u.host;
@@ -81,22 +97,29 @@ export default class RequestWatcher {
             return true;
         }
 
-        // File hosts hide the real name in query (?file=game.rar) or short links
-        // (https://bzzhr.to/wjwse1a5544o) — match the extension anywhere in the URL.
-        try {
-            const ufull = res.url.toUpperCase();
-            if (this.fileExts.find(e => ufull.indexOf("." + e) >= 0)) {
-                return true;
-            }
-        } catch { }
+        // Query-aware fallback for short file-host links (e.g. bzzhr.to/xxxx).
+        if (matchesFileExtInUrl(res.url, null, this.fileExts)) {
+            return true;
+        }
 
         let contentDisposition = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
         if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
             return true;
         }
 
+        // matchingHosts (youtube/googlevideo) must NOT match every API call on the
+        // host (getDatasyncIdsEndpoint, sw.js_data, stats). Require a media signal:
+        // segmented-playback URL or an audio/video/octet-stream response.
         if (this.matchingHosts.find(h => hostName.indexOf(h) >= 0)) {
-            return true;
+            const low = res.url.toLowerCase();
+            if (low.indexOf("videoplayback") >= 0 || low.indexOf(".m3u8") >= 0 || low.indexOf(".mpd") >= 0) {
+                return true;
+            }
+            const ct = (mediaType && mediaType["value"] ? mediaType["value"] : "").toLowerCase();
+            if (ct.indexOf("audio/") >= 0 || ct.indexOf("video/") >= 0 || ct.indexOf("application/octet") >= 0) {
+                return true;
+            }
+            return false;
         }
     }
 
@@ -119,6 +142,9 @@ export default class RequestWatcher {
         let req = this.requestMap.get(reqId);
         if (req) {
             this.requestMap.delete(reqId);
+            if (res.url && (res.url.indexOf("127.0.0.1") >= 0 || isNoiseUrl(res.url))) {
+                return;
+            }
             if (this.callback && this.isMatchingRequest(res)) {
                 if (req.tabId !== -1) {
                     chrome.tabs.get(

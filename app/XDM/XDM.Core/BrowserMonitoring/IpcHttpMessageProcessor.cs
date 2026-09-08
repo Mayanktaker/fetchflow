@@ -233,7 +233,7 @@ namespace XDM.Core.BrowserMonitoring
         private void OnTabUpdateMessage(RequestContext context)
         {
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(context.RequestBody!));
-            if (msg == null)
+            if (msg == null || (!string.IsNullOrEmpty(msg.TabUrl) && NetworkHelper.IsNoiseUrl(msg.TabUrl)))
             {
                 return;
             }
@@ -244,10 +244,22 @@ namespace XDM.Core.BrowserMonitoring
             }
         }
 
+        private static bool IsJunkCapture(ExtensionData? msg)
+        {
+            if (msg == null || string.IsNullOrEmpty(msg.Url)) return true;
+            try
+            {
+                if (NetworkHelper.IsNoiseUrl(msg.Url)) return true;
+                if (Helpers.IsBlockedHost(msg.Url)) return true;
+            }
+            catch { }
+            return false;
+        }
+
         private void OnDownloadMessage(RequestContext context)
         {
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(context.RequestBody!));
-            if (msg == null)
+            if (msg == null || IsJunkCapture(msg))
             {
                 return;
             }
@@ -267,7 +279,7 @@ namespace XDM.Core.BrowserMonitoring
         private void OnMediaMessage(RequestContext context)
         {
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(context.RequestBody!));
-            if (msg == null)
+            if (msg == null || IsJunkCapture(msg))
             {
                 return;
             }
@@ -301,6 +313,8 @@ namespace XDM.Core.BrowserMonitoring
             {
                 return;
             }
+            msgArr = msgArr.Where(m => !IsJunkCapture(m)).ToArray();
+            if (msgArr.Length == 0) return;
             ApplicationContext.CoreService.AddBatchLinks(msgArr.Select(msg =>
             {
                 var dmsg = new Message();
@@ -639,7 +653,7 @@ namespace XDM.Core.BrowserMonitoring
         private void OnDownloadMessage(byte[] body)
         {
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
-            if (msg == null) return;
+            if (msg == null || IsJunkCapture(msg)) return;
             var dmsg = new Message();
             dmsg.Url = msg.Url;
             dmsg.RequestMethod = msg.Method;
@@ -656,7 +670,7 @@ namespace XDM.Core.BrowserMonitoring
         private void OnMediaMessage(byte[] body)
         {
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
-            if (msg == null) return;
+            if (msg == null || IsJunkCapture(msg)) return;
             var dmsg = new Message();
             dmsg.Url = msg.Url;
             dmsg.RequestMethod = msg.Method;
@@ -684,6 +698,7 @@ namespace XDM.Core.BrowserMonitoring
         {
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
             if (msg == null) return;
+            if (!string.IsNullOrEmpty(msg.TabUrl) && NetworkHelper.IsNoiseUrl(msg.TabUrl)) return;
             if (msg.TabId != null)
             {
                 VideoUrlHelper.ClearTabState(msg.TabId);
@@ -706,6 +721,8 @@ namespace XDM.Core.BrowserMonitoring
         {
             var msgArr = JsonConvert.DeserializeObject<ExtensionData[]>(Encoding.UTF8.GetString(body));
             if (msgArr == null) return;
+            msgArr = msgArr.Where(m => !IsJunkCapture(m)).ToArray();
+            if (msgArr.Length == 0) return;
             ApplicationContext.CoreService.AddBatchLinks(msgArr.Select(msg =>
             {
                 var dmsg = new Message();

@@ -199,6 +199,8 @@ namespace XDM.Core
             {
                 var url = message.Url;
                 if (string.IsNullOrEmpty(url)) continue;
+                if (NetworkHelper.IsNoiseUrl(url)) continue;
+                try { if (Helpers.IsBlockedHost(url)) continue; } catch { continue; }
                 var file = FileHelper.SanitizeFileName(message.File ?? FileHelper.GetFileName(new Uri(message.Url)));
                 var si = new SingleSourceHTTPDownloadInfo
                 {
@@ -214,6 +216,15 @@ namespace XDM.Core
 
         public void AddDownload(Message message)
         {
+            // Final safety net: never open a dialog for autocomplete/telemetry/
+            // service-worker/sticker noise, even from clipboard/args paths.
+            if (message == null || string.IsNullOrEmpty(message.Url)) return;
+            if (NetworkHelper.IsNoiseUrl(message.Url))
+            {
+                Log.Debug($"Skipping noise capture: {message.Url}");
+                return;
+            }
+            try { if (Helpers.IsBlockedHost(message.Url)) return; } catch { return; }
             if (ApplicationContext.LinkRefresher.LinkAccepted(message)) return;
 
             // Duplicate capture guard: the same URL already sits in the active list

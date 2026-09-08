@@ -36,6 +36,17 @@ dotnet build app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
 }
 echo "=== Pre-release tests passed successfully ==="
 
+# Extension parity gate: junk-URL lists must match across chrome/firefox/core
+echo "=== Running extension noise-filter parity test ==="
+if command -v node >/dev/null 2>&1; then
+    node scripts/test-noise-filter.mjs || {
+        echo "ERROR: noise-filter parity test failed. Aborting release build." >&2
+        exit 1
+    }
+else
+    echo "WARNING: node not found, skipping noise-filter parity test." >&2
+fi
+
 # Create and clean output directory
 OUT_DIR="$(pwd)/fetchflow-release"
 rm -rf "$OUT_DIR"

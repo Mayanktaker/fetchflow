@@ -1,5 +1,7 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 "use strict";
+// Noise helpers (isNoiseUrl, matchesFileExtInUrl) come from noise-filter.js,
+// loaded first via the manifest background scripts list.
 
 class RequestWatcher {
     constructor(callback, statusCallback) {
@@ -51,6 +53,9 @@ class RequestWatcher {
         if (this.isInValidResourceType(res) || this.isInValidStatus(res)) {
             return false;
         }
+        if (isNoiseUrl(res.url)) {
+            return false;
+        }
 
         let u = new URL(res.url);
 
@@ -86,20 +91,28 @@ class RequestWatcher {
         }
 
         // Query-aware fallback for short file-host links (e.g. bzzhr.to/xxxx).
-        try {
-            const ufull = res.url.toUpperCase();
-            if (this.fileExts.find(e => ufull.indexOf("." + e) >= 0)) {
-                return true;
-            }
-        } catch { }
+        if (matchesFileExtInUrl(res.url, null, this.fileExts)) {
+            return true;
+        }
 
         let contentDisposition = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
         if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
             return true;
         }
 
+        // matchingHosts (youtube/googlevideo) must NOT match every API call on the
+        // host (getDatasyncIdsEndpoint, sw.js_data, stats). Require a media signal:
+        // segmented-playback URL or an audio/video/octet-stream response.
         if (this.matchingHosts.find(h => hostName.indexOf(h) >= 0)) {
-            return true;
+            const low = res.url.toLowerCase();
+            if (low.indexOf("videoplayback") >= 0 || low.indexOf(".m3u8") >= 0 || low.indexOf(".mpd") >= 0) {
+                return true;
+            }
+            const ct = (mediaType && mediaType["value"] ? mediaType["value"] : "").toLowerCase();
+            if (ct.indexOf("audio/") >= 0 || ct.indexOf("video/") >= 0 || ct.indexOf("application/octet") >= 0) {
+                return true;
+            }
+            return false;
         }
     }
 
@@ -138,7 +151,7 @@ class RequestWatcher {
         let req = this.requestMap.get(reqId);
         if (req) {
             this.requestMap.delete(reqId);
-            if (res.url.indexOf("127.0.0.1") >= 0) {
+            if (res.url.indexOf("127.0.0.1") >= 0 || isNoiseUrl(res.url)) {
                 return;
             }
             // Attachment fast-path: take over the response here and cancel the

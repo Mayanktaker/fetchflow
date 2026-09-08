@@ -36,6 +36,8 @@
     <Compile Include="..\XDM.Core\Util\ThemePaletteHelper.cs" Link="Util\ThemePaletteHelper.cs" />
     <Compile Include="..\XDM.Core\Translations\TextResource.cs" Link="Translations\TextResource.cs" />
     <Compile Include="..\XDM.Core\BrowserMonitoring\ExtensionData.cs" Link="BrowserMonitoring\ExtensionData.cs" />
+    <!-- NoiseFilterTests: junk-URL gate shared by IPC handlers and ApplicationCore -->
+    <Compile Include="..\XDM.Core\BrowserMonitoring\NetworkHelper.cs" Link="BrowserMonitoring\NetworkHelper.cs" />
     <!-- SingleInstancePolicyTests + NanoServerResilienceTests: arbitration policy and
          the self-contained IPC HTTP server cluster (TraceLog included once, here) -->
     <Compile Include="..\XDM.Core\SingleInstancePolicy.cs" Link="SingleInstancePolicy.cs" />

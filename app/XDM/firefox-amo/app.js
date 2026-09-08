@@ -1,5 +1,7 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 "use strict";
+// Noise helpers (isNoiseUrl, matchesFileExtInUrl) come from noise-filter.js,
+// loaded first via the manifest background scripts list.
 
 class App {
 
@@ -323,11 +325,19 @@ class App {
     // MV3/Phase2.1: takeover rule (file-extension based; mirrors chrome-extension/app.js)
     shouldTakeOver(url, file, mime, size) {
         if (!url) return false;
+        if (isNoiseUrl(url)) {
+            return false;
+        }
         let u;
         try { u = new URL(url); } catch { return false; }
         if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
         let hostName = u.host;
         if (this.blockedHosts && this.blockedHosts.some(item => hostName.includes(item))) {
+            return false;
+        }
+        // Chat-sticker/image CDNs (fbsbx) are UI chrome, not user downloads —
+        // the user can still force-capture via the context menu.
+        if (hostName.toLowerCase().indexOf("fbsbx.com") >= 0) {
             return false;
         }
         let cleanFile = file ? file.replace(/\.part$/i, "") : "";
@@ -340,15 +350,19 @@ class App {
             return true;
         }
         // Extensionless file-host URLs (e.g. https://bzzhr.to/wjwse1a5544o):
-        // fall back to full-URL (query-aware), MIME, and size signals.
-        try {
-            const fullUrl = (url + " " + (cleanFile || "")).toUpperCase();
-            if (this.fileExts && this.fileExts.some(ext => fullUrl.indexOf("." + ext) >= 0)) {
-                return true;
-            }
-        } catch { }
+        // fall back to query-param-aware, MIME, and size signals.
+        if (matchesFileExtInUrl(url, cleanFile, this.fileExts)) {
+            return true;
+        }
         if (mime) {
             const m = ("" + mime).toLowerCase();
+            // Never hijack pages/documents/APIs the browser should render
+            if (m.indexOf("text/html") >= 0 || m.indexOf("text/plain") >= 0
+                || m.indexOf("application/json") >= 0 || m.indexOf("javascript") >= 0
+                || m.indexOf("text/xml") >= 0 || m.indexOf("application/xml") >= 0
+                || m.indexOf("image/") === 0) {
+                return false;
+            }
             if (m.indexOf("application/octet-stream") >= 0
                 || m.indexOf("application/zip") >= 0
                 || m.indexOf("rar") >= 0
@@ -358,10 +372,9 @@ class App {
                 || m.indexOf("audio/") === 0) {
                 return true;
             }
-            if (m.indexOf("text/html") >= 0 || m.indexOf("text/plain") >= 0) {
-                return false;
-            }
         }
+        // Large attachment with no known extension — still offer it to FetchFlow.
+        // Renderable/API payloads (images, text, json) are excluded above.
         if (size && +size > 1024 * 1024) {
             return true;
         }

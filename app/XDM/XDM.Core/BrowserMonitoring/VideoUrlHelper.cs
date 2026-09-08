@@ -113,13 +113,19 @@ namespace XDM.Core.BrowserMonitoring
 
         public static void ProcessMediaMessage(Message message)
         {
+            // Server-side safety net: drop autocomplete/telemetry/SW/sticker noise
+            // even if an older extension build forwards it.
+            if (NetworkHelper.IsNoiseUrl(message.Url))
+            {
+                return;
+            }
             var contentType = message.GetResponseHeaderFirstValue("Content-Type");
             if (contentType == null)
             {
                 return;
             }
 
-            if (VideoUrlHelper.IsYtFormat(contentType))
+            if (VideoUrlHelper.IsYtFormat(contentType, message.Url))
             {
                 VideoUrlHelper.ProcessPostYtFormats(message);
             }
@@ -153,7 +159,20 @@ namespace XDM.Core.BrowserMonitoring
             {
                 return false;
             }
-            if (url.ToLowerInvariant().Contains("init.mp4"))
+            if (NetworkHelper.IsNoiseUrl(url))
+            {
+                return false;
+            }
+            var lowUrl = (url ?? string.Empty).ToLowerInvariant();
+            var lowCt = (contentType ?? string.Empty).ToLowerInvariant();
+            // Images, pages, scripts and API payloads are never "normal videos"
+            if (lowCt.StartsWith("image/") || lowCt.Contains("text/") ||
+                lowCt.Contains("json") || lowCt.Contains("javascript") ||
+                lowCt.Contains("xml"))
+            {
+                return false;
+            }
+            if (lowUrl.Contains("init.mp4"))
             {
                 suspectedMp4Fragments.Add(new Uri(new Uri(url), ".").AbsoluteUri);
                 return false;
@@ -164,7 +183,8 @@ namespace XDM.Core.BrowserMonitoring
             }
             return (contentType != null && !(contentType.Contains("f4f") ||
                                 contentType.Contains("m4s") || url.Contains("abst") ||
-                                url.Contains("f4x") || url.Contains(".fbcdn")
+                                url.Contains("f4x") || url.Contains(".fbcdn") ||
+                                lowUrl.Contains("fbsbx.com")
                                 || url.Contains("http://127.0.0.1:9614")));
         }
 
@@ -835,17 +855,16 @@ namespace XDM.Core.BrowserMonitoring
             return url?.ToLowerInvariant().Contains(".mpd") ?? false;
         }
 
-        internal static bool IsYtFormat(string? contentType)
+        internal static bool IsYtFormat(string? contentType, string? url = null)
         {
             if (string.IsNullOrEmpty(contentType)) return false;
-            foreach (var key in new string[] { "application/json" })
-            {
-                if (contentType!.ToLowerInvariant().Contains(key))
-                {
-                    return true;
-                }
-            }
-            return false;
+            if (!contentType!.ToLowerInvariant().Contains("application/json")) return false;
+            // application/json alone matches every autocomplete/telemetry API —
+            // only treat it as a YouTube player response on YouTube-ish hosts.
+            if (string.IsNullOrEmpty(url)) return false;
+            var low = url.ToLowerInvariant();
+            return low.Contains("youtube.com") || low.Contains("youtu.be") ||
+                   low.Contains("googlevideo.com");
         }
 
         public static bool AddToQueue(DashInfo info)
@@ -983,6 +1002,8 @@ namespace XDM.Core.BrowserMonitoring
         public static void ProcessMediaTab(string url, string tabId)
         {
             if (!IsYdlSupportedUrl(url))
+                return;
+            if (NetworkHelper.IsNoiseUrl(url))
                 return;
 
             // Build a dedup key — strip query params after the video ID for YouTube,

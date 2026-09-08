@@ -3,6 +3,7 @@
 import Logger from './logger.js';
 import RequestWatcher from './request-watcher.js';
 import Connector from './connector.js';
+import { isNoiseUrl, matchesFileExtInUrl } from './noise-filter.js';
 
 const BLOB_CHUNK_SIZE = 512 * 1024; // 512 KiB per chunk — keeps SW memory bounded
 const DEFAULT_BLOB_MAX_BYTES = 256 * 1024 * 1024; // 256 MiB default cap
@@ -388,12 +389,21 @@ export default class App {
     }
 
     shouldTakeOver(url, file, mime, size) {
-        let u = new URL(url);
+        if (!url || isNoiseUrl(url)) {
+            return false;
+        }
+        let u;
+        try { u = new URL(url); } catch { return false; }
         if (!this.isSupportedProtocol(url)) {
             return false;
         }
         let hostName = u.host;
         if (this.blockedHosts.find(item => hostName.indexOf(item) >= 0)) {
+            return false;
+        }
+        // Chat-sticker/image CDNs (fbsbx) are UI chrome, not user downloads —
+        // the user can still force-capture via the context menu.
+        if (hostName.toLowerCase().indexOf("fbsbx.com") >= 0) {
             return false;
         }
         let path = file || u.pathname;
@@ -402,19 +412,25 @@ export default class App {
             upath = u.pathname.toUpperCase();
         }
         if (this.fileExts.find(ext => upath.endsWith(ext))) {
+            // A filename extension match on a noise host already returned above;
+            // autocomplete/telemetry endpoints never carry a real filename ext.
             return true;
         }
         // Extensionless file-host URLs (e.g. https://bzzhr.to/wjwse1a5544o): the
         // filename may not carry an extension yet, but the download is real —
-        // fall back to full-URL (query-aware), MIME, and size signals.
-        try {
-            const fullUrl = (url + " " + (file || "")).toUpperCase();
-            if (this.fileExts.find(ext => fullUrl.indexOf("." + ext) >= 0)) {
-                return true;
-            }
-        } catch { }
+        // fall back to query-param-aware, MIME, and size signals.
+        if (matchesFileExtInUrl(url, file, this.fileExts)) {
+            return true;
+        }
         if (mime) {
             const m = ("" + mime).toLowerCase();
+            // Never hijack pages/documents/APIs the browser should render
+            if (m.indexOf("text/html") >= 0 || m.indexOf("text/plain") >= 0
+                || m.indexOf("application/json") >= 0 || m.indexOf("javascript") >= 0
+                || m.indexOf("text/xml") >= 0 || m.indexOf("application/xml") >= 0
+                || m.indexOf("image/") === 0) {
+                return false;
+            }
             if (m.indexOf("application/octet-stream") >= 0
                 || m.indexOf("application/zip") >= 0
                 || m.indexOf("rar") >= 0
@@ -424,14 +440,11 @@ export default class App {
                 || m.indexOf("audio/") === 0) {
                 return true;
             }
-            // Never hijack pages/documents the browser should render
-            if (m.indexOf("text/html") >= 0 || m.indexOf("text/plain") >= 0) {
-                return false;
-            }
         }
         // Large attachment with no known extension — still offer it to FetchFlow
         // instead of silently letting the browser keep it (file hosts often hide
         // the real name behind a short link until Content-Disposition resolves).
+        // Renderable/API payloads (images, text, json) are excluded above.
         if (size && +size > 1024 * 1024) {
             return true;
         }
