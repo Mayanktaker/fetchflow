@@ -155,7 +155,12 @@ jobs:
                       filename, url = asset_map[key]
                       # Update href
                       content = re.sub(
-                          rf'(<a [^>]*id="{el_id}"[^>]*href=")[^"]+(")',
+                          rf'(<a\s+[^>]*?id="{el_id}"[^>]*?\shref=")[^"]+(")',
+                          rf'\g<1>{url}\g<2>',
+                          content
+                      )
+                      content = re.sub(
+                          rf'(<a\s+[^>]*?\shref=")[^"]+("[^>]*?id="{el_id}")',
                           rf'\g<1>{url}\g<2>',
                           content
                       )
