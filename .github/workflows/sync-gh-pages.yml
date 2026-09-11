@@ -195,7 +195,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           if [ -n "$(git status --porcelain)" ]; then
-            git add index.html docs/index.html
+            git add index.html docs/index.html privacy.html docs/privacy.html 2>/dev/null || git add index.html docs/index.html
             git commit -m "chore(gh-pages): auto-sync download links and checksums for latest release"
             git push origin gh-pages
             echo "Successfully pushed latest release updates to gh-pages."
