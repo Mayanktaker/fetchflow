@@ -401,3 +401,4 @@ Screenshot_*.png
 screenshot_*.png
 *.log
 .zcode/
+.serena/

@@ -75,14 +75,14 @@ namespace XDM.Core
 
         public static string[] DefaultFileExtensions => new string[]
             {
-                "3GP", "7Z", "AAC", "ACE", "AI", "AIFF", "ALAC", "APK", "APPIMAGE", "AVI", "AVIF", "AZW3",
-                "BIN", "BMP", "BZ2", "CAB", "CBR", "CBZ", "CSV", "DEB", "DJVU", "DMG", "DOC", "DOCX",
-                "EPUB", "EXE", "F4V", "FLAC", "FLATPAK", "FLATPAKREF", "FLV", "GIF", "GZ", "HEIC", "HEIF",
-                "ICO", "IMG", "ISO", "JAR", "JPEG", "JPG", "KEY", "M2TS", "M4A", "M4V", "MD", "MID",
+                "3GP", "7Z", "AAC", "ACE", "AI", "AIFF", "ALAC", "APK", "APPIMAGE", "AVI", "AZW3",
+                "BIN", "BZ2", "CAB", "CBR", "CBZ", "CSV", "DEB", "DJVU", "DMG", "DOC", "DOCX",
+                "EPUB", "EXE", "F4V", "FLAC", "FLATPAK", "FLATPAKREF", "FLV", "GZ", "HEIC", "HEIF",
+                "IMG", "ISO", "JAR", "KEY", "M2TS", "M4A", "M4V", "MD", "MID",
                 "MIDI", "MKV", "MOBI", "MOV", "MP3", "MP4", "MPEG", "MPG", "MSI", "MSIX", "ODP", "ODS",
-                "ODT", "OGA", "OGG", "OGV", "OPUS", "PAGES", "PDF", "PKG", "PNG", "PPT", "PPTX", "PSD",
-                "QCOW2", "RAR", "RAW", "RPM", "RTF", "RUN", "SH", "SIT", "SITX", "SNAP", "SVG", "TAR",
-                "TGZ", "TIFF", "TS", "TXT", "VHD", "VHDX", "VMDK", "VOB", "WAV", "WEBM", "WEBP", "WMA",
+                "ODT", "OGA", "OGG", "OGV", "OPUS", "PAGES", "PDF", "PKG", "PPT", "PPTX", "PSD",
+                "QCOW2", "RAR", "RAW", "RPM", "RTF", "RUN", "SH", "SIT", "SITX", "SNAP", "TAR",
+                "TGZ", "TS", "TXT", "VHD", "VHDX", "VMDK", "VOB", "WAV", "WEBM", "WMA",
                 "WMV", "XLS", "XLSX", "XZ", "ZIP", "ZIPX", "ZST"
             };
 

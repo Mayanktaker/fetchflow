@@ -48,6 +48,7 @@ const junk = [
     "https://www.youtube.com/sw.js_data",
     "https://www.youtube.com/api/timedtext?v=abc&caps=asr",
     "https://suggestqueries-clients6.youtube.com/complete/search?client=youtube&q=test",
+    "https://devin.ai/_next/image?url=%2Fassets%2Fimages%2Fhome-hero%2Fhero_new.webp&w=3840&q=75",
 ];
 for (const u of junk) {
     check(chromeIsNoise(u) && ffSandbox.__isNoise(u), `junk rejected: ${u.slice(0, 60)}…`);

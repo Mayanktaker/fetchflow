@@ -82,21 +82,15 @@ class RequestWatcher {
 
         const responseHeaders = res.responseHeaders || [];
         let mediaType = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-TYPE");
+        if (mediaType && ("" + mediaType["value"]).toLowerCase().startsWith("image/")) {
+            return false;
+        }
         if (mediaType && this.mediaTypes.find(m => mediaType["value"].indexOf(m) >= 0)) {
             return true;
         }
 
-        if (this.fileExts.find(e => upath.endsWith("." + e))) {
-            return true;
-        }
-
-        // Query-aware fallback for short file-host links (e.g. bzzhr.to/xxxx).
-        if (matchesFileExtInUrl(res.url, null, this.fileExts)) {
-            return true;
-        }
-
-        let contentDisposition = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
-        if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
+        // Query-aware fallback for media stream links
+        if (matchesFileExtInUrl(res.url, null, this.mediaExts)) {
             return true;
         }
 
@@ -130,10 +124,22 @@ class RequestWatcher {
     // Attachment fast-path: server explicitly forces a save dialog
     // (Content-Disposition: attachment; filename="...rar"). Returns the filename
     // when its extension is a known download type, else null. Inline responses
-    // (video/audio streaming, pages) never match — playback stays untouched.
+    // (video/audio streaming, images, subresources, pages) never match — playback stays untouched.
     getAttachmentFilename(res) {
         try {
+            // Subresources and page assets must never be hijacked as file downloads
+            if (res.type && res.type !== "main_frame" && res.type !== "sub_frame" && res.type !== "other") {
+                return null;
+            }
             const headers = res.responseHeaders || [];
+            // Never hijack images or media streams via attachment fast-path (media routes to /media)
+            const ct = headers.find(h => h["name"].toUpperCase() === "CONTENT-TYPE");
+            if (ct && ct["value"]) {
+                const lowCt = ct["value"].toLowerCase();
+                if (lowCt.startsWith("image/") || lowCt.startsWith("video/") || lowCt.startsWith("audio/")) {
+                    return null;
+                }
+            }
             const cd = headers.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
             if (!cd || !cd["value"] || cd["value"].toLowerCase().indexOf("attachment") < 0) return null;
             const v = cd["value"];
@@ -287,6 +293,16 @@ class RequestWatcher {
     }
 
     isInValidResourceType(res) {
-        return res.type && (res.type === "stylesheet" || res.type === "script" || res.type === "font" || res.type === "websocket");
+        return res.type && (
+            res.type === "stylesheet" ||
+            res.type === "script" ||
+            res.type === "font" ||
+            res.type === "websocket" ||
+            res.type === "image" ||
+            res.type === "imageset" ||
+            res.type === "ping" ||
+            res.type === "beacon" ||
+            res.type === "csp_report"
+        );
     }
 }

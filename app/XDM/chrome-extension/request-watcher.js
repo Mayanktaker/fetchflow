@@ -53,7 +53,17 @@ export default class RequestWatcher {
     }
 
     isInValidResourceType(res) {
-        return res.type && (res.type === "stylesheet" || res.type === "script" || res.type === "font" || res.type === "websocket");
+        return res.type && (
+            res.type === "stylesheet" ||
+            res.type === "script" ||
+            res.type === "font" ||
+            res.type === "websocket" ||
+            res.type === "image" ||
+            res.type === "imageset" ||
+            res.type === "ping" ||
+            res.type === "beacon" ||
+            res.type === "csp_report"
+        );
     }
 
     isMatchingRequest(res) {
@@ -89,21 +99,15 @@ export default class RequestWatcher {
 
         const responseHeaders = res.responseHeaders || [];
         let mediaType = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-TYPE");
+        if (mediaType && ("" + mediaType["value"]).toLowerCase().startsWith("image/")) {
+            return false;
+        }
         if (mediaType && this.mediaTypes.find(m => mediaType["value"].indexOf(m) >= 0)) {
             return true;
         }
 
-        if (this.fileExts.find(e => upath.endsWith("." + e))) {
-            return true;
-        }
-
-        // Query-aware fallback for short file-host links (e.g. bzzhr.to/xxxx).
-        if (matchesFileExtInUrl(res.url, null, this.fileExts)) {
-            return true;
-        }
-
-        let contentDisposition = responseHeaders.find(h => h["name"].toUpperCase() === "CONTENT-DISPOSITION");
-        if (contentDisposition && this.fileExts.find(ext => contentDisposition["value"].toUpperCase().indexOf("." + ext) >= 0)) {
+        // Query-aware fallback for media stream links
+        if (matchesFileExtInUrl(res.url, null, this.mediaExts)) {
             return true;
         }
 

@@ -14,7 +14,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | Video | `yt-dlp` CLI wrapper via `VideoUrlHelper.cs` |
 | Extensions | Manifest V3 vanilla JS: `app/XDM/chrome-extension/`, `app/XDM/firefox-amo/` (shared `noise-filter.js` twin + core `NetworkHelper.cs` — keep all 3 blocklists identical) |
 | Toolchain | .NET SDK 8.0.424 at `~/.dotnet8`; `rpmbuild`, `dpkg-deb`, `zip`, `tar`; no root/sudo |
-| Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.2` (sync `AppInfo.cs` + both `manifest.json`) |
+| Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.3` (sync `AppInfo.cs` + both `manifest.json`) |
 
 ## Docs (don't duplicate, point here)
 

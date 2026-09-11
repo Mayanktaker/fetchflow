@@ -406,6 +406,18 @@ export default class App {
         if (hostName.toLowerCase().indexOf("fbsbx.com") >= 0) {
             return false;
         }
+
+        if (mime) {
+            const m = ("" + mime).toLowerCase();
+            // Never hijack pages/documents/APIs/images the browser should render
+            if (m.indexOf("text/html") >= 0 || m.indexOf("text/plain") >= 0
+                || m.indexOf("application/json") >= 0 || m.indexOf("javascript") >= 0
+                || m.indexOf("text/xml") >= 0 || m.indexOf("application/xml") >= 0
+                || m.indexOf("image/") === 0) {
+                return false;
+            }
+        }
+
         let path = file || u.pathname;
         let upath = path.toUpperCase();
         if (file && !this.fileExts.find(ext => upath.endsWith(ext))) {
@@ -424,13 +436,6 @@ export default class App {
         }
         if (mime) {
             const m = ("" + mime).toLowerCase();
-            // Never hijack pages/documents/APIs the browser should render
-            if (m.indexOf("text/html") >= 0 || m.indexOf("text/plain") >= 0
-                || m.indexOf("application/json") >= 0 || m.indexOf("javascript") >= 0
-                || m.indexOf("text/xml") >= 0 || m.indexOf("application/xml") >= 0
-                || m.indexOf("image/") === 0) {
-                return false;
-            }
             if (m.indexOf("application/octet-stream") >= 0
                 || m.indexOf("application/zip") >= 0
                 || m.indexOf("rar") >= 0

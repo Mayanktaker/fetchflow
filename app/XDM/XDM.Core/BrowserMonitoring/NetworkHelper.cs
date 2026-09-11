@@ -1,4 +1,4 @@
-// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -21,6 +21,7 @@ namespace XDM.Core.BrowserMonitoring
             "play.google.com/log", "google.com/log",
             "safebrowsing",
             "fbsbx.com",
+            "_next/image",
         };
 
         public static bool IsNoiseUrl(string? url)
@@ -57,6 +58,53 @@ namespace XDM.Core.BrowserMonitoring
             {
                 referersToSkip[ComputeHash(referer!)] = DateTime.Now;
             }
+        }
+
+        // True for progressive video/audio captures that belong in the extension
+        // menu, not in an immediate New Download dialog (e.g. CDN episode bursts).
+        public static bool IsStreamableMedia(string? url, string? file, string? mime, IEnumerable<string> videoExts)
+        {
+            var lowMime = (mime ?? string.Empty).ToLowerInvariant();
+            if (lowMime.StartsWith("video/") || lowMime.StartsWith("audio/") ||
+                lowMime.Contains("mpegurl") || lowMime.Contains("m3u8") ||
+                lowMime.Contains("dash") || lowMime.Contains("mpd")) return true;
+
+            var lowUrl = (url ?? string.Empty).ToLowerInvariant();
+            if (lowUrl.Contains("videoplayback") || lowUrl.Contains(".m3u8") ||
+                lowUrl.Contains(".mpd") || lowUrl.Contains("mime=video") ||
+                lowUrl.Contains("mime=audio")) return true;
+
+            var ext = GetMediaExtension(url, file);
+            if (string.IsNullOrEmpty(ext)) return false;
+            foreach (var vid in videoExts)
+            {
+                if (string.Equals(ext, vid, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
+        }
+
+        // Extension from explicit filename first, else URL path (no query noise).
+        public static string GetMediaExtension(string? url, string? file)
+        {
+            foreach (var candidate in new[] { file, TryGetUrlPath(url) })
+            {
+                if (string.IsNullOrEmpty(candidate)) continue;
+                var dot = candidate.LastIndexOf('.');
+                if (dot < 0 || dot == candidate.Length - 1) continue;
+                var ext = candidate.Substring(dot + 1);
+                var cut = ext.IndexOfAny(new[] { '?', '#', '&', ';' });
+                if (cut >= 0) ext = ext.Substring(0, cut);
+                if (!string.IsNullOrEmpty(ext)) return ext.ToUpperInvariant();
+            }
+            return string.Empty;
+        }
+
+        // Path portion of a URL without query/fragment (null-safe for matching).
+        private static string? TryGetUrlPath(string? url)
+        {
+            if (string.IsNullOrEmpty(url)) return null;
+            try { return new Uri(url).AbsolutePath; }
+            catch { return null; }
         }
 
         public static bool IsRefererSkipped(string? referer)

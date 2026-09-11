@@ -15,7 +15,7 @@ command -v sqlite3 >/dev/null 2>&1 || { echo "ERROR: sqlite3 not found." >&2; ex
 DB="${1:-$HOME/.fetchflow-app-data/downloads.db}"
 [ -f "$DB" ] || { echo "ERROR: DB not found: $DB" >&2; exit 1; }
 # Single predicate mirroring NetworkHelper.IsNoiseUrl + both noise-filter.js twins
-PRED="primary_url LIKE '%complete/search%' OR primary_url LIKE '%/complete/s%' OR primary_url LIKE '%google.com/async/%' OR primary_url LIKE '%google.com/httpservice/%' OR primary_url LIKE '%getdatasyncids%' OR primary_url LIKE '%sw.js%' OR primary_url LIKE '%/api/timedtext%' OR primary_url LIKE '%gen_204%' OR primary_url LIKE '%/api/stats%' OR primary_url LIKE '%google.com/log%' OR primary_url LIKE '%safebrowsing%' OR primary_url LIKE '%fbsbx.com%'"
+PRED="primary_url LIKE '%complete/search%' OR primary_url LIKE '%/complete/s%' OR primary_url LIKE '%google.com/async/%' OR primary_url LIKE '%google.com/httpservice/%' OR primary_url LIKE '%getdatasyncids%' OR primary_url LIKE '%sw.js%' OR primary_url LIKE '%/api/timedtext%' OR primary_url LIKE '%gen_204%' OR primary_url LIKE '%/api/stats%' OR primary_url LIKE '%google.com/log%' OR primary_url LIKE '%safebrowsing%' OR primary_url LIKE '%fbsbx.com%' OR primary_url LIKE '%_next/image%'"
 
 BEFORE=$(sqlite3 "$DB" "SELECT COUNT(*) FROM downloads WHERE $PRED;")
 echo "Junk rows found: $BEFORE"

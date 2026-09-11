@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -238,6 +239,20 @@ namespace XDM.Core
                 return;
             }
 
+            // Streamable media belongs in the extension video list, not in a
+            // New Download dialog per URL (e.g. BunnyCDN episode bursts).
+            if (IsStreamableMediaRedirect(message))
+            {
+                Log.Debug($"Routing streamable media to video list: {message.Url}");
+                var mediaMsg = EnsureMediaHeaders(message);
+                System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    try { BrowserMonitoring.VideoUrlHelper.ProcessMediaMessage(mediaMsg); }
+                    catch (Exception ex) { Log.Debug("Media redirect error: " + ex.Message); }
+                });
+                return;
+            }
+
             if (Config.Instance.StartDownloadAutomatically)
             {
                 var url = message.Url;
@@ -265,7 +280,7 @@ namespace XDM.Core
             }
             else
             {
-                Log.Debug("Adding download");
+                Log.Debug($"Adding download: {message.File} ({message.Url})");
                 ApplicationContext.Application.ShowNewDownloadDialog(message);
             }
         }
@@ -318,6 +333,46 @@ namespace XDM.Core
             {
                 recentCaptureUrls.Remove(url);
             }
+        }
+
+        // True for progressive video/audio captures that must surface in the
+        // extension menu instead of opening an immediate download dialog.
+        public static bool IsStreamableMediaRedirect(Message message)
+        {
+            if (message == null || string.IsNullOrEmpty(message.Url)) return false;
+            return BrowserMonitoring.NetworkHelper.IsStreamableMedia(
+                message.Url, message.File,
+                message.GetResponseHeaderFirstValue("Content-Type"),
+                Config.Instance.VideoExtensions);
+        }
+
+        // ProcessMediaMessage drops captures without Content-Type, so infer one
+        // from the video extension when the browser only sent a URL + filename.
+        public static Message EnsureMediaHeaders(Message message)
+        {
+            if (message.GetResponseHeaderFirstValue("Content-Type") == null)
+            {
+                var ext = BrowserMonitoring.NetworkHelper.GetMediaExtension(message.Url, message.File);
+                var mime = ext switch
+                {
+                    "MP4" or "M4V" => "video/mp4",
+                    "WEBM" => "video/webm",
+                    "MKV" => "video/x-matroska",
+                    "FLV" or "F4V" => "video/x-flv",
+                    "AVI" => "video/x-msvideo",
+                    "MOV" => "video/quicktime",
+                    "WMV" => "video/x-ms-wmv",
+                    "MPG" or "MPEG" => "video/mpeg",
+                    "3GP" => "video/3gpp",
+                    "OGV" => "video/ogg",
+                    "TS" or "MTS" or "M2TS" => "video/mp2t",
+                    "M3U8" => "application/x-mpegURL",
+                    "MPD" => "application/dash+xml",
+                    _ => "video/mp4",
+                };
+                message.ResponseHeaders["Content-Type"] = new List<string> { mime };
+            }
+            return message;
         }
 
         public void ResumeNonInteractiveDownloads(IEnumerable<string> idList)

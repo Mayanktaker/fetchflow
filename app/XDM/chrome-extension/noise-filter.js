@@ -11,6 +11,7 @@ export const NOISE_URL_SUBSTRINGS = [
     "play.google.com/log", "google.com/log",
     "safebrowsing",
     "fbsbx.com",
+    "_next/image",
 ];
 
 // True for autocomplete/telemetry/SW/sticker-CDN noise that must never capture
