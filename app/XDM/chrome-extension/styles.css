@@ -510,6 +510,20 @@ body.popup {
   border-color: rgba(234, 179, 8, 0.45);
 }
 
+.btn-queued {
+  background: var(--success) !important;
+  color: #ffffff !important;
+  border-color: var(--success) !important;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.btn-quick-audio.btn-queued {
+  background-color: var(--success) !important;
+  color: #ffffff !important;
+  border-color: var(--success) !important;
+}
+
 .media-card:hover {
   background-color: var(--bg-card-hover);
   border-color: var(--accent);

@@ -6,6 +6,7 @@ class VideoPopup {
         this.filterQuery = "";
         this.currentScope = "current"; // "current" | "all"
         this.activeTabId = null;
+        this.preferredQuality = "";
         this.soundEnabled = false;
         this.healthInterval = null;
     }
@@ -27,6 +28,18 @@ class VideoPopup {
             });
         } catch (_) {}
 
+        // Load saved user preferences: sound chime & preferred resolution tier
+        chrome.storage.local.get(["fetchflowSoundEnabled", "fetchflowPreferredQuality"], (res) => {
+            if (res) {
+                this.soundEnabled = !!res.fetchflowSoundEnabled;
+                this.preferredQuality = res.fetchflowPreferredQuality || "";
+                this.updateSoundIcon();
+                if (this.rawList && this.rawList.length > 0) {
+                    this.applyFilter();
+                }
+            }
+        });
+
         // Request initial status from background script
         chrome.runtime.sendMessage({ type: "stat" }, this.onMsg.bind(this));
 
@@ -41,12 +54,6 @@ class VideoPopup {
 
         window.addEventListener('unload', () => {
             if (this.healthInterval) clearInterval(this.healthInterval);
-        });
-
-        // Load audio chime setting
-        chrome.storage.local.get(["fetchflowSoundEnabled"], (res) => {
-            this.soundEnabled = !!res.fetchflowSoundEnabled;
-            this.updateSoundIcon();
         });
 
         const soundToggle = document.getElementById("soundToggle");
@@ -200,10 +207,10 @@ class VideoPopup {
 
         // Download the best/selected resolution for each distinct video group
         groups.forEach((grp, idx) => {
-            const bestId = grp.items[0]?.id;
-            if (bestId) {
+            const targetId = grp.selectedId || grp.items[0]?.id;
+            if (targetId) {
                 setTimeout(() => {
-                    chrome.runtime.sendMessage({ type: "vid", itemId: bestId });
+                    chrome.runtime.sendMessage({ type: "vid", itemId: targetId });
                 }, idx * 120);
             }
         });
@@ -255,8 +262,8 @@ class VideoPopup {
     }
 
     matchesCurrentTab(item) {
-        if (!this.activeTabId) return true;
-        if (item.tabId == null) return true;
+        if (!this.activeTabId || this.activeTabId === "-1") return true;
+        if (item.tabId == null || item.tabId === 0 || item.tabId === -1) return true;
         return String(item.tabId) === String(this.activeTabId);
     }
 
@@ -293,6 +300,18 @@ class VideoPopup {
         if (combined.includes("WEBM")) return "WEBM";
         if (combined.includes("MKV")) return "MKV";
         return "VIDEO";
+    }
+
+    extractQualityKey(text, info) {
+        const combined = ((text || "") + " " + (info || "")).toUpperCase();
+        if (combined.includes("2160") || combined.includes("4K")) return "4K";
+        if (combined.includes("1440") || combined.includes("2K")) return "2K";
+        if (combined.includes("1080")) return "1080";
+        if (combined.includes("720")) return "720";
+        if (combined.includes("480")) return "480";
+        if (combined.includes("360")) return "360";
+        if (combined.includes("AUDIO")) return "AUDIO";
+        return "";
     }
 
     isAudioStream(item) {
@@ -463,11 +482,28 @@ class VideoPopup {
         }, 1800);
     }
 
-    triggerDownloadItem(card, id, text) {
+    triggerDownloadItem(card, id, text, triggerBtn) {
         if (card) {
             card.classList.add('media-card-downloading');
             setTimeout(() => card.classList.remove('media-card-downloading'), 600);
         }
+
+        // Reassuring button confirmation state
+        if (triggerBtn) {
+            const originalHtml = triggerBtn.innerHTML;
+            triggerBtn.classList.add('btn-queued');
+            triggerBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Queued</span>
+            `;
+            setTimeout(() => {
+                triggerBtn.classList.remove('btn-queued');
+                triggerBtn.innerHTML = originalHtml;
+            }, 1400);
+        }
+
         const shortName = text && text.length > 28 ? text.substring(0, 25) + '...' : (text || 'Media');
         this.showToast(`Starting download: ${shortName}`);
         chrome.runtime.sendMessage({ type: "vid", itemId: id });
@@ -485,7 +521,22 @@ class VideoPopup {
 
     createGroupedCard(group) {
         const isAudioOnly = group.items.every(it => this.isAudioStream(it));
-        const badge = group.topBadge || (isAudioOnly ? "AUDIO" : "VIDEO");
+
+        // Find if user has a matching quality preference in this group
+        let defaultIndex = 0;
+        if (this.preferredQuality) {
+            const preferredIdx = group.items.findIndex(it => {
+                const key = this.extractQualityKey(it.text, it.info);
+                return key && key.toUpperCase() === this.preferredQuality.toUpperCase();
+            });
+            if (preferredIdx !== -1) {
+                defaultIndex = preferredIdx;
+            }
+        }
+
+        const initialSelectedItem = group.items[defaultIndex];
+        group.selectedId = initialSelectedItem.id;
+        const initialBadge = this.getFormatBadge(initialSelectedItem.text, initialSelectedItem.info);
 
         const card = document.createElement('div');
         card.className = `media-card-grouped${isAudioOnly ? ' media-card-audio' : ''}`;
@@ -496,8 +547,9 @@ class VideoPopup {
         headerRow.className = 'media-card-header';
 
         const badgeElem = document.createElement('div');
-        badgeElem.className = `media-card-badge${isAudioOnly ? ' media-card-badge-audio' : ''}`;
-        badgeElem.textContent = badge;
+        const isInitialAudio = this.isAudioStream(initialSelectedItem);
+        badgeElem.className = `media-card-badge${isInitialAudio ? ' media-card-badge-audio' : ''}`;
+        badgeElem.textContent = initialBadge;
 
         const titleElem = document.createElement('div');
         titleElem.className = 'media-card-header-title';
@@ -541,7 +593,30 @@ class VideoPopup {
             const opt = document.createElement('option');
             opt.value = it.id;
             opt.textContent = this.getFormatOptionLabel(it, idx === 0);
+            if (idx === defaultIndex) {
+                opt.selected = true;
+            }
             select.appendChild(opt);
+        });
+
+        // Dynamic Badge update + Preference memory on dropdown change
+        select.addEventListener('change', () => {
+            const chosenId = select.value;
+            group.selectedId = chosenId;
+            const chosenItem = group.items.find(it => String(it.id) === String(chosenId));
+            if (chosenItem) {
+                const newBadge = this.getFormatBadge(chosenItem.text, chosenItem.info);
+                const isChosenAudio = this.isAudioStream(chosenItem);
+                badgeElem.textContent = newBadge;
+                badgeElem.className = `media-card-badge${isChosenAudio ? ' media-card-badge-audio' : ''}`;
+
+                // Persist preferred resolution tier across sessions
+                const qualityKey = this.extractQualityKey(chosenItem.text, chosenItem.info);
+                if (qualityKey) {
+                    this.preferredQuality = qualityKey;
+                    chrome.storage.local.set({ "fetchflowPreferredQuality": qualityKey });
+                }
+            }
         });
 
         const dlBtn = document.createElement('button');
@@ -557,7 +632,7 @@ class VideoPopup {
         dlBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const selectedId = select.value;
-            this.triggerDownloadItem(card, selectedId, group.title);
+            this.triggerDownloadItem(card, selectedId, group.title, dlBtn);
         });
 
         selectorRow.appendChild(select);
@@ -577,7 +652,7 @@ class VideoPopup {
             `;
             audioBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.triggerDownloadItem(card, group.audioItem.id, `${group.title} (Audio)`);
+                this.triggerDownloadItem(card, group.audioItem.id, `${group.title} (Audio)`, audioBtn);
             });
             selectorRow.appendChild(audioBtn);
         }
