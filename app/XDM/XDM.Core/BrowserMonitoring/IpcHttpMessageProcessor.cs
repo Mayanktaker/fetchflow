@@ -227,7 +227,7 @@ namespace XDM.Core.BrowserMonitoring
             {
                 return;
             }
-            ApplicationContext.VideoTracker.AddVideoDownload(msg.Vid);
+            ApplicationContext.VideoTracker.AddVideoDownload(msg.Vid, msg.ConvertToMp3);
         }
 
         private void OnTabUpdateMessage(RequestContext context)
@@ -714,7 +714,7 @@ namespace XDM.Core.BrowserMonitoring
         {
             var msg = JsonConvert.DeserializeObject<ExtensionData>(Encoding.UTF8.GetString(body));
             if (msg == null) return;
-            ApplicationContext.VideoTracker.AddVideoDownload(msg.Vid);
+            ApplicationContext.VideoTracker.AddVideoDownload(msg.Vid, msg.ConvertToMp3);
         }
 
         private void OnBatchMessage(byte[] body)

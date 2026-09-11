@@ -125,8 +125,13 @@ namespace XDM.Core.BrowserMonitoring
             }
             else if (videoList.ContainsKey(videoId))
             {
-                ApplicationContext.CoreService.StartDownload(videoList[videoId].Key, name, convertToMp3 ? FileNameFetchMode.None : FileNameFetchMode.ExtensionOnly,
-                    folder, startImmediately, authentication, proxyInfo, queueId, convertToMp3);
+                var convert = convertToMp3 || videoList[videoId].Key.ConvertToMp3;
+                if (convert && !name.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+                {
+                    name = Path.ChangeExtension(name, ".mp3");
+                }
+                ApplicationContext.CoreService.StartDownload(videoList[videoId].Key, name, convert ? FileNameFetchMode.None : FileNameFetchMode.ExtensionOnly,
+                    folder, startImmediately, authentication, proxyInfo, queueId, convert);
             }
             else if (hlsVideoList.ContainsKey(videoId))
             {
@@ -323,7 +328,7 @@ namespace XDM.Core.BrowserMonitoring
             }
         }
 
-        public void AddVideoDownload(string videoId)
+        public void AddVideoDownload(string videoId, bool convertToMp3 = false)
         {
             var name = string.Empty;
             var size = 0L;
@@ -344,6 +349,10 @@ namespace XDM.Core.BrowserMonitoring
                 size = videoList[videoId].Value.Size;
                 contentType = videoList[videoId].Key.ContentType;
                 valid = true;
+                if (convertToMp3)
+                {
+                    videoList[videoId].Key.ConvertToMp3 = true;
+                }
             }
             else if (hlsVideoList.ContainsKey(videoId))
             {
@@ -368,13 +377,17 @@ namespace XDM.Core.BrowserMonitoring
             }
             if (valid)
             {
+                var isAudio = (videoList.ContainsKey(videoId) && videoList[videoId].Key.ConvertToMp3)
+                    || (!string.IsNullOrEmpty(contentType) && contentType.StartsWith("audio", StringComparison.OrdinalIgnoreCase));
+                var shouldConvert = isAudio && (convertToMp3 || (videoList.ContainsKey(videoId) && videoList[videoId].Key.ConvertToMp3));
+
                 if (Config.Instance.StartDownloadAutomatically && IsFFmpegOK(videoId))
                 {
                     var targetFolder = FileHelper.GetDownloadFolderByFileName(name);
                     StartVideoDownload(
                         videoId, FileHelper.SanitizeFileName(name),
                         targetFolder, true, null, Config.Instance.Proxy,
-                    Helpers.GetSpeedLimit(), null);
+                        Helpers.GetSpeedLimit(), null, shouldConvert);
                 }
                 else
                 {

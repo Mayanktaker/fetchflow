@@ -56,20 +56,16 @@
 
 ---
 
-## ✨ What's New in 9.1.15.3
+## ✨ What's New in 9.1.15.4
 
 **What's new**
-- **Extension Media Menu Integration**: Streaming videos and playlist episodes detected while browsing now cleanly queue into the FetchFlow browser extension toolbar menu, allowing you to choose exactly when and what to download with a single click.
-- New list header strip with a select-all checkbox and clickable **Name / Size** sort headers with direction arrows — your sort choice is remembered across restarts
-- The header strip now uses each theme's **accent color** with bold white labels and a thin bottom divider, consistent across all 14 themes
-- Downloads from file-host short links (like bzzhr.to) are now **captured reliably** — extensionless URLs, POST downloads, and MIME/size fallbacks are all handled
+- **Convert Audio to MP3**: Direct one-click toggle switch in the browser extension toolbar menu to encode captured streaming audio into universal MP3 format.
+- **Audio Bitrate Badges & Labels**: View exact audio bitrates (e.g. `128k`, `160k`, `256k`, `320k`) directly on media cards and within format dropdown menus.
+- **Enhanced Media Grouping**: Highest quality audio streams automatically prioritize to the top of format selections.
 
 **Bug fixes**
-- **No More Image Download Popups**: Fixed an issue where modern web pages loading web images (such as Next.js image assets) would accidentally trigger repeated desktop "New Download" popup dialogues.
-- **Improved Filter Accuracy**: Renderable images and background web assets are now properly ignored by the browser helper extension.
-- Firefox's own save dialog **no longer appears** when FetchFlow takes over a download
-- Fixed multi-select collapsing to a single row when right-clicking after Ctrl+A, which deleted only one item
-- Fixed invisible submenu text in some themes — every menu now renders correctly in all light and dark themes
+- **Eliminated Storyboard Previews**: Filtered out internal video storyboard preview files (`.mhtml`) so only genuine downloadable video and audio streams appear in the media inspector.
+- **Cleaned Media Titles**: Polished media titles by trimming trailing punctuation dots and redundant container extension strings.
 
 ---
 
@@ -93,22 +89,22 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 
 ### Windows 11 / 10 (64-bit)
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-9.1.15.3.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-9.1.15.4.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.3-1.fc44.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.4-1.fc44.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.15.3_amd64.deb
+sudo apt install ./fetchflow_9.1.15.4_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS
 ```bash
 # Using prebuilt package:
-sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.3-1-x86_64.pkg.tar.zst
+sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.4-1-x86_64.pkg.tar.zst
 
 # Or build via PKGBUILD:
 cd app/XDM/XDM.Linux.Installer && makepkg -si
@@ -116,7 +112,7 @@ cd app/XDM/XDM.Linux.Installer && makepkg -si
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.15.3.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.15.4.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
@@ -133,12 +129,12 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 
 | Browser Family | Supported Browsers | Package | Features |
 |---|---|---|---|
-| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.3.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
-| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.3.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.4.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.4.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
 
 
 ### Installation
-- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.3.xpi).
+- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.4.xpi).
 - **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.
 
 ---

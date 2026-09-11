@@ -58,6 +58,7 @@ namespace XDM.Core.BrowserMonitoring
         public long? FileSize { get; set; }
         public string? MimeType { get; set; }
         public string? Vid { get; set; }
+        public bool ConvertToMp3 { get; set; }
     }
 
     // Normalizes 'cookies' payloads of any JSON shape into a semicolon-joined string

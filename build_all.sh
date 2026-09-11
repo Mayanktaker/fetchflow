@@ -70,7 +70,11 @@ fi
 cp "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" "$OUT_DIR/fetchflow-firefox-extension.xpi"
 mkdir -p "$OUT_DIR/test"
 cp "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" "$OUT_DIR/test/fetchflow-firefox-extension.xpi"
+cp "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" "$OUT_DIR/test/fetchflow-firefox-extension-${VERSION}.xpi"
+cp -r . "$OUT_DIR/test/firefox-unpacked"
 cd ../../..
+mkdir -p "$OUT_DIR/test/chrome-unpacked"
+cp -r app/XDM/chrome-extension/* "$OUT_DIR/test/chrome-unpacked/"
 
 echo "Publishing FetchFlow .NET Application..."
 rm -f build_output/xdm-app/fetchflow 2>/dev/null || :

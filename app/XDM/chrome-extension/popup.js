@@ -9,6 +9,7 @@ class VideoPopup {
         this.activeTabTitle = "";
         this.activeTabUrl = "";
         this.preferredQuality = "";
+        this.convertToMp3 = true;
         this.soundEnabled = false;
         this.healthInterval = null;
     }
@@ -51,11 +52,14 @@ class VideoPopup {
     onLoad() {
         this.queryActiveTab();
 
-        // Load saved user preferences: sound chime & preferred resolution tier
-        chrome.storage.local.get(["fetchflowSoundEnabled", "fetchflowPreferredQuality"], (res) => {
+        // Load saved user preferences: sound chime, preferred resolution tier, and MP3 conversion
+        chrome.storage.local.get(["fetchflowSoundEnabled", "fetchflowPreferredQuality", "fetchflowConvertToMp3"], (res) => {
             if (res) {
                 this.soundEnabled = !!res.fetchflowSoundEnabled;
                 this.preferredQuality = res.fetchflowPreferredQuality || "";
+                this.convertToMp3 = res.fetchflowConvertToMp3 !== undefined ? !!res.fetchflowConvertToMp3 : true;
+                const chkMp3 = document.getElementById("chkMp3");
+                if (chkMp3) chkMp3.checked = this.convertToMp3;
                 this.updateSoundIcon();
                 if (this.rawList && this.rawList.length > 0) {
                     this.applyFilter();
@@ -98,6 +102,18 @@ class VideoPopup {
         if (chk) {
             chk.addEventListener('change', () => {
                 chrome.runtime.sendMessage({ type: "cmd", enabled: chk.checked });
+            });
+        }
+
+        const chkMp3 = document.getElementById("chkMp3");
+        if (chkMp3) {
+            chkMp3.addEventListener('change', () => {
+                this.convertToMp3 = chkMp3.checked;
+                chrome.storage.local.set({ "fetchflowConvertToMp3": this.convertToMp3 });
+                this.showToast(this.convertToMp3 ? "Convert to MP3 enabled" : "Download original audio format");
+                if (this.rawList && this.rawList.length > 0) {
+                    this.applyFilter();
+                }
             });
         }
 
@@ -247,9 +263,15 @@ class VideoPopup {
         // Download the best/selected resolution for each distinct video group
         groups.forEach((grp, idx) => {
             const targetId = grp.selectedId || grp.items[0]?.id;
+            const chosenItem = grp.items.find(it => String(it.id) === String(targetId)) || grp.items[0];
+            const isAudio = chosenItem ? this.isAudioStream(chosenItem) : false;
             if (targetId) {
                 setTimeout(() => {
-                    chrome.runtime.sendMessage({ type: "vid", itemId: targetId });
+                    chrome.runtime.sendMessage({
+                        type: "vid",
+                        itemId: targetId,
+                        convertToMp3: isAudio ? this.convertToMp3 : false
+                    });
                 }, idx * 120);
             }
         });
@@ -367,7 +389,10 @@ class VideoPopup {
         if (combined.includes("360")) return 360;
         if (combined.includes("240")) return 240;
         if (combined.includes("144")) return 144;
-        if (this.isAudioStream({ text, info })) return 1;
+        if (this.isAudioStream({ text, info })) {
+            const match = combined.match(/\b(\d{2,3})[Kk]\b/) || combined.match(/\b(\d{2,3})\s*KBPS\b/);
+            return match ? parseInt(match[1], 10) : 1;
+        }
         return 500;
     }
 
@@ -380,14 +405,18 @@ class VideoPopup {
         if (combined.includes("480P") || combined.includes("480")) return "480P";
         if (combined.includes("360P") || combined.includes("360")) return "360P";
         if (combined.includes("M3U8") || combined.includes("HLS")) return "HLS";
-        if (combined.includes("MP3")) return "MP3";
-        if (combined.includes("M4A")) return "M4A";
-        if (combined.includes("AAC")) return "AAC";
-        if (combined.includes("OPUS")) return "OPUS";
-        if (combined.includes("FLAC")) return "FLAC";
-        if (combined.includes("AUDIO ONLY") || combined.includes("AUDIO")) return "AUDIO";
+
+        const bitrateMatch = combined.match(/\b(\d{2,3})[Kk]\b/) || combined.match(/\b(\d{2,3})\s*KBPS\b/);
+        const bitrateSuffix = bitrateMatch ? ` · ${bitrateMatch[1]}k` : "";
+
+        if (combined.includes("MP3")) return `MP3${bitrateSuffix}`;
+        if (combined.includes("M4A")) return `M4A${bitrateSuffix}`;
+        if (combined.includes("AAC")) return `AAC${bitrateSuffix}`;
+        if (combined.includes("OPUS")) return `OPUS${bitrateSuffix}`;
+        if (combined.includes("FLAC")) return `FLAC${bitrateSuffix}`;
+        if (combined.includes("AUDIO ONLY") || combined.includes("AUDIO")) return `AUDIO${bitrateSuffix}`;
         if (combined.includes("MP4")) return "MP4";
-        if (combined.includes("WEBM")) return "WEBM";
+        if (combined.includes("WEBM")) return combined.includes("AUDIO") ? `WEBM${bitrateSuffix}` : "WEBM";
         if (combined.includes("MKV")) return "MKV";
         return "VIDEO";
     }
@@ -588,7 +617,7 @@ class VideoPopup {
         }, 1800);
     }
 
-    triggerDownloadItem(card, id, text, triggerBtn) {
+    triggerDownloadItem(card, id, text, triggerBtn, isAudio = false) {
         if (card) {
             card.classList.add('media-card-downloading');
             setTimeout(() => card.classList.remove('media-card-downloading'), 600);
@@ -611,14 +640,22 @@ class VideoPopup {
         }
 
         const shortName = text && text.length > 28 ? text.substring(0, 25) + '...' : (text || 'Media');
-        this.showToast(`Starting download: ${shortName}`);
-        chrome.runtime.sendMessage({ type: "vid", itemId: id });
+        const audioNote = isAudio && this.convertToMp3 ? " (Converting to MP3)" : "";
+        this.showToast(`Starting download: ${shortName}${audioNote}`);
+        chrome.runtime.sendMessage({
+            type: "vid",
+            itemId: id,
+            convertToMp3: isAudio ? this.convertToMp3 : false
+        });
     }
 
     getFormatOptionLabel(item, isBest) {
         const info = (item.info || "").trim();
         const badge = this.getFormatBadge(item.text, item.info);
         let label = info ? `${info}` : badge;
+        if (this.isAudioStream(item) && this.convertToMp3 && !label.toUpperCase().includes("MP3")) {
+            label += " (→ MP3)";
+        }
         if (isBest) {
             label += " ★ Best Quality";
         }
@@ -738,7 +775,9 @@ class VideoPopup {
         dlBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const selectedId = select.value;
-            this.triggerDownloadItem(card, selectedId, group.title, dlBtn);
+            const chosenItem = group.items.find(it => String(it.id) === String(selectedId));
+            const isAudio = chosenItem ? this.isAudioStream(chosenItem) : false;
+            this.triggerDownloadItem(card, selectedId, group.title, dlBtn, isAudio);
         });
 
         selectorRow.appendChild(select);
@@ -758,7 +797,7 @@ class VideoPopup {
             `;
             audioBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.triggerDownloadItem(card, group.audioItem.id, `${group.title} (Audio)`, audioBtn);
+                this.triggerDownloadItem(card, group.audioItem.id, `${group.title} (Audio)`, audioBtn, true);
             });
             selectorRow.appendChild(audioBtn);
         }

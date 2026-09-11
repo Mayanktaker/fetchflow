@@ -605,6 +605,7 @@ export default class App {
             let vid = request.itemId;
             this.connector.postMessage("/vid", {
                 vid: vid + "",
+                convertToMp3: !!request.convertToMp3
             });
         }
         else if (request.type === "clear") {

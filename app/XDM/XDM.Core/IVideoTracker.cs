@@ -35,7 +35,7 @@ namespace XDM.Core.BrowserMonitoring
         event EventHandler<string> MediaFetchStarted;
         event EventHandler<string> MediaFetchCompleted;
         void ClearVideoList();
-        void AddVideoDownload(string videoId);
+        void AddVideoDownload(string videoId, bool convertToMp3 = false);
         List<MediaInfo> GetVideoList();
         void UpdateMediaTitle(string tabUrl, string tabTitle);
         void OnMediaFetchStarted(string url);

@@ -1140,6 +1140,7 @@ namespace XDM.Core.BrowserMonitoring
                                                 {
                                                     Uri = fmt.AudioUrl ?? fmt.VideoUrl,
                                                     File = file,
+                                                    ContentType = $"audio/{audioExt}",
                                                     ConvertToMp3 = true
                                                 });
                                             }

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using Translations;
 using XDM.Core;
@@ -45,6 +45,7 @@ namespace XDM.Core.UI
                     if (!(mime.Contains("mpeg") || mime.Contains("mp3")))
                     {
                         window.ShowMp3Checkbox = true;
+                        window.IsMp3CheckboxChecked = true;
                     }
                 }
             }
