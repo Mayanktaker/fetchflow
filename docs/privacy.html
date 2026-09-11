@@ -2,142 +2,340 @@
 <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy — FetchFlow Download Manager</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #e2e8f0;
-            --text-muted: #94a3b8;
-            --accent-color: #38bdf8;
-            --border-color: #334155;
-        }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.7;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #ffffff !important;
-        }
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-        }
-        h1, h2, h3, h4 {
-            color: #ffffff;
-            font-weight: 600;
-        }
-        h4 {
-            margin-top: 1.75rem;
-            color: var(--accent-color);
-        }
-        a {
-            color: var(--accent-color);
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .lead {
-            color: var(--text-muted);
-        }
-        .badge-policy {
-            background-color: rgba(56, 189, 248, 0.15);
-            color: var(--accent-color);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        footer {
-            border-top: 1px solid var(--border-color);
-            margin-top: 3rem;
-            padding-top: 1.5rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — FetchFlow Download Manager</title>
+  <meta name="description" content="Privacy Policy for FetchFlow Download Manager and companion browser extensions. 100% open source, zero telemetry, local loopback IPC only.">
+  <link rel="icon" type="image/svg+xml" href="fetchflow-logo.svg">
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --surface: #111827;
+      --surface-elevated: #1e293b;
+      --border: #334155;
+      --border-focus: #f97316;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #f97316;
+      --accent-hover: #ea580c;
+      --cyan: #38bdf8;
+      --green: #22c55e;
+      --radius: 12px;
+      --radius-lg: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: #fdba74; }
+
+    /* Navigation */
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .brand img {
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .nav-links a:hover { color: #fff; }
+    .btn-github {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      color: #fff !important;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-github:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    /* Hero Section */
+    .hero {
+      max-width: 900px;
+      margin: 40px auto 40px;
+      padding: 0 20px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(249, 115, 22, 0.12);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Content Container */
+    .policy-container {
+      max-width: 900px;
+      margin: 0 auto 80px;
+      padding: 0 20px;
+    }
+
+    .policy-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      margin-bottom: 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .policy-card h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .policy-card h2 .section-num {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .policy-card p {
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      font-size: 1rem;
+    }
+
+    .policy-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .policy-card ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 14px 0;
+    }
+
+    .policy-card ul li {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 12px;
+      color: var(--text-muted);
+      font-size: 0.98rem;
+    }
+
+    .policy-card ul li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--green);
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .policy-card strong {
+      color: var(--text);
+    }
+
+    .policy-card code {
+      background: var(--surface-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 0.9em;
+      color: var(--cyan);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .highlight-box {
+      background: var(--surface-elevated);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .highlight-box p {
+      color: var(--text);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      .nav-links { display: none; }
+      .policy-card { padding: 24px; }
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary mb-4 py-3">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="https://mayanktaker.com">
-                <img src="./fetchflow-logo.svg" alt="FetchFlow" width="32" height="32" class="me-2" onerror="this.src='./fetchflow-logo.png'">
-                FetchFlow Download Manager
-            </a>
-            <span class="badge badge-policy ms-auto">September 2026 Policy Standards</span>
-        </div>
-    </nav>
 
-    <main class="container my-4" style="max-width: 860px;">
-        <div class="card p-4 p-md-5 shadow-lg">
-            <h1 class="mb-2">Privacy Policy</h1>
-            <p class="lead">Last updated: September 2026</p>
-            <hr class="border-secondary mb-4">
+  <!-- Navigation -->
+  <nav>
+    <a href="index.html" class="brand">
+      <img src="fetchflow-logo.png" alt="FetchFlow Logo">
+      <span>FetchFlow</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#comparison">Compare</a>
+      <a href="index.html#downloads">Downloads</a>
+      <a href="index.html#extensions">Extensions</a>
+      <a href="https://github.com/Mayanktaker/fetchflow" class="btn-github" target="_blank">
+        <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </nav>
 
-            <p>
-                <strong>FetchFlow Download Manager</strong> (Wayland &amp; Desktop Edition), developed by 
-                <a href="https://mayanktaker.com" target="_blank" rel="noopener">Mayanktaker Computers &amp; Web Development</a>,
-                is committed to protecting user privacy. This Privacy Policy details our handling of information across the FetchFlow desktop application, companion browser extensions, and official website.
-            </p>
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-badge">🔒 Zero-Telemetry &bull; Privacy First</div>
+    <h1>Privacy Policy</h1>
+    <p>
+      FetchFlow Download Manager &amp; Companion Browser Helper Extensions
+      <br>
+      Last updated: September 2026 &bull; Strict local-loopback architecture with zero tracking
+    </p>
+  </header>
 
-            <h4>1. Zero Telemetry &amp; No Cloud Tracking</h4>
-            <p>
-                FetchFlow is fully open-source software (licensed under GNU GPL v3.0). It contains <strong>zero tracking components, zero telemetry, zero analytics scripts, and zero spyware</strong>. We do not collect, store, sell, or transmit any personally identifiable information, browsing histories, search queries, or downloaded file records to any cloud server or third party.
-            </p>
+  <!-- Content -->
+  <main class="policy-container">
 
-            <h4>2. FetchFlow Browser Helper (Chrome &amp; Firefox Extensions)</h4>
-            <p>
-                The <strong>FetchFlow Browser Helper</strong> browser extensions for Google Chrome, Mozilla Firefox, and Chromium-based browsers operate strictly as a local integration bridge between your browser and the FetchFlow desktop client:
-            </p>
-            <ul>
-                <li><strong>Local Loopback Communication:</strong> The browser extension communicates exclusively with the FetchFlow desktop application running on your own machine via local loopback (<code>127.0.0.1</code> / <code>ws://127.0.0.1:8597</code>). No data is sent over the Internet to any third-party or developer server.</li>
-                <li><strong>Download Metadata:</strong> When you initiate a download or capture a media stream, the extension passes the download URL, file name, referrer URL, and necessary session headers/cookies directly to your local desktop client to facilitate multi-threaded accelerated downloading.</li>
-                <li><strong>Local Storage:</strong> All download histories, configuration rules, and categories remain entirely on your local filesystem in an encrypted or local SQLite database and are never shared.</li>
-            </ul>
+    <div class="policy-card">
+      <h2><span class="section-num">1.</span> Zero Telemetry &amp; No Cloud Tracking</h2>
+      <p>
+        <strong>FetchFlow Download Manager</strong> is free, open-source software licensed under the 
+        <strong>GNU General Public License v3.0</strong>.
+      </p>
+      <p>
+        The desktop application and its browser extensions contain <strong>zero tracking components, zero telemetry, zero analytics scripts, and zero spyware</strong>. We do not collect, log, store, sell, or transmit any personally identifiable information (PII), browsing histories, search queries, or downloaded file records to any developer server, cloud platform, or third party.
+      </p>
+      <div class="highlight-box">
+        <p><strong>Core Guarantee:</strong> All download activities, file lists, and user configuration settings exist solely on your local computer and never leave your machine.</p>
+      </div>
+    </div>
 
-            <h4>3. Compliance with Extension Store Policies</h4>
-            <p>
-                In compliance with the <strong>Google Chrome Web Store Limited Use Requirements</strong> and <strong>Mozilla Add-on Data Collection Policies</strong>:
-            </p>
-            <ul>
-                <li>Data collected by the extension is restricted strictly to the user-facing purpose of download management.</li>
-                <li>User data is <strong>never sold</strong> to data brokers, advertising platforms, or third parties.</li>
-                <li>User data is <strong>never used or transferred</strong> for personalized advertising, credit assessment, or user profiling.</li>
-            </ul>
+    <div class="policy-card">
+      <h2><span class="section-num">2.</span> FetchFlow Browser Helper (Extensions)</h2>
+      <p>
+        The <strong>FetchFlow Browser Helper</strong> extensions for Mozilla Firefox, Google Chrome, Microsoft Edge, Brave, and other Chromium browsers operate strictly as an integration bridge between your browser and the local FetchFlow desktop app:
+      </p>
+      <ul>
+        <li><strong>Local Loopback IPC Only:</strong> All communication between the browser extension and the FetchFlow desktop application occurs exclusively over local loopback (<code>127.0.0.1:8597</code> / WebSocket). No browser data is transmitted over the Internet to developer or third-party servers.</li>
+        <li><strong>User-Initiated Download Metadata:</strong> When you initiate a download or capture a media stream, the extension hands off the target URL, filename, referrer, and user session cookies directly to your local desktop client to facilitate multi-segmented, accelerated downloading.</li>
+        <li><strong>Local Storage:</strong> Download history, queues, and categories remain entirely on your local filesystem in your local SQLite database (<code>~/.fetchflow-app-data/downloads.db</code>) and are never shared.</li>
+      </ul>
+    </div>
 
-            <h4>4. Unsolicited Advertising</h4>
-            <p>
-                FetchFlow and its companion extensions are 100% ad-free. The software does not inject ads, display promotional popups, or bundle third-party promotional installers.
-            </p>
+    <div class="policy-card">
+      <h2><span class="section-num">3.</span> Store Policy Compliance (AMO &amp; Chrome Web Store)</h2>
+      <p>
+        In strict compliance with the <strong>Mozilla Add-on Data Collection Policies</strong> and <strong>Google Chrome Web Store Limited Use Requirements</strong>:
+      </p>
+      <ul>
+        <li>Data handling is restricted strictly to the user-facing purpose of file download management and stream capture.</li>
+        <li>User data is <strong>never sold</strong> to data brokers, advertising platforms, or third parties.</li>
+        <li>User data is <strong>never transferred</strong> for personalized advertising, credit assessment, or user profiling.</li>
+        <li>The extension explicitly declares <code>"data_collection_permissions": {"required": ["none"]}</code> in its Mozilla manifest.</li>
+      </ul>
+    </div>
 
-            <h4>5. External Links</h4>
-            <p>
-                The FetchFlow application and website may contain links to external project repositories or documentation pages. We do not control and are not responsible for the privacy practices of external third-party websites.
-            </p>
+    <div class="policy-card">
+      <h2><span class="section-num">4.</span> No Unsolicited Advertising</h2>
+      <p>
+        FetchFlow and its companion browser extensions are <strong>100% ad-free</strong>. The software does not inject ads, display sponsored popups, manipulate web search results, or bundle promotional third-party software.
+      </p>
+    </div>
 
-            <h4>6. Contact &amp; Open Source Support</h4>
-            <p>
-                For questions regarding this Privacy Policy or FetchFlow development, please contact:
-            </p>
-            <ul>
-                <li><strong>Developer:</strong> Mayanktaker Computers &amp; Web Development</li>
-                <li><strong>Website:</strong> <a href="https://mayanktaker.com" target="_blank" rel="noopener">https://mayanktaker.com</a></li>
-                <li><strong>Source Repository:</strong> <a href="https://github.com/mayanktaker/fetchflow" target="_blank" rel="noopener">https://github.com/mayanktaker/fetchflow</a></li>
-            </ul>
+    <div class="policy-card">
+      <h2><span class="section-num">5.</span> Open Source Transparency &amp; Contact</h2>
+      <p>
+        FetchFlow is maintained by <strong>Mayanktaker Computers &amp; Web Development</strong>. Because our codebase is completely public, anyone can audit our source code and verify our privacy commitments:
+      </p>
+      <ul>
+        <li><strong>Maintainer:</strong> Mayanktaker Computers &amp; Web Development</li>
+        <li><strong>Official Website:</strong> <a href="https://mayanktaker.com" target="_blank" rel="noopener">https://mayanktaker.com</a></li>
+        <li><strong>Source Repository:</strong> <a href="https://github.com/mayanktaker/fetchflow" target="_blank" rel="noopener">https://github.com/mayanktaker/fetchflow</a></li>
+        <li><strong>Issue Tracker:</strong> <a href="https://github.com/mayanktaker/fetchflow/issues" target="_blank" rel="noopener">https://github.com/mayanktaker/fetchflow/issues</a></li>
+      </ul>
+    </div>
 
-            <footer class="text-center mt-5">
-                <p class="mb-0">&copy; 2013 &ndash; 2026 Mayanktaker Computers &amp; Web Development. All rights reserved.</p>
-            </footer>
-        </div>
-    </main>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      &copy; 2026 <a href="https://mayanktaker.com" target="_blank"><b>Mayanktaker Computers &amp; Web Development</b></a>. All rights reserved.
+      <br>
+      Licensed under the <a href="https://github.com/Mayanktaker/fetchflow/blob/master/LICENSE" target="_blank">GNU General Public License v2.0</a>. &bull; <a href="privacy.html"><b>Privacy Policy</b></a>
+    </p>
+  </footer>
+
 </body>
 </html>
