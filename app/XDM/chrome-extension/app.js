@@ -579,6 +579,7 @@ export default class App {
             let resp = {
                 enabled: this.isMonitoringEnabled(),
                 list: list,
+                activeTabId: this.activeTabId,
                 health: this.connector.getHealthInfo()
             };
             sendResponse(resp);

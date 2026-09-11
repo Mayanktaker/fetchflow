@@ -38,6 +38,18 @@
 
   <main id="content" class="popup-body">
     <div id="mediaContainer" class="media-container">
+      <div class="scope-tabs-bar" role="tablist" aria-label="Media scope filter">
+        <button id="scopeCurrentTab" class="scope-tab-btn active" role="tab" aria-selected="true" title="Show media from active tab only">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+          <span>This Tab</span>
+          <span id="scopeCurrentCount" class="scope-count-badge">0</span>
+        </button>
+        <button id="scopeAllTabs" class="scope-tab-btn" role="tab" aria-selected="false" title="Show media across all open tabs">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="14" rx="2"/><path d="M6 3h14a2 2 0 0 1 2 2v12"/></svg>
+          <span>All Tabs</span>
+          <span id="scopeAllCount" class="scope-count-badge">0</span>
+        </button>
+      </div>
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle>
@@ -45,6 +57,10 @@
         </svg>
         <input type="text" id="searchInput" class="search-input" placeholder="Search by name or format..." autocomplete="off">
         <button id="clearSearch" class="search-clear-btn" style="display: none;" aria-label="Clear search">✕</button>
+      </div>
+      <div id="emptyTabNotice" class="empty-tab-notice" style="display: none;">
+        <span>No media on this tab.</span>
+        <button id="switchToAllTabsBtn" class="btn-switch-tab">View All Tabs (<span id="emptyTabOtherCount">0</span>)</button>
       </div>
       <div id="list" class="media-list"></div>
       <div class="toolbar-row">

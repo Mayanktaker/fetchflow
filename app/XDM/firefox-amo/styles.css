@@ -271,6 +271,100 @@ body.popup {
   background-color: var(--border);
 }
 
+/* Scope Filter Tabs */
+.scope-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-sidebar);
+  padding: 3px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-soft);
+  margin-bottom: var(--s2);
+}
+
+.scope-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scope-tab-btn:hover {
+  color: var(--text);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.scope-tab-btn.active {
+  color: var(--text);
+  background-color: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.scope-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: var(--r-pill);
+  background-color: var(--border);
+  color: var(--text-dim);
+  min-width: 16px;
+}
+
+.scope-tab-btn.active .scope-count-badge {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+.empty-tab-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--s4) var(--s2);
+  margin-bottom: var(--s2);
+  background-color: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.btn-switch-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background-color: rgba(53, 132, 228, 0.1);
+  border: 1px solid rgba(53, 132, 228, 0.25);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-switch-tab:hover {
+  background-color: rgba(53, 132, 228, 0.2);
+  color: var(--accent-hover);
+}
+
 /* Media Cards */
 .media-container {
   display: none;
@@ -302,6 +396,118 @@ body.popup {
   border-radius: var(--r-md);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+/* Consolidated Group Card */
+.media-card-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 9px 10px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  cursor: default;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.media-card-grouped:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.media-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  width: 100%;
+}
+
+.media-card-header-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.media-card-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.media-card-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.quality-select {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 2px 8px;
+  background-color: var(--bg-view);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.quality-select:focus {
+  border-color: var(--accent);
+  background-color: var(--bg-sidebar);
+}
+
+.quality-select option {
+  background-color: var(--bg-sidebar);
+  color: var(--text);
+}
+
+.btn-download-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: var(--r-sm);
+}
+
+.btn-quick-audio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #eab308;
+  background-color: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.btn-quick-audio:hover {
+  background-color: rgba(234, 179, 8, 0.22);
+  border-color: rgba(234, 179, 8, 0.45);
 }
 
 .media-card:hover {

@@ -37,3 +37,4 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 3. Every release MUST ship: `.rpm` + `.deb` + `.tar.gz` + Windows setup/ZIP + `.zip`/`.xpi` + `SHA256SUMS.txt` in `fetchflow-release/`.
 4. CWS builds disable YouTube stream capture (policy); GitHub builds keep full capture. AMO needs `"data_collection_permissions": {"required": ["none"]}`; all extension JS unminified.
 5. File header: `© Mayanktaker Computers & Web Development | https://mayanktaker.com`. Never hardcode versions or delete files directly.
+6. Stream captures (`videoplayback`, `.m3u8`, `.mpd`) route to extension menu (`VideoTracker`), not desktop dialogs; web assets (`image/*`, `_next/image`) never auto-capture.
