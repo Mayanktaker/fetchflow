@@ -307,8 +307,9 @@ class VideoPopup {
         if (!str) return "";
         return str
             .toLowerCase()
+            .replace(/\.{2,}$/, "")
             .replace(/[-_]/g, " ")
-            .replace(/\b(youtube|watch|official|video|audio|full|hd|mkv|mp4|webm)\b/gi, "")
+            .replace(/\b(youtube|watch|official|video|audio|full|hd|mkv|mp4|webm|mhtml)\b/gi, "")
             .replace(/[^a-z0-9]/gi, "")
             .trim();
     }
@@ -426,8 +427,18 @@ class VideoPopup {
 
         for (const item of items) {
             const rawTitle = (item.text || "Untitled Media").trim();
-            // Remove common container extensions (.mkv, .mp4, etc.)
-            const cleanTitle = rawTitle.replace(/\.(mkv|mp4|webm|ts|m3u8|mpd|avi|flv|mov|m4a|mp3|aac|opus|flac)$/i, "").trim();
+            const rawInfo = (item.info || "").toUpperCase();
+
+            // Drop any junk MHTML storyboard preview sheets
+            if (rawInfo.includes("MHTML") || rawTitle.toLowerCase().endsWith(".mhtml") || rawInfo.includes("STORYBOARD")) {
+                continue;
+            }
+
+            // Remove common container extensions (.mkv, .mp4, etc.) and trailing dots
+            const cleanTitle = rawTitle
+                .replace(/\.(mkv|mp4|webm|ts|m3u8|mpd|avi|flv|mov|m4a|mp3|aac|opus|flac|mhtml)$/i, "")
+                .replace(/\.{2,}$/, "")
+                .trim();
             // Group by normalized title — merges all resolutions of the same video into a single card
             const normTitle = this.normalizeTitle(cleanTitle) || cleanTitle.toLowerCase();
             const groupKey = normTitle;

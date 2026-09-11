@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace YDLWrapper
 {
@@ -85,10 +87,25 @@ namespace YDLWrapper
 
             foreach (var format in formatList.Formats)
             {
+                // Skip storyboard / mhtml preview thumbnail sheets
+                var ext = (format.Ext ?? string.Empty).ToLowerInvariant();
+                var protocol = (format.Protocol ?? string.Empty).ToLowerInvariant();
+                var note = (format.Format_Note ?? string.Empty).ToLowerInvariant();
+                if (ext == "mhtml" || protocol == "mhtml" || note.Contains("storyboard"))
+                {
+                    continue;
+                }
+
                 var acodec = GetStringValue(format.Acodec);
                 var vcodec = GetStringValue(format.Vcodec);
-                if ((vcodec == null && acodec == null) ||
-                    (vcodec != null && acodec != null))
+
+                // Both codecs null/none indicates image sheets or unplayable manifests
+                if (vcodec == null && acodec == null)
+                {
+                    continue;
+                }
+
+                if (vcodec != null && acodec != null)
                 {
                     list.Add(new YDLVideoFormatEntry
                     {
@@ -146,10 +163,15 @@ namespace YDLWrapper
                 }
             }
 
-            if (list.Count == 0)
+            // Always provide high-quality standalone audio streams (e.g. M4A / WebM / Opus)
+            var seenAudioExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var sortedAudios = audioOnlyList.OrderByDescending(a => double.TryParse(a.Abr, out var abr) ? abr : 0);
+            foreach (var audio in sortedAudios)
             {
-                foreach (var audio in audioOnlyList)
+                var audioExt = audio.Ext ?? "m4a";
+                if (!seenAudioExts.Contains(audioExt))
                 {
+                    seenAudioExts.Add(audioExt);
                     var audioType = GetEntryType(audio);
                     list.Add(new YDLVideoFormatEntry
                     {
@@ -158,7 +180,7 @@ namespace YDLWrapper
                         AudioUrl = audio.Url,
                         Title = formatList.Title,
                         YDLEntryType = audioType,
-                        FileExt = audio.Ext,
+                        FileExt = audioExt,
                         AudioCodec = audio.Acodec,
                         Abr = audio.Abr,
                         FragmentBaseUrl = audio.Fragment_Base_Url

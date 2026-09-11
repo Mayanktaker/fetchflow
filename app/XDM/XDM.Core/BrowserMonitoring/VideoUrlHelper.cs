@@ -1117,6 +1117,34 @@ namespace XDM.Core.BrowserMonitoring
                                             }
                                         }
                                     }
+                                    else if (!string.IsNullOrEmpty(fmt.AudioCodec) || !string.IsNullOrEmpty(fmt.AudioUrl) ||
+                                             fmt.FileExt?.ToLowerInvariant() == "m4a" || fmt.FileExt?.ToLowerInvariant() == "webm" || fmt.FileExt?.ToLowerInvariant() == "mp3")
+                                    {
+                                        var audioExt = (fmt.FileExt ?? "m4a").ToLowerInvariant();
+                                        var audioKey = "audio_" + audioExt;
+                                        if (!addedQualities.Contains(audioKey))
+                                        {
+                                            addedQualities.Add(audioKey);
+                                            var abrText = !string.IsNullOrEmpty(fmt.Abr) ? $" {fmt.Abr}kbps" : string.Empty;
+                                            var displayInfo = new StreamingVideoDisplayInfo
+                                            {
+                                                Quality = $"[{audioExt.ToUpperInvariant()} AUDIO]{abrText}",
+                                                CreationTime = DateTime.Now,
+                                                TabId = tabId
+                                            };
+                                            var file = FileHelper.SanitizeFileName(entry.Title) + "." + audioExt;
+
+                                            if (fmt.YDLEntryType == YDLEntryType.Http || fmt.YDLEntryType == YDLEntryType.Dash)
+                                            {
+                                                ApplicationContext.VideoTracker.AddVideoNotification(displayInfo, new SingleSourceHTTPDownloadInfo
+                                                {
+                                                    Uri = fmt.AudioUrl ?? fmt.VideoUrl,
+                                                    File = file,
+                                                    ConvertToMp3 = true
+                                                });
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
