@@ -768,6 +768,45 @@ body.popup {
   transform: translateX(16px);
 }
 
+/* MP3 Bitrate Row */
+.mp3-bitrate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding: 5px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.mp3-bitrate-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+
+.bitrate-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 2px 20px 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+
+.bitrate-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;

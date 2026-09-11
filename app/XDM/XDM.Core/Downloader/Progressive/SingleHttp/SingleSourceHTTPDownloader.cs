@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -33,7 +33,8 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                 TempDir = Path.Combine(Config.Instance.TempDir, Id),
                 Authentication = authentication,
                 Proxy = proxy,
-                ConvertToMp3 = convertToMp3
+                ConvertToMp3 = convertToMp3,
+                AudioBitrate = info.AudioBitrate
             };
 
             if (this.state.Headers == null)
@@ -421,7 +422,7 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                                     this.OnAssembleProgressChanged(prg);
                                 };
                                 var res = mediaProcessor.ConvertToMp3Audio(outFile!, TargetFile!,
-                                    this.cancelFlag, out totalBytes);
+                                    this.cancelFlag, out totalBytes, state!.AudioBitrate);
                                 if (res != MediaProcessingResult.Success)
                                 {
                                     throw new AssembleFailedException(
@@ -537,5 +538,6 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
         public Dictionary<string, List<string>> Headers;
         public string Cookies;
         public bool ConvertToMp3;
+        public string? AudioBitrate;
     }
 }

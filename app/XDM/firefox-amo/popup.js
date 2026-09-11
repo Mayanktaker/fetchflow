@@ -10,6 +10,7 @@ class VideoPopup {
         this.activeTabUrl = "";
         this.preferredQuality = "";
         this.convertToMp3 = true;
+        this.mp3Bitrate = "320k";
         this.soundEnabled = false;
         this.healthInterval = null;
     }
@@ -52,14 +53,19 @@ class VideoPopup {
     onLoad() {
         this.queryActiveTab();
 
-        // Load saved user preferences: sound chime, preferred resolution tier, and MP3 conversion
-        chrome.storage.local.get(["fetchflowSoundEnabled", "fetchflowPreferredQuality", "fetchflowConvertToMp3"], (res) => {
+        // Load saved user preferences: sound chime, preferred resolution tier, MP3 conversion & bitrate
+        chrome.storage.local.get(["fetchflowSoundEnabled", "fetchflowPreferredQuality", "fetchflowConvertToMp3", "fetchflowMp3Bitrate"], (res) => {
             if (res) {
                 this.soundEnabled = !!res.fetchflowSoundEnabled;
                 this.preferredQuality = res.fetchflowPreferredQuality || "";
                 this.convertToMp3 = res.fetchflowConvertToMp3 !== undefined ? !!res.fetchflowConvertToMp3 : true;
+                this.mp3Bitrate = res.fetchflowMp3Bitrate || "320k";
                 const chkMp3 = document.getElementById("chkMp3");
                 if (chkMp3) chkMp3.checked = this.convertToMp3;
+                const mp3Row = document.getElementById("mp3BitrateRow");
+                if (mp3Row) mp3Row.style.display = this.convertToMp3 ? "flex" : "none";
+                const bitrateSelect = document.getElementById("mp3BitrateSelect");
+                if (bitrateSelect) bitrateSelect.value = this.mp3Bitrate;
                 this.updateSoundIcon();
                 if (this.rawList && this.rawList.length > 0) {
                     this.applyFilter();
@@ -110,7 +116,21 @@ class VideoPopup {
             chkMp3.addEventListener('change', () => {
                 this.convertToMp3 = chkMp3.checked;
                 chrome.storage.local.set({ "fetchflowConvertToMp3": this.convertToMp3 });
-                this.showToast(this.convertToMp3 ? "Convert to MP3 enabled" : "Download original audio format");
+                const mp3Row = document.getElementById("mp3BitrateRow");
+                if (mp3Row) mp3Row.style.display = this.convertToMp3 ? "flex" : "none";
+                this.showToast(this.convertToMp3 ? `Convert to MP3 (${this.mp3Bitrate})` : "Download original audio format");
+                if (this.rawList && this.rawList.length > 0) {
+                    this.applyFilter();
+                }
+            });
+        }
+
+        const bitrateSelect = document.getElementById("mp3BitrateSelect");
+        if (bitrateSelect) {
+            bitrateSelect.addEventListener('change', () => {
+                this.mp3Bitrate = bitrateSelect.value || "320k";
+                chrome.storage.local.set({ "fetchflowMp3Bitrate": this.mp3Bitrate });
+                this.showToast(`MP3 bitrate set to ${this.mp3Bitrate}`);
                 if (this.rawList && this.rawList.length > 0) {
                     this.applyFilter();
                 }
@@ -270,7 +290,8 @@ class VideoPopup {
                     chrome.runtime.sendMessage({
                         type: "vid",
                         itemId: targetId,
-                        convertToMp3: isAudio ? this.convertToMp3 : false
+                        convertToMp3: isAudio ? this.convertToMp3 : false,
+                        audioBitrate: isAudio ? this.mp3Bitrate : null
                     });
                 }, idx * 120);
             }
@@ -640,12 +661,13 @@ class VideoPopup {
         }
 
         const shortName = text && text.length > 28 ? text.substring(0, 25) + '...' : (text || 'Media');
-        const audioNote = isAudio && this.convertToMp3 ? " (Converting to MP3)" : "";
+        const audioNote = isAudio && this.convertToMp3 ? ` (MP3 · ${this.mp3Bitrate})` : "";
         this.showToast(`Starting download: ${shortName}${audioNote}`);
         chrome.runtime.sendMessage({
             type: "vid",
             itemId: id,
-            convertToMp3: isAudio ? this.convertToMp3 : false
+            convertToMp3: isAudio ? this.convertToMp3 : false,
+            audioBitrate: isAudio ? this.mp3Bitrate : null
         });
     }
 
@@ -654,7 +676,7 @@ class VideoPopup {
         const badge = this.getFormatBadge(item.text, item.info);
         let label = info ? `${info}` : badge;
         if (this.isAudioStream(item) && this.convertToMp3 && !label.toUpperCase().includes("MP3")) {
-            label += " (→ MP3)";
+            label += ` (→ MP3 ${this.mp3Bitrate})`;
         }
         if (isBest) {
             label += " ★ Best Quality";

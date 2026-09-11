@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -27,6 +27,8 @@ namespace XDM.Core.IO
             w.Write(info.ContentLength);
             StreamHelper.WriteStateHeaders(info.Headers, w);
             StreamHelper.WriteStateCookies(info.Cookies, w);
+            w.Write(info.ConvertToMp3);
+            WriteStringSafe(info.AudioBitrate, w);
             //File.WriteAllText(Path.Combine(Config.DataDir, id + ".info"), JsonConvert.SerializeObject(downloadInfo));
         }
 
@@ -105,6 +107,15 @@ namespace XDM.Core.IO
                 info.Headers = headers;
                 StreamHelper.ReadStateCookies(r, out string? cookies);
                 info.Cookies = cookies;
+                if (r.BaseStream.Position < r.BaseStream.Length)
+                {
+                    info.ConvertToMp3 = r.ReadBoolean();
+                }
+                if (r.BaseStream.Position < r.BaseStream.Length)
+                {
+                    var br = StreamHelper.ReadString(r);
+                    info.AudioBitrate = string.IsNullOrWhiteSpace(br) ? null : br;
+                }
                 return info;
             }
             catch (Exception ex)

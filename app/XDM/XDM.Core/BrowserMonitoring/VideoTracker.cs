@@ -328,7 +328,7 @@ namespace XDM.Core.BrowserMonitoring
             }
         }
 
-        public void AddVideoDownload(string videoId, bool convertToMp3 = false)
+        public void AddVideoDownload(string videoId, bool convertToMp3 = false, string? audioBitrate = null)
         {
             var name = string.Empty;
             var size = 0L;
@@ -352,6 +352,10 @@ namespace XDM.Core.BrowserMonitoring
                 if (convertToMp3)
                 {
                     videoList[videoId].Key.ConvertToMp3 = true;
+                }
+                if (!string.IsNullOrWhiteSpace(audioBitrate))
+                {
+                    videoList[videoId].Key.AudioBitrate = audioBitrate.Trim();
                 }
             }
             else if (hlsVideoList.ContainsKey(videoId))

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -108,6 +108,15 @@ namespace XDM.Core.IO
                 };
             }
             state.ConvertToMp3 = r.ReadBoolean();
+            try
+            {
+                if (r.BaseStream.Position < r.BaseStream.Length)
+                {
+                    var br = XDM.Messaging.StreamHelper.ReadString(r);
+                    state.AudioBitrate = string.IsNullOrWhiteSpace(br) ? null : br;
+                }
+            }
+            catch { }
             return state;
         }
 
@@ -147,6 +156,7 @@ namespace XDM.Core.IO
                 w.Write(state.Proxy!.Value.Password ?? string.Empty);
             }
             w.Write(state.ConvertToMp3);
+            w.Write(state.AudioBitrate ?? string.Empty);
         }
 
         public static DualSourceHTTPDownloaderState LoadDualSourceHTTPDownloaderState(string id)

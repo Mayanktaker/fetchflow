@@ -605,7 +605,8 @@ export default class App {
             let vid = request.itemId;
             this.connector.postMessage("/vid", {
                 vid: vid + "",
-                convertToMp3: !!request.convertToMp3
+                convertToMp3: !!request.convertToMp3,
+                audioBitrate: request.audioBitrate || null
             });
         }
         else if (request.type === "clear") {

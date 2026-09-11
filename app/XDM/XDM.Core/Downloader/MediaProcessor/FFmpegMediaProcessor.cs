@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -42,9 +42,9 @@ namespace XDM.Core.MediaProcessor
         }
 
         public override MediaProcessingResult ConvertToMp3Audio(string infile, string outfile,
-            CancelFlag cancellationToken, out long outFileSize)
+            CancelFlag cancellationToken, out long outFileSize, string? bitrate = null)
         {
-            var args = CreateMP3MergeArgs(infile, outfile);
+            var args = CreateMP3MergeArgs(infile, outfile, bitrate);
             var ret = this.ProcessMedia(args, cancellationToken);
             try
             {
@@ -67,9 +67,10 @@ namespace XDM.Core.MediaProcessor
             return args;
         }
 
-        private string[] CreateMP3MergeArgs(string file, string outfile)
+        private string[] CreateMP3MergeArgs(string file, string outfile, string? bitrate = null)
         {
-            var args = new string[] { "-i", file, "-acodec", "libmp3lame", outfile, "-y" };
+            var br = string.IsNullOrWhiteSpace(bitrate) ? "320k" : bitrate.Trim();
+            var args = new string[] { "-i", file, "-acodec", "libmp3lame", "-b:a", br, outfile, "-y" };
             return args;
         }
 
