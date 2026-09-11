@@ -153,14 +153,14 @@ jobs:
               for el_id, key in replacements:
                   if key in asset_map:
                       filename, url = asset_map[key]
-                      # Update href
+                      # Update href (handle either id before href, or href before id)
                       content = re.sub(
-                          rf'(<a\s+[^>]*?id="{el_id}"[^>]*?\shref=")[^"]+(")',
+                          rf'(<a\s+[^>]*?id="{el_id}"[^>]*?href=")[^"]+(")',
                           rf'\g<1>{url}\g<2>',
                           content
                       )
                       content = re.sub(
-                          rf'(<a\s+[^>]*?\shref=")[^"]+("[^>]*?id="{el_id}")',
+                          rf'(<a\s+[^>]*?href=")[^"]+("[^>]*?id="{el_id}")',
                           rf'\g<1>{url}\g<2>',
                           content
                       )
