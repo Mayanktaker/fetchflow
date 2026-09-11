@@ -17,36 +17,39 @@ class VideoPopup {
         document.addEventListener('DOMContentLoaded', this.onLoad.bind(this), false);
     }
 
-    onLoad() {
-        // Query active browser tab with multi-signal detection (ID + Title + URL)
-        const queryActiveTab = () => {
-            const handleTabs = (tabs) => {
-                if (tabs && tabs.length > 0 && tabs[0]) {
-                    this.activeTabId = tabs[0].id != null ? String(tabs[0].id) : null;
-                    this.activeTabTitle = tabs[0].title || "";
-                    this.activeTabUrl = tabs[0].url || "";
-                    if (this.rawList && this.rawList.length > 0) {
-                        this.applyFilter();
-                    }
+    queryActiveTab(callback) {
+        const handleTabs = (tabs) => {
+            if (tabs && tabs.length > 0 && tabs[0]) {
+                this.activeTabId = tabs[0].id != null ? String(tabs[0].id) : null;
+                this.activeTabTitle = tabs[0].title || "";
+                this.activeTabUrl = tabs[0].url || "";
+                if (this.rawList && this.rawList.length > 0) {
+                    this.applyFilter();
                 }
-            };
-
-            // In Firefox MV3, lastFocusedWindow reliably targets the browser window containing the active webpage
-            try {
-                chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-                    if (tabs && tabs.length > 0) {
-                        handleTabs(tabs);
-                    } else {
-                        chrome.tabs.query({ active: true, currentWindow: true }, handleTabs);
-                    }
-                });
-            } catch (_) {
-                try {
-                    chrome.tabs.query({ active: true, currentWindow: true }, handleTabs);
-                } catch (_) {}
             }
+            if (callback) callback();
         };
-        queryActiveTab();
+
+        // In Firefox MV3, lastFocusedWindow reliably targets the browser window containing the active webpage
+        try {
+            chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+                if (tabs && tabs.length > 0) {
+                    handleTabs(tabs);
+                } else {
+                    chrome.tabs.query({ active: true, currentWindow: true }, handleTabs);
+                }
+            });
+        } catch (_) {
+            try {
+                chrome.tabs.query({ active: true, currentWindow: true }, handleTabs);
+            } catch (_) {
+                if (callback) callback();
+            }
+        }
+    }
+
+    onLoad() {
+        this.queryActiveTab();
 
         // Load saved user preferences: sound chime & preferred resolution tier
         chrome.storage.local.get(["fetchflowSoundEnabled", "fetchflowPreferredQuality"], (res) => {
@@ -135,6 +138,22 @@ class VideoPopup {
                     this.applyFilter();
                     searchInput.focus();
                 }
+            });
+        }
+
+        const refreshTabsBtn = document.getElementById("refreshTabsBtn");
+        if (refreshTabsBtn) {
+            refreshTabsBtn.addEventListener('click', () => {
+                refreshTabsBtn.classList.add('spinning');
+                this.queryActiveTab(() => {
+                    chrome.runtime.sendMessage({ type: "stat" }, (res) => {
+                        if (res) this.onMsg(res);
+                        setTimeout(() => {
+                            refreshTabsBtn.classList.remove('spinning');
+                            this.showToast("Tab media refreshed");
+                        }, 350);
+                    });
+                });
             });
         }
 

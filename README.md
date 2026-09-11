@@ -17,18 +17,22 @@
 <p align="center">
   <a href="https://github.com/Mayanktaker/fetchflow/releases/latest"><img src="https://img.shields.io/github/v/release/Mayanktaker/fetchflow?color=orange&style=flat-square&logo=github" alt="Latest Release" /></a>
   <a href="https://github.com/Mayanktaker/fetchflow/releases"><img src="https://img.shields.io/github/downloads/Mayanktaker/fetchflow/total?color=blue&style=flat-square" alt="Total Downloads" /></a>
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/"><img src="https://img.shields.io/badge/Firefox_Add--on-FetchFlow_Helper-FF7139?style=flat-square&logo=firefox-browser" alt="Firefox Add-on" /></a>
   <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20Wayland%20%7C%20X11%20%7C%20Windows-brightgreen?style=flat-square" alt="Platform" />
   <img src="https://img.shields.io/badge/.NET-8.0%20AOT-512BD4?style=flat-square&logo=dotnet" alt=".NET 8" />
   <img src="https://img.shields.io/badge/UI-GTK3%20CSD%20%7C%20Windows%20WPF-4A90E2?style=flat-square" alt="UI" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--2.0-blue?style=flat-square" alt="License" /></a>
+  <a href="#-support--donate-via-paypal"><img src="https://img.shields.io/badge/Donate-PayPal-00457C?style=flat-square&logo=paypal" alt="Donate via PayPal" /></a>
   <a href="https://mayanktaker.com"><img src="https://img.shields.io/badge/Maintained%20by-Mayanktaker-F97316?style=flat-square" alt="Maintainer" /></a>
 </p>
 
 <p align="center">
   <a href="https://mayanktaker.github.io/fetchflow/"><b>🌐 Official Website</b></a> &bull;
   <a href="https://github.com/Mayanktaker/fetchflow/releases"><b>📦 Downloads &amp; Releases</b></a> &bull;
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/"><b>🦊 Firefox Add-on</b></a> &bull;
   <a href="#-browser-extensions-manifest-v3"><b>🧩 Browser Extensions</b></a> &bull;
-  <a href="#-why-fetchflow-comparison"><b>⚖️ Comparison</b></a> &bull;
+  <a href="#-reviews--feedback"><b>⭐ Reviews &amp; Feedback</b></a> &bull;
+  <a href="#-support--donate-via-paypal"><b>☕ Donate</b></a> &bull;
   <a href="https://github.com/Mayanktaker/fetchflow/issues"><b>🐛 Report an Issue</b></a>
 </p>
 
@@ -208,6 +212,36 @@ dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj
 ### 🛟 Single-Instance Self-Recovery
 
 FetchFlow allows only one running instance. If a previous instance ever becomes unresponsive (its internal message port stops answering), the next launch detects this within a couple of seconds and automatically takes over as the primary instance — the app always starts instead of silently exiting. The IPC listener is also supervised and rebinds itself if it ever stops unexpectedly, keeping browser-extension connectivity alive.
+
+---
+
+## ⭐ Reviews & Feedback
+
+Your feedback powers FetchFlow's continuous refinement! If FetchFlow has accelerated your downloads or simplified media ingestion:
+
+- **Leave a Review on Firefox Add-ons (AMO):** If you use the Firefox integration, please take 30 seconds to rate us and share your feedback on the **[FetchFlow AMO Review Page](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/reviews/)**. It helps other users discover high-performance, telemetry-free downloading.
+- **Star & Share the Repository:** A ⭐ on GitHub helps boost visibility across the open-source community.
+- **Feature Requests & Bug Reports:** Have an idea for improvement, new video platform support, or UI enhancements? Open a discussion or ticket on **[GitHub Issues](https://github.com/Mayanktaker/fetchflow/issues)**.
+
+---
+
+## ☕ Support & Donate via PayPal
+
+FetchFlow is **100% free, open-source, zero-telemetry, and ad-free software**. We build and maintain high-performance native desktop clients and browser integrations entirely independently.
+
+If FetchFlow brings value to your daily workflow, consider supporting ongoing development, hosting, and test hardware:
+
+<p align="center">
+  <a href="https://www.paypal.com/donate/?business=mayanktaker_hell%40yahoo.co.in&currency_code=USD" target="_blank" rel="noopener">
+    <img src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" alt="Donate with PayPal" />
+  </a>
+</p>
+
+<p align="center">
+  <b>PayPal Account:</b> <code>mayanktaker_hell@yahoo.co.in</code>
+  <br />
+  <a href="https://www.paypal.com/donate/?business=mayanktaker_hell%40yahoo.co.in&currency_code=USD"><b>Click here to donate via PayPal &rarr;</b></a>
+</p>
 
 ---
 

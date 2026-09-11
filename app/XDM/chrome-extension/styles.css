@@ -231,7 +231,7 @@ body.popup {
 .search-input {
   width: 100%;
   height: 28px;
-  padding: 0 24px 0 28px;
+  padding: 0 46px 0 28px;
   font-size: 11px;
   color: var(--text);
   background-color: var(--bg-card);
@@ -252,7 +252,7 @@ body.popup {
 
 .search-clear-btn {
   position: absolute;
-  right: 6px;
+  right: 28px;
   width: 16px;
   height: 16px;
   display: inline-flex;
@@ -269,6 +269,36 @@ body.popup {
 .search-clear-btn:hover {
   color: var(--text);
   background-color: var(--border);
+}
+
+.search-refresh-btn {
+  position: absolute;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.2s ease;
+}
+
+.search-refresh-btn:hover {
+  color: var(--accent);
+  background-color: var(--border-soft);
+}
+
+.search-refresh-btn.spinning svg {
+  animation: search-refresh-spin 0.6s linear infinite;
+}
+
+@keyframes search-refresh-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Scope Filter Tabs */

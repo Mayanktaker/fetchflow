@@ -67,6 +67,9 @@ else
     echo "No Mozilla API keys provided, creating unsigned XPI..."
     zip -r "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" . -x ".*"
 fi
+cp "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" "$OUT_DIR/fetchflow-firefox-extension.xpi"
+mkdir -p "$OUT_DIR/test"
+cp "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" "$OUT_DIR/test/fetchflow-firefox-extension.xpi"
 cd ../../..
 
 echo "Publishing FetchFlow .NET Application..."
