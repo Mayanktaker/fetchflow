@@ -12,7 +12,7 @@ namespace XDM.Core
         public const string SupportUrl = "https://github.com/Mayanktaker/fetchflow";
         public const string IssueUrl = "https://github.com/Mayanktaker/fetchflow/issues";
         public const string ChromeExtensionUrl = "https://github.com/Mayanktaker/fetchflow";
-        public const string FirefoxExtensionUrl = "https://github.com/Mayanktaker/fetchflow";
+        public const string FirefoxExtensionUrl = "https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/";
         public const string OperaExtensionUrl = "https://github.com/Mayanktaker/fetchflow";
         public const string EdgeExtensionUrl = "https://github.com/Mayanktaker/fetchflow";
         public const string VideoDownloadTutorialUrl = "https://github.com/Mayanktaker/fetchflow";

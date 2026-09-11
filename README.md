@@ -130,12 +130,12 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 | Browser Family | Supported Browsers | Package | Features |
 |---|---|---|---|
 | **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.3.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
-| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | `fetchflow-firefox-extension-9.1.15.3.xpi` | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.3.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
 
 
-### Manual Installation
+### Installation
+- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.3.xpi).
 - **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.
-- **Firefox:** Open `about:debugging#/runtime/this-firefox` &rarr; Click *Load Temporary Add-on* &rarr; Select `app/XDM/firefox-amo/manifest.json`.
 
 ---
 

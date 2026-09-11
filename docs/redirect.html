@@ -10,14 +10,8 @@
             } else {
                 window.location.href = "https://chrome.google.com/webstore/detail/xtreme-download-manager/dkckaoghoiffdbomfbbodbbgmhjblecj"
             }
-        } else if (str.indexOf("mzfirefox") != -1 && str.indexOf("&version=8.0") != -1) {
-            window.location.href = "https://addons.mozilla.org/en-US/firefox/addon/xdm-browser-monitor-v8/"
-        } else if (str.indexOf("firefox") != -1) {
-            if (str.indexOf("&version=8.0") != -1) {
-                window.location.href = "https://addons.mozilla.org/en-US/firefox/addon/xdm-integration-module/"
-            } else {
-                window.location.href = "https://addons.mozilla.org/en-US/firefox/addon/xdm-browser-monitor/"
-            }
+        } else if (str.indexOf("firefox") != -1 || str.indexOf("mzfirefox") != -1) {
+            window.location.href = "https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/";
         } else if (str.indexOf("target=ext") != -1) {
             window.location.href = "https://github.com/subhra74/xdm/wiki/How-to-Install-Browser-extension-for-Google-Chrome---MS-Edge---Brave---Vivaldi-in-XDM-8"
         } else if (str.indexOf("target=mg") != -1 || str.indexOf("target=video") != -1) {

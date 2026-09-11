@@ -643,8 +643,9 @@
         <div class="card-icon" style="margin: 0 auto 16px;">🦊</div>
         <h3>Firefox & Gecko</h3>
         <p style="margin-bottom: 20px;">For Firefox, Floorp, LibreWolf, and Waterfox.</p>
-        <div class="dl-actions" style="justify-content: center;">
-          <a href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.15.3/fetchflow-firefox-extension-9.1.15.3.xpi" id="dl-firefox" class="btn-secondary">Download Firefox XPI (v9.1.15.3)</a>
+        <div class="dl-actions" style="justify-content: center; flex-wrap: wrap; gap: 8px;">
+          <a href="https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/" target="_blank" rel="noopener" class="btn-primary" style="background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);">Add to Firefox (AMO)</a>
+          <a href="https://github.com/Mayanktaker/fetchflow/releases/download/v9.1.15.3/fetchflow-firefox-extension-9.1.15.3.xpi" id="dl-firefox" class="btn-secondary">Direct XPI</a>
           <button class="btn-sha-copy" data-target="dl-firefox" data-hash="224207d6b774773545d4c98e6df82a5c1f4980e2d4d49a9ac571bf676dc0f463" title="Copy SHA-256 checksum">📋 SHA-256</button>
         </div>
       </div>
@@ -750,7 +751,7 @@
               if (el) { el.href = url; el.textContent = `Download Chrome MV3 Zip (${tag})`; }
             } else if (name.includes('firefox') && (name.endsWith('.xpi') || name.endsWith('.zip'))) {
               const el = document.getElementById('dl-firefox');
-              if (el) { el.href = url; el.textContent = `Download Firefox XPI (${tag})`; }
+              if (el) { el.href = url; el.textContent = `Direct XPI (${tag})`; }
             }
           });
 
