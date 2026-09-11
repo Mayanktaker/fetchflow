@@ -6,6 +6,8 @@ class VideoPopup {
         this.filterQuery = "";
         this.currentScope = "current"; // "current" | "all"
         this.activeTabId = null;
+        this.activeTabTitle = "";
+        this.activeTabUrl = "";
         this.preferredQuality = "";
         this.soundEnabled = false;
         this.healthInterval = null;
@@ -16,17 +18,35 @@ class VideoPopup {
     }
 
     onLoad() {
-        // Query active browser tab immediately for tab-scoping accuracy
-        try {
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                if (tabs && tabs.length > 0 && tabs[0].id != null) {
-                    this.activeTabId = tabs[0].id + "";
+        // Query active browser tab with multi-signal detection (ID + Title + URL)
+        const queryActiveTab = () => {
+            const handleTabs = (tabs) => {
+                if (tabs && tabs.length > 0 && tabs[0]) {
+                    this.activeTabId = tabs[0].id != null ? String(tabs[0].id) : null;
+                    this.activeTabTitle = tabs[0].title || "";
+                    this.activeTabUrl = tabs[0].url || "";
                     if (this.rawList && this.rawList.length > 0) {
                         this.applyFilter();
                     }
                 }
-            });
-        } catch (_) {}
+            };
+
+            // In Firefox MV3, lastFocusedWindow reliably targets the browser window containing the active webpage
+            try {
+                chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+                    if (tabs && tabs.length > 0) {
+                        handleTabs(tabs);
+                    } else {
+                        chrome.tabs.query({ active: true, currentWindow: true }, handleTabs);
+                    }
+                });
+            } catch (_) {
+                try {
+                    chrome.tabs.query({ active: true, currentWindow: true }, handleTabs);
+                } catch (_) {}
+            }
+        };
+        queryActiveTab();
 
         // Load saved user preferences: sound chime & preferred resolution tier
         chrome.storage.local.get(["fetchflowSoundEnabled", "fetchflowPreferredQuality"], (res) => {
@@ -223,8 +243,11 @@ class VideoPopup {
             this.updateHealth(response.health);
         }
 
-        if (response.activeTabId != null) {
-            this.activeTabId = response.activeTabId + "";
+        // Only adopt background tab ID if we don't already have one from active browser query
+        if (response.activeTabId != null && response.activeTabId !== "-1" && response.activeTabId !== -1) {
+            if (!this.activeTabId) {
+                this.activeTabId = String(response.activeTabId);
+            }
         }
 
         const chk = document.getElementById("chk");
@@ -261,10 +284,57 @@ class VideoPopup {
         }
     }
 
-    matchesCurrentTab(item) {
-        if (!this.activeTabId || this.activeTabId === "-1") return true;
-        if (item.tabId == null || item.tabId === 0 || item.tabId === -1) return true;
-        return String(item.tabId) === String(this.activeTabId);
+    normalizeTitle(str) {
+        if (!str) return "";
+        return str
+            .toLowerCase()
+            .replace(/[-_]/g, " ")
+            .replace(/\b(youtube|watch|official|video|audio|full|hd|mkv|mp4|webm)\b/gi, "")
+            .replace(/[^a-z0-9]/gi, "")
+            .trim();
+    }
+
+    extractYoutubeId(url) {
+        if (!url) return "";
+        const m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+        return m ? m[1] : "";
+    }
+
+    matchesCurrentTab(group) {
+        // 1. Direct Tab ID match: if any item in this group shares the active tab ID
+        if (this.activeTabId && group.tabIds && group.tabIds.has(String(this.activeTabId))) {
+            return true;
+        }
+
+        // 2. YouTube Video ID match: if active page URL shares YouTube video ID
+        const currentYtId = this.extractYoutubeId(this.activeTabUrl);
+        if (currentYtId && group.urls && group.urls.length > 0) {
+            if (group.urls.some(u => u && u.includes(currentYtId))) {
+                return true;
+            }
+        }
+
+        // 3. Title match: active browser tab title matches the captured media title
+        if (this.activeTabTitle && group.title) {
+            const normTab = this.normalizeTitle(this.activeTabTitle);
+            const normGrp = this.normalizeTitle(group.title);
+            if (normTab && normGrp) {
+                if (normTab.includes(normGrp) || normGrp.includes(normTab)) {
+                    return true;
+                }
+                const sampleLength = Math.min(14, Math.min(normTab.length, normGrp.length));
+                if (sampleLength >= 6 && normTab.slice(0, sampleLength) === normGrp.slice(0, sampleLength)) {
+                    return true;
+                }
+            }
+        }
+
+        // 4. Fallback: if active tab could not be queried at all, show items
+        if (!this.activeTabId && !this.activeTabTitle) {
+            return true;
+        }
+
+        return false;
     }
 
     getResolutionRank(text, info) {
@@ -337,20 +407,28 @@ class VideoPopup {
 
         for (const item of items) {
             const rawTitle = (item.text || "Untitled Media").trim();
-            // Remove common container extensions from base grouping title
+            // Remove common container extensions (.mkv, .mp4, etc.)
             const cleanTitle = rawTitle.replace(/\.(mkv|mp4|webm|ts|m3u8|mpd|avi|flv|mov|m4a|mp3|aac|opus|flac)$/i, "").trim();
-            const tabKey = item.tabId != null ? String(item.tabId) : "unknown";
-            const groupKey = `${tabKey}:::${cleanTitle.toLowerCase()}`;
+            // Group by normalized title — merges all resolutions of the same video into a single card
+            const normTitle = this.normalizeTitle(cleanTitle) || cleanTitle.toLowerCase();
+            const groupKey = normTitle;
 
             if (!groupsMap.has(groupKey)) {
                 groupsMap.set(groupKey, {
                     title: cleanTitle || rawTitle,
                     rawTitle: rawTitle,
-                    tabId: item.tabId,
+                    tabIds: new Set(),
+                    urls: [],
                     items: []
                 });
             }
-            groupsMap.get(groupKey).items.push(item);
+            const grp = groupsMap.get(groupKey);
+            if (item.tabId != null && item.tabId !== "" && item.tabId !== "-1" && item.tabId !== -1) {
+                grp.tabIds.add(String(item.tabId));
+            }
+            if (item.url) grp.urls.push(item.url);
+            if (item.tabUrl) grp.urls.push(item.tabUrl);
+            grp.items.push(item);
         }
 
         const groups = [];
@@ -372,12 +450,11 @@ class VideoPopup {
     }
 
     applyFilter() {
-        // Calculate counts for the Scope switcher
-        const currentItems = this.rawList.filter(item => this.matchesCurrentTab(item));
-        const allItems = this.rawList;
+        // Group all raw media items first into consolidated video entities
+        const allGroups = this.groupMediaItems(this.rawList);
 
-        const currentGroups = this.groupMediaItems(currentItems);
-        const allGroups = this.groupMediaItems(allItems);
+        // Filter groups for current tab using multi-signal matching
+        const currentGroups = allGroups.filter(grp => this.matchesCurrentTab(grp));
 
         const scopeCurrentBadge = document.getElementById("scopeCurrentCount");
         const scopeAllBadge = document.getElementById("scopeAllCount");
@@ -388,7 +465,7 @@ class VideoPopup {
         const emptyTabNotice = document.getElementById("emptyTabNotice");
         const emptyTabOtherCount = document.getElementById("emptyTabOtherCount");
 
-        if (this.currentScope === 'current' && currentItems.length === 0 && allItems.length > 0) {
+        if (this.currentScope === 'current' && currentGroups.length === 0 && allGroups.length > 0) {
             if (emptyTabNotice) emptyTabNotice.style.display = 'flex';
             if (emptyTabOtherCount) emptyTabOtherCount.textContent = allGroups.length + "";
         } else {
@@ -396,19 +473,18 @@ class VideoPopup {
         }
 
         // Apply scope selection
-        let workingList = this.currentScope === 'current' ? currentItems : allItems;
+        let workingGroups = this.currentScope === 'current' ? currentGroups : allGroups;
 
         // Apply search query filter if user typed text
         if (this.filterQuery) {
-            workingList = workingList.filter(item => {
-                const text = (item.text || "").toLowerCase();
-                const info = (item.info || "").toLowerCase();
-                return text.includes(this.filterQuery) || info.includes(this.filterQuery);
+            workingGroups = workingGroups.filter(grp => {
+                const titleMatch = (grp.title || "").toLowerCase().includes(this.filterQuery);
+                const formatMatch = grp.items.some(it => ((it.info || "") + " " + (it.text || "")).toLowerCase().includes(this.filterQuery));
+                return titleMatch || formatMatch;
             });
         }
 
-        // Group the filtered items into consolidated video entities
-        this.displayedGroups = this.groupMediaItems(workingList);
+        this.displayedGroups = workingGroups;
 
         const downloadAllBtn = document.getElementById("downloadAll");
         if (downloadAllBtn) {

@@ -4,8 +4,9 @@ set -e
 
 # Resolve paths
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CHROME_EXT_DIR="$HOME/Downloads/fetchflow-chrome-extension"
-FIREFOX_EXT_DIR="$HOME/Downloads/fetchflow-firefox-extension"
+TEST_DIR="$BASE_DIR/fetchflow-release/test"
+CHROME_EXT_DIR="$TEST_DIR/fetchflow-chrome-extension"
+FIREFOX_EXT_DIR="$TEST_DIR/fetchflow-firefox-extension"
 
 mkdir -p "$CHROME_EXT_DIR" "$FIREFOX_EXT_DIR"
 
