@@ -56,7 +56,7 @@
 
 ---
 
-## ✨ What's New in 9.1.15.5 — Windows Feature Parity
+## ✨ What's New in 9.1.15.6 — Windows Feature Parity
 
 **What's new (Windows)**
 - **Full Theme Suite on Windows**: All 14 color schemes (7 dark + 7 light) from the Linux edition now live on Windows too — pick Light, Dark, or Follow System in Settings and switch instantly, no restart.
@@ -94,7 +94,7 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 
 ### Windows 11 / 10 (64-bit)
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.5.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.6.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash

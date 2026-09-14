@@ -159,8 +159,7 @@ jobs:
           }
           Write-Host "Using Inno Setup compiler at: $iscc"
 
-          # Compile standalone Windows installer .exe
-          & $iscc "/DAppVersion=$env:VERSION" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\fetchflow-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
+          # Compile standalone Windows installer .exe (versioned output name)
           & $iscc "/DAppVersion=$env:VERSION" "/DOutputBaseName=fetchflow-windows-x64-$env:VERSION-setup" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\fetchflow-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
           Write-Host "Generated Windows Setup Installer: fetchflow-release\fetchflow-windows-x64-$env:VERSION-setup.exe"
       - name: Upload Windows Artifacts
@@ -169,8 +168,8 @@ jobs:
           name: windows-artifacts
           path: |
             fetchflow-release/fetchflow-windows-x64-*.zip
-            fetchflow-release/fetchflow-windows-x64-setup.exe
-
+            fetchflow-release/fetchflow-windows-x64-*.zip
+            fetchflow-release/fetchflow-windows-x64-*.exe
   publish-release:
     name: Publish Release & Checksums
     needs: [build-linux, build-windows]

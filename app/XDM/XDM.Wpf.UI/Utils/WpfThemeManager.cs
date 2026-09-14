@@ -30,6 +30,7 @@ using Microsoft.Win32;
 using TraceLog;
 using XDM.Core;
 using XDM.Core.UI;
+using WpfApplication = System.Windows.Application;
 
 namespace XDM.Wpf.UI.Utils
 {
@@ -114,7 +115,7 @@ namespace XDM.Wpf.UI.Utils
                 {
                     return;
                 }
-                var app = Application.Current;
+                var app = WpfApplication.Current;
                 var dispatcher = app?.Dispatcher;
                 if (dispatcher == null)
                 {
@@ -154,7 +155,7 @@ namespace XDM.Wpf.UI.Utils
         // Swaps skin dictionaries, layers scheme brushes and restyles title bars
         public static void ApplyTheme(bool? darkRequested, int? colorSchemeRequested = null)
         {
-            var app = Application.Current;
+            var app = WpfApplication.Current;
             var dispatcher = app?.Dispatcher;
             if (dispatcher != null && !dispatcher.CheckAccess())
             {
@@ -215,7 +216,7 @@ namespace XDM.Wpf.UI.Utils
         }
 
         // Reloads skin dictionaries and recolors every live brush set from the new theme + scheme
-        private static void ApplyThemeToResources(Application app, bool modeChanged)
+        private static void ApplyThemeToResources(WpfApplication app, bool modeChanged)
         {
             var skinDictionaries = FindSkinDictionaries(app.Resources).ToList();
             var firstRegistration = liveBrushSets.Count == 0;
@@ -332,7 +333,7 @@ namespace XDM.Wpf.UI.Utils
         }
 
         // Creates (once) and appends the scheme layer, then recolors it like every other set
-        private static void EnsureSchemeLayer(Application app)
+        private static void EnsureSchemeLayer(WpfApplication app)
         {
             if (schemeLayer == null)
             {
@@ -355,7 +356,7 @@ namespace XDM.Wpf.UI.Utils
         }
 
         // Applies the immersive dark/light title bar attribute to every open window
-        private static void ApplyTitleBarTheme(Application app, bool dark)
+        private static void ApplyTitleBarTheme(WpfApplication app, bool dark)
         {
             var windows = new Window[app.Windows.Count];
             app.Windows.CopyTo(windows, 0);
