@@ -924,6 +924,10 @@ namespace XDM.Wpf.UI
             }
             var enabled = Config.Instance.EnableSpeedLimit;
             var limit = Config.Instance.DefaltDownloadSpeed;
+            // Accent tint when active, muted statusbar tint when off (follows live scheme)
+            var brushKey = enabled ? "AccentBrush" : "StatusbarIconcolor";
+            SpeedLimitIcon.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, brushKey);
+            SpeedLimitIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, brushKey);
             SpeedLimitIcon.Opacity = enabled ? FullOpacity : SpeedLimiterDimmedOpacity;
             BtnSpeedLimit.ToolTip = enabled && limit > 0
                 ? TextResource.GetText("MSG_SPEED_LIMIT") + SpeedStateSeparator + FormattingHelper.FormatSize(limit * (double)BytesPerKilobyte) + SpeedRateSuffix

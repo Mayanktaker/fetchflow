@@ -4,7 +4,6 @@ name: Windows Desktop CI
 on:
   push:
     branches: [ "master" ]
-    tags: [ "v*" ]
   pull_request:
     branches: [ "master" ]
 
@@ -79,15 +78,3 @@ jobs:
             fetchflow-release/fetchflow-windows-*
             fetchflow-release/SHA256SUMS-windows-*.txt
           if-no-files-found: error
-
-      - name: Attach to GitHub Release (tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Release attach is tag-gated per repo release policy
-          $tag = "${{ github.ref_name }}"
-          $files = @(Get-ChildItem fetchflow-release | Where-Object { $_.Name -like "fetchflow-windows-*" -or $_.Name -like "SHA256SUMS-windows-*" } | ForEach-Object { $_.FullName })
-          gh release create $tag --title $tag --generate-notes @files 2>$null
-          if ($LASTEXITCODE -ne 0) { gh release upload $tag @files --clobber }

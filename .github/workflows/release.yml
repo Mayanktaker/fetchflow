@@ -145,8 +145,8 @@ jobs:
           Copy-Item -Force "app\XDM\fetchflow-logo-512.png" "$winDir\fetchflow-logo-512.png"
 
           # Package Portable Windows ZIP
-          Compress-Archive -Path "$winDir\*" -DestinationPath "$outDir\fetchflow-windows-x64-$env:VERSION.zip" -Force
-          Write-Host "Generated Portable ZIP: $outDir\fetchflow-windows-x64-$env:VERSION.zip"
+          Compress-Archive -Path "$winDir\*" -DestinationPath "$outDir\fetchflow-windows-x64-portable-$env:VERSION.zip" -Force
+          Write-Host "Generated Portable ZIP: $outDir\fetchflow-windows-x64-portable-$env:VERSION.zip"
 
       - name: Build Inno Setup Installer
         shell: pwsh
@@ -161,8 +161,8 @@ jobs:
 
           # Compile standalone Windows installer .exe
           & $iscc "/DAppVersion=$env:VERSION" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\fetchflow-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
-          Write-Host "Generated Windows Setup Installer: fetchflow-release\fetchflow-windows-x64-setup.exe"
-
+          & $iscc "/DAppVersion=$env:VERSION" "/DOutputBaseName=fetchflow-windows-x64-$env:VERSION-setup" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\fetchflow-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
+          Write-Host "Generated Windows Setup Installer: fetchflow-release\fetchflow-windows-x64-$env:VERSION-setup.exe"
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:

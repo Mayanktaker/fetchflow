@@ -70,6 +70,7 @@ namespace XDM.Wpf.UI.Utils
         // Applies theme mode + scheme from persisted config (ThemeMode 2 => follow system)
         public static void ApplyFromConfig()
         {
+            EnsureSystemThemeWatcher();
             bool? dark;
             if (Config.Instance.ThemeMode == ThemeModeFollowSystem)
             {
@@ -80,6 +81,65 @@ namespace XDM.Wpf.UI.Utils
                 dark = Config.Instance.ThemeMode == ThemeModeDark;
             }
             ApplyTheme(dark, Config.Instance.ColorScheme);
+        }
+
+        // One-time SystemEvents hook so "Follow System" reacts to the Windows
+        // personalization toggle (WM_SETTINGCHANGE) without an app restart
+        private static bool systemThemeWatcherAttached;
+
+        // Subscribes the system theme watcher exactly once
+        private static void EnsureSystemThemeWatcher()
+        {
+            if (systemThemeWatcherAttached)
+            {
+                return;
+            }
+            systemThemeWatcherAttached = true;
+            try
+            {
+                SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Non-fatal: system theme watcher unavailable: " + ex.Message);
+            }
+        }
+
+        // Re-applies theme when the OS apps-theme flips while in Follow System mode
+        private static void OnUserPreferenceChanged(object? sender, UserPreferenceChangedEventArgs e)
+        {
+            try
+            {
+                if (Config.Instance.ThemeMode != ThemeModeFollowSystem)
+                {
+                    return;
+                }
+                var app = Application.Current;
+                var dispatcher = app?.Dispatcher;
+                if (dispatcher == null)
+                {
+                    return;
+                }
+                dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        // Only re-apply when the resolved mode actually flips
+                        if (IsSystemAppsThemeDark() != IsDarkActive)
+                        {
+                            ApplyTheme(null, Config.Instance.ColorScheme);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Debug("Non-fatal: system theme follow failed: " + ex.Message);
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Non-fatal: theme change handler failed: " + ex.Message);
+            }
         }
 
         // Toggles between Dark and Light mode, persisting the choice like GTK ThemeManager
