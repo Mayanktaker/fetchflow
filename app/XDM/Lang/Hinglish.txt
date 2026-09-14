@@ -282,3 +282,7 @@ MSG_COPY=Copy karein
 MSG_PLAY_SOUND=Download poora hone par sound play karein
 SORT_BY=Sort karein
 SORT_DESCENDING=Ulta (bade se chhota)
+SETTINGS_THEME=Theme:
+SETTINGS_COLOR_SCHEME=Color Scheme:
+BTN_EXPORT_PALETTES=Palettes export karein
+BTN_IMPORT_PALETTES=Palettes import karein

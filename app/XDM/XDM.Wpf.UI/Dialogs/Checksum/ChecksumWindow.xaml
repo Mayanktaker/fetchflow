@@ -1,0 +1,148 @@
+<Window x:Class="XDM.Wpf.UI.Dialogs.Checksum.ChecksumWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Width="680" Height="540" MinWidth="560" MinHeight="460"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        AllowDrop="True"
+        PreviewDragOver="Window_PreviewDragOver" PreviewDrop="Window_PreviewDrop">
+    <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+    <Window.Resources>
+        <!-- Accent-filled button template used for the primary close action -->
+        <ControlTemplate x:Key="AccentButtonTemplate" TargetType="Button">
+            <Border x:Name="AccentBorder" CornerRadius="4" BorderThickness="{TemplateBinding BorderThickness}"
+                    Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                    Padding="{TemplateBinding Padding}">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter TargetName="AccentBorder" Property="Opacity" Value="0.8"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter TargetName="AccentBorder" Property="Opacity" Value="0.5"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </Window.Resources>
+    <Grid Background="{DynamicResource ControlBackcolor}" Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- File summary header: type icon, name, size and friendly path -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Border Width="46" Height="46" CornerRadius="6" BorderThickness="1" VerticalAlignment="Center"
+                    Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBordercolor}">
+                <Path Name="ImgFileIcon" Width="28" Height="28" Stretch="Uniform"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                <TextBlock Name="LblFileName" FontSize="13" FontWeight="Bold" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource ControlForecolor}"/>
+                <TextBlock Name="LblFileMeta" FontSize="11" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource ControlForecolor}"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Progress indicator and computation status line -->
+        <StackPanel Grid.Row="1" Margin="0,12,0,0">
+            <ProgressBar Name="PrgHash" Height="6" Minimum="0" Maximum="100"/>
+            <TextBlock Name="LblStatus" FontSize="11" Margin="0,5,0,0" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ControlForecolor}"/>
+        </StackPanel>
+
+        <!-- Grid of computed read-only digests with per-row copy buttons -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="78"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Name="LblSha256" Grid.Row="0" Grid.Column="0" FontWeight="Bold" Margin="0,0,8,5"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Foreground="{DynamicResource ControlForecolor}"/>
+            <TextBox Name="TxtSha256" Grid.Row="0" Grid.Column="1" Margin="0,0,0,5" IsReadOnly="True"
+                     FontFamily="Consolas" FontSize="12" AllowDrop="False"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"/>
+            <Button Name="BtnCopySha256" Grid.Row="0" Grid.Column="2" Padding="6,2" Click="BtnCopyHash_Click">
+                <Path Data="{StaticResource ri-file-copy-line}" Width="14" Height="14" Stretch="Uniform"
+                      Fill="{DynamicResource ButtonForecolor}"/>
+            </Button>
+
+            <TextBlock Name="LblMd5" Grid.Row="1" Grid.Column="0" FontWeight="Bold" Margin="0,0,8,5"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Foreground="{DynamicResource ControlForecolor}"/>
+            <TextBox Name="TxtMd5" Grid.Row="1" Grid.Column="1" Margin="0,0,0,5" IsReadOnly="True"
+                     FontFamily="Consolas" FontSize="12" AllowDrop="False"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"/>
+            <Button Name="BtnCopyMd5" Grid.Row="1" Grid.Column="2" Padding="6,2" Click="BtnCopyHash_Click">
+                <Path Data="{StaticResource ri-file-copy-line}" Width="14" Height="14" Stretch="Uniform"
+                      Fill="{DynamicResource ButtonForecolor}"/>
+            </Button>
+
+            <TextBlock Name="LblSha512" Grid.Row="2" Grid.Column="0" FontWeight="Bold" Margin="0,0,8,5"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Foreground="{DynamicResource ControlForecolor}"/>
+            <TextBox Name="TxtSha512" Grid.Row="2" Grid.Column="1" Margin="0,0,0,5" IsReadOnly="True"
+                     FontFamily="Consolas" FontSize="12" AllowDrop="False"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"/>
+            <Button Name="BtnCopySha512" Grid.Row="2" Grid.Column="2" Padding="6,2" Click="BtnCopyHash_Click">
+                <Path Data="{StaticResource ri-file-copy-line}" Width="14" Height="14" Stretch="Uniform"
+                      Fill="{DynamicResource ButtonForecolor}"/>
+            </Button>
+
+            <TextBlock Name="LblSha1" Grid.Row="3" Grid.Column="0" FontWeight="Bold" Margin="0,0,8,0"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Foreground="{DynamicResource ControlForecolor}"/>
+            <TextBox Name="TxtSha1" Grid.Row="3" Grid.Column="1" IsReadOnly="True"
+                     FontFamily="Consolas" FontSize="12" AllowDrop="False"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"/>
+            <Button Name="BtnCopySha1" Grid.Row="3" Grid.Column="2" Padding="6,2" Click="BtnCopyHash_Click">
+                <Path Data="{StaticResource ri-file-copy-line}" Width="14" Height="14" Stretch="Uniform"
+                      Fill="{DynamicResource ButtonForecolor}"/>
+            </Button>
+        </Grid>
+
+        <!-- Live compare section: expected hash input with watermark and match badge -->
+        <StackPanel Grid.Row="3" Margin="0,10,0,0" VerticalAlignment="Top">
+            <TextBlock Name="LblCompareHeader" FontWeight="Bold"
+                       Foreground="{DynamicResource ControlForecolor}"/>
+            <Grid Margin="0,6,0,0">
+                <TextBox Name="TxtExpected" AllowDrop="False" VerticalContentAlignment="Center"
+                         TextChanged="TxtExpected_TextChanged"/>
+                <TextBlock Name="LblHint" IsHitTestVisible="False" VerticalAlignment="Center"
+                           Margin="6,0,24,0" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource PlaceHolderForecolor}"/>
+            </Grid>
+            <TextBlock Name="LblBadge" Margin="0,6,0,0" FontSize="12" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- Action bar: copy report, recalculate, spacer, accent close -->
+        <DockPanel Grid.Row="4" Margin="0,12,0,0">
+            <Button DockPanel.Dock="Right" Name="BtnClose" MinWidth="88" Padding="16,5" BorderThickness="0"
+                    Template="{StaticResource AccentButtonTemplate}"
+                    Background="{DynamicResource AccentBrush}"
+                    Foreground="{DynamicResource AccentForegroundBrush}"
+                    Click="BtnClose_Click"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Name="BtnCopyAll" Click="BtnCopyAll_Click"/>
+                <Button Name="BtnRecalculate" Click="BtnRecalculate_Click"/>
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

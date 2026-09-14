@@ -107,3 +107,18 @@ These are used inline in C# for dynamic status text, not in CSS:
 | Active (connected) | #22c55e | MainWindow, SettingsDialog |
 | Ready | #38bdf8 | MainWindow, SettingsDialog |
 | Listening | #94a3b8 | MainWindow, SettingsDialog |
+
+## WPF Theme Token Mapping (Windows parity)
+
+Scheme hex tokens are single-sourced in `app/XDM/XDM.Core/UI/ColorSchemeTable.cs` (shared project — consumed by both GTK `ThemeManager` and WPF `Utils/WpfThemeManager.cs`). Never fork these values into CSS/XAML copies; the runtime layers them live.
+
+| ColorSchemeDefinition token | GTK effect | WPF runtime brush override |
+|---|---|---|
+| `AccentHex` | accent CSS variables | `AccentBrush`, `TabSelectionColor`, `ProgressBarForecolor`, `TextFocusedBorder`, `TextMouseOverBorder`, `ButtonFocusedBorder`, `HyperlinkForecolor` |
+| accent luminance | — | `AccentForegroundBrush` (white / `#1A1A1A`, Rec.601 threshold 0.55) |
+| `HoverBackgroundHex` | row hover | `RowHoverBrush`, `ListViewMouseOverBackcolor` |
+| `ActiveBackgroundHex` | row selected | `RowActiveBrush`, `ListViewSelectedBackcolor`, `CategoryHighlight`, `SystemColors.HighlightBrushKey` |
+| `AlternateBackgroundHex` | alternating rows | `RowAlternateBrush` |
+| `CardBackgroundHex` | card / rail surfaces | `CardBackgroundBrush` |
+
+WPF base neutral skins live in `Themes/DarkTheme.xaml` + `Themes/LightTheme.xaml` (full brush-key parity); control chrome in `Resources/*Styles.xaml` references brushes via `DynamicResource` only, so scheme swaps recolor open windows without restart.

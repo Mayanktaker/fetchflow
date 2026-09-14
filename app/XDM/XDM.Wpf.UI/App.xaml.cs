@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Net;
 using System.Linq;
 using System.Windows;
@@ -11,6 +12,7 @@ using System.IO;
 using XDMApp = XDM.Core.Application;
 using XDM.Core.BrowserMonitoring;
 using System.Diagnostics;
+using XDM.Wpf.UI.Utils;
 
 namespace XDM.Wpf.UI
 {
@@ -22,7 +24,15 @@ namespace XDM.Wpf.UI
         private const string DisableCachingName = @"TestSwitch.LocalAppContext.DisableCaching";
         private const string DontEnableSchUseStrongCryptoName = @"Switch.System.Net.DontEnableSchUseStrongCrypto";
 
-        public static Skin Skin = ShouldSelectDarkTheme() ? Skin.Dark : Skin.Light;
+        private static Skin skin = ShouldSelectDarkTheme() ? Skin.Dark : Skin.Light;
+
+        // Active skin; WpfThemeManager keeps this in sync for legacy App.Skin readers
+        public static Skin Skin
+         {
+             get { return skin; }
+             set { skin = value; }
+         }
+
         private ApplicationCore core;
         private XDMApp app;
         private MainWindow win;
@@ -57,6 +67,9 @@ namespace XDM.Wpf.UI
             Log.Debug($"Application_Startup::args->: {string.Join(" ", Environment.GetCommandLineArgs())}");
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+            // Apply persisted theme mode + color scheme before any window is created
+            WpfThemeManager.ApplyFromConfig();
 
             core = new ApplicationCore();
             win = new MainWindow();

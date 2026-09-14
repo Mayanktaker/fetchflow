@@ -56,16 +56,21 @@
 
 ---
 
-## ✨ What's New in 9.1.15.4
+## ✨ What's New in 9.1.15.5 — Windows Feature Parity
 
-**What's new**
-- **Convert Audio to MP3**: Direct one-click toggle switch in the browser extension toolbar menu to encode captured streaming audio into universal MP3 format.
-- **Audio Bitrate Badges & Labels**: View exact audio bitrates (e.g. `128k`, `160k`, `256k`, `320k`) directly on media cards and within format dropdown menus.
-- **Enhanced Media Grouping**: Highest quality audio streams automatically prioritize to the top of format selections.
+**What's new (Windows)**
+- **Full Theme Suite on Windows**: All 14 color schemes (7 dark + 7 light) from the Linux edition now live on Windows too — pick Light, Dark, or Follow System in Settings and switch instantly, no restart.
+- **Polished Controls Everywhere**: Dropdowns, checkboxes, scrollbars, tabs, menus, and text fields are fully restyled to match the app's theme — no more default Windows-gray popups.
+- **Checksum Verification**: Right-click any finished download → Verify Checksum. Computes SHA-256, MD5, SHA-512 and SHA-1 with live progress, paste-or-drop an expected hash to confirm file integrity, and copy any digest in one click.
+- **Backup & Restore Center**: The Import / Export menu now opens a dedicated chooser to save your download list and settings to a `.zip` archive — or restore them on another PC.
+- **Speed Limiter Quick Menu**: Adjust download speed limits instantly from the main window without opening full settings.
+- **Sound on Completion Toggle**: Turn the download-finished sound on or off right from the menu.
+- **More Settings Parity**: Fallback user agent, server timestamps, antivirus scanning, temp folder, double-click action, and more — now matching the Linux edition.
 
-**Bug fixes**
-- **Eliminated Storyboard Previews**: Filtered out internal video storyboard preview files (`.mhtml`) so only genuine downloadable video and audio streams appear in the media inspector.
-- **Cleaned Media Titles**: Polished media titles by trimming trailing punctuation dots and redundant container extension strings.
+**Bug fixes (Windows)**
+- **Light Mode Fixed**: The light theme previously shipped with missing colors, causing washed-out and broken-looking surfaces. It is now complete and fully readable in every scheme.
+- **Sorting That Sticks**: Clicking column headers to sort downloads now remembers your choice between sessions.
+- **Right-Click No Longer Drops Your Selection**: Selecting several downloads and right-clicking keeps the whole selection intact.
 
 ---
 
@@ -89,7 +94,7 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 
 ### Windows 11 / 10 (64-bit)
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-9.1.15.4.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.5.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash

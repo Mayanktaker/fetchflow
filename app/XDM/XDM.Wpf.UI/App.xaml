@@ -7,6 +7,7 @@
              Exit="Application_Exit" 
              DispatcherUnhandledException="Application_DispatcherUnhandledException"
              SessionEnding="Application_SessionEnding">
+    <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

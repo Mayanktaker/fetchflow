@@ -1,4 +1,5 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿ <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:core="clr-namespace:System;assembly=mscorlib"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--#region Colors and Brushes -->
@@ -74,6 +75,15 @@
 
     <SolidColorBrush x:Key="ProgressBarBackcolor" Color="#343537"/>
     <SolidColorBrush x:Key="ProgressBarForecolor" Color="#114C7B"/>
+ 
+    <!-- Color scheme layer keys: overridden at runtime by WpfThemeManager from ColorSchemeTable -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#10B981"/>
+     <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF"/>
+     <SolidColorBrush x:Key="RowHoverBrush" Color="#1B302A"/>
+     <SolidColorBrush x:Key="RowActiveBrush" Color="#27443C"/>
+     <SolidColorBrush x:Key="RowAlternateBrush" Color="#172421"/>
+     <SolidColorBrush x:Key="CardBackgroundBrush" Color="#1D2C29"/>
+     <SolidColorBrush x:Key="CheckBoxFocusVisual" Color="#10B981" Opacity="0.6"/>
 
     <core:Double x:Key="ButtonDisabledOpacity">0.4</core:Double>
 

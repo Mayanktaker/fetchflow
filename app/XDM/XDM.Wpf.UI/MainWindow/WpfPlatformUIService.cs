@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using XDM.Core.Downloader;
 using XDM.Core.UI;
 using XDM.Core.Util;
 using XDM.Wpf.UI.Dialogs.BatchDownload;
+using XDM.Wpf.UI.Dialogs.Checksum;
 using XDM.Wpf.UI.Dialogs.ChromeIntegrator;
 using XDM.Wpf.UI.Dialogs.CompletedDialog;
 using XDM.Wpf.UI.Dialogs.CredentialDialog;
@@ -260,7 +262,8 @@ namespace XDM.Wpf.UI
 
         public void ShowChecksumDialog(object? window, string filePath)
         {
-            // Placeholder for Windows WPF UI
+            var owner = window as Window ?? ApplicationContext.MainWindow as Window;
+            new ChecksumWindow(owner, filePath).Show();
         }
     }
 }

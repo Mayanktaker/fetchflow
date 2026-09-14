@@ -1,0 +1,84 @@
+<Window x:Class="XDM.Wpf.UI.Dialogs.ImportExport.ImportExportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Width="480" Height="300"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+    <Window.Resources>
+        <!-- Semantic glyph colors for the export and import action cards -->
+        <SolidColorBrush x:Key="ExportGlyphBrush" Color="#3584E4"/>
+        <SolidColorBrush x:Key="ImportGlyphBrush" Color="#10B981"/>
+
+        <!-- Rounded card button template with hover/press feedback -->
+        <ControlTemplate x:Key="CardButtonTemplate" TargetType="Button">
+            <Border x:Name="CardBorder" CornerRadius="6" BorderThickness="1" Padding="14,10"
+                    Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBordercolor}">
+                <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="CardBorder" Property="Background" Value="{DynamicResource RowHoverBrush}"/>
+                    <Setter TargetName="CardBorder" Property="BorderBrush" Value="{DynamicResource RowActiveBrush}"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter TargetName="CardBorder" Property="Background" Value="{DynamicResource RowActiveBrush}"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter TargetName="CardBorder" Property="Opacity" Value="0.5"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </Window.Resources>
+    <Grid Background="{DynamicResource ControlBackcolor}" Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header and descriptive subtitle -->
+        <TextBlock Name="LblHeader" FontSize="14" FontWeight="Bold"
+                   Foreground="{DynamicResource ControlForecolor}"/>
+        <TextBlock Name="LblSub" Grid.Row="1" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
+                   Foreground="{DynamicResource ControlForecolor}"/>
+
+        <!-- Export and import action cards -->
+        <StackPanel Grid.Row="2" Margin="0,14,0,0" VerticalAlignment="Top">
+            <Button Name="BtnExport" Template="{StaticResource CardButtonTemplate}"
+                    HorizontalAlignment="Stretch" Click="BtnExport_Click">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⬆" FontFamily="Segoe UI Symbol" FontSize="26" VerticalAlignment="Center"
+                               Foreground="{StaticResource ExportGlyphBrush}"/>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Name="LblExportTitle" FontSize="12" FontWeight="Bold"
+                                   Foreground="{DynamicResource ControlForecolor}"/>
+                        <TextBlock Name="LblExportDesc" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource ControlForecolor}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+            <Button Name="BtnImport" Template="{StaticResource CardButtonTemplate}" Margin="0,10,0,0"
+                    HorizontalAlignment="Stretch" Click="BtnImport_Click">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⬇" FontFamily="Segoe UI Symbol" FontSize="26" VerticalAlignment="Center"
+                               Foreground="{StaticResource ImportGlyphBrush}"/>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Name="LblImportTitle" FontSize="12" FontWeight="Bold"
+                                   Foreground="{DynamicResource ControlForecolor}"/>
+                        <TextBlock Name="LblImportDesc" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource ControlForecolor}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Dismiss button -->
+        <Button Name="BtnClose" Grid.Row="3" HorizontalAlignment="Right" MinWidth="90"
+                Margin="0,10,0,0" Click="BtnClose_Click"/>
+    </Grid>
+</Window>

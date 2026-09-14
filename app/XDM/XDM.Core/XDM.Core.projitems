@@ -72,6 +72,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)TraceLog\Log.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Translations\TextResource.cs" />
     <Compile Include="..\XDM.Core\UI\BatchDownloadUIController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ColorSchemeTable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\CommonUtils.cs" />
     <Compile Include="..\XDM.Core\UI\ComponentUpdaterUIController.cs" />
     <Compile Include="..\XDM.Core\UI\DownloadCompleteUIController.cs" />

@@ -1,4 +1,97 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
+    <!-- Implicit ContextMenu style: rounded themed popup surface -->
+    <Style TargetType="{x:Type ContextMenu}">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="HasDropShadow" Value="False"/>
+        <Setter Property="Foreground" Value="{DynamicResource ControlForecolor}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ContextMenu}">
+                    <Border Background="{DynamicResource ControlBackcolor}"
+                            BorderBrush="{DynamicResource ControlBordercolor}"
+                            BorderThickness="1" CornerRadius="6" Padding="4">
+                        <StackPanel IsItemsHost="True"
+                                    KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Themed separator used between menu groups -->
+    <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="{x:Type Separator}">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Separator}">
+                    <Rectangle Height="1" Margin="8,3,8,3"
+                               Fill="{DynamicResource ControlBordercolor}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Implicit MenuItem style: accent highlight bar, icon column, submenu popup -->
+    <Style TargetType="{x:Type MenuItem}">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Foreground" Value="{DynamicResource ControlForecolor}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type MenuItem}">
+                    <Grid Background="Transparent" MinWidth="180">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="24"/>
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="Highlight" Grid.ColumnSpan="3" CornerRadius="4"
+                                Margin="2,1,2,1" Background="Transparent"/>
+                        <ContentPresenter x:Name="Icon" Grid.Column="0"
+                                          ContentSource="Icon" Margin="4,4,4,4"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <ContentPresenter Grid.Column="1" ContentSource="Header"
+                                          RecognizesAccessKey="True" Margin="8,5,16,5"
+                                          VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <Path x:Name="Arrow" Grid.Column="2" Visibility="Collapsed"
+                              Data="M 0 0 L 4 4 L 0 8 Z" VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              Fill="{DynamicResource ControlForecolor}"/>
+                        <Popup x:Name="SubPopup" IsOpen="{TemplateBinding IsSubmenuOpen}"
+                               Placement="Right" AllowsTransparency="True" Focusable="False"
+                               PopupAnimation="Fade">
+                            <Border Background="{DynamicResource ControlBackcolor}"
+                                    BorderBrush="{DynamicResource ControlBordercolor}"
+                                    BorderThickness="1" CornerRadius="6" Padding="4" Margin="0,2,0,0">
+                                <StackPanel IsItemsHost="True"
+                                            KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Role" Value="TopLevelHeader">
+                            <Setter TargetName="SubPopup" Property="Placement" Value="Bottom"/>
+                        </Trigger>
+                        <Trigger Property="Icon" Value="{x:Null}">
+                            <Setter TargetName="Icon" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="HasItems" Value="True">
+                            <Setter TargetName="Arrow" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Highlight" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource ToolButtonMouseDisabledForecolor}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

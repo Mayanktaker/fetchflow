@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -25,6 +26,7 @@ using XDM.Wpf.UI.Dialogs.CompletedDialog;
 using XDM.Wpf.UI.Dialogs.CredentialDialog;
 using XDM.Wpf.UI.Dialogs.DeleteConfirm;
 using XDM.Wpf.UI.Dialogs.DownloadSelection;
+using XDM.Wpf.UI.Dialogs.ImportExport;
 using XDM.Wpf.UI.Dialogs.LanguageSettings;
 using XDM.Wpf.UI.Dialogs.NewDownload;
 using XDM.Wpf.UI.Dialogs.NewVideoDownload;
@@ -60,6 +62,22 @@ namespace XDM.Wpf.UI
         private Win32ClipboarMonitor clipboarMonitor;
 
         private IMenuItem[] menuItems;
+
+        private MenuItem? completionSoundMenuItem;
+
+        // Speed limiter quick-menu constants (presets in KB/s) ported from the GTK UI
+        private static readonly int[] SpeedLimitPresets = { 256, 512, 1024, 2048, 5120, 10240 };
+        private const int BytesPerKilobyte = 1024;
+        private const int DefaultSpeedLimitKb = 1024;
+        private const double SpeedLimiterDimmedOpacity = 0.5;
+        private const double FullOpacity = 1.0;
+        private const string SpeedStateSeparator = ": ";
+        private const string SpeedRateSuffix = "/s";
+        private const string SpeedMenuBullet = "● ";
+        private const string SpeedMenuOffLabel = "Unlimited (Off)";
+        private const string SpeedMenuCustomLabel = "Custom Limit...";
+        private const string SpeedMenuCustomFormat = "● Custom ({0}" + SpeedRateSuffix + ")...";
+        private const string ConfigChangedEvent = "ConfigChanged";
 
         public MainWindow()
         {
@@ -104,6 +122,8 @@ namespace XDM.Wpf.UI
             SwitchToFinishedView();
             this.Loaded += MainWindow_Loaded;
             CreateMenuItems();
+            UpdateSpeedLimitButton();
+            ApplicationContext.ApplicationEvent += ApplicationContext_ApplicationEvent;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -114,38 +134,125 @@ namespace XDM.Wpf.UI
 
         private void InProgressListViewInitialSortIfNotAlreadySorted()
         {
-            //sort in-progress list view by date
+            //sort in-progress list view by persisted config sort
             if (inProgressListViewSortCol == null)
             {
-                var col = (GridViewColumnHeader)FindName("lvInProgress_DateAdded");
-                var layer = AdornerLayer.GetAdornerLayer(col);
-                if (layer != null)
-                {
-                    inProgressListViewSortCol = col;
-                    inProgressListViewSortAdorner = new SortAdorner(inProgressListViewSortCol, ListSortDirection.Descending);
-                    layer.Add(inProgressListViewSortAdorner);
-                }
-                lvInProgress.Items.SortDescriptions.Add(new SortDescription("DateAdded", ListSortDirection.Descending));
+                ApplyPersistedSort(lvInProgress, ref inProgressListViewSortCol, ref inProgressListViewSortAdorner);
             }
+            EnsureSortAdorner(inProgressListViewSortCol, inProgressListViewSortAdorner);
         }
 
         private void FinishedListViewInitialSortIfNotAlreadySorted()
         {
-            //sort finished list view by date
+            //sort finished list view by persisted config sort
             if (finishedListViewSortCol == null)
             {
-                var col = (GridViewColumnHeader)FindName("lvFinished_DateAdded");
-                var layer = AdornerLayer.GetAdornerLayer(col);
-                if (layer != null)
+                ApplyPersistedSort(lvFinished, ref finishedListViewSortCol, ref finishedListViewSortAdorner);
+            }
+            EnsureSortAdorner(finishedListViewSortCol, finishedListViewSortAdorner);
+        }
+
+        // Applies the persisted config sort to a list view
+        private void ApplyPersistedSort(ListView listView, ref GridViewColumnHeader? sortCol, ref SortAdorner? sortAdorner)
+        {
+            var property = SortPropertyForConfigColumn(Config.Instance.DownloadSortColumn);
+            var direction = Config.Instance.DownloadSortDescending
+                ? ListSortDirection.Descending : ListSortDirection.Ascending;
+            ApplySort(listView, property, direction, ref sortCol, ref sortAdorner);
+        }
+
+        // Persists the sort selection and applies it to both download lists (GTK parity)
+        private void SetDownloadSort(string property, bool descending)
+        {
+            Config.Instance.DownloadSortColumn = ConfigColumnForSortProperty(property);
+            Config.Instance.DownloadSortDescending = descending;
+            Config.SaveConfig();
+            var direction = descending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+            ApplySort(lvInProgress, property, direction, ref inProgressListViewSortCol, ref inProgressListViewSortAdorner);
+            ApplySort(lvFinished, property, direction, ref finishedListViewSortCol, ref finishedListViewSortAdorner);
+        }
+
+        // Toggles the direction on the active column or switches columns descending-first
+        private void SortByHeader(GridViewColumnHeader column)
+        {
+            var property = column.Tag as string;
+            if (string.IsNullOrEmpty(property))
+            {
+                return;
+            }
+            var configColumn = ConfigColumnForSortProperty(property);
+            var descending = Config.Instance.DownloadSortColumn == configColumn
+                ? !Config.Instance.DownloadSortDescending
+                : true;
+            SetDownloadSort(property, descending);
+        }
+
+        // Replaces the active sort descriptions and header arrow of a list view
+        private void ApplySort(ListView listView, string property, ListSortDirection direction,
+            ref GridViewColumnHeader? sortCol, ref SortAdorner? sortAdorner)
+        {
+            if (sortCol != null && sortAdorner != null)
+            {
+                AdornerLayer.GetAdornerLayer(sortCol)?.Remove(sortAdorner);
+            }
+            listView.Items.SortDescriptions.Clear();
+            listView.Items.SortDescriptions.Add(new SortDescription(property, direction));
+            sortCol = FindSortHeader(listView, property);
+            sortAdorner = sortCol == null ? null : new SortAdorner(sortCol, direction);
+            EnsureSortAdorner(sortCol, sortAdorner);
+        }
+
+        // Attaches the sort arrow adorner once its layer is available
+        private static void EnsureSortAdorner(GridViewColumnHeader? sortCol, SortAdorner? sortAdorner)
+        {
+            if (sortCol == null || sortAdorner == null)
+            {
+                return;
+            }
+            var layer = AdornerLayer.GetAdornerLayer(sortCol);
+            if (layer == null)
+            {
+                return;
+            }
+            var existing = layer.GetAdorners(sortCol);
+            if (existing == null || Array.IndexOf(existing, sortAdorner) < 0)
+            {
+                layer.Add(sortAdorner);
+            }
+        }
+
+        // Locates the header of the column tagged with the sort property
+        private static GridViewColumnHeader? FindSortHeader(ListView listView, string property)
+        {
+            if (listView.View is GridView view)
+            {
+                foreach (var column in view.Columns)
                 {
-                    finishedListViewSortCol = col;
-                    finishedListViewSortAdorner = new SortAdorner(finishedListViewSortCol, ListSortDirection.Descending);
-                    layer.Add(finishedListViewSortAdorner);
+                    if (column.Header is GridViewColumnHeader header && (header.Tag as string) == property)
+                    {
+                        return header;
+                    }
                 }
-                //finishedListViewSortCol = (GridViewColumnHeader)FindName("lvFinished_DateAdded");
-                //finishedListViewSortAdorner = new SortAdorner(finishedListViewSortCol, ListSortDirection.Descending);
-                //AdornerLayer.GetAdornerLayer(finishedListViewSortCol).Add(finishedListViewSortAdorner);
-                lvFinished.Items.SortDescriptions.Add(new SortDescription("DateAdded", ListSortDirection.Descending));
+            }
+            return null;
+        }
+
+        // Maps a wrapper sort property to its persisted config column key
+        private static string ConfigColumnForSortProperty(string property)
+        {
+            return property == "DateAdded" ? "Date" : property;
+        }
+
+        // Maps the persisted config column key to a wrapper sort property
+        private static string SortPropertyForConfigColumn(string? column)
+        {
+            switch (column)
+            {
+                case "Name":
+                case "Size":
+                    return column;
+                default:
+                    return "DateAdded";
             }
         }
 
@@ -454,30 +561,16 @@ namespace XDM.Wpf.UI
         {
             if (e.OriginalSource is GridViewColumnHeader column)
             {
-                string sortBy = (string)column.Tag;
-                if (string.IsNullOrEmpty(sortBy))
-                {
-                    return;
-                }
-                if (finishedListViewSortCol != null)
-                {
-                    AdornerLayer.GetAdornerLayer(finishedListViewSortCol).Remove(finishedListViewSortAdorner);
-                    lvFinished.Items.SortDescriptions.Clear();
-                }
-
-                ListSortDirection newDir = ListSortDirection.Ascending;
-                if (finishedListViewSortCol == column && finishedListViewSortAdorner?.Direction == newDir)
-                    newDir = ListSortDirection.Descending;
-
-                finishedListViewSortCol = column;
-                finishedListViewSortAdorner = new SortAdorner(finishedListViewSortCol, newDir);
-                AdornerLayer.GetAdornerLayer(finishedListViewSortCol).Add(finishedListViewSortAdorner);
-                lvFinished.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+                SortByHeader(column);
             }
         }
 
         private void BtnMenu_Click(object sender, RoutedEventArgs e)
         {
+            if (completionSoundMenuItem != null)
+            {
+                completionSoundMenuItem.IsChecked = Config.Instance.PlayCompletionSound;
+            }
             var nctx = (ContextMenu)FindResource("ctxMainMenu");
             if (nctx.Placement != PlacementMode.Bottom || nctx.PlacementTarget != BtnMenu)
             {
@@ -535,12 +628,21 @@ namespace XDM.Wpf.UI
 
         private void menuImport_Click(object sender, RoutedEventArgs e)
         {
-            ImportClicked?.Invoke(sender, e);
+            OpenImportExportChooser();
         }
 
         private void menuExport_Click(object sender, RoutedEventArgs e)
         {
-            ExportClicked?.Invoke(sender, e);
+            OpenImportExportChooser();
+        }
+
+        // Shows the import/export chooser and forwards its requests downstream (GTK parity)
+        private void OpenImportExportChooser()
+        {
+            var chooser = new ImportExportWindow(this);
+            chooser.ExportRequested += (_, _) => ExportClicked?.Invoke(this, EventArgs.Empty);
+            chooser.ImportRequested += (_, _) => ImportClicked?.Invoke(this, EventArgs.Empty);
+            chooser.ShowDialog(this);
         }
 
         private void menuHelpAndSupport_Click(object sender, RoutedEventArgs e)
@@ -571,25 +673,7 @@ namespace XDM.Wpf.UI
         {
             if (e.OriginalSource is GridViewColumnHeader column)
             {
-                string sortBy = (string)column.Tag;
-                if (string.IsNullOrEmpty(sortBy))
-                {
-                    return;
-                }
-                if (inProgressListViewSortCol != null)
-                {
-                    AdornerLayer.GetAdornerLayer(inProgressListViewSortCol).Remove(inProgressListViewSortAdorner);
-                    lvInProgress.Items.SortDescriptions.Clear();
-                }
-
-                ListSortDirection newDir = ListSortDirection.Ascending;
-                if (inProgressListViewSortCol == column && inProgressListViewSortAdorner?.Direction == newDir)
-                    newDir = ListSortDirection.Descending;
-
-                inProgressListViewSortCol = column;
-                inProgressListViewSortAdorner = new SortAdorner(inProgressListViewSortCol, newDir);
-                AdornerLayer.GetAdornerLayer(inProgressListViewSortCol).Add(inProgressListViewSortAdorner);
-                lvInProgress.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+                SortByHeader(column);
             }
         }
 
@@ -610,6 +694,7 @@ namespace XDM.Wpf.UI
 
                 new MenuItemWrapper("open",TextResource.GetText("CTX_OPEN_FILE")),
                 new MenuItemWrapper("openFolder",TextResource.GetText("CTX_OPEN_FOLDER")),
+                new MenuItemWrapper("verifyChecksum",TextResource.GetText("CTX_CHECKSUM") ?? "Verify Checksum"),
                 new MenuItemWrapper("deleteDownloads",TextResource.GetText("MENU_DELETE_DWN")),
                 new MenuItemWrapper("copyURL1",TextResource.GetText("CTX_COPY_URL")),
                 new MenuItemWrapper("copyFile",TextResource.GetText("CTX_COPY_FILE")),
@@ -657,6 +742,14 @@ namespace XDM.Wpf.UI
             var menuBatchDownload = (MenuItem)newDownloadMenu.Items[2];
             menuBatchDownload.Click += MenuBatchDownload_Click;
             menuBatchDownload.Header = TextResource.GetText("MENU_BATCH_DOWNLOAD");
+
+            completionSoundMenuItem = ((ContextMenu)FindResource("ctxMainMenu")).Items
+                .OfType<MenuItem>().FirstOrDefault(m => m.Name == "menuCompletionSound");
+            if (completionSoundMenuItem != null)
+            {
+                completionSoundMenuItem.Header = TextResource.GetText("MSG_PLAY_SOUND") ?? "Play sound when download finishes";
+                completionSoundMenuItem.IsChecked = Config.Instance.PlayCompletionSound;
+            }
         }
 
         private void BtnHelp_Click(object sender, RoutedEventArgs e)
@@ -715,6 +808,151 @@ namespace XDM.Wpf.UI
         private void LvInProgressContextMenu_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             this.InProgressContextMenuOpening?.Invoke(sender, e);
+        }
+
+        // Persists the completion sound preference from the checkable menu item (GTK parity)
+        private void menuCompletionSound_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item)
+            {
+                Config.Instance.PlayCompletionSound = item.IsChecked;
+                Config.SaveConfig();
+                ApplicationContext.BroadcastConfigChange();
+            }
+        }
+
+        // Handles application-wide broadcast events to refresh config-driven UI
+        private void ApplicationContext_ApplicationEvent(object? sender, ApplicationEvent e)
+        {
+            if (e.EventType == ConfigChangedEvent)
+            {
+                RunOnUIThread(RefreshConfigDrivenUi);
+            }
+        }
+
+        // Refreshes UI elements that mirror persisted config values
+        private void RefreshConfigDrivenUi()
+        {
+            if (completionSoundMenuItem != null)
+            {
+                completionSoundMenuItem.IsChecked = Config.Instance.PlayCompletionSound;
+            }
+            UpdateSpeedLimitButton();
+        }
+
+        // Toggles global bandwidth throttling on or off (GTK parity)
+        private void BtnSpeedLimit_Click(object sender, RoutedEventArgs e)
+        {
+            Config.Instance.EnableSpeedLimit = !Config.Instance.EnableSpeedLimit;
+            if (Config.Instance.EnableSpeedLimit && Config.Instance.DefaltDownloadSpeed <= 0)
+            {
+                Config.Instance.DefaltDownloadSpeed = DefaultSpeedLimitKb;
+            }
+            Config.SaveConfig();
+            ApplicationContext.BroadcastConfigChange();
+            UpdateSpeedLimitButton();
+        }
+
+        // Opens the quick speed limit preset menu on right click (GTK parity)
+        private void BtnSpeedLimit_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            ShowSpeedLimiterMenu();
+            e.Handled = true;
+        }
+
+        // Displays context menu with quick speed limit presets
+        private void ShowSpeedLimiterMenu()
+        {
+            var menu = new ContextMenu();
+            var title = new MenuItem { Header = TextResource.GetText("MSG_SPEED_LIMIT"), IsEnabled = false };
+            menu.Items.Add(title);
+            menu.Items.Add(new Separator());
+
+            var currentLimit = Config.Instance.EnableSpeedLimit ? Config.Instance.DefaltDownloadSpeed : 0;
+
+            var offHeader = currentLimit == 0 ? SpeedMenuBullet + SpeedMenuOffLabel : SpeedMenuOffLabel;
+            var offItem = new MenuItem { Header = offHeader };
+            offItem.Click += (_, _) => SetSpeedLimit(0);
+            menu.Items.Add(offItem);
+            menu.Items.Add(new Separator());
+
+            foreach (var preset in SpeedLimitPresets)
+            {
+                var label = FormattingHelper.FormatSize(preset * (double)BytesPerKilobyte) + SpeedRateSuffix;
+                var isSelected = Config.Instance.EnableSpeedLimit && Config.Instance.DefaltDownloadSpeed == preset;
+                var item = new MenuItem { Header = isSelected ? SpeedMenuBullet + label : label };
+                item.Click += (_, _) => SetSpeedLimit(preset);
+                menu.Items.Add(item);
+            }
+
+            menu.Items.Add(new Separator());
+
+            var isCustom = Config.Instance.EnableSpeedLimit
+                && Array.IndexOf(SpeedLimitPresets, Config.Instance.DefaltDownloadSpeed) < 0
+                && Config.Instance.DefaltDownloadSpeed > 0;
+            var customHeader = isCustom
+                ? string.Format(SpeedMenuCustomFormat, FormattingHelper.FormatSize(Config.Instance.DefaltDownloadSpeed * (double)BytesPerKilobyte))
+                : SpeedMenuCustomLabel;
+            var customItem = new MenuItem { Header = customHeader };
+            customItem.Click += (_, _) => ApplicationContext.PlatformUIService.ShowSpeedLimiterWindow();
+            menu.Items.Add(customItem);
+
+            menu.PlacementTarget = BtnSpeedLimit;
+            menu.Placement = PlacementMode.MousePoint;
+            menu.IsOpen = true;
+        }
+
+        // Applies a speed limit preset in KB/s (0 disables the limiter)
+        private void SetSpeedLimit(int kilobytesPerSecond)
+        {
+            Config.Instance.EnableSpeedLimit = kilobytesPerSecond > 0;
+            if (kilobytesPerSecond > 0)
+            {
+                Config.Instance.DefaltDownloadSpeed = kilobytesPerSecond;
+            }
+            Config.SaveConfig();
+            ApplicationContext.BroadcastConfigChange();
+            UpdateSpeedLimitButton();
+        }
+
+        // Refreshes the speed limiter button visual state and tooltip
+        private void UpdateSpeedLimitButton()
+        {
+            if (BtnSpeedLimit == null)
+            {
+                return;
+            }
+            var enabled = Config.Instance.EnableSpeedLimit;
+            var limit = Config.Instance.DefaltDownloadSpeed;
+            SpeedLimitIcon.Opacity = enabled ? FullOpacity : SpeedLimiterDimmedOpacity;
+            BtnSpeedLimit.ToolTip = enabled && limit > 0
+                ? TextResource.GetText("MSG_SPEED_LIMIT") + SpeedStateSeparator + FormattingHelper.FormatSize(limit * (double)BytesPerKilobyte) + SpeedRateSuffix
+                : TextResource.GetText("MSG_SPEED_LIMIT");
+        }
+
+        // Keeps multi-selection when right-clicking a selected row (GTK parity)
+        private void DownloadList_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (!(sender is ListView listView))
+            {
+                return;
+            }
+            var item = FindAncestorListItem(e.OriginalSource as DependencyObject);
+            if (item != null && !item.IsSelected)
+            {
+                listView.UnselectAll();
+                item.IsSelected = true;
+            }
+        }
+
+        // Walks the visual tree up to the containing list item
+        private static ListViewItem? FindAncestorListItem(DependencyObject? source)
+        {
+            while (source != null && !(source is ListViewItem))
+            {
+                source = VisualTreeHelper.GetParent(source);
+            }
+            return source as ListViewItem;
         }
 
         public IPlatformClipboardMonitor GetClipboardMonitor() => this.clipboarMonitor;

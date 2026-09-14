@@ -2,7 +2,11 @@
 ; Inno Setup compiler script for FetchFlow Download Manager (Windows x64)
 
 #ifndef AppVersion
-  #define AppVersion "9.1.10"
+  #define AppVersion "9.1.15.5"
+#endif
+
+#ifndef OutputBaseName
+  #define OutputBaseName "fetchflow-windows-x64-setup"
 #endif
 
 #ifndef SourceDir
@@ -31,7 +35,7 @@ DefaultDirName={autopf}\FetchFlow
 DefaultGroupName=FetchFlow Download Manager
 AllowNoIcons=yes
 OutputDir={#OutputDir}
-OutputBaseFilename=fetchflow-windows-x64-setup
+OutputBaseFilename={#OutputBaseName}
 SetupIconFile=..\fetchflow-logo.ico
 Compression=lzma2/ultra64
 SolidCompression=yes

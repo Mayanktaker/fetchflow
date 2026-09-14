@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,7 @@ using XDM.Core.Util;
 using XDM.Wpf.UI.Common;
 using XDM.Wpf.UI.Win32;
 using XDM.Core.UI;
+using XDM.Wpf.UI.Utils;
 
 namespace XDM.Wpf.UI.Dialogs.Settings
 {
@@ -79,6 +81,8 @@ namespace XDM.Wpf.UI.Dialogs.Settings
 
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
+            // Cancel discards the live theme preview by re-applying the persisted config
+            WpfThemeManager.ApplyFromConfig();
             Close();
         }
 

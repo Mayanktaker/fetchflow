@@ -282,3 +282,7 @@ MSG_COPY=कॉपी करें
 MSG_PLAY_SOUND=डाउनलोड पूरा होने पर ध्वनि बजाएं
 SORT_BY=क्रमबद्ध करें
 SORT_DESCENDING=अवरोही
+SETTINGS_THEME=थीम:
+SETTINGS_COLOR_SCHEME=रंग योजना:
+BTN_EXPORT_PALETTES=पैलेट निर्यात करें
+BTN_IMPORT_PALETTES=पैलेट आयात करें

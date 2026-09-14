@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:XDM.Wpf.UI"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d"
-        Title="Xtreme Download Manager" Height="500" Width="800" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
+        Title="FetchFlow Download Manager" Height="500" Width="800" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
+    <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
     <Window.Resources>
         <Style TargetType="Button" >
             <Setter Property="SnapsToDevicePixels" Value="true"/>
@@ -55,11 +56,15 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- Clock geometry for the speed limiter statusbar button (matches GTK time-line icon) -->
+        <Geometry x:Key="ri-time-line">M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm1-8h4v2h-6V7h2v5z</Geometry>
 
         <ContextMenu x:Key="ctxMainMenu" x:Name="ctxMainMenu" 
                      LayoutUpdated="ctxMainMenu_LayoutUpdated">
             <MenuItem Name="menuSettings" Header="{StaticResource TITLE_SETTINGS}" 
                       Foreground="{StaticResource ControlForecolor}" Click="menuSettings_Click"/>
+            <MenuItem Name="menuCompletionSound" IsCheckable="True"
+                      Foreground="{StaticResource ControlForecolor}" Click="menuCompletionSound_Click"/>
             <MenuItem Name="menuBrowserMonitor" Header="{StaticResource SETTINGS_MONITORING}" Click="menuBrowserMonitor_Click"
                       Foreground="{StaticResource ControlForecolor}"/>
             <MenuItem Name="menuMediaGrabber" Header="{StaticResource MSG_MEDIA_CAPTURE}" Click="menuMediaGrabber_Click"
@@ -514,6 +519,7 @@
                             <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
@@ -555,7 +561,22 @@
                                 <TextBlock Padding="3,0,3,2" VerticalAlignment="Center" Text="{StaticResource DESC_Q_TITLE}"/>
                             </StackPanel>
                         </Button>
-                        <Button Name="BtnHelp" Grid.Column="4" Foreground="{StaticResource ToolButtonForecolor}"
+                        <Button Grid.Column="3" Name="BtnSpeedLimit" Foreground="{StaticResource ToolButtonForecolor}"
+                            Margin="10,0" Padding="0" BorderThickness="0" Background="{StaticResource StatusbarBackcolor}"
+                                Click="BtnSpeedLimit_Click" MouseRightButtonUp="BtnSpeedLimit_MouseRightButtonUp">
+                            <Path Name="SpeedLimitIcon"
+                                Height="16"
+                                Width="16"
+                                Margin="5,0"
+                                VerticalAlignment="Center"
+                                StrokeThickness="0"
+                                Stretch="Fill"
+                                Fill="{StaticResource StatusbarIconcolor}"
+                                Stroke="{StaticResource StatusbarIconcolor}"
+                                Data="{StaticResource ri-time-line}"
+                                SnapsToDevicePixels="True"/>
+                        </Button>
+                        <Button Name="BtnHelp" Grid.Column="5" Foreground="{StaticResource ToolButtonForecolor}"
                             Margin="0,0" Padding="0" BorderThickness="0" Background="{StaticResource StatusbarBackcolor}" Click="BtnHelp_Click">
                             <StackPanel Orientation="Horizontal" Margin="5,0,10,0">
                                 <Path Name="PathHelp"
@@ -587,7 +608,8 @@
                           HorizontalAlignment="Stretch" 
                           Grid.Column="0" Grid.Row="0"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
-                          GridViewColumnHeader.Click="lvInProgress_Click">
+                          GridViewColumnHeader.Click="lvInProgress_Click"
+                          PreviewMouseRightButtonDown="DownloadList_PreviewMouseRightButtonDown">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Width="200">
@@ -655,7 +677,8 @@
                           HorizontalAlignment="Stretch" 
                           Grid.Column="0" Grid.Row="0"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
-                          GridViewColumnHeader.Click="lvFinished_Click">
+                          GridViewColumnHeader.Click="lvFinished_Click"
+                          PreviewMouseRightButtonDown="DownloadList_PreviewMouseRightButtonDown">
                         <!--<ListView.Resources>
                             <ResourceDictionary>
                                 <ResourceDictionary.MergedDictionaries>

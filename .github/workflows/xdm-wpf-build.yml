@@ -4,12 +4,13 @@ name: Windows Desktop CI
 on:
   push:
     branches: [ "master" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "master" ]
 
 jobs:
   build:
-    name: Build Windows WPF & WinForms
+    name: Build & Package Windows Desktop
     runs-on: windows-latest
 
     steps:
@@ -21,8 +22,72 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Build WPF Application
-        run: dotnet build -c Release -f net4.7.2 app/XDM/XDM.Wpf.UI/XDM.Wpf.UI.csproj
+      - name: Read package version
+        id: ver
+        shell: pwsh
+        run: |
+          # Single source of truth: app/XDM/XDM.Linux.Installer/version.env
+          $line = Get-Content app/XDM/XDM.Linux.Installer/version.env | Where-Object { $_ -match '^VERSION=' } | Select-Object -First 1
+          $version = $line -replace '^VERSION=', ''
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Version: $version"
 
-      - name: Build WinForms Integration UI
-        run: dotnet build -c Release -f net4.7.2 app/XDM/XDM.WinForms.IntegrationUI/XDM.WinForms.IntegrationUI.csproj
+      - name: Publish WPF Application
+        run: dotnet publish -c Release -f net4.7.2 app/XDM/XDM.Wpf.UI/XDM.Wpf.UI.csproj -o build_output/xdm-win-x64
+
+      - name: Build WinForms Integration UI (into publish tree)
+        run: dotnet publish -c Release -f net4.7.2 app/XDM/XDM.WinForms.IntegrationUI/XDM.WinForms.IntegrationUI.csproj -o build_output/xdm-win-x64
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile installer
+        shell: pwsh
+        run: |
+          # Drives fetchflow-setup.iss defines; versioned output lands in fetchflow-release/
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
+          $ver = "${{ steps.ver.outputs.version }}"
+          Set-Location app/XDM/XDM.Win.Installer
+          & $iscc "/DAppVersion=$ver" "/DOutputBaseName=fetchflow-windows-x64-$ver-setup" fetchflow-setup.iss
+
+      - name: Create portable ZIP
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          New-Item -ItemType Directory -Force -Path fetchflow-release | Out-Null
+          Compress-Archive -Path build_output/xdm-win-x64/* -DestinationPath "fetchflow-release/fetchflow-windows-x64-portable-$ver.zip" -Force
+
+      - name: Generate SHA256 checksums
+        shell: pwsh
+        run: |
+          # Windows-side checksum manifest (kept separate from Linux SHA256SUMS.txt)
+          $ver = "${{ steps.ver.outputs.version }}"
+          $lines = @()
+          Get-ChildItem fetchflow-release -Filter "fetchflow-windows-*" | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            $lines += "$hash  $($_.Name)"
+          }
+          $lines | Set-Content -Encoding ascii "fetchflow-release/SHA256SUMS-windows-$ver.txt"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetchflow-windows-${{ steps.ver.outputs.version }}
+          path: |
+            fetchflow-release/fetchflow-windows-*
+            fetchflow-release/SHA256SUMS-windows-*.txt
+          if-no-files-found: error
+
+      - name: Attach to GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Release attach is tag-gated per repo release policy
+          $tag = "${{ github.ref_name }}"
+          $files = @(Get-ChildItem fetchflow-release | Where-Object { $_.Name -like "fetchflow-windows-*" -or $_.Name -like "SHA256SUMS-windows-*" } | ForEach-Object { $_.FullName })
+          gh release create $tag --title $tag --generate-notes @files 2>$null
+          if ($LASTEXITCODE -ne 0) { gh release upload $tag @files --clobber }

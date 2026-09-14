@@ -1,4 +1,5 @@
-﻿using System;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using TraceLog;
 using Translations;
 using XDM.Core;
@@ -27,10 +29,26 @@ namespace XDM.Wpf.UI.Dialogs.Settings
     /// </summary>
     public partial class BrowserMonitoringView : UserControl, ISettingsPage
     {
+        // IPC relay UI strings (glade literals in GTK — not yet in Lang files)
+        private const string RestartIpcLabel = "Restart IPC Relay";
+        private const string RestartIpcBusyLabel = "Restarting...";
+        private const string IpcLoopbackHost = "127.0.0.1";
+        private const string IpcRunningSessionsFormat = "● Running: {0}:{1} ({2} active extensions)";
+        private const string IpcRunningReadyFormat = "● Running: {0}:{1} (Ready)";
+        private const string IpcListeningFormat = "○ Listening: {0}:{1}";
+        private const string IpcActiveColor = "#22c55e";
+        private const string IpcReadyColor = "#38bdf8";
+        private const string IpcIdleColor = "#94a3b8";
+        // Extension shortcut tip + guide (GTK settings-dialog.glade literals)
+        private const string ExtensionShortcutsGuideUrl = "https://github.com/Mayanktaker/fetchflow#browser-shortcuts";
+        // Delay before the IPC status label refreshes after a restart
+        private const int IpcRestartRefreshDelayMs = 600;
+
         public BrowserMonitoringView()
         {
             InitializeComponent();
             CmbMinVidSize.ItemsSource = new int[] { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
+            UpdateIpcStatus();
         }
 
         public void PopulateUI()
@@ -44,6 +62,7 @@ namespace XDM.Wpf.UI.Dialogs.Settings
             ChkMonitorClipboard.IsChecked = Config.Instance.MonitorClipboard;
             ChkTimestamp.IsChecked = Config.Instance.FetchServerTimeStamp;
             ChkShowMediaNotification.IsChecked = Config.Instance.ShowNotification;
+            UpdateIpcStatus();
         }
 
         public void UpdateConfig()
@@ -56,6 +75,87 @@ namespace XDM.Wpf.UI.Dialogs.Settings
             Config.Instance.MonitorClipboard = ChkMonitorClipboard.IsChecked.HasValue ? ChkMonitorClipboard.IsChecked.Value : false;
             Config.Instance.MinVideoSize = (int)CmbMinVidSize.SelectedItem;
             Config.Instance.ShowNotification = ChkShowMediaNotification.IsChecked.HasValue ? ChkShowMediaNotification.IsChecked.Value : false;
+        }
+
+        // Refreshes the IPC server connectivity badge and port display
+        private void UpdateIpcStatus()
+        {
+            var port = IpcHttpMessageProcessor.EffectivePort;
+            var count = IpcHttpMessageProcessor.ActiveWebSocketSessionsCount;
+            var isConnected = IpcHttpMessageProcessor.IsConnected;
+
+            string text;
+            string color;
+            if (count > 0)
+            {
+                text = string.Format(IpcRunningSessionsFormat, IpcLoopbackHost, port, count);
+                color = IpcActiveColor;
+            }
+            else if (isConnected)
+            {
+                text = string.Format(IpcRunningReadyFormat, IpcLoopbackHost, port);
+                color = IpcReadyColor;
+            }
+            else
+            {
+                text = string.Format(IpcListeningFormat, IpcLoopbackHost, port);
+                color = IpcIdleColor;
+            }
+            LblIpcStatus.Text = text;
+            LblIpcStatus.Foreground = ParseBrush(color);
+        }
+
+        // Converts a hex color string to a brush, falling back to gray
+        private static Brush ParseBrush(string hex)
+        {
+            try
+            {
+                return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            }
+            catch (Exception)
+            {
+                return new SolidColorBrush(Colors.Gray);
+            }
+        }
+
+        // Restarts the background IPC server and updates the status label
+        private void BtnRestartIpc_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                BtnRestartIpc.IsEnabled = false;
+                BtnRestartIpc.Content = RestartIpcBusyLabel;
+                BrowserMonitor.Restart();
+                UpdateIpcStatus();
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(IpcRestartRefreshDelayMs) };
+                timer.Tick += (s, args) =>
+                {
+                    timer.Stop();
+                    BtnRestartIpc.IsEnabled = true;
+                    BtnRestartIpc.Content = RestartIpcLabel;
+                    UpdateIpcStatus();
+                };
+                timer.Start();
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Error restarting IPC server from settings: " + ex.Message);
+                BtnRestartIpc.IsEnabled = true;
+                BtnRestartIpc.Content = RestartIpcLabel;
+            }
+        }
+
+        // Opens the FetchFlow browser shortcut documentation and setup guide
+        private void BtnExtensionShortcuts_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PlatformHelper.OpenBrowser(ExtensionShortcutsGuideUrl);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Error opening shortcuts guide: " + ex.Message);
+            }
         }
 
         private void BrowserButtonClick(Browser browser)

@@ -7,6 +7,7 @@
         mc:Ignorable="d"
         Title="{StaticResource TITLE_SETTINGS}" Height="500" Width="700" ShowInTaskbar="False" 
         WindowStartupLocation="CenterOwner">
+    <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
