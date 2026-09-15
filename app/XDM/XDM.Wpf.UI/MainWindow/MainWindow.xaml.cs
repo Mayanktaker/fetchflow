@@ -82,6 +82,7 @@ namespace XDM.Wpf.UI
         public MainWindow()
         {
             InitializeComponent();
+            ApplyMainMenuIcons();
 
             newButton = new ButtonWrapper(this.BtnNew);
             deleteButton = new ButtonWrapper(this.BtnDelete);
@@ -913,6 +914,37 @@ namespace XDM.Wpf.UI
             Config.SaveConfig();
             ApplicationContext.BroadcastConfigChange();
             UpdateSpeedLimitButton();
+        }
+
+        // Assigns GTK-parity icons to the statically declared main menu items
+        private void ApplyMainMenuIcons()
+        {
+            var map = new Dictionary<string, string>
+            {
+                ["menuSettings"] = "ri-settings-3-line",
+                ["menuBrowserMonitor"] = "ri-toggle-line",
+                ["menuMediaGrabber"] = "ri-movie-line",
+                ["menuClearFinished"] = "ri-delete-bin-7-line",
+                ["menuExport"] = "ri-upload-2-line",
+                ["menuImport"] = "ri-download-2-line",
+                ["menuLanguage"] = "ri-global-line",
+                ["menuHelpAndSupport"] = "ri-question-line",
+                ["menuReportProblem"] = "ri-feedback-line",
+                ["menuCheckForUpdate"] = "ri-refresh-line",
+                ["menuAbout"] = "ri-fetchflow-mark",
+                ["menuExit"] = "ri-logout-box-r-line"
+            };
+            if (!(FindResource("ctxMainMenu") is ContextMenu mainMenu))
+            {
+                return;
+            }
+            foreach (var item in mainMenu.Items)
+            {
+                if (item is MenuItem mi && map.TryGetValue(mi.Name, out var iconKey))
+                {
+                    MenuItemWrapper.SetMenuItemIcon(mi, iconKey);
+                }
+            }
         }
 
         // Refreshes the speed limiter button visual state and tooltip

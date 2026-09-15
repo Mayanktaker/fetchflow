@@ -2,7 +2,7 @@
 ; Inno Setup compiler script for FetchFlow Download Manager (Windows x64)
 
 #ifndef AppVersion
-  #define AppVersion "9.1.15.7"
+  #define AppVersion "9.1.15.8"
 #endif
 
 #ifndef OutputBaseName

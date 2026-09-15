@@ -10,12 +10,12 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 |:---|:---|
 | Core | C# / .NET 8 (`net8.0`), AOT single-file binary; Windows UI on .NET Framework 4.7.2 (`XDM.Wpf.UI`, `XDM.WinForms.IntegrationUI`) |
 | Linux UI | GTK3 via GtkSharp (`XDM.Gtk.UI`, Glade XML + live CSS) |
-| Windows UI | WPF `XDM.Wpf.UI` at GTK feature parity since 9.1.15.7: themes via `Utils/WpfThemeManager.cs` (live swap), Checksum + Import/Export dialogs, theme/scheme settings. Scheme data single-sourced in `XDM.Core/UI/ColorSchemeTable.cs` (both UIs consume it — keep hex tokens in sync there only) |
+| Windows UI | WPF `XDM.Wpf.UI` at GTK feature parity since 9.1.15.8: themes via `Utils/WpfThemeManager.cs` (live swap), Checksum + Import/Export dialogs, theme/scheme settings. Scheme data single-sourced in `XDM.Core/UI/ColorSchemeTable.cs` (both UIs consume it — keep hex tokens in sync there only) |
 | Database | SQLite (`System.Data.SQLite`), DB at `~/.fetchflow-app-data/downloads.db`, crash log `crash.log` (5 MB cap) |
 | Video | `yt-dlp` CLI wrapper via `VideoUrlHelper.cs` |
 | Extensions | Manifest V3 vanilla JS: `app/XDM/chrome-extension/`, `app/XDM/firefox-amo/` (shared `noise-filter.js` twin + core `NetworkHelper.cs` — keep all 3 blocklists identical) |
 | Toolchain | .NET SDK 8.0.424 at `~/.dotnet8`; `rpmbuild`, `dpkg-deb`, `zip`, `tar`; no root/sudo. WPF cannot build on Linux — windows-latest jobs in `xdm-wpf-build.yml` (per-push gate) and `release.yml` (tag builds) are its only build gates |
-| Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.7` (sync `AppInfo.cs` + both `manifest.json` + WPF `<AssemblyVersion>` + `.iss` `AppVersion` default) |
+| Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.8` (sync `AppInfo.cs` + both `manifest.json` + WPF `<AssemblyVersion>` + `.iss` `AppVersion` default) |
 
 ## Docs (don't duplicate, point here)
 

@@ -24,6 +24,7 @@
                 <ResourceDictionary Source="Resources/ProgressBarStyles.xaml"/>
                 <ResourceDictionary Source="Resources/TabControlStyles.xaml"/>
                 <ResourceDictionary Source="Resources/ScrollBarStyles.xaml"/>
+<ResourceDictionary Source="Resources/IconGeometries.xaml"/>
                 <ResourceDictionary Source="Resources/TextBoxStyles.xaml"/>
                 <ResourceDictionary>
                     <Geometry x:Key="ri-file-line">
