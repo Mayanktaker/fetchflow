@@ -38,6 +38,7 @@ namespace XDM.Wpf.UI.Dialogs.ProgressWindow
             {
                 var val = value >= 0 && value <= 100 ? value : 0;
                 this.PrgProgress.Value = val;
+                this.TxtPercent.Text = value >= 0 && value <= 100 ? value + "%" : "";
                 var prg = value >= 0 && value <= 100 ? value + "% " : "";
                 this.Title = $"{prg}{FileNameText}";
 #if NET45_OR_GREATER

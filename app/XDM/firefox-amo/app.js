@@ -328,6 +328,11 @@ class App {
         if (isNoiseUrl(url)) {
             return false;
         }
+        // Never take over browser-internal blob:/data: URLs — external apps can't
+        // fetch them, so cancelling would destroy the user's download
+        if (this.isBlobUrl(url) || this.isDataUrl(url)) {
+            return false;
+        }
         let u;
         try { u = new URL(url); } catch { return false; }
         if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
@@ -397,6 +402,14 @@ class App {
         try {
             let u = new URL(url);
             return u.protocol === 'blob:';
+        } catch { return false; }
+    }
+
+    isDataUrl(url) {
+        if (!url) return false;
+        try {
+            let u = new URL(url);
+            return u.protocol === 'data:';
         } catch { return false; }
     }
 

@@ -110,14 +110,10 @@ export default class App {
         let url = download.finalUrl || download.url;
         this.logger.log(url);
 
-        // Blob URL interception: cancel browser DL and stream via blob-capture.js
-        if (this.isBlobUrl(url)) {
-            chrome.downloads.cancel(
-                download.id,
-                () => chrome.downloads.erase({ id: download.id })
-            );
-            const filename = download.filename || this.deriveBlobFilename(url, download.mime);
-            this.startBlobTransfer(url, filename, download.mime, download.tabId);
+        // Blob/data URLs stay in the browser: external apps can't fetch browser-internal
+        // blob: URLs (e.g. FetchV merged videos), so cancelling them loses the download
+        if (this.isBlobUrl(url) || this.isDataUrl(url)) {
+            suggest({ filename: download.filename });
             return;
         }
 
@@ -233,6 +229,14 @@ export default class App {
         try {
             let u = new URL(url);
             return u.protocol === 'blob:';
+        } catch { return false; }
+    }
+
+    isDataUrl(url) {
+        if (!url) return false;
+        try {
+            let u = new URL(url);
+            return u.protocol === 'data:';
         } catch { return false; }
     }
 
@@ -390,6 +394,11 @@ export default class App {
 
     shouldTakeOver(url, file, mime, size) {
         if (!url || isNoiseUrl(url)) {
+            return false;
+        }
+        // Never take over browser-internal blob:/data: URLs — external apps can't
+        // fetch them, so cancelling would destroy the user's download
+        if (this.isBlobUrl(url) || this.isDataUrl(url)) {
             return false;
         }
         let u;

@@ -56,7 +56,7 @@
 
 ---
 
-## ✨ What's New in 9.1.15.6 — Windows Feature Parity
+## ✨ What's New in 9.1.15.7 — Windows Feature Parity
 
 **What's new (Windows)**
 - **Full Theme Suite on Windows**: All 14 color schemes (7 dark + 7 light) from the Linux edition now live on Windows too — pick Light, Dark, or Follow System in Settings and switch instantly, no restart.
@@ -71,6 +71,9 @@
 - **Light Mode Fixed**: The light theme previously shipped with missing colors, causing washed-out and broken-looking surfaces. It is now complete and fully readable in every scheme.
 - **Sorting That Sticks**: Clicking column headers to sort downloads now remembers your choice between sessions.
 - **Right-Click No Longer Drops Your Selection**: Selecting several downloads and right-clicking keeps the whole selection intact.
+- **Extension No Longer Intercepts In-Browser Downloads**: Downloads that websites create internally (blob/data streams, e.g. merged videos from transcoder extensions like FetchV) are now left to the browser and always complete.
+- **Progress Numbers Are Back**: The % column in the download list and the mini progress window now show live percentage digits again.
+- **Checkmarks Visible on Windows**: Tick icons render correctly in checkboxes across dialogs (e.g. "Delete files from disk").
 
 ---
 
@@ -94,7 +97,7 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 
 ### Windows 11 / 10 (64-bit)
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.6.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.7.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash

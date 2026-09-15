@@ -52,7 +52,14 @@
                            Foreground="{StaticResource ToolButtonMouseDisabledForecolor}" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TxtStatus" Text="---" Margin="10,5" />
                 <TextBlock Grid.Row="3" Grid.Column="2" x:Name="TxtSpeed" Text="---" Margin="10,5" HorizontalAlignment="Right" />
-                <ProgressBar Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="PrgProgress" MinHeight="5" Margin="10,5"  />
+                <Grid Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Margin="10,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ProgressBar Grid.Column="0" x:Name="PrgProgress" MinHeight="5" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" x:Name="TxtPercent" Text="" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
                 <TextBlock Grid.Row="5" Grid.Column="1" x:Name="TxtETA" Text="" Margin="10,5" />
                 <TextBlock Grid.Row="5" Grid.Column="2" x:Name="TxtSpeedLimit" Text="{StaticResource MSG_NO_SPEED_LIMIT}" 
                            Margin="10,5"  HorizontalAlignment="Right"

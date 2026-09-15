@@ -654,9 +654,11 @@
                                 <GridViewColumn Header="%" Width="50" x:Name="p1" >
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <ProgressBar Width="{Binding Path=Width, ElementName=p1}" 
-                                                     Value="{Binding Progress}" Height="5"
-                                                     Maximum="100"   />
+                                            <StackPanel>
+                                                <ProgressBar Value="{Binding Progress}" Height="5" Maximum="100"/>
+                                                <TextBlock Text="{Binding Progress, StringFormat={}{0}%}"
+                                                           HorizontalAlignment="Center" FontSize="11"/>
+                                            </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
