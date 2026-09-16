@@ -389,6 +389,7 @@ app/XDM/XDM.Linux.Installer/fetchflow*/
 
 # Local clutter & Agent operating maps
 .superpowers/
+.pi/
 .worktrees/
 .kilo/
 .commandcode/
