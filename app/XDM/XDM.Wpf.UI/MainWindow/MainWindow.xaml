@@ -609,6 +609,7 @@
                           Grid.Column="0" Grid.Row="0"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
                           GridViewColumnHeader.Click="lvInProgress_Click"
+                          AlternationCount="2"
                           PreviewMouseRightButtonDown="DownloadList_PreviewMouseRightButtonDown">
                         <ListView.View>
                             <GridView>
@@ -626,7 +627,7 @@
                                                   Width="24" Height="24" 
                                                   Data="{Binding Path=Name, Converter={StaticResource FileExtensionToVectorImageConverter}}"
                                                   />
-                                                <TextBlock Text="{Binding Name}" Margin="5,5" VerticalAlignment="Center"></TextBlock>
+                                                <TextBlock Text="{Binding Name}" Margin="5,4" VerticalAlignment="Center" FontWeight="SemiBold"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -668,8 +669,19 @@
                         <ListView.ItemContainerStyle>
                             <Style TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource {x:Type ListViewItem}}">
                                 <Setter Property="ContextMenu" Value="{StaticResource lvInProgressContextMenu}" />
-                                <Setter Property="Padding" Value="0,0" />
+                                <Setter Property="Padding" Value="10,7" />
                                 <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick"/>
+                                <Style.Triggers>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                        <Setter Property="Background" Value="{DynamicResource RowAlternateBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource RowHoverBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource RowActiveBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
                             </Style>
                         </ListView.ItemContainerStyle>
                     </ListView>
@@ -680,6 +692,7 @@
                           Grid.Column="0" Grid.Row="0"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
                           GridViewColumnHeader.Click="lvFinished_Click"
+                          AlternationCount="2"
                           PreviewMouseRightButtonDown="DownloadList_PreviewMouseRightButtonDown">
                         <!--<ListView.Resources>
                             <ResourceDictionary>
@@ -705,7 +718,7 @@
                                                   Width="24" Height="24"  
                                                   Data="{Binding Path=Name, Converter={StaticResource FileExtensionToVectorImageConverter}}"
                                                   />
-                                                <TextBlock Text="{Binding Name}" Margin="5,5" VerticalAlignment="Center"></TextBlock>
+                                                <TextBlock Text="{Binding Name}" Margin="5,4" VerticalAlignment="Center" FontWeight="SemiBold"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -735,8 +748,19 @@
                         <ListView.ItemContainerStyle>
                             <Style TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource {x:Type ListViewItem}}">
                                 <Setter Property="ContextMenu" Value="{StaticResource lvFinishedContextMenu}" />
-                                <Setter Property="Padding" Value="0,0" />
+                                <Setter Property="Padding" Value="10,7" />
                                 <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick"/>
+                                <Style.Triggers>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                        <Setter Property="Background" Value="{DynamicResource RowAlternateBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource RowHoverBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource RowActiveBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
                             </Style>
                         </ListView.ItemContainerStyle>
                     </ListView>
