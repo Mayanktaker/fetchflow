@@ -1,4 +1,4 @@
-﻿<Window x:Class="XDM.Wpf.UI.MainWindow"
+<Window x:Class="XDM.Wpf.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -71,9 +71,7 @@
                       Foreground="{StaticResource ControlForecolor}"/>
             <MenuItem Name="menuClearFinished" Header="{StaticResource MENU_DELETE_COMPLETED}" Click="menuClearFinished_Click" 
                       Foreground="{StaticResource ControlForecolor}"/>
-            <MenuItem Name="menuExport" Header="{StaticResource MENU_EXPORT}" Click="menuExport_Click"
-                      Foreground="{StaticResource ControlForecolor}"/>
-            <MenuItem Name="menuImport" Header="{StaticResource MENU_IMPORT}" Click="menuImport_Click"
+            <MenuItem Name="menuImportExport" Header="{StaticResource MENU_IMPORT_EXPORT}" Click="menuImportExport_Click"
                       Foreground="{StaticResource ControlForecolor}"/>
             <MenuItem Name="menuLanguage" Header="{StaticResource MENU_LANG}" 
                       Foreground="{StaticResource ControlForecolor}" Click="menuLanguage_Click"/>

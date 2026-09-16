@@ -148,7 +148,7 @@ namespace XDM.Wpf.UI
 
         public void ShowSettingsDialog(int page = 0)
         {
-            var settings = new SettingsWindow() { Owner = GetMainWindow() };
+            var settings = new SettingsWindow(page) { Owner = GetMainWindow() };
             settings.ShowDialog(GetMainWindow());
         }
 

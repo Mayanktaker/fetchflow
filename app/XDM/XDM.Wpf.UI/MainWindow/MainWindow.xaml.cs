@@ -1,4 +1,4 @@
-﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -627,12 +627,7 @@ namespace XDM.Wpf.UI
             BrowserMonitoringSettingsClicked?.Invoke(sender, e);
         }
 
-        private void menuImport_Click(object sender, RoutedEventArgs e)
-        {
-            OpenImportExportChooser();
-        }
-
-        private void menuExport_Click(object sender, RoutedEventArgs e)
+        private void menuImportExport_Click(object sender, RoutedEventArgs e)
         {
             OpenImportExportChooser();
         }
@@ -714,18 +709,22 @@ namespace XDM.Wpf.UI
 
             var lvInProgressContextMenu = (ContextMenu)this.FindResource("lvInProgressContextMenu");
             var lvFinishedContextMenu = (ContextMenu)this.FindResource("lvFinishedContextMenu");
-            var i = 0;
-            foreach (MenuItemWrapper mi in menuItems)
+            string[] inProgressKeys = { "pause", "resume", "delete", "saveAs", "refresh", "restart", "schedule", "showProgress", "copyURL", "moveToQueue", "properties" };
+            foreach (var key in inProgressKeys)
             {
-                if (i < 10)
+                if (dict.TryGetValue(key, out var mi) && mi is MenuItemWrapper wrapper)
                 {
-                    lvInProgressContextMenu.Items.Add(mi.Menu);
+                    lvInProgressContextMenu.Items.Add(wrapper.Menu);
                 }
-                else
+            }
+
+            string[] finishedKeys = { "open", "openFolder", "verifyChecksum", "deleteDownloads", "downloadAgain", "copyURL1", "copyFile", "properties1" };
+            foreach (var key in finishedKeys)
+            {
+                if (dict.TryGetValue(key, out var mi) && mi is MenuItemWrapper wrapper)
                 {
-                    lvFinishedContextMenu.Items.Add(mi.Menu);
+                    lvFinishedContextMenu.Items.Add(wrapper.Menu);
                 }
-                i++;
             }
             lvInProgress.ContextMenuOpening += LvInProgressContextMenu_ContextMenuOpening;
             lvFinished.ContextMenuOpening += LvFinishedContextMenu_ContextMenuOpening;

@@ -1,10 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Versioning;
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 using XDM.Core;
 using XDM.Core.Util;
 using XDM.Wpf.UI.Common;
@@ -12,42 +12,54 @@ using XDM.Wpf.UI.Win32;
 
 namespace XDM.Wpf.UI.Dialogs.About
 {
-    /// <summary>
-    /// Interaction logic for AboutWindow.xaml
-    /// </summary>
+    // Modern About dialog displaying FetchFlow branding, version, and links
     public partial class AboutWindow : Window, IDialog
     {
+        public bool Result { get; set; }
+
+        // Initializes modern about window with branding metadata
         public AboutWindow()
         {
             InitializeComponent();
-            this.TxtAppVersion.Text = AppInfo.APP_VERSION_TEXT;
-            this.TxtCopyright.Text = AppInfo.APP_COPYRIGHT_TEXT;
-            this.TxtWebsite.Text = AppInfo.APP_HOMEPAGE_TEXT;
-            this.TxtOSInfo.Text = Environment.OSVersion.ToString();
-            this.TxtNetFxInfo.Text = GetNetImageVersion();
-            this.TxtMSIXInfo.Text = "App container: " + MsixHelper.IsAppContainer;
+            TxtAppName.Text = AppInfo.APP_FULL_NAME;
+            TxtAppVersion.Text = AppInfo.APP_VERSION_ONLY;
+            TxtCopyright.Text = AppInfo.APP_COPYRIGHT_TEXT;
+            TxtOriginalCredit.Text = AppInfo.APP_ORIGINAL_AUTHOR_CREDIT;
+            LoadAppLogo();
         }
 
-        public bool Result { get; set; }
-
-        private string GetNetImageVersion()
+        // Loads the highest resolution FetchFlow logo available on disk
+        private void LoadAppLogo()
         {
             try
             {
-#if NET35
-                return Environment.Version.ToString();
-#else
-            return Assembly.GetExecutingAssembly()
-                .GetCustomAttributes(true).OfType<TargetFrameworkAttribute>().First().FrameworkDisplayName;
-#endif
-            }
-            catch
-            {
-                return Environment.Version.ToString();
-            }
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string[] candidates = {
+                    Path.Combine(baseDir, "images", "fetchflow-logo-128.png"),
+                    Path.Combine(baseDir, "images", "fetchflow-logo.png"),
+                    Path.Combine(baseDir, "images", "fetchflow-logo-512.png"),
+                    Path.Combine(baseDir, "fetchflow-logo-512.png"),
+                    Path.Combine(baseDir, "fetchflow-logo.png")
+                };
 
+                foreach (var path in candidates)
+                {
+                    if (File.Exists(path))
+                    {
+                        var bmp = new BitmapImage();
+                        bmp.BeginInit();
+                        bmp.UriSource = new Uri(path, UriKind.Absolute);
+                        bmp.CacheOption = BitmapCacheOption.OnLoad;
+                        bmp.EndInit();
+                        AppLogo.Source = bmp;
+                        break;
+                    }
+                }
+            }
+            catch { }
         }
 
+        // Configures dark mode and disables maximize/minimize
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -63,9 +75,28 @@ namespace XDM.Wpf.UI.Dialogs.About
 #endif
         }
 
-        private void TextBlock_MouseDown(object sender, MouseButtonEventArgs e)
+        // Opens official product website in default browser
+        private void BtnAppWebsite_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            PlatformHelper.OpenBrowser(Links.HomePageUrl);
+            PlatformHelper.OpenBrowser(AppInfo.APP_PRODUCT_URL);
+        }
+
+        // Opens developer company website in default browser
+        private void BtnDevWebsite_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            PlatformHelper.OpenBrowser(AppInfo.APP_DEVELOPER_URL);
+        }
+
+        // Opens GitHub repository and issue tracker
+        private void BtnGitHub_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            PlatformHelper.OpenBrowser(Links.SupportUrl);
+        }
+
+        // Closes the About dialog
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }

@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Setup .NET SDK 8.0
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
         with:
           dotnet-version: '8.0.x'
 
@@ -95,7 +95,7 @@ jobs:
           ls -lh "$OUT_DIR"
 
       - name: Upload Linux Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: linux-artifacts
           path: |
@@ -111,10 +111,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Setup .NET SDK 8.0
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
         with:
           dotnet-version: '8.0.x'
 
@@ -163,7 +163,7 @@ jobs:
           & $iscc "/DAppVersion=$env:VERSION" "/DOutputBaseName=fetchflow-windows-x64-$env:VERSION-setup" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\fetchflow-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
           Write-Host "Generated Windows Setup Installer: fetchflow-release\fetchflow-windows-x64-$env:VERSION-setup.exe"
       - name: Upload Windows Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: windows-artifacts
           path: |
@@ -177,16 +177,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: linux-artifacts
           path: fetchflow-release
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: windows-artifacts
           path: fetchflow-release
@@ -202,14 +202,43 @@ jobs:
           cat SHA256SUMS.txt
 
       - name: Upload Complete Release Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: fetchflow-complete-release
           path: fetchflow-release/*
 
+      - name: Extract Release Notes from CHANGELOG.md
+        run: |
+          source app/XDM/XDM.Linux.Installer/version.env
+          TARGET_VER="${GITHUB_REF_NAME#v}"
+          TARGET_VER="${TARGET_VER:-$VERSION}"
+          echo "Extracting release notes for version: $TARGET_VER"
+          python3 -c "
+          import re, sys
+          ver = sys.argv[1].lstrip('v')
+          try:
+              with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+                  content = f.read()
+              pattern = rf'## v?{re.escape(ver)}[^\n]*\n(.*?)(?=\n## |\n---|\Z)'
+              m = re.search(pattern, content, re.DOTALL)
+              if m and m.group(1).strip():
+                  notes = m.group(1).strip()
+                  with open('fetchflow-release/RELEASE_NOTES.md', 'w', encoding='utf-8') as out:
+                      out.write(notes + '\n')
+                  print('Successfully extracted release notes.')
+              else:
+                  print(f'No matching changelog section found for {ver}')
+          except Exception as e:
+              print(f'Error reading changelog: {e}')
+          " "$TARGET_VER"
+          if [ -f fetchflow-release/RELEASE_NOTES.md ]; then
+            echo "RELEASE_NOTES_PATH=fetchflow-release/RELEASE_NOTES.md" >> "$GITHUB_ENV"
+          fi
+
       - name: Create GitHub Release and Upload Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: fetchflow-release/*
+          body_path: ${{ env.RELEASE_NOTES_PATH }}
           generate_release_notes: true
