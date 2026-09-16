@@ -7,6 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>xdm-guide</AssemblyName>
+    <ApplicationIcon>Icon\xdm-logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!--<ItemGroup>

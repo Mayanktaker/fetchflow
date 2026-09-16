@@ -56,7 +56,7 @@
 
 ---
 
-## ✨ What's New in 9.1.15.9 — Windows Feature Parity
+## ✨ What's New in 9.1.15.10 — Windows Feature Parity
 
 **What's new (Windows)**
 - **Full Theme Suite on Windows**: All 14 color schemes (7 dark + 7 light) from the Linux edition now live on Windows too — pick Light, Dark, or Follow System in Settings and switch instantly, no restart.
@@ -76,6 +76,7 @@
 - **Checkmarks Visible on Windows**: Tick icons render correctly in checkboxes across dialogs (e.g. "Delete files from disk").
 - **Icons in Every Menu**: Right-click and main menus now show the same crisp icons as the Linux edition.
 - **Refreshed Download Lists**: Rows now use the Linux-style card look — alternating row tints, smooth hover highlighting, accent selection color, taller rows, and bold filenames.
+- **Correct FetchFlow Icon Everywhere**: The app, installer, desktop shortcuts, and system tray now show the real FetchFlow mark — the previous package accidentally carried the legacy icon file.
 
 ---
 
@@ -99,7 +100,7 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 
 ### Windows 11 / 10 (64-bit)
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.9.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.10.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash

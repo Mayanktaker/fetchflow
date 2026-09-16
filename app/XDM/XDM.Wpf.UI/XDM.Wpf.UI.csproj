@@ -18,7 +18,7 @@
     <StartupObject>XDM.Wpf.UI.App</StartupObject>
     <Description>FetchFlow Download Manager</Description>
     <AssemblyTitle>FetchFlow Download Manager</AssemblyTitle>
-    <AssemblyVersion>9.1.15.9</AssemblyVersion>
+    <AssemblyVersion>9.1.15.10</AssemblyVersion>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
   </PropertyGroup>
