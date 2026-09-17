@@ -29,6 +29,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | `dotnet app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll` | Full automated suite (MSTest console runner) |
 | `node scripts/test-noise-filter.mjs` | Blocklist parity: chrome/firefox/core lists + junk vectors (also in build gate) |
 | `scripts/run-gtk-smoke.sh` | Headless GTK smoke under Xvfb |
+| `bash scripts/build-windows-local.sh` | Local standalone Windows portable ZIP release (`fetchflow-windows-x64-portable-*.zip`) |
 | `scripts/cleanup-junk-captures.sh` | Purge junk captures (quit app first; auto-backup) |
 
 ## Rules
