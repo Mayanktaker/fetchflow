@@ -56,28 +56,21 @@
 
 ---
 
-## ✨ What's New in 9.1.15.11 — Windows Feature Parity
+## ✨ What's New in 9.1.15.13 — Modernized Windows UI & Parity
 
-**What's new (Windows)**
-- **Full Theme Suite on Windows**: All 14 color schemes (7 dark + 7 light) from the Linux edition now live on Windows too — pick Light, Dark, or Follow System in Settings and switch instantly, no restart.
-- **Polished Controls Everywhere**: Dropdowns, checkboxes, scrollbars, tabs, menus, and text fields are fully restyled to match the app's theme — no more default Windows-gray popups.
-- **Checksum Verification**: Right-click any finished download → Verify Checksum. Computes SHA-256, MD5, SHA-512 and SHA-1 with live progress, paste-or-drop an expected hash to confirm file integrity, and copy any digest in one click.
-- **Backup & Restore Center**: The Import / Export menu now opens a dedicated chooser to save your download list and settings to a `.zip` archive — or restore them on another PC.
-- **Speed Limiter Quick Menu**: Adjust download speed limits instantly from the main window without opening full settings.
-- **Sound on Completion Toggle**: Turn the download-finished sound on or off right from the menu.
-- **More Settings Parity**: Fallback user agent, server timestamps, antivirus scanning, temp folder, double-click action, and more — now matching the Linux edition.
+**What's new (Windows & Cross-Platform)**
+- **Integrated CSD Header Bar**: Sleek client-side decorated title bar with real-time Sun/Moon theme toggle button directly in the window caption.
+- **Dynamic Category View Subtitle**: Window title bar dynamically reflects your active download view (e.g. `· All Unfinished`, `· All Finished`, `· Videos`).
+- **Elevated Card-Style Download Rows**: Modern rounded cards with 6px border radius, alternating surface tints, smooth 120ms hover animations, and 1px accent active selection borders.
+- **Capsule Pill Search Input**: Full-capsule search bar with integrated quick search button matching modern design systems.
+- **Softened Dark Scheme Contrast**: Replaced pitch-black borders and surfaces with comfortable, refined `#2A3F3A` borders and `#131C1A` dark background for improved readability.
+- **Windows Package Manager (Winget) Manifests**: Added support for automated Windows package installation via Winget (`winget install Mayanktaker.FetchFlow`).
+- **Complete Visual Parity**: All controls, dialogs, buttons, and layouts now share an identical modern design language across both Linux and Windows.
 
-**Bug fixes (Windows)**
-- **Light Mode Fixed**: The light theme previously shipped with missing colors, causing washed-out and broken-looking surfaces. It is now complete and fully readable in every scheme.
-- **Sorting That Sticks**: Clicking column headers to sort downloads now remembers your choice between sessions.
-- **Right-Click No Longer Drops Your Selection**: Selecting several downloads and right-clicking keeps the whole selection intact.
-- **Extension No Longer Intercepts In-Browser Downloads**: Downloads that websites create internally (blob/data streams, e.g. merged videos from transcoder extensions like FetchV) are now left to the browser and always complete.
-- **Progress Numbers Are Back**: The % column in the download list and the mini progress window now show live percentage digits again.
-- **Checkmarks Visible on Windows**: Tick icons render correctly in checkboxes across dialogs (e.g. "Delete files from disk").
-- **Icons in Every Menu**: Right-click and main menus now show the same crisp icons as the Linux edition.
-- **Refreshed Download Lists**: Rows now use the Linux-style card look — alternating row tints, smooth hover highlighting, accent selection color, taller rows, and bold filenames.
-- **Correct FetchFlow Icon Everywhere**: The app, installer, desktop shortcuts, and system tray now show the real FetchFlow mark — the previous package accidentally carried the legacy icon file.
-- **Official Navy FF Brand Restored**: The Windows icon set now matches the Linux edition exactly — the previous build had briefly shipped the wrong orange artwork family.
+**Bug fixes**
+- Fixed maximize window boundary overflow under the Windows taskbar.
+- Fixed selection highlight borders in download lists to track active color schemes smoothly.
+- Fixed window close button behavior to consistently minimize to system tray.
 
 ---
 
@@ -100,23 +93,27 @@
 FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linux** with zero runtime prerequisites.
 
 ### Windows 11 / 10 (64-bit)
+- **Windows Package Manager (Winget):**
+  ```powershell
+  winget install Mayanktaker.FetchFlow
+  ```
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.11.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.13.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.4-1.fc44.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.13-1.fc44.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.15.4_amd64.deb
+sudo apt install ./fetchflow_9.1.15.13_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS
 ```bash
 # Using prebuilt package:
-sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.4-1-x86_64.pkg.tar.zst
+sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.13-1-x86_64.pkg.tar.zst
 
 # Or build via PKGBUILD:
 cd app/XDM/XDM.Linux.Installer && makepkg -si
@@ -124,7 +121,7 @@ cd app/XDM/XDM.Linux.Installer && makepkg -si
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.15.4.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.15.13.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
@@ -141,12 +138,12 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 
 | Browser Family | Supported Browsers | Package | Features |
 |---|---|---|---|
-| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.4.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
-| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.4.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.13.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.13.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
 
 
 ### Installation
-- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.4.xpi).
+- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.13.xpi).
 - **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.
 
 ---

@@ -5,6 +5,30 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
+## v9.1.15.13 (2026-09-17)
+
+### What's new
+
+- **Refined Windows Desktop Experience:**
+  - Modern integrated title bar featuring an instant Sun/Moon theme toggle button
+  - Dynamic category subtitle in the window title showing your active view (All Unfinished, Videos, Music, etc.)
+  - Card-style download list with elegant rounded corners and smooth animated hover and selection transitions
+  - Modern capsule pill search bar for intuitive searching and filtering
+  - Rounded action buttons, toolbar cards, and status bar matching the Linux desktop interface
+  - Softened, comfortable dark mode colors with improved contrast and eye comfort
+- **Windows Package Manager (Winget) Support:**
+  - Official Winget installation manifests for seamless one-line setup and package management
+- **Visual Parity:**
+  - Complete aesthetic and fluidity alignment between Linux and Windows editions
+
+### Bug fixes
+
+- Fixed window border clipping when maximizing on Windows
+- Fixed download row selection highlight borders to smoothly follow the active color theme
+- Fixed window close button behavior to consistently minimize to tray
+
+---
+
 ## v9.1.15.12 (2026-09-17)
 
 ### What's new

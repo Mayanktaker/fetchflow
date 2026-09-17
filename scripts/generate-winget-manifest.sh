@@ -26,7 +26,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
 # Resolve default version from single source of truth
-DEFAULT_VERSION="9.1.15.12"
+DEFAULT_VERSION="9.1.15.13"
 if [ -f "app/XDM/XDM.Linux.Installer/version.env" ]; then
     # shellcheck disable=SC1091
     source "app/XDM/XDM.Linux.Installer/version.env"
