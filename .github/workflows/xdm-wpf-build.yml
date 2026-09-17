@@ -37,6 +37,19 @@ jobs:
       - name: Build WinForms Integration UI (into publish tree)
         run: dotnet publish -c Release -f net4.7.2 app/XDM/XDM.WinForms.IntegrationUI/XDM.WinForms.IntegrationUI.csproj -o build_output/xdm-win-x64
 
+      - name: Sync extensions and brand assets
+        shell: pwsh
+        run: |
+          $winDir = "build_output\xdm-win-x64"
+          Copy-Item -Recurse -Force "app\XDM\chrome-extension" "$winDir\chrome-extension"
+          Copy-Item -Recurse -Force "app\XDM\firefox-amo" "$winDir\firefox-extension"
+          Copy-Item -Force "app\XDM\fetchflow-logo.ico" "$winDir\xdm-logo.ico"
+          Copy-Item -Force "app\XDM\fetchflow-logo.svg" "$winDir\fetchflow-logo.svg"
+          Copy-Item -Force "app\XDM\fetchflow-logo-512.png" "$winDir\fetchflow-logo-512.png"
+          New-Item -ItemType Directory -Force -Path "$winDir\images" | Out-Null
+          Copy-Item -Force "app\XDM\XDM.Wpf.UI\images\fetchflow-logo*.png" "$winDir\images\"
+          Get-ChildItem -Path $winDir -Filter "*.pdb" -Recurse | Remove-Item -Force
+
       - name: Install Inno Setup
         shell: pwsh
         run: choco install innosetup --no-progress -y

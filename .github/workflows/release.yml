@@ -143,6 +143,11 @@ jobs:
           Copy-Item -Force "app\XDM\fetchflow-logo.ico" "$winDir\xdm-logo.ico"
           Copy-Item -Force "app\XDM\fetchflow-logo.svg" "$winDir\fetchflow-logo.svg"
           Copy-Item -Force "app\XDM\fetchflow-logo-512.png" "$winDir\fetchflow-logo-512.png"
+          New-Item -ItemType Directory -Force -Path "$winDir\images" | Out-Null
+          Copy-Item -Force "app\XDM\XDM.Wpf.UI\images\fetchflow-logo*.png" "$winDir\images\"
+
+          # Remove debug symbols before packaging
+          Get-ChildItem -Path $winDir -Filter "*.pdb" -Recurse | Remove-Item -Force
 
           # Package Portable Windows ZIP
           Compress-Archive -Path "$winDir\*" -DestinationPath "$outDir\fetchflow-windows-x64-portable-$env:VERSION.zip" -Force
@@ -151,23 +156,22 @@ jobs:
       - name: Build Inno Setup Installer
         shell: pwsh
         run: |
-          # Install Inno Setup compiler
-          choco install innosetup --no-progress
-          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) {
-            $iscc = (Get-Command iscc.exe -ErrorAction SilentlyContinue).Source
-          }
+          # Install Inno Setup compiler non-interactively
+          choco install innosetup --no-progress -y
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) { $iscc = (Get-Command iscc.exe -ErrorAction SilentlyContinue).Source }
           Write-Host "Using Inno Setup compiler at: $iscc"
 
           # Compile standalone Windows installer .exe (versioned output name)
           & $iscc "/DAppVersion=$env:VERSION" "/DOutputBaseName=fetchflow-windows-x64-$env:VERSION-setup" "/DSourceDir=..\..\..\build_output\xdm-win-x64" "/DOutputDir=..\..\..\fetchflow-release" app\XDM\XDM.Win.Installer\fetchflow-setup.iss
           Write-Host "Generated Windows Setup Installer: fetchflow-release\fetchflow-windows-x64-$env:VERSION-setup.exe"
+
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: windows-artifacts
           path: |
-            fetchflow-release/fetchflow-windows-x64-*.zip
             fetchflow-release/fetchflow-windows-x64-*.zip
             fetchflow-release/fetchflow-windows-x64-*.exe
   publish-release:
