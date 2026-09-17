@@ -1,4 +1,4 @@
-﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
 // WpfThemeManager — WPF theme engine mirroring XDM.GtkUI.Utils.ThemeManager:
 // resolves dark/light + one of the 14 shared color schemes (XDM.Core.UI.ColorSchemeTable),
@@ -319,6 +319,9 @@ namespace XDM.Wpf.UI.Utils
             targets["RowActiveBrush"] = SchemeBrushMapper.ParseColor(scheme.ActiveBackgroundHex);
             targets["RowAlternateBrush"] = SchemeBrushMapper.ParseColor(scheme.AlternateBackgroundHex);
             targets["CardBackgroundBrush"] = SchemeBrushMapper.ParseColor(scheme.CardBackgroundHex);
+            targets["BaseSurfaceBrush"] = SchemeBrushMapper.ParseColor(IsDarkActive ? "#131C1A" : "#F4F8FA");
+            targets["HeaderBarBackgroundBrush"] = SchemeBrushMapper.ParseColor(IsDarkActive ? "#101816" : "#E3EDF1");
+            targets["CardBorderBrush"] = IsDarkActive ? Color.FromArgb(20, 255, 255, 255) : Color.FromArgb(255, 226, 232, 240);
             targets["CategoryHighlight"] = targets["RowActiveBrush"];
             targets["ListViewSelectedBackcolor"] = targets["RowActiveBrush"];
             targets[SystemColors.HighlightBrushKey] = targets["RowActiveBrush"];

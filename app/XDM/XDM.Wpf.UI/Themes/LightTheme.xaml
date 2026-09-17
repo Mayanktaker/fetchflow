@@ -1,4 +1,4 @@
-﻿ <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+ <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:core="clr-namespace:System;assembly=mscorlib"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -80,6 +80,9 @@
      <SolidColorBrush x:Key="RowActiveBrush" Color="#CFE2EA"/>
      <SolidColorBrush x:Key="RowAlternateBrush" Color="#EDF3F6"/>
      <SolidColorBrush x:Key="CardBackgroundBrush" Color="#F8FAFB"/>
+     <SolidColorBrush x:Key="CardBorderBrush" Color="#E2E8F0"/>
+     <SolidColorBrush x:Key="HeaderBarBackgroundBrush" Color="#E3EDF1"/>
+     <SolidColorBrush x:Key="BaseSurfaceBrush" Color="#F4F8FA"/>
      <SolidColorBrush x:Key="CheckBoxFocusVisual" Color="#0891B2" Opacity="0.6"/>
 
     <core:Double x:Key="ButtonDisabledOpacity">0.5</core:Double>

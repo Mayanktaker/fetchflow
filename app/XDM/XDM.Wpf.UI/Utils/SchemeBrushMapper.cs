@@ -1,4 +1,4 @@
-﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
 // SchemeBrushMapper — color utilities for the WPF scheme layer: hex parsing via
 // ColorConverter and luminance-based accent foreground selection (white text on
@@ -33,6 +33,9 @@ namespace XDM.Wpf.UI.Utils
             "RowActiveBrush",
             "RowAlternateBrush",
             "CardBackgroundBrush",
+            "CardBorderBrush",
+            "HeaderBarBackgroundBrush",
+            "BaseSurfaceBrush",
             "CategoryHighlight",
             "ListViewSelectedBackcolor",
             SystemColors.HighlightBrushKey,

@@ -40,6 +40,7 @@ using XDM.Wpf.UI.Dialogs.VideoDownloader;
 using XDM.Wpf.UI.Dialogs.Widget;
 using XDM.Wpf.UI.Win32;
 using XDM.Wpf.UI.Dialogs.MediaCapture;
+using XDM.Wpf.UI.Utils;
 
 namespace XDM.Wpf.UI
 {
@@ -122,6 +123,7 @@ namespace XDM.Wpf.UI
 
             SwitchToFinishedView();
             this.Loaded += MainWindow_Loaded;
+            this.StateChanged += MainWindow_StateChanged;
             CreateMenuItems();
             UpdateSpeedLimitButton();
             ApplicationContext.ApplicationEvent += ApplicationContext_ApplicationEvent;
@@ -131,6 +133,8 @@ namespace XDM.Wpf.UI
         {
             FinishedListViewInitialSortIfNotAlreadySorted();
             UpdateBrowserMonitorButton();
+            UpdateThemeToggleIcon();
+            WpfThemeManager.ThemeChanged += isDark => RunOnUIThread(UpdateThemeToggleIcon);
         }
 
         private void InProgressListViewInitialSortIfNotAlreadySorted()
@@ -272,6 +276,7 @@ namespace XDM.Wpf.UI
                 lvFinished.Visibility = Visibility.Collapsed;
                 InProgressListViewInitialSortIfNotAlreadySorted();
 
+                UpdateViewSubtitle(TextResource.GetText("ALL_UNFINISHED") ?? "All Unfinished");
                 CategoryChanged?.Invoke(this, new CategoryChangedEventArgs { Level = 0, Index = 0 });
             }
             else if (index > 0)
@@ -285,6 +290,7 @@ namespace XDM.Wpf.UI
                 {
                     CategoryWrapper? cat = (CategoryWrapper)lvCategory.SelectedItem;
                     view.Filter = a => IsCategoryMatched((FinishedDownloadEntryWrapper)a, cat);
+                    UpdateViewSubtitle(cat?.DisplayName ?? "Category");
                     CategoryChanged?.Invoke(this, new CategoryChangedEventArgs
                     {
                         Level = 1,
@@ -295,6 +301,7 @@ namespace XDM.Wpf.UI
                 else
                 {
                     view.Filter = a => IsCategoryMatched((FinishedDownloadEntryWrapper)a, null);
+                    UpdateViewSubtitle(TextResource.GetText("ALL_FINISHED") ?? "All Finished");
                     CategoryChanged?.Invoke(this, new CategoryChangedEventArgs { Level = 0, Index = 1 });
                 }
             }
@@ -1000,6 +1007,78 @@ namespace XDM.Wpf.UI
                 this.WindowState = WindowState.Normal;
             }
             this.Activate();
+        }
+
+        // Updates dynamic headerbar subtitle according to active category view
+        private void UpdateViewSubtitle(string title)
+        {
+            if (lblViewSubtitle != null)
+            {
+                lblViewSubtitle.Text = $" · {title}";
+            }
+        }
+
+        // Adjusts window chrome margins and toggle glyph on window maximize/restore
+        private void MainWindow_StateChanged(object? sender, EventArgs e)
+        {
+            if (this.WindowState == WindowState.Maximized)
+            {
+                RootGrid.Margin = new Thickness(6);
+                if (PathMaximize != null)
+                {
+                    PathMaximize.Data = Geometry.Parse("M 2.5,0.5 H 9.5 V 7.5 H 7.5 M 7.5,2.5 H 0.5 V 9.5 H 7.5 Z");
+                }
+            }
+            else
+            {
+                RootGrid.Margin = new Thickness(0);
+                if (PathMaximize != null)
+                {
+                    PathMaximize.Data = Geometry.Parse("M 0.5,0.5 H 9.5 V 9.5 H 0.5 Z");
+                }
+            }
+        }
+
+        // Minimizes main window to taskbar
+        private void BtnMinimize_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
+        }
+
+        // Toggles window state between maximized and restored
+        private void BtnMaximize_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
+        // Closes main window (hides to tray)
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        // Toggles between Dark and Light mode live
+        private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
+        {
+            WpfThemeManager.ToggleTheme();
+            UpdateThemeToggleIcon();
+        }
+
+        // Updates the headerbar theme toggle icon and tooltip based on active theme
+        private void UpdateThemeToggleIcon()
+        {
+            if (PathThemeIcon == null || BtnThemeToggle == null)
+            {
+                return;
+            }
+            var iconKey = WpfThemeManager.IsDarkActive ? "ri-sun-line" : "ri-moon-line";
+            if (TryFindResource(iconKey) is Geometry geom)
+            {
+                PathThemeIcon.Data = geom;
+            }
+            BtnThemeToggle.ToolTip = WpfThemeManager.IsDarkActive
+                ? "Switch to Light theme"
+                : "Switch to Dark theme";
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--Control colors.-->
     <!--<Color x:Key="WindowColor">#FFE8EDF9</Color>
@@ -425,15 +425,13 @@
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
         <Setter Property="ScrollViewer.CanContentScroll" Value="true" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="{StaticResource ListViewBackcolor}" />
-        <Setter Property="Background" Value="{StaticResource ListViewBackcolor}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListView">
                     <Border Name="Border" BorderThickness="{TemplateBinding BorderThickness}" 
-                            Background="{TemplateBinding Background}" 
-                            BorderBrush="{TemplateBinding BorderBrush}">
+                            Background="{TemplateBinding Background}">
                         <ScrollViewer Style="{StaticResource {x:Static GridView.GridViewScrollViewerStyleKey}}">
                             <ItemsPresenter />
                         </ScrollViewer>
@@ -443,7 +441,7 @@
                             <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
-                            <Setter TargetName="Border" Property="Background" Value="{StaticResource ListViewBackcolor}"/>
+                            <Setter TargetName="Border" Property="Background" Value="Transparent"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -454,32 +452,36 @@
     <Style x:Key="{x:Type ListViewItem}" TargetType="ListViewItem" >
         <Setter Property="SnapsToDevicePixels" Value="true" />
         <Setter Property="OverridesDefaultStyle" Value="true" />
-        <Setter Property="Foreground" Value="{StaticResource ListViewForecolor}"></Setter>
-        <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-        <Setter Property="Background" Value="{StaticResource ListViewBackcolor}"></Setter>
-        <Setter Property="Padding" Value="5"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource ListViewForecolor}"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Margin" Value="5,3,5,3"/>
+        <Setter Property="Padding" Value="6,6"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ListViewItem}">
                     <Border x:Name="Border" Padding="{TemplateBinding Padding}"
-                                                Background="{TemplateBinding Background}"
-                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                SnapsToDevicePixels="true" 
-                                                ContextMenu="{TemplateBinding ContextMenu}">
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6"
+                            SnapsToDevicePixels="true" 
+                            ContextMenu="{TemplateBinding ContextMenu}">
                         <GridViewRowPresenter x:Name="Row" HorizontalAlignment="Stretch" 
-                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"  />
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsSelected" Value="True" >
-                            <Setter TargetName="Border" Property="Background" Value="{StaticResource ListViewSelectedBackcolor}"/>
-                            <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource ListViewSelectedBackcolor}"/>
-                            <Setter Property="Foreground" Value="{StaticResource ListViewSelectedForecolor}"/>
-                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="{StaticResource ListViewMouseOverBackcolor}"/>
-                            <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource ListViewMouseOverBackcolor}"/>
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource RowHoverBrush}"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True" >
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource RowActiveBrush}"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
