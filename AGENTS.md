@@ -30,6 +30,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | `node scripts/test-noise-filter.mjs` | Blocklist parity: chrome/firefox/core lists + junk vectors (also in build gate) |
 | `scripts/run-gtk-smoke.sh` | Headless GTK smoke under Xvfb |
 | `bash scripts/build-windows-local.sh` | Local standalone Windows portable ZIP release (`fetchflow-windows-x64-portable-*.zip`) |
+| `bash scripts/generate-winget-manifest.sh` | Generate Windows Package Manager (Winget) v1.6.0 manifests |
 | `scripts/cleanup-junk-captures.sh` | Purge junk captures (quit app first; auto-backup) |
 
 ## Rules

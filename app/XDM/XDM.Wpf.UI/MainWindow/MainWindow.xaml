@@ -733,12 +733,6 @@
                                     <Trigger Property="ItemsControl.AlternationIndex" Value="1">
                                         <Setter Property="Background" Value="{DynamicResource RowAlternateBrush}"/>
                                     </Trigger>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{DynamicResource RowHoverBrush}"/>
-                                    </Trigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="{DynamicResource RowActiveBrush}"/>
-                                    </Trigger>
                                 </Style.Triggers>
                             </Style>
                         </ListView.ItemContainerStyle>
@@ -811,12 +805,6 @@
                                 <Style.Triggers>
                                     <Trigger Property="ItemsControl.AlternationIndex" Value="1">
                                         <Setter Property="Background" Value="{DynamicResource RowAlternateBrush}"/>
-                                    </Trigger>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{DynamicResource RowHoverBrush}"/>
-                                    </Trigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="{DynamicResource RowActiveBrush}"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>

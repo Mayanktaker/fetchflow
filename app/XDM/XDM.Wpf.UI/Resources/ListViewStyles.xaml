@@ -462,26 +462,68 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ListViewItem}">
-                    <Border x:Name="Border" Padding="{TemplateBinding Padding}"
+                    <Border x:Name="Border"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="6"
                             SnapsToDevicePixels="true" 
                             ContextMenu="{TemplateBinding ContextMenu}">
-                        <GridViewRowPresenter x:Name="Row" HorizontalAlignment="Stretch" 
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        <Grid>
+                            <!-- Subtle hardware-accelerated transition overlays -->
+                            <Border x:Name="HoverOverlay" Background="{DynamicResource RowHoverBrush}" 
+                                    CornerRadius="5" Opacity="0" IsHitTestVisible="False"/>
+                            <Border x:Name="ActiveOverlay" Background="{DynamicResource RowActiveBrush}" 
+                                    CornerRadius="5" Opacity="0" IsHitTestVisible="False"/>
+                            <GridViewRowPresenter x:Name="Row" Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Stretch" 
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource RowHoverBrush}"/>
                             <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.12"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True" >
-                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource RowActiveBrush}"/>
                             <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                             <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ActiveOverlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.10"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ActiveOverlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.15"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -378,6 +378,7 @@ build_output/
 test-publish/
 xdm-release/
 fetchflow-release/
+winget-manifests/
 app/XDM/XDM.Linux.Installer/xdman_gtk-*/
 msg.bin
 
