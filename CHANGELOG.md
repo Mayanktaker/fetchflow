@@ -5,6 +5,18 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
+## v9.1.15.15 (2026-09-27)
+
+### What's new
+
+- **More robust one-line Linux installer:** piping the installer via `curl | bash` now works reliably on all distros
+
+### Bug fixes
+
+- Fixed the app failing to start on Arch, CachyOS, and Manjaro with an application-bundle error (packaging no longer strips the binary)
+
+---
+
 ## v9.1.15.14 (2026-09-27)
 
 ### What's new

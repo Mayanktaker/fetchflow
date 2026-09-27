@@ -11,7 +11,7 @@ REPO="Mayanktaker/fetchflow"
 APP_ID="com.mayanktaker.fetchflow"
 INSTALL_DIR="/opt/fetchflow"
 BIN_LINK="/usr/bin/fetchflow"
-VERSION_DEFAULT="9.1.15.14"
+VERSION_DEFAULT="9.1.15.15"
 VERSION="${FETCHFLOW_VERSION:-$VERSION_DEFAULT}"
 
 # CLI flags
@@ -76,8 +76,14 @@ need_root() {
             [ $ASSUME_YES = 1 ] && extra="$extra --yes";
             [ $DO_UNINSTALL = 1 ] && extra="$extra --uninstall";
             [ $DO_CHECK = 1 ] && extra="$extra --check";
+            script="$0";
+            # Piped install (curl|bash): $0 is not a file, so stage a stable copy
+            if [ ! -f "$script" ]; then
+                script="$(mktemp /tmp/fetchflow-install.XXXXXX.sh)";
+                fetch "https://github.com/$REPO/releases/latest/download/install-fetchflow.sh" "$script" || die "Could not stage installer for sudo re-exec.";
+            fi
             # shellcheck disable=SC2086
-            exec sudo FETCHFLOW_VERSION="$VERSION" bash "$0" $extra --version="$VERSION";
+            exec sudo FETCHFLOW_VERSION="$VERSION" bash "$script" $extra --version="$VERSION";
         else
             die "Run as root (or install sudo).";
         fi

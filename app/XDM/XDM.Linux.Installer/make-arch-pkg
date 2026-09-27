@@ -100,6 +100,8 @@ pkgdesc="Fast, modern open source download accelerator and video downloader."
 arch=("x86_64")
 url="https://mayanktaker.com"
 license=('GPL2')
+# Never strip: this is a .NET single-file bundle — strip destroys the payload
+options=('!strip')
 depends=('ffmpeg' 'gtk3>=3.24')
 optdepends=('xdg-desktop-portal: native file choosers under Wayland/sandboxes'
             'libnotify: desktop notifications'
