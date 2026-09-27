@@ -129,12 +129,17 @@ chmod +x "$OUT_DIR/install-fetchflow.sh"
 
 echo "Staging AUR package files..."
 rm -rf "$OUT_DIR/aur"
-cp -r aur/fetchflow-bin "$OUT_DIR/aur"
+(cd app/XDM/XDM.Linux.Installer && bash make-aur-pkg) || echo "WARNING: AUR files skipped (Arch package or makepkg missing)."
+[ -d app/XDM/XDM.Linux.Installer/aur-output ] && cp -r app/XDM/XDM.Linux.Installer/aur-output "$OUT_DIR/aur"
+
+echo "Bundling AUR files as release asset..."
+rm -f "$OUT_DIR/fetchflow-aur-${VERSION}.tar.gz"
+[ -d "$OUT_DIR/aur" ] && tar -czf "$OUT_DIR/fetchflow-aur-${VERSION}.tar.gz" -C "$OUT_DIR" aur
 
 echo "Generating SHA256 Checksums..."
 cd "$OUT_DIR"
 rm -f SHA256SUMS.txt
-sha256sum * > SHA256SUMS.txt 2>/dev/null || true
+find . -maxdepth 1 -type f ! -name 'SHA256SUMS.txt' -printf '%P\0' | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
 cd ..
 
 echo "========================================="

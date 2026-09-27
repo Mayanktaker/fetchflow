@@ -1,0 +1,62 @@
+#!/bin/bash
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+# Mint AUR files (PKGBUILD + .SRCINFO) for fetchflow-bin from the official Arch package.
+# Run from XDM.Linux.Installer/: bash make-aur-pkg [pkgfile] [outdir]
+# Defaults: ./fetchflow-${VERSION}-1-x86_64.pkg.tar.zst and ./aur-output
+set -e
+
+# Single source of truth for the version
+source ./version.env
+
+PKG="${1:-fetchflow-${VERSION}-1-x86_64.pkg.tar.zst}"
+OUT="${2:-aur-output}"
+
+# Hash source must exist (CI builds the Arch package first)
+[ -f "$PKG" ] || { echo "ERROR: '$PKG' not found — build the Arch package first." >&2; exit 1; }
+
+# Filename/version drift only happens in dev trees, never in CI
+case "$PKG" in
+    *"${VERSION}"*) : ;;
+    *) echo "WARNING: '$PKG' does not match version.env (${VERSION}) — hash describes this file only." ;;
+esac
+
+SUM="$(sha256sum "$PKG" | cut -d' ' -f1)"
+
+rm -rf "$OUT"
+mkdir -p "$OUT"
+
+# Binary repackage of the official Arch build
+cat > "$OUT/PKGBUILD" <<EOF
+# Maintainer: Mayanktaker Computers & Web Development <https://mayanktaker.com>
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+# AUR binary package: repackages the official FetchFlow Arch build from GitHub releases.
+pkgname=fetchflow-bin
+pkgver=${VERSION}
+pkgrel=1
+pkgdesc="Fast, modern open source download accelerator and video downloader."
+arch=('x86_64')
+url="https://mayanktaker.com"
+license=('GPL2')
+depends=('ffmpeg' 'gtk3>=3.24')
+optdepends=('xdg-desktop-portal: native file choosers under Wayland/sandboxes'
+            'libnotify: desktop notifications'
+            'yt-dlp: video/audio extraction from 1000+ sites')
+provides=('fetchflow')
+conflicts=('fetchflow')
+source=("fetchflow-\${pkgver}-1-x86_64.pkg.tar.zst::https://github.com/Mayanktaker/fetchflow/releases/download/v\${pkgver}/fetchflow-\${pkgver}-1-x86_64.pkg.tar.zst")
+sha256sums=('$SUM')
+
+# Repack official tree (strip pacman metadata)
+package() {
+    bsdtar -xpf "\${srcdir}/fetchflow-\${pkgver}-1-x86_64.pkg.tar.zst" -C "\${pkgdir}" --exclude=.PKGINFO --exclude=.BUILDINFO --exclude=.MTREE
+}
+EOF
+
+# Canonical .SRCINFO via makepkg when available
+if command -v makepkg >/dev/null 2>&1; then
+    (cd "$OUT" && makepkg --printsrcinfo > .SRCINFO)
+else
+    echo "WARNING: makepkg not found — shipping PKGBUILD without .SRCINFO."
+fi
+
+echo "Wrote AUR files to $OUT/ (pkgver ${VERSION}, sha256 ${SUM})"

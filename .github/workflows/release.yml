@@ -137,8 +137,9 @@ jobs:
           tar -xzf "fetchflow-release/fetchflow-linux-x64-${VERSION}.tar.gz" \
             -C app/XDM/XDM.Linux.Installer/binary-source
           cp scripts/install-fetchflow.sh "fetchflow-release/install-fetchflow.sh"
+          su builder -c "cd app/XDM/XDM.Linux.Installer && bash make-aur-pkg"
           rm -rf fetchflow-release/aur
-          cp -r aur/fetchflow-bin fetchflow-release/aur
+          cp -r app/XDM/XDM.Linux.Installer/aur-output fetchflow-release/aur
           # makepkg refuses to run as root — build as an unprivileged user
           useradd -m builder
           chown -R builder:builder .
@@ -251,11 +252,17 @@ jobs:
           name: arch-artifacts
           path: fetchflow-release
 
+      - name: Bundle AUR files as release asset
+        run: |
+          source app/XDM/XDM.Linux.Installer/version.env
+          rm -f "fetchflow-release/fetchflow-aur-${VERSION}.tar.gz"
+          tar -czf "fetchflow-release/fetchflow-aur-${VERSION}.tar.gz" -C fetchflow-release aur
+
       - name: Generate Unified SHA256 Checksums
         run: |
           cd fetchflow-release
           rm -f SHA256SUMS.txt
-          sha256sum * > SHA256SUMS.txt
+          find . -maxdepth 1 -type f ! -name 'SHA256SUMS.txt' -printf '%P\0' | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
           echo "=== Complete Release Artifacts ==="
           ls -lh
           echo "=== SHA256SUMS.txt ==="
