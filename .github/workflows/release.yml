@@ -91,6 +91,10 @@ jobs:
           cp *.deb "$OUT_DIR/" 2>/dev/null || :
           cd ../../..
 
+          echo "=== 5. Staging universal Linux installer ==="
+          cp scripts/install-fetchflow.sh "$OUT_DIR/install-fetchflow.sh"
+          chmod +x "$OUT_DIR/install-fetchflow.sh"
+
           echo "=== Linux Artifacts summary ==="
           ls -lh "$OUT_DIR"
 
@@ -102,8 +106,54 @@ jobs:
             fetchflow-release/*.tar.gz
             fetchflow-release/*.rpm
             fetchflow-release/*.deb
+            fetchflow-release/*.pkg.tar.*
+            fetchflow-release/*.sh
             fetchflow-release/*.zip
             fetchflow-release/*.xpi
+
+  build-arch:
+    name: Build Arch Linux Package (CachyOS/Manjaro)
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    needs: [build-linux]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Download Linux tarball
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: linux-artifacts
+          path: fetchflow-release
+
+      - name: Build Arch package via makepkg
+        run: |
+          pacman -Syu --noconfirm --needed base-devel zstd
+          source app/XDM/XDM.Linux.Installer/version.env
+          rm -rf app/XDM/XDM.Linux.Installer/binary-source
+          mkdir -p app/XDM/XDM.Linux.Installer/binary-source
+          tar -xzf "fetchflow-release/fetchflow-linux-x64-${VERSION}.tar.gz" \
+            -C app/XDM/XDM.Linux.Installer/binary-source
+          cp scripts/install-fetchflow.sh "fetchflow-release/install-fetchflow.sh"
+          rm -rf fetchflow-release/aur
+          cp -r aur/fetchflow-bin fetchflow-release/aur
+          # makepkg refuses to run as root — build as an unprivileged user
+          useradd -m builder
+          chown -R builder:builder .
+          su builder -c "cd app/XDM/XDM.Linux.Installer && bash make-arch-pkg"
+          cp app/XDM/XDM.Linux.Installer/*.pkg.tar.zst fetchflow-release/
+          ls -lh fetchflow-release
+
+      - name: Upload Arch Artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: arch-artifacts
+          path: |
+            fetchflow-release/*.pkg.tar.*
+            fetchflow-release/*.sh
+            fetchflow-release/aur/
 
   build-windows:
     name: Build & Package Windows Artifacts
@@ -176,7 +226,7 @@ jobs:
             fetchflow-release/fetchflow-windows-x64-*.exe
   publish-release:
     name: Publish Release & Checksums
-    needs: [build-linux, build-windows]
+    needs: [build-linux, build-arch, build-windows]
     runs-on: ubuntu-latest
 
     steps:
@@ -193,6 +243,12 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: windows-artifacts
+          path: fetchflow-release
+
+      - name: Download Arch artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: arch-artifacts
           path: fetchflow-release
 
       - name: Generate Unified SHA256 Checksums
@@ -243,6 +299,15 @@ jobs:
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: fetchflow-release/*
+          files: |
+            fetchflow-release/*.tar.gz
+            fetchflow-release/*.rpm
+            fetchflow-release/*.deb
+            fetchflow-release/*.pkg.tar.*
+            fetchflow-release/*.sh
+            fetchflow-release/*.zip
+            fetchflow-release/*.xpi
+            fetchflow-release/*.exe
+            fetchflow-release/SHA256SUMS.txt
           body_path: ${{ env.RELEASE_NOTES_PATH }}
           generate_release_notes: true

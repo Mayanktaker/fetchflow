@@ -22,6 +22,7 @@ for sz in 16 22 24 32 48 64 128 256 512; do
     mkdir -p "${PKG}/usr/share/icons/hicolor/${sz}x${sz}/apps"
 done
 mkdir -p "${PKG}/usr/share/mime/packages"
+mkdir -p "${PKG}/usr/share/doc/fetchflow"
 
 cp -r "${SRC_DIR}/." "${PKG}/opt/fetchflow"
 cp ../../../xdm-updater.sh "${PKG}/opt/fetchflow/" 2>/dev/null || :
@@ -36,7 +37,7 @@ Package: fetchflow
 Version: ${VERSION}
 Architecture: amd64
 Depends: libgtk-3-0 (>= 3.24)
-Recommends: ffmpeg, libnotify-bin, xdg-desktop-portal
+Recommends: ffmpeg, libnotify-bin, xdg-desktop-portal, yt-dlp
 Maintainer: Mayanktaker | Mayanktaker Computers & Web Development (https://mayanktaker.com)
 Description: Fast, modern open source download accelerator and video downloader.
  FetchFlow accelerates downloads using multi-connection segments, captures
@@ -97,6 +98,15 @@ cat <<EOF > "${PKG}/usr/share/mime/packages/com.mayanktaker.fetchflow.xml"
   </mime-type>
 </mime-info>
 EOF
+
+# Debian policy copyright file (upstream LICENSE is GPL-2.0)
+{
+    echo "Package: fetchflow"
+    echo "Upstream: Mayanktaker Computers & Web Development (https://mayanktaker.com)"
+    echo "License: GPL-2.0"
+    echo ""
+    cat ../../../LICENSE 2>/dev/null || echo "See LICENSE in the source repository."
+} > "${PKG}/usr/share/doc/fetchflow/copyright"
 
 cat <<EOF > "${PKG}/DEBIAN/postinst"
 #!/bin/bash

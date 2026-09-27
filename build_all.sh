@@ -123,6 +123,14 @@ cp fetchflow_${VERSION}*.deb "$OUT_DIR/" 2>/dev/null || echo "No .deb packages f
 cp fetchflow-${VERSION}*.pkg.tar.* "$OUT_DIR/" 2>/dev/null || echo "No .pkg.tar.* packages found to copy"
 cd ../../..
 
+echo "Staging universal Linux installer..."
+cp scripts/install-fetchflow.sh "$OUT_DIR/install-fetchflow.sh"
+chmod +x "$OUT_DIR/install-fetchflow.sh"
+
+echo "Staging AUR package files..."
+rm -rf "$OUT_DIR/aur"
+cp -r aur/fetchflow-bin "$OUT_DIR/aur"
+
 echo "Generating SHA256 Checksums..."
 cd "$OUT_DIR"
 rm -f SHA256SUMS.txt

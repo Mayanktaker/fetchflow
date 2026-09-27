@@ -5,6 +5,20 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
+## v9.1.15.14 (2026-09-27)
+
+### What's new
+
+- **One-line Linux installer:** a single command now detects your distro (Arch, CachyOS, Manjaro, Fedora, Debian, openSUSE) and installs the correct native package automatically
+- **Arch, CachyOS & Manjaro support:** brand-new native system package plus AUR availability (`yay -S fetchflow-bin`) — no more manual tarball setup
+
+### Bug fixes
+
+- Fixed installation failing on Arch-based distros with a "conflicting files" error
+- Fixed missing license info in the Debian package
+
+---
+
 ## v9.1.15.13 (2026-09-17)
 
 ### What's new

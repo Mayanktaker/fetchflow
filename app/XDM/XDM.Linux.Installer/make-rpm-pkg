@@ -108,9 +108,10 @@ Requires:   	gtk3 >= 3.24
 Recommends: 	(ffmpeg-free or ffmpeg)
 Recommends: 	xdg-desktop-portal
 Recommends: 	libnotify
+Recommends: 	yt-dlp
 
 Group:      	System Environment/Base
-License:    	GPLv3+
+License:    	GPL-2.0-only
 Source0:    	${SOURCE_NAME}.tar.gz
 
 %description

@@ -56,7 +56,7 @@
 
 ---
 
-## ✨ What's New in 9.1.15.13 — Modernized Windows UI & Parity
+## ✨ What's New in 9.1.15.14 — Modernized Windows UI & Parity
 
 **What's new (Windows & Cross-Platform)**
 - **Integrated CSD Header Bar**: Sleek client-side decorated title bar with real-time Sun/Moon theme toggle button directly in the window caption.
@@ -92,36 +92,54 @@
 
 FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linux** with zero runtime prerequisites.
 
+### Universal Installer (Recommended — CachyOS / Manjaro / Arch / Fedora / Debian / openSUSE)
+```bash
+curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/install-fetchflow.sh | bash
+# Options: bash install-fetchflow.sh --version 9.1.15.14 --yes --check --uninstall
+```
+The script auto-detects your distro, installs system deps (`gtk3`, `ffmpeg`, `xdg-desktop-portal`), then installs the native package (`.pkg.tar.zst` on Arch-family, `.rpm` on Fedora, `.deb` on Debian/Ubuntu) with a portable `/opt/fetchflow` tarball fallback.
+
+### CachyOS / Manjaro / Arch / EndeavourOS / Garuda
+```bash
+# Via AUR helper (simplest on Arch-family):
+yay -S fetchflow-bin
+# or: paru -S fetchflow-bin
+
+# Via universal installer (handles deps + fallback automatically):
+curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/install-fetchflow.sh | bash
+
+# Or manually with the prebuilt package:
+sudo pacman -S --needed gtk3 ffmpeg xdg-desktop-portal libnotify yt-dlp
+sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.14-1-x86_64.pkg.tar.zst
+```
+
 ### Windows 11 / 10 (64-bit)
 - **Windows Package Manager (Winget):**
   ```powershell
   winget install Mayanktaker.FetchFlow
   ```
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.13.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.14.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.13-1.fc44.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.14-1.fc44.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.15.13_amd64.deb
+sudo apt install ./fetchflow_9.1.15.14_amd64.deb
 ```
 
-### Arch Linux / Manjaro / EndeavourOS
+### Arch Linux / Manjaro / EndeavourOS (legacy manual PKGBUILD)
 ```bash
-# Using prebuilt package:
-sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.13-1-x86_64.pkg.tar.zst
-
 # Or build via PKGBUILD:
 cd app/XDM/XDM.Linux.Installer && makepkg -si
 ```
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.15.13.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.15.14.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
@@ -138,12 +156,12 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 
 | Browser Family | Supported Browsers | Package | Features |
 |---|---|---|---|
-| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.13.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
-| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.13.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.14.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.14.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
 
 
 ### Installation
-- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.13.xpi).
+- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.14.xpi).
 - **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.
 
 ---
@@ -202,6 +220,12 @@ All compiled packages land in `fetchflow-release/`.
 ```bash
 dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj
 ```
+
+### Lint Shell Scripts
+```bash
+shellcheck -S warning scripts/*.sh build_all.sh xdm-updater.sh app/XDM/XDM.Linux.Installer/make-arch-pkg app/XDM/XDM.Linux.Installer/make-deb-pkg app/XDM/XDM.Linux.Installer/make-rpm-pkg
+```
+Runs automatically on every push via `.github/workflows/lint.yml`.
 
 ---
 
