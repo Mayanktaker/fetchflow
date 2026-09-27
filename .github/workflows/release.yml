@@ -137,14 +137,14 @@ jobs:
           tar -xzf "fetchflow-release/fetchflow-linux-x64-${VERSION}.tar.gz" \
             -C app/XDM/XDM.Linux.Installer/binary-source
           cp scripts/install-fetchflow.sh "fetchflow-release/install-fetchflow.sh"
-          su builder -c "cd app/XDM/XDM.Linux.Installer && bash make-aur-pkg"
-          rm -rf fetchflow-release/aur
-          cp -r app/XDM/XDM.Linux.Installer/aur-output fetchflow-release/aur
           # makepkg refuses to run as root — build as an unprivileged user
           useradd -m builder
           chown -R builder:builder .
           su builder -c "cd app/XDM/XDM.Linux.Installer && bash make-arch-pkg"
           cp app/XDM/XDM.Linux.Installer/*.pkg.tar.zst fetchflow-release/
+          su builder -c "cd app/XDM/XDM.Linux.Installer && bash make-aur-pkg"
+          rm -rf fetchflow-release/aur
+          cp -r app/XDM/XDM.Linux.Installer/aur-output fetchflow-release/aur
           ls -lh fetchflow-release
 
       - name: Upload Arch Artifacts
