@@ -18,6 +18,9 @@ namespace XDM.GtkUI
 {
     class Program
     {
+        // Must match the desktop file's StartupWMClass and the app icon name, or the
+        // shell cannot associate the window with its .desktop entry
+        private const string AppId = "com.mayanktaker.fetchflow";
         private const string DisableCachingName = @"TestSwitch.LocalAppContext.DisableCaching";
         private const string DontEnableSchUseStrongCryptoName = @"Switch.System.Net.DontEnableSchUseStrongCrypto";
 
@@ -103,8 +106,12 @@ namespace XDM.GtkUI
             Log.Debug("Application_Startup");
             WriteCrashLine("Startup", "pid=" + System.Diagnostics.Process.GetCurrentProcess().Id);
             Environment.SetEnvironmentVariable("GTK_USE_PORTAL", "1");
-            Gtk.Application.Init("com.mayanktaker.fetchflow", ref args);
-            GLib.Global.ProgramName = "fetchflow";
+            Gtk.Application.Init(AppId, ref args);
+            // WM_CLASS is built from the program name, and the desktop file declares
+            // StartupWMClass=com.mayanktaker.fetchflow. Setting it to "fetchflow" made
+            // GNOME unable to match window -> desktop entry, so the dash showed a
+            // generic icon while the launcher showed the right one. Keep them equal.
+            GLib.Global.ProgramName = AppId;
             GLib.Global.ApplicationName = "FetchFlow Download Manager";
             GLib.ExceptionManager.UnhandledException += ExceptionManager_UnhandledException;
 

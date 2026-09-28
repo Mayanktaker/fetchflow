@@ -300,6 +300,10 @@ namespace XDM.GtkUI.Utils
             while (comboBox.Model.IterNext(ref iter));
         }
 
+        // Selection checkbox edge length in px — large enough to read as the row's
+        // primary action without crowding a 67px row
+        public const int SelectionCheckboxSize = 22;
+
         public static Gdk.Pixbuf? LoadSvg(string name, int dimension = 16)
         {
             try
@@ -324,6 +328,37 @@ namespace XDM.GtkUI.Utils
             }
             catch { }
             return null;
+        }
+
+        // Download list selection checkbox, sized for the 67px row pitch. A
+        // CellRendererToggle cannot be restyled from CSS (it has no styleable node),
+        // so the two states are real SVG assets and the accent is re-tinted from the
+        // active theme at call time.
+        private static Gdk.Pixbuf? cachedCheckboxUnchecked;
+        private static Gdk.Pixbuf? cachedCheckboxChecked;
+        private static byte[] cachedAccent = Array.Empty<byte>();
+
+        public static Gdk.Pixbuf? LoadSelectionCheckbox(bool isChecked, byte accentR, byte accentG, byte accentB)
+        {
+            // Re-tint only when the theme's accent actually changed
+            var accentChanged = cachedAccent.Length != 3
+                || cachedAccent[0] != accentR
+                || cachedAccent[1] != accentG
+                || cachedAccent[2] != accentB;
+
+            if (cachedCheckboxUnchecked == null || accentChanged)
+            {
+                cachedCheckboxUnchecked = LoadSvg("checkbox-unchecked", SelectionCheckboxSize);
+                var checkedBase = LoadSvg("checkbox-checked", SelectionCheckboxSize);
+                cachedCheckboxChecked = checkedBase == null
+                    ? null
+                    : TintPixbuf(checkedBase, accentR, accentG, accentB);
+                cachedAccent = new[] { accentR, accentG, accentB };
+            }
+
+            return isChecked
+                ? cachedCheckboxChecked ?? cachedCheckboxUnchecked
+                : cachedCheckboxUnchecked;
         }
 
         // Tinted copy of a monochrome pixbuf: RGB channels replaced with (r,g,b),

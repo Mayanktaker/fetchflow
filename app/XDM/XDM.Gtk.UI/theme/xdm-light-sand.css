@@ -1140,6 +1140,19 @@ treeview.finished header button {
   padding: 14px 12px;
 }
 
+/* Visible column dividers: without them nothing tells the user the header edge
+   is draggable, so the columns look non-resizable. The divider brightens on
+   hover, which is exactly where the resize cursor appears. */
+treeview.unfinished header button:not(:last-child),
+treeview.finished header button:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+treeview.unfinished header button:hover,
+treeview.finished header button:hover {
+  border-right-color: rgba(255, 255, 255, 0.75);
+}
+
 /* Rounded outer corners only, so the three captions read as one bar */
 treeview.unfinished header button:first-child,
 treeview.finished header button:first-child {
@@ -1152,13 +1165,16 @@ treeview.finished header button:last-child {
 }
 
 /* Column header captions line up with the text they label, so header and rows read
-   as one grid. Insets are measured against the rows: 64px lands "File name" on the
-   first pixel of the file titles (12 icon pad + 28 icon + 12 icon pad + 12 name
-   pad), 16px lands "Size" on the right edge of the metadata (16 meta pad).
+   as one grid. Insets are measured against the real row geometry: "File name"
+   starts on the first pixel of the file titles (8 checkbox pad + 22 box +
+   8 checkbox pad + 12 icon pad + 28 icon + 12 icon pad + 12 name pad = 102,
+   plus the header button's own 2px inner padding), and "Size" ends on the right
+   edge of the metadata (16 meta pad). Verified by
+   DownloadListColumnHeaderSmokeTests.
    The header button's own 2px inner padding accounts for the 2px difference. */
 treeview.unfinished header button.list-header-name,
 treeview.finished header button.list-header-name {
-  padding-left: 66px;
+  padding-left: 104px;
 }
 
 treeview.unfinished header button.list-header-size,

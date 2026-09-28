@@ -84,6 +84,24 @@ action row can never drift from the dialog's Cancel / Save buttons. Its
 destructive variant keeps the subtle red of `button.flat.destructive-action` and
 gains the row's border and hover.
 
+The download list's selection checkbox is **not** a `CellRendererToggle`: a cell
+renderer has no styleable CSS node, so a toggle cannot be themed at all (verified —
+`treeview row checkbutton`, `treeview cell` and `treeview toggle` all have zero
+effect). The gutter is a `CellRendererPixbuf` showing
+`svg-icons/checkbox-unchecked.svg` / `checkbox-checked.svg` (22px, accent-tinted via
+`GtkHelper.LoadSelectionCheckbox`, re-tinted when the theme accent changes). Gutter
+width 52px = 22px box + 8px padding each side.
+
+Two things must hold for that checkbox to work, both pinned by
+`DownloadListCheckboxTests`:
+
+- The row must be re-rendered on selection change — the cell-data-func is not
+  re-invoked on its own, so each `Selection.Changed` handler calls `QueueDraw()`.
+- The gutter click must **not** be suppressed. A `ConnectBefore` press handler that
+  sets `RetVal = true` stops GTK's own handlers on that widget, which is what left
+  the checkbox dead. The toggle now happens on press, in our own handler, and the
+  event is left unclaimed so ctrl/shift-click still works.
+
 `button.flat:hover` must stay at **alpha >= 0.10** (0.10 light / 0.13 dark): a 6%
 wash is invisible on a light surface and reads as a dead button. Both invariants
 are enforced by `DialogButtonConsistencyTests` across all 14 themes.

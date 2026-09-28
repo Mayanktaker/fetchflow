@@ -22,6 +22,9 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - Fixed the download list header on Linux looking clipped and misaligned against the file names and sizes
 - **The column header bar is visible again on light themes** — it had gone transparent and blended into the background
 - **Columns can be resized again** on every theme, light and dark
+- **You can now see where to drag a column:** a divider sits between the download list headings and lights up when you point at it
+- **Selecting several downloads works again:** the tick box now responds on click, and it is a larger, clearer box so it is easy to hit and easy to see
+- **Correct icon in the GNOME dock and taskbar:** the window now carries the same app ID as its launcher entry, so the shell shows the FetchFlow icon instead of a generic one
 
 ---
 ## v9.1.15.17 (2026-09-28)

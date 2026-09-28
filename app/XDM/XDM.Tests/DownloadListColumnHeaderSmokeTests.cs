@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gtk;
+using Pixbuf = Gdk.Pixbuf;
 
 namespace XDM.Tests
 {
@@ -22,7 +23,7 @@ namespace XDM.Tests
     public class DownloadListColumnHeaderSmokeTests
     {
         // Mirrors MainWindow's download-list geometry tokens
-        private const int GutterWidth = 46;
+        private const int GutterWidth = 52;          // mirrors DownloadGutterWidth (holds the 22px checkbox)
         private const int GutterMinWidth = 36;
         private const int GutterMaxWidth = 200;
         private const int SizeWidth = 196;
@@ -35,6 +36,8 @@ namespace XDM.Tests
         private const int IconPadding = 12;          // mirrors DownloadIconHorizontalPadding
         private const int NamePadding = 12;          // mirrors DownloadNameHorizontalPadding
         private const int IconSize = 28;             // mirrors DownloadIconSize
+        private const int CheckboxSize = 22;         // mirrors GtkHelper.SelectionCheckboxSize
+        private const int CheckboxPadding = 8;       // mirrors the gutter pixbuf padding
 
         private static string RepoRoot
         {
@@ -91,8 +94,10 @@ namespace XDM.Tests
                     MinWidth = GutterMinWidth,
                     MaxWidth = GutterMaxWidth
                 };
-                var check = new CellRendererToggle { Activatable = false };
-                check.SetPadding(8, 12);
+                // mirrors production: a 22px checkbox pixbuf in the gutter
+                var check = new CellRendererPixbuf();
+                check.SetPadding(CheckboxPadding, 12);
+                check.Pixbuf = LoadCheckbox(false);
                 h.Gutter.PackStart(check, true);
                 h.Gutter.Clicked += (_, _) => h.Clicks++;
 
@@ -178,6 +183,13 @@ namespace XDM.Tests
             {
                 try { Window.Dispose(); } catch { }
             }
+        }
+
+        private static Pixbuf LoadCheckbox(bool isChecked)
+        {
+            var dir = Path.Combine(RepoRoot, "app", "XDM", "XDM.Gtk.UI", "svg-icons");
+            var file = Path.Combine(dir, isChecked ? "checkbox-checked.svg" : "checkbox-unchecked.svg");
+            return File.Exists(file) ? new Pixbuf(file, CheckboxSize, CheckboxSize, true) : null;
         }
 
         private static void PumpEvents(int iterations)
@@ -288,7 +300,9 @@ namespace XDM.Tests
             harness.View.TranslateCoordinates(harness.Window, 0, 0, out viewX, out _);
             caption.TranslateCoordinates(harness.Window, 0, 0, out captionX, out _);
             var nameArea = harness.View.GetCellArea(new TreePath("0"), harness.Name);
-            var rowTitleX = viewX + nameArea.X + IconPadding + IconSize + IconPadding + NamePadding;
+            // gutter cell = checkbox padding + box + padding, then the file icon and its padding
+            var rowTitleX = viewX + nameArea.X + CheckboxPadding + CheckboxSize + CheckboxPadding
+                + IconPadding + IconSize + IconPadding + NamePadding;
             Assert.AreEqual(rowTitleX, captionX,
                 "the File name caption must start where the row titles start");
         }

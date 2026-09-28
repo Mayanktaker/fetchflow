@@ -175,7 +175,7 @@ namespace XDM.GtkUI
         private const int DownloadSizeColumnMinWidth = 110;
         private const int DownloadSizeColumnMaxWidth = 720;
         // Selection gutter column: default width + clamp (never narrower than the toggle)
-        private const int DownloadGutterWidth = 46;
+        private const int DownloadGutterWidth = 52;   // 22px box + 8px padding each side
         private const int DownloadGutterMinWidth = 36;
         private const int DownloadGutterMaxWidth = 200;
         // File name column: starting width, then it absorbs the leftover space
@@ -1484,16 +1484,17 @@ namespace XDM.GtkUI
                 MinWidth = DownloadGutterMinWidth,
                 MaxWidth = DownloadGutterMaxWidth
             };
-            var inprogressCheckRenderer = new CellRendererToggle { Activatable = false };
+            var inprogressCheckRenderer = new CellRendererPixbuf();
             inprogressCheckRenderer.SetPadding(8, DownloadRowToggleVerticalPadding);
             inprogressCheckCol.PackStart(inprogressCheckRenderer, true);
             inprogressCheckCol.SetCellDataFunc(inprogressCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
-                var toggle = (CellRendererToggle)cell;
                 var checkPath = model.GetPath(iter);
-                toggle.Active = lvInprogress.Selection.PathIsSelected(checkPath);
+                var selected = lvInprogress.Selection.PathIsSelected(checkPath);
+                ((CellRendererPixbuf)cell).Pixbuf = GtkHelper.LoadSelectionCheckbox(
+                    selected, AccentR, AccentG, AccentB);
                 // Gutter rail: plain card base in every state, never the row fill
-                toggle.CellBackground = TreeViewSelectionHelper.GutterCellBackground(
+                ((CellRendererPixbuf)cell).CellBackground = TreeViewSelectionHelper.GutterCellBackground(
                     checkPath, ThemeManager.ActiveCardBackgroundHex, ThemeManager.ActiveAlternateRowColor);
             }));
             lvInprogress.AppendColumn(inprogressCheckCol);
@@ -1537,6 +1538,9 @@ namespace XDM.GtkUI
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 SyncSelectAllHeader(true);
+                // The gutter checkbox is drawn by a cell-data-func, so the row has to
+                // be re-rendered explicitly or the tick can stay stale.
+                lvInprogress.QueueDraw();
             };
 
             lvInprogress.MotionNotifyEvent += (o, args) =>
@@ -1688,16 +1692,17 @@ namespace XDM.GtkUI
                 MinWidth = DownloadGutterMinWidth,
                 MaxWidth = DownloadGutterMaxWidth
             };
-            var finishedCheckRenderer = new CellRendererToggle { Activatable = false };
+            var finishedCheckRenderer = new CellRendererPixbuf();
             finishedCheckRenderer.SetPadding(8, DownloadRowToggleVerticalPadding);
             finishedCheckCol.PackStart(finishedCheckRenderer, true);
             finishedCheckCol.SetCellDataFunc(finishedCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
-                var toggle = (CellRendererToggle)cell;
                 var checkPath = model.GetPath(iter);
-                toggle.Active = lvFinished.Selection.PathIsSelected(checkPath);
+                var selected = lvFinished.Selection.PathIsSelected(checkPath);
+                ((CellRendererPixbuf)cell).Pixbuf = GtkHelper.LoadSelectionCheckbox(
+                    selected, AccentR, AccentG, AccentB);
                 // Gutter rail: plain card base in every state, never the row fill
-                toggle.CellBackground = TreeViewSelectionHelper.GutterCellBackground(
+                ((CellRendererPixbuf)cell).CellBackground = TreeViewSelectionHelper.GutterCellBackground(
                     checkPath, ThemeManager.ActiveCardBackgroundHex, ThemeManager.ActiveAlternateRowColor);
             }));
             lvFinished.AppendColumn(finishedCheckCol);
@@ -1741,6 +1746,8 @@ namespace XDM.GtkUI
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 SyncSelectAllHeader(false);
+                // See above: force the gutter checkbox to repaint with the new state
+                lvFinished.QueueDraw();
             };
 
             lvFinished.MotionNotifyEvent += (o, args) =>
@@ -1906,10 +1913,12 @@ namespace XDM.GtkUI
                 args.RetVal = true;
             }
             else if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 1
-                && inprogressCheckCol != null
-                && TreeViewSelectionHelper.HitTestToggleCell(lvInprogress, inprogressCheckCol, args.Event.X, args.Event.Y))
+                && ToggleDownloadRow(lvInprogress, inprogressCheckCol, args.Event.X, args.Event.Y))
             {
-                args.RetVal = true;
+                // Toggle on press, like every file manager. The press event is NOT
+                // suppressed: claiming it (RetVal = true) stopped GTK's own handlers,
+                // which is what used to leave the checkbox dead. GTK's default
+                // selection still runs, so ctrl/shift-click keeps working.
             }
             else
             {
@@ -1925,13 +1934,6 @@ namespace XDM.GtkUI
                 InProgressContextMenuOpening?.Invoke(this, EventArgs.Empty);
                 menuInProgress.PopupAtPointer(args.Event);
             }
-            if (args.Event.Type == Gdk.EventType.ButtonRelease && args.Event.Button == 1
-                && inprogressCheckCol != null
-                && TreeViewSelectionHelper.HitTestToggleCell(lvInprogress, inprogressCheckCol, args.Event.X, args.Event.Y)
-                && lvInprogress.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath togglePath, out _, out _, out _))
-            {
-                TreeViewSelectionHelper.ToggleSelectionPath(lvInprogress, togglePath);
-            }
         }
 
         [GLib.ConnectBefore]
@@ -1944,10 +1946,9 @@ namespace XDM.GtkUI
                 args.RetVal = true;
             }
             else if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 1
-                && finishedCheckCol != null
-                && TreeViewSelectionHelper.HitTestToggleCell(lvFinished, finishedCheckCol, args.Event.X, args.Event.Y))
+                && ToggleDownloadRow(lvFinished, finishedCheckCol, args.Event.X, args.Event.Y))
             {
-                args.RetVal = true;
+                // See OnInprogressButtonPress: toggle on press, never suppress.
             }
             else
             {
@@ -1963,18 +1964,23 @@ namespace XDM.GtkUI
                 FinishedContextMenuOpening?.Invoke(this, EventArgs.Empty);
                 menuFinished.PopupAtPointer(args.Event);
             }
-            if (args.Event.Type == Gdk.EventType.ButtonRelease && args.Event.Button == 1
-                && finishedCheckCol != null
-                && TreeViewSelectionHelper.HitTestToggleCell(lvFinished, finishedCheckCol, args.Event.X, args.Event.Y)
-                && lvFinished.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath togglePath, out _, out _, out _))
-            {
-                TreeViewSelectionHelper.ToggleSelectionPath(lvFinished, togglePath);
-            }
         }
 
         // Safety net: if the press claim ever misses (theme hitbox drift, Wayland
         // coordinate skew), the press collapses to 1 row — reselect the snapshot so
         // the context menu and Delete act on every row the user had selected.
+        // Checkbox click: toggle the row's membership in the selection. Runs on
+        // button-PRESS (file-manager semantics) and returns true when it handled the
+        // click, so the caller can treat a gutter press differently from a row press.
+        private static bool ToggleDownloadRow(TreeView view, TreeViewColumn? gutterCol, double x, double y)
+        {
+            if (gutterCol == null) return false;
+            if (!TreeViewSelectionHelper.HitTestToggleCell(view, gutterCol, x, y)) return false;
+            if (!view.GetPathAtPos((int)x, (int)y, out TreePath path, out _, out _, out _)) return false;
+            TreeViewSelectionHelper.ToggleSelectionPath(view, path);
+            return true;
+        }
+
         private static void RestoreSnapshotIfCollapsed(TreeView view, ref TreePath[]? snapshot)
         {
             try
