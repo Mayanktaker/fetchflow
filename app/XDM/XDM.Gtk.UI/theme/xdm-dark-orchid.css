@@ -377,7 +377,7 @@ button.flat {
 }
 
 button.flat:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.13);
   border-color: transparent;
   border-radius: 6px;
 }
@@ -1243,4 +1243,62 @@ checkbutton check {
 
 tooltip {
   border-radius: 8px;
+}
+/* Dialog action rows: peer buttons that act on the same thing (Add / Edit /
+   Delete / Defaults) must share one look. These used to be `flat`, so they had
+   no border and a 6% hover and read as links next to the bordered Cancel / Save
+   buttons. Colours are taken from this theme's own `button` rules above, so the
+   row always matches the rest of the dialog. */
+button.dialog-action-button {
+  background-color: #332b47;
+  border: 1px solid #44385c;
+  color: #f0f0f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  border-radius: 12px;
+  padding: 6px 12px;
+}
+
+button.dialog-action-button:hover {
+  background-color: #393939;
+  border-color: #4e4e4e;
+}
+
+button.dialog-action-button:active {
+  background-color: #242424;
+  border-color: #3d3254;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+button.dialog-action-button:disabled {
+  background-color: #242424;
+  border-color: #2c2c2c;
+  color: #757575;
+  box-shadow: none;
+}
+
+button.dialog-action-button.destructive-action {
+  background-color: #332b47;
+  border: 1px solid #44385c;
+  color: #ef6a70;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+button.dialog-action-button.destructive-action:hover {
+  background-color: rgba(224, 27, 36, 0.18);
+  color: #f4888d;
+  border-color: #4e4e4e;
+}
+
+button.dialog-action-button.destructive-action:active {
+  background-color: rgba(224, 27, 36, 0.18);
+  color: #f4888d;
+  border-color: #3d3254;
+  box-shadow: none;
+}
+
+button.dialog-action-button.destructive-action:disabled {
+  background-color: #242424;
+  border-color: #2c2c2c;
+  color: #757575;
+  box-shadow: none;
 }

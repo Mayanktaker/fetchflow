@@ -604,7 +604,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat" />
+                                      <class name="dialog-action-button" />
                                     </style>
                                   </object>
                                   <packing>
@@ -622,7 +622,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat" />
+                                      <class name="dialog-action-button" />
                                       <class name="destructive-action" />
                                     </style>
                                   </object>
@@ -641,7 +641,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat" />
+                                      <class name="dialog-action-button" />
                                     </style>
                                   </object>
                                   <packing>
@@ -658,7 +658,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <style>
-                                      <class name="flat" />
+                                      <class name="dialog-action-button" />
                                     </style>
                                   </object>
                                   <packing>
@@ -1639,7 +1639,7 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <style>
-                              <class name="flat" />
+                              <class name="dialog-action-button" />
                               <class name="destructive-action" />
                             </style>
                           </object>
@@ -1658,7 +1658,7 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <style>
-                              <class name="flat" />
+                              <class name="dialog-action-button" />
                             </style>
                           </object>
                           <packing>
@@ -1675,7 +1675,7 @@
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <style>
-                              <class name="flat" />
+                              <class name="dialog-action-button" />
                             </style>
                           </object>
                           <packing>

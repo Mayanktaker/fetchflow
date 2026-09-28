@@ -14,6 +14,8 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - **More air between downloads:** list items are spaced further apart so each download is easier to scan and click
 - **Softer, more modern surfaces on Linux:** buttons, menus, popovers, search boxes and cards drop the old hard-edge gradients in favour of flat surfaces with rounder corners, matching the look of current GNOME and other modern Linux desktops
 - **Roomier rows on Windows too:** the Windows download list now uses the same roomier spacing and a clearly visible column divider you can drag
+- **Buttons that all match:** the Add / Edit / Delete / Defaults row in Settings and the queue buttons no longer look like plain text next to Cancel and Save — every button in a row now has the same border and lights up the same way on hover
+- **Hover you can actually see:** borderless buttons (the small Copy, Default and Browse links) now show a clearly visible highlight when you point at them, instead of barely reacting
 
 ### Bug fixes
 

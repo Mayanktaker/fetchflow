@@ -575,7 +575,7 @@
                     <property name="receives-default">True</property>
                     <property name="margin-end">10</property>
                     <style>
-                      <class name="flat" />
+                      <class name="dialog-action-button" />
                     </style>
                   </object>
                   <packing>
@@ -592,7 +592,7 @@
                     <property name="receives-default">True</property>
                     <property name="margin-end">10</property>
                     <style>
-                      <class name="flat" />
+                      <class name="dialog-action-button" />
                       <class name="destructive-action" />
                     </style>
                   </object>
@@ -610,7 +610,7 @@
                     <property name="receives-default">True</property>
                     <property name="margin-end">10</property>
                     <style>
-                      <class name="flat" />
+                      <class name="dialog-action-button" />
                       <class name="suggested-action" />
                     </style>
                   </object>
@@ -627,7 +627,7 @@
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
                     <style>
-                      <class name="flat" />
+                      <class name="dialog-action-button" />
                     </style>
                   </object>
                   <packing>

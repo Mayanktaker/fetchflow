@@ -60,6 +60,25 @@ Two GTK3-CSS rules the layer depends on, worth knowing before editing it:
 Verified by rendering a real button against the theme and comparing its corner
 silhouette with a forced-radius reference.
 
+## Buttons
+
+Buttons come in exactly two looks, and peer buttons in one row must share one:
+
+| Class | Look | Used for |
+|---|---|---|
+| (none) / `suggested-action` / `destructive-action` | 1px border, themed surface, hover shifts background + border | dialog actions: Cancel, Save, and every `dialog-action-button` |
+| `flat` | no border, hover wash only | inline links beside an entry (Copy, Default, Browse) and icon stacks |
+
+`button.dialog-action-button` is the class for a dialog action row (Add / Edit /
+Delete / Defaults). It is **generated from each theme's own `button` rules**, so an
+action row can never drift from the dialog's Cancel / Save buttons. Its
+destructive variant keeps the subtle red of `button.flat.destructive-action` and
+gains the row's border and hover.
+
+`button.flat:hover` must stay at **alpha >= 0.10** (0.10 light / 0.13 dark): a 6%
+wash is invisible on a light surface and reads as a dead button. Both invariants
+are enforced by `DialogButtonConsistencyTests` across all 14 themes.
+
 ## WPF parity
 
 The Windows list mirrors the Linux spacing: `ListViewItem` padding `12,12` and a
