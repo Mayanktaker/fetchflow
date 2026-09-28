@@ -4,6 +4,22 @@ All notable user-facing changes to FetchFlow are documented here.
 For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
+## Unreleased
+
+### What's new
+
+- **Drag any column to make it wider:** the downloads header is now a real column header — pull the edge between selection, file name and size to fit your screen, and the headings move with the columns
+- **A header you can actually read:** the strip above the list is taller and roomier, the sort arrow sits on the column you're sorting by, and the other columns keep a small hint that they can be sorted too
+- **Select-all in the header:** the tick box in the header now shows whether nothing, some or everything is selected, and clicking it fills or clears the list in one go
+- **More air between downloads:** list items are spaced further apart so each download is easier to scan and click
+- **Softer, more modern surfaces on Linux:** buttons, menus, popovers, search boxes and cards drop the old hard-edge gradients in favour of flat surfaces with rounder corners, matching the look of current GNOME and other modern Linux desktops
+- **Roomier rows on Windows too:** the Windows download list now uses the same roomier spacing and a clearly visible column divider you can drag
+
+### Bug fixes
+
+- Fixed the download list header on Linux looking clipped and misaligned against the file names and sizes
+
+---
 ## v9.1.15.17 (2026-09-28)
 
 ### What's new

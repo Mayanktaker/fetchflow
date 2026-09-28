@@ -21,9 +21,52 @@ Spec: docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.m
 
 4 / 8 / 12 / 16 / 24 px — all margins, paddings and gaps derive from this scale.
 
-Exception: download list rows (Active/Complete TreeViews) use a dedicated 5px
-vertical margin (`margin: 5px 6px;` primary, `margin: 5px 8px;` cascade block)
-in every theme, giving rows consistent breathing room regardless of palette.
+Exceptions:
+
+- Download list rows (Active/Complete TreeViews) use a 12px card inset
+  (`padding: 12px 12px;` in BOTH the primary and the cascade row block of every
+  theme). GTK3 sizes a row from its cell renderers, NOT from CSS `margin`/`padding`,
+  so the gap between items comes from two places: the 12px CSS inset that insets the
+  painted card, plus the renderers' vertical padding in `MainWindow`
+  (`DownloadRowToggleVerticalPadding` 12, `DownloadRowIconVerticalPadding` 12,
+  `DownloadRowNameVerticalPadding` 10, `DownloadRowMetaVerticalPadding` 16).
+  Result: 67px row pitch, ~43px card, 24px gap between cards. Row `margin` is inert
+  in GTK3 — never "fix" list spacing there.
+- Download list column header: 14px vertical padding
+  (`treeview.<view> header button`) → a 52px header bar, matching a GTK4 headerbar.
+  Caption insets live on the `list-header-name` / `list-header-size` header-button
+  classes (66px / 18px) so each caption lines up pixel-exact with the row text it
+  labels — verified by `DownloadListColumnHeaderSmokeTests`.
+  The header is GTK's own (three drag-resizable columns: gutter | File name | Size);
+  see `MainWindow.WireListColumnHeaders` and `DownloadListHeaderPolicy`.
+
+## GTK4 (libadwaita) alignment
+
+Every GTK theme ends with one `GTK4 (libadwaita) alignment` layer. Adwaita on GTK4
+is flat and generously rounded, so the layer removes the GTK3 bevel gradients
+(`background-image: none`) from buttons, selected sidebar rows, the headerbar and
+the progress fill, and raises corners to 12px on buttons, entries, menus, popovers,
+scrolled windows and cards (10px flat buttons, 6px menu items and checkboxes, 8px
+tooltips).
+
+Two GTK3-CSS rules the layer depends on, worth knowing before editing it:
+
+- A later rule only beats an earlier one when the two selectors have **equal
+  specificity**, so every rule in the layer repeats the exact selector it overrides
+  (`button.suggested-action`, not just `button`).
+- The layer is **appended**, so it is always last. Put new GTK4 rules there rather
+  than editing the GTK3-era blocks above.
+
+Verified by rendering a real button against the theme and comparing its corner
+silhouette with a forced-radius reference.
+
+## WPF parity
+
+The Windows list mirrors the Linux spacing: `ListViewItem` padding `12,12` and a
+52px accent column header (`ListViewHeaderBackcolor` / `ListViewHeaderTextBrush`
+in both themes), with every `GridViewColumn` explicitly `CanUserResize="True"` and a
+visible header gripper. WPF cannot be built on Linux — `xdm-wpf-build.yml` is its
+only build gate, so treat WPF changes as CI-verified, not locally verified.
 
 ## Color
 

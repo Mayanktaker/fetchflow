@@ -46,6 +46,9 @@
     <SolidColorBrush x:Key="ListViewMouseOverBackcolor" Color="#F5F5F5"/>
     <SolidColorBrush x:Key="ListViewMouseOverForecolor" Color="#3C3C3C"/>
     <SolidColorBrush x:Key="ListViewHeaderForecolor" Color="#A0A0A0"/>
+    <!-- Column header bar: matches the GTK download-list accent header (see docs/design.md) -->
+    <SolidColorBrush x:Key="ListViewHeaderBackcolor" Color="#0891B2"/>
+    <SolidColorBrush x:Key="ListViewHeaderTextBrush" Color="#FFFFFF"/>
 
     <SolidColorBrush x:Key="StatusbarBackcolor" Color="White"/>
     <SolidColorBrush x:Key="StatusbarIconcolor" Color="DodgerBlue"/>

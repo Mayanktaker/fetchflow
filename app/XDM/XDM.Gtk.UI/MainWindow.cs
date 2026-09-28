@@ -158,24 +158,39 @@ namespace XDM.GtkUI
         private const int ButtonContentSpacing = 10;
         private const int ButtonBoxMargin = 2;
         private const int DownloadColumnSpacing = 0;
+        private const int DownloadIconSize = 28;
         private const int DownloadIconHorizontalPadding = 12;
         private const int DownloadNameHorizontalPadding = 12;
         private const int DownloadMetaHorizontalPadding = 16;
+        // Row vertical padding: GTK3 sizes a row from its cell renderers (CSS row
+        // margin/padding only inset the painted card), so this is what separates the
+        // list items. Sized against the 12px card inset in the theme CSS.
+        private const int DownloadRowToggleVerticalPadding = 12;
+        private const int DownloadRowIconVerticalPadding = 12;
+        private const int DownloadRowNameVerticalPadding = 10;
+        private const int DownloadRowMetaVerticalPadding = 16;
+        // Size column: default width + the clamp its header drag handle respects
         private const int DownloadMetaActiveWidth = 196;
         private const int DownloadMetaFinishedWidth = 176;
+        private const int DownloadSizeColumnMinWidth = 110;
+        private const int DownloadSizeColumnMaxWidth = 720;
+        // Selection gutter column: default width + clamp (never narrower than the toggle)
+        private const int DownloadGutterWidth = 46;
+        private const int DownloadGutterMinWidth = 36;
+        private const int DownloadGutterMaxWidth = 200;
+        // File name column: takes the leftover width, clamped so drag stays usable
+        private const int DownloadNameColumnMinWidth = 160;
+        private const int DownloadNameColumnMaxWidth = 1200;
+        // Header caption insets are theme CSS (list-header-name / list-header-size)
 
         private Menu menuInProgress, menuFinished;
         private IPlatformClipboardMonitor clipboarMonitor;
         private TreePath? hoveredInprogressPath;
         private TreePath? hoveredFinishedPath;
         private TreeViewColumn? inprogressCheckCol, finishedCheckCol;
+        private TreeViewColumn? inprogressNameCol, inprogressSizeCol, finishedNameCol, finishedSizeCol;
         private TreePath[]? inprogressRightClickSnapshot, finishedRightClickSnapshot;
         private const int SortTypeColumnId = 100;
-        private CheckButton? selectAllInProgress, selectAllFinished;
-        private Label? sortNameHeader, sortSizeHeader;
-        private readonly List<Label> sortArrowNameLabels = new();
-        private readonly List<Label> sortArrowSizeLabels = new();
-        private bool suppressSelectAllSync;
 
         public MainWindow() : base("FetchFlow Download Manager")
         {
@@ -406,7 +421,7 @@ namespace XDM.GtkUI
             ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) =>
             {
                 RefreshMenuIcons(isDark);
-                SyncSortHeaderArrows();
+                SyncHeaderSortState();
                 lvFinished?.QueueDraw();
                 lvInprogress?.QueueDraw();
             });
@@ -1368,8 +1383,7 @@ namespace XDM.GtkUI
         private Widget CreateInProgressListView()
         {
             var listHost = new VBox();
-            listHost.PackStart(CreateListHeader(true), false, false, 0);
-
+            // Column header lives inside the TreeView itself (see WireListColumnHeaders)
             inprogressDownloadsStore = new ListStore(typeof(string),        // file name
                 typeof(string),                                             // date modified
                 typeof(string),                                             // size
@@ -1433,28 +1447,38 @@ namespace XDM.GtkUI
             // Drag-select (rubber band) — GTK defaults OFF, which silently broke
             // drag-based multi-selection attempts on the Active list.
             lvInprogress.RubberBanding = true;
-            lvInprogress.HeadersVisible = false;
+            // Real GTK column header (GTK4-style): every column is drag-resizable; the
+            // accent surface comes from the treeview.<view> header rules in the theme
+            lvInprogress.HeadersVisible = true;
             lvInprogress.EnableGridLines = TreeViewGridLines.None;
             // Per-view surface tint (see treeview.unfinished in the theme layer)
             lvInprogress.StyleContext.AddClass("unfinished");
 
-            // Unified Single Card Column (Icon + Title/Sub on left, Meta on right)
+            // Card split into three resizable columns:
+            // gutter (selection) | File name (icon + title/sub) | Size meta
             var inprogressCardCol = new TreeViewColumn
             {
                 Expand = true,
                 Sizing = TreeViewColumnSizing.Autosize,
-                Spacing = DownloadColumnSpacing
+                Spacing = DownloadColumnSpacing,
+                SortColumnId = -1,
+                Resizable = true,
+                MinWidth = DownloadNameColumnMinWidth,
+                MaxWidth = DownloadNameColumnMaxWidth
             };
             // Dedicated selection-checkbox column — click any rows to build a
             // multi-selection without Ctrl/Shift; state mirrors TreeSelection.
             inprogressCheckCol = new TreeViewColumn
             {
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 46,
-                Resizable = false
+                FixedWidth = DownloadGutterWidth,
+                SortColumnId = -1,
+                Resizable = true,
+                MinWidth = DownloadGutterMinWidth,
+                MaxWidth = DownloadGutterMaxWidth
             };
             var inprogressCheckRenderer = new CellRendererToggle { Activatable = false };
-            inprogressCheckRenderer.SetPadding(8, 8);
+            inprogressCheckRenderer.SetPadding(8, DownloadRowToggleVerticalPadding);
             inprogressCheckCol.PackStart(inprogressCheckRenderer, true);
             inprogressCheckCol.SetCellDataFunc(inprogressCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
@@ -1468,26 +1492,39 @@ namespace XDM.GtkUI
             lvInprogress.AppendColumn(inprogressCheckCol);
 
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, 8);
+            fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, DownloadRowIconVerticalPadding);
             inprogressCardCol.PackStart(fileIconRenderer, false);
             inprogressCardCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
             var inprogressNameRenderer = new CellRendererText();
-            inprogressNameRenderer.SetPadding(DownloadNameHorizontalPadding, 6);
+            inprogressNameRenderer.SetPadding(DownloadNameHorizontalPadding, DownloadRowNameVerticalPadding);
             inprogressNameRenderer.Ellipsize = Pango.EllipsizeMode.Middle;
             inprogressCardCol.PackStart(inprogressNameRenderer, true);
             SetInProgressNameColumn(inprogressCardCol, inprogressNameRenderer, lvInprogress);
 
+            // Size column: right-aligned progress/speed, resized from its header edge
+            var inprogressSizeCol = new TreeViewColumn
+            {
+                Sizing = TreeViewColumnSizing.Fixed,
+                FixedWidth = DownloadMetaActiveWidth,
+                SortColumnId = -1,
+                Resizable = true,
+                MinWidth = DownloadSizeColumnMinWidth,
+                MaxWidth = DownloadSizeColumnMaxWidth
+            };
             var inprogressMetaRenderer = new CellRendererText
             {
                 Xalign = 1.0f,
-                Alignment = Pango.Alignment.Right
+                Alignment = Pango.Alignment.Right,
+                Yalign = 0.5f
             };
-            inprogressMetaRenderer.SetPadding(DownloadMetaHorizontalPadding, 12);
-            inprogressCardCol.PackEnd(inprogressMetaRenderer, false);
-            SetInProgressMetaColumn(inprogressCardCol, inprogressMetaRenderer, lvInprogress);
+            inprogressMetaRenderer.SetPadding(DownloadMetaHorizontalPadding, DownloadRowMetaVerticalPadding);
+            inprogressSizeCol.PackEnd(inprogressMetaRenderer, false);
+            SetInProgressMetaColumn(inprogressSizeCol, inprogressMetaRenderer, lvInprogress);
 
             lvInprogress.AppendColumn(inprogressCardCol);
+            lvInprogress.AppendColumn(inprogressSizeCol);
+            WireListColumnHeaders(inprogressCheckCol, inprogressCardCol, inprogressSizeCol, true);
 
             lvInprogress.Selection.Changed += (_, _) =>
             {
@@ -1545,8 +1582,7 @@ namespace XDM.GtkUI
         private Widget CreateFinishedListView()
         {
             var listHost = new VBox();
-            listHost.PackStart(CreateListHeader(false), false, false, 0);
-
+            // Column header lives inside the TreeView itself (see WireListColumnHeaders)
             finishedDownloadsStore = new ListStore(typeof(string),          // file name
                 typeof(string),                                             // date modified
                 typeof(string),                                             // size
@@ -1615,28 +1651,36 @@ namespace XDM.GtkUI
             lvFinished.Selection.Mode = SelectionMode.Multiple;
             // Drag-select (rubber band) — same as the Active list
             lvFinished.RubberBanding = true;
-            lvFinished.HeadersVisible = false;
+            // Real GTK column header (GTK4-style): every column is drag-resizable; the
+            // accent surface comes from the treeview.<view> header rules in the theme
+            lvFinished.HeadersVisible = true;
             lvFinished.EnableGridLines = TreeViewGridLines.None;
             // Per-view surface tint (see treeview.finished in the theme layer)
             lvFinished.StyleContext.AddClass("finished");
 
-            // Unified Single Card Column (Icon + Title/Sub on left, Meta on right)
+            // Card split into three resizable columns:
+            // gutter (selection) | File name (icon + title/sub) | Size meta
             var finishedCardCol = new TreeViewColumn
             {
                 Expand = true,
                 Sizing = TreeViewColumnSizing.Autosize,
                 Spacing = DownloadColumnSpacing,
-                SortColumnId = 0
+                SortColumnId = -1,
+                Resizable = true,
+                MinWidth = DownloadNameColumnMinWidth,
+                MaxWidth = DownloadNameColumnMaxWidth
             };
             // Dedicated selection-checkbox column — same pure-toggle semantics as Active
             finishedCheckCol = new TreeViewColumn
             {
                 Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = 46,
-                Resizable = false
+                FixedWidth = DownloadGutterWidth,
+                SortColumnId = -1,
+                MinWidth = DownloadGutterMinWidth,
+                MaxWidth = DownloadGutterMaxWidth
             };
             var finishedCheckRenderer = new CellRendererToggle { Activatable = false };
-            finishedCheckRenderer.SetPadding(8, 8);
+            finishedCheckRenderer.SetPadding(8, DownloadRowToggleVerticalPadding);
             finishedCheckCol.PackStart(finishedCheckRenderer, true);
             finishedCheckCol.SetCellDataFunc(finishedCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
             {
@@ -1650,26 +1694,39 @@ namespace XDM.GtkUI
             lvFinished.AppendColumn(finishedCheckCol);
 
             var fileIconRenderer = new CellRendererPixbuf { };
-            fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, 8);
+            fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, DownloadRowIconVerticalPadding);
             finishedCardCol.PackStart(fileIconRenderer, false);
             finishedCardCol.SetCellDataFunc(fileIconRenderer, new CellLayoutDataFunc(GetFileIcon));
 
             var finishedNameRenderer = new CellRendererText();
-            finishedNameRenderer.SetPadding(DownloadNameHorizontalPadding, 6);
+            finishedNameRenderer.SetPadding(DownloadNameHorizontalPadding, DownloadRowNameVerticalPadding);
             finishedNameRenderer.Ellipsize = Pango.EllipsizeMode.Middle;
             finishedCardCol.PackStart(finishedNameRenderer, true);
             SetFinishedNameColumn(finishedCardCol, finishedNameRenderer, lvFinished);
 
+            // Size column: right-aligned size/date, resized from its header edge
+            var finishedSizeCol = new TreeViewColumn
+            {
+                Sizing = TreeViewColumnSizing.Fixed,
+                FixedWidth = DownloadMetaFinishedWidth,
+                SortColumnId = -1,
+                Resizable = true,
+                MinWidth = DownloadSizeColumnMinWidth,
+                MaxWidth = DownloadSizeColumnMaxWidth
+            };
             var finishedMetaRenderer = new CellRendererText
             {
                 Xalign = 1.0f,
-                Alignment = Pango.Alignment.Right
+                Alignment = Pango.Alignment.Right,
+                Yalign = 0.5f
             };
-            finishedMetaRenderer.SetPadding(DownloadMetaHorizontalPadding, 12);
-            finishedCardCol.PackEnd(finishedMetaRenderer, false);
-            SetFinishedMetaColumn(finishedCardCol, finishedMetaRenderer, lvFinished);
+            finishedMetaRenderer.SetPadding(DownloadMetaHorizontalPadding, DownloadRowMetaVerticalPadding);
+            finishedSizeCol.PackEnd(finishedMetaRenderer, false);
+            SetFinishedMetaColumn(finishedSizeCol, finishedMetaRenderer, lvFinished);
 
             lvFinished.AppendColumn(finishedCardCol);
+            lvFinished.AppendColumn(finishedSizeCol);
+            WireListColumnHeaders(finishedCheckCol, finishedCardCol, finishedSizeCol, false);
 
             lvFinished.Selection.Changed += (_, _) =>
             {
@@ -1720,145 +1777,111 @@ namespace XDM.GtkUI
             return listHost;
         }
 
-        // Header strip above a download list: select-all checkbox aligned with the
-        // row checkboxes + clickable File name / Size sort labels with direction arrows
-        private Widget CreateListHeader(bool inprogress)
+        // Wires a download list's three column headers: gutter (select-all), File name
+        // and Size. The headers are GTK's own header buttons, so dragging a column edge
+        // resizes it natively and each caption follows its column. sort-column-id stays
+        // -1 to detach GTK's built-in click sorting — clicks route through the app's
+        // persisted sort state instead (SetDownloadSort is the single source of truth).
+        private const string HeaderNameClass = "list-header-name";
+        private const string HeaderSizeClass = "list-header-size";
+        private void WireListColumnHeaders(TreeViewColumn gutterCol, TreeViewColumn nameCol, TreeViewColumn sizeCol, bool inprogress)
         {
-            var header = new HBox { MarginStart = 6, MarginEnd = 6, MarginTop = 0, MarginBottom = 0 };
-            header.StyleContext.AddClass("list-header-bar");
-            // Roomy strip: inner top/bottom padding keeps the accent band visible
-            var headerAlign = new Alignment(0, 0.5f, 1, 1) { TopPadding = 9, BottomPadding = 9, LeftPadding = 6, RightPadding = 6 };
-            headerAlign.Add(header);
-            var selectAll = new CheckButton { MarginStart = 8 };
-            selectAll.Toggled += (_, _) =>
+            if (inprogress)
             {
-                if (suppressSelectAllSync) return;
-                var view = inprogress ? lvInprogress : lvFinished;
-                if (view == null) return;
-                if (selectAll.Active)
-                {
-                    view.Selection.SelectAll();
-                }
-                else
-                {
-                    view.Selection.UnselectAll();
-                }
-            };
-            header.PackStart(selectAll, false, false, 0);
-            if (inprogress) { selectAllInProgress = selectAll; }
-            else { selectAllFinished = selectAll; }
-
-            // Spacer matching the checkbox column + icon so File name sits over titles
-            header.PackStart(new Label { WidthRequest = 64 }, false, false, 0);
-
-            var nameHeader = CreateSortHeaderLabel(TextResource.GetText("SORT_NAME") ?? "File name");
-            sortArrowNameLabels.Add(nameHeader.Arrow);
-            nameHeader.Box.PackStart(nameHeader.Arrow, false, false, 2);
-            nameHeader.EventBox.ButtonPressEvent += (_, e) =>
+                inprogressNameCol = nameCol;
+                inprogressSizeCol = sizeCol;
+            }
+            else
             {
-                ToggleListSort("Name", e);
-                e.RetVal = true;
-            };
-            header.PackStart(nameHeader.EventBox, true, true, 0);
+                finishedNameCol = nameCol;
+                finishedSizeCol = sizeCol;
+            }
 
-            var sizeHeader = CreateSortHeaderLabel(TextResource.GetText("SORT_SIZE") ?? "Size");
-            sortArrowSizeLabels.Add(sizeHeader.Arrow);
-            sizeHeader.Box.PackStart(sizeHeader.Arrow, false, false, 2);
-            sizeHeader.EventBox.ButtonPressEvent += (_, e) =>
-            {
-                ToggleListSort("Size", e);
-                e.RetVal = true;
-            };
-            header.PackStart(sizeHeader.EventBox, false, false, 24);
-            sortNameHeader = nameHeader.Label;
-            sortSizeHeader = sizeHeader.Label;
+            // Gutter caption is the select-all state (☐ / ▣ / ☑); it travels through
+            // the title so GTK rebuilds its own header button contents
+            gutterCol.Title = DownloadListHeaderPolicy.GlyphNone;
+            // Size caption sits over the right-aligned metadata it labels
+            sizeCol.Alignment = 1.0f;
+            // Caption insets (theme CSS) line each caption up with the text it labels
+            nameCol.Button?.StyleContext.AddClass(HeaderNameClass);
+            sizeCol.Button?.StyleContext.AddClass(HeaderSizeClass);
 
-            header.ShowAll();
-            headerAlign.ShowAll();
-            return headerAlign;
+            gutterCol.Clicked += (_, _) => ToggleSelectAll(inprogress);
+            nameCol.Clicked += (_, _) => CycleListSort("Name");
+            sizeCol.Clicked += (_, _) => CycleListSort("Size");
         }
 
-        // Sort header cell: styled text label + its own arrow inside a hoverable event box
-        private (Gtk.EventBox EventBox, HBox Box, Label Label, Label Arrow) CreateSortHeaderLabel(string text)
+        // Gutter header button: select-all acts as a toggle over the current selection
+        private void ToggleSelectAll(bool inprogress)
         {
-            var label = new Label(text) { Xalign = 0 };
-            var box = new HBox(false, 0);
-            box.PackStart(label, false, false, 0);
-            var arrow = new Label(string.Empty);
-            var eventBox = new Gtk.EventBox();
-            eventBox.Add(box);
-            eventBox.StyleContext.AddClass("list-sort-header");
-            return (eventBox, box, label, arrow);
+            var view = inprogress ? lvInprogress : lvFinished;
+            if (view == null) return;
+            var selected = view.Selection.CountSelectedRows();
+            if (DownloadListHeaderPolicy.SelectAllShouldClear(selected, view.Model.IterNChildren()))
+            {
+                view.Selection.UnselectAll();
+            }
+            else
+            {
+                view.Selection.SelectAll();
+            }
         }
 
         // Clicking File name/Size: switch column or flip direction if already active
-        private void ToggleListSort(string column, ButtonPressEventArgs e)
+        private void CycleListSort(string column)
         {
-            if (e.Event.Type != Gdk.EventType.ButtonPress || e.Event.Button != 1) return;
-            var descending = Config.Instance.DownloadSortColumn == column
-                ? !Config.Instance.DownloadSortDescending
-                : true;
-            SetDownloadSort(column, descending);
-            e.RetVal = true;
+            var (next, descending) = DownloadListHeaderPolicy.NextSort(
+                column, Config.Instance.DownloadSortColumn, Config.Instance.DownloadSortDescending);
+            SetDownloadSort(next, descending);
         }
 
-        // Updates arrows on all sort headers: header strip is the theme accent,
-        // so arrows stay white — active column bold ▾/▴, idle faint ↕
-        private void SyncSortHeaderArrows()
+        // Mirrors the persisted sort state onto both lists' column headers. The active
+        // column gets GTK's own direction arrow (GTK4 headerbar behaviour); every other
+        // sortable column keeps a faint ↕ hint so the header still advertises sorting.
+        private void SyncHeaderSortState()
         {
             try
             {
                 var col = Config.Instance.DownloadSortColumn ?? "Date";
-                var desc = Config.Instance.DownloadSortDescending;
-                foreach (var arrow in sortArrowNameLabels)
+                var order = Config.Instance.DownloadSortDescending
+                    ? SortType.Descending : SortType.Ascending;
+                foreach (var (column, name) in SortableHeaderColumns())
                 {
-                    arrow.Markup = col == "Name"
-                        ? "<span foreground=\"#ffffff\" weight=\"bold\">" + (desc ? "▾" : "▴") + "</span>"
-                        : "<span foreground=\"#ffffff\">↕</span>";
-                }
-                foreach (var arrow in sortArrowSizeLabels)
-                {
-                    arrow.Markup = col == "Size"
-                        ? "<span foreground=\"#ffffff\" weight=\"bold\">" + (desc ? "▾" : "▴") + "</span>"
-                        : "<span foreground=\"#ffffff\">↕</span>";
+                    if (column == null) continue;
+                    var active = col == name;
+                    var caption = name == "Name"
+                        ? (TextResource.GetText("SORT_NAME") ?? "File name")
+                        : (TextResource.GetText("SORT_SIZE") ?? "Size");
+                    // Caption lives in the title so GTK rebuilds its header button
+                    column.Title = DownloadListHeaderPolicy.Caption(caption, active);
+                    column.SortIndicator = active;
+                    if (active) { column.SortOrder = order; }
                 }
             }
             catch { }
         }
 
-        // Mirrors row selection into the header select-all checkbox (all/some/none)
+        // Every (column, sort key) pair the header captions are drawn for, in both lists
+        private IEnumerable<(TreeViewColumn? Column, string Key)> SortableHeaderColumns()
+        {
+            yield return (inprogressNameCol, "Name");
+            yield return (inprogressSizeCol, "Size");
+            yield return (finishedNameCol, "Name");
+            yield return (finishedSizeCol, "Size");
+        }
+
+        // Mirrors row selection into the gutter header's select-all glyph (all/some/none)
         private void SyncSelectAllHeader(bool inprogress)
         {
             try
             {
                 var view = inprogress ? lvInprogress : lvFinished;
-                var box = inprogress ? selectAllInProgress : selectAllFinished;
-                if (view == null || box == null) return;
+                var gutter = inprogress ? inprogressCheckCol : finishedCheckCol;
+                if (view == null || gutter == null) return;
                 var selected = view.Selection.CountSelectedRows();
-                var total = 0;
-                view.Model.Foreach((model, path, iter) => { total++; return false; });
-                suppressSelectAllSync = true;
-                if (selected == 0)
-                {
-                    box.Inconsistent = false;
-                    box.Active = false;
-                }
-                else if (selected == total && total > 0)
-                {
-                    box.Inconsistent = false;
-                    box.Active = true;
-                }
-                else
-                {
-                    box.Active = false;
-                    box.Inconsistent = true;
-                }
-                suppressSelectAllSync = false;
+                gutter.Title = DownloadListHeaderPolicy.SelectAllGlyph(selected, view.Model.IterNChildren());
             }
-            catch
-            {
-                suppressSelectAllSync = false;
-            }
+            catch { }
         }
 
         // Runs BEFORE GTK's default TreeView press handler (ButtonPress is RUN_LAST):
@@ -2004,7 +2027,7 @@ namespace XDM.GtkUI
                 var order = Config.Instance.DownloadSortDescending ? SortType.Descending : SortType.Ascending;
                 inprogressDownloadsStoreSorted?.SetSortColumnId(columnId, order);
                 finishedDownloadsStoreSorted?.SetSortColumnId(columnId, order);
-                SyncSortHeaderArrows();
+                SyncHeaderSortState();
             }
             catch { }
         }
@@ -2276,7 +2299,7 @@ namespace XDM.GtkUI
             var name = (string)tree_model.GetValue(iter, 0);
             var (r, g, b) = GetCategoryColorForFileType(name);
             var svgName = IconResource.GetSVGNameForFileType(name);
-            var rawPix = LoadSvg(svgName, 28);
+            var rawPix = LoadSvg(svgName, DownloadIconSize);
             var path = tree_model.GetPath(iter);
             var view = (cell_layout as TreeViewColumn)?.TreeView as TreeView;
             var isSelected = view != null && view.Selection.PathIsSelected(path);

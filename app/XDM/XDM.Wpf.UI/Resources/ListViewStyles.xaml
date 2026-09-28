@@ -349,7 +349,7 @@
                     <Border Padding="{TemplateBinding Padding}" Background="Transparent">
                         <Rectangle HorizontalAlignment="Center"
                      Width="1"
-                     Fill="Transparent" />
+                     Fill="#33FFFFFF" />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -364,16 +364,18 @@
         <Setter Property="VerticalContentAlignment"
           Value="Center" />
         <Setter Property="Foreground"
-          Value="{StaticResource ListViewHeaderForecolor}" />
+          Value="{StaticResource ListViewHeaderTextBrush}" />
+        <!-- Roomier, GTK4-style header bar (14px vertical padding) -->
+        <Setter Property="MinHeight" Value="52" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="GridViewColumnHeader">
                     <Grid>
                         <Border x:Name="HeaderBorder" 
-                                BorderThickness="0,1,0,1" 
-                                Padding="0,5" 
-                                BorderBrush="{StaticResource ListViewBackcolor}" 
-                                Background="{StaticResource ListViewBackcolor}">
+                                BorderThickness="0,0,0,1" 
+                                Padding="0,14" 
+                                BorderBrush="{StaticResource ListViewHeaderBackcolor}" 
+                                Background="{StaticResource ListViewHeaderBackcolor}">
                             <ContentPresenter x:Name="HeaderContent"
                               Margin="5,0,5,1"
                               RecognizesAccessKey="True"
@@ -396,7 +398,7 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="GridViewColumnHeader">
                             <Canvas Name="PART_FloatingHeaderCanvas">
-                                <Rectangle Fill="{StaticResource ListViewBackcolor}" Width="{TemplateBinding ActualWidth}"  
+                                <Rectangle Fill="{StaticResource ListViewHeaderBackcolor}" Width="{TemplateBinding ActualWidth}"  
                                            Height="{TemplateBinding ActualHeight}" />
                             </Canvas>
                         </ControlTemplate>
@@ -407,9 +409,9 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="GridViewColumnHeader">
-                            <Border Name="HeaderBorder" BorderThickness="0,1,0,1" 
-                                    Background="{StaticResource ListViewBackcolor}" 
-                                    BorderBrush="{StaticResource ListViewBackcolor}">
+                            <Border Name="HeaderBorder" BorderThickness="0,0,0,1" 
+                                    Background="{StaticResource ListViewHeaderBackcolor}" 
+                                    BorderBrush="{StaticResource ListViewHeaderBackcolor}">
                             </Border>
                         </ControlTemplate>
                     </Setter.Value>

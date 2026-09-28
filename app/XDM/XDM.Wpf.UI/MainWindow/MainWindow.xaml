@@ -671,7 +671,7 @@
                           PreviewMouseRightButtonDown="DownloadList_PreviewMouseRightButtonDown">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Width="200">
+                                <GridViewColumn CanUserResize="True" Width="200">
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Name">
                                             <TextBlock Padding="40,0" Text="{StaticResource SORT_NAME}" />
@@ -690,7 +690,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Width="80">
+                                <GridViewColumn CanUserResize="True" Width="80">
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="DateAdded" Name="lvInProgress_DateAdded">
                                             <TextBlock Text="{StaticResource SORT_DATE}"/>
@@ -702,7 +702,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Width="60" 
+                                <GridViewColumn CanUserResize="True" Width="60" 
                                             DisplayMemberBinding="{Binding Size, Converter={StaticResource FileSizeValueConverter}}" >
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Size">
@@ -710,7 +710,7 @@
                                         </GridViewColumnHeader>
                                     </GridViewColumn.Header>
                                 </GridViewColumn>
-                                <GridViewColumn Header="%" Width="50" x:Name="p1" >
+                                <GridViewColumn CanUserResize="True" Header="%" Width="50" x:Name="p1" >
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel>
@@ -721,13 +721,13 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="{StaticResource SORT_STATUS}" Width="150" DisplayMemberBinding="{Binding StatusText}" />
+                                <GridViewColumn CanUserResize="True" Header="{StaticResource SORT_STATUS}" Width="150" DisplayMemberBinding="{Binding StatusText}" />
                             </GridView>
                         </ListView.View>
                         <ListView.ItemContainerStyle>
                             <Style TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource {x:Type ListViewItem}}">
                                 <Setter Property="ContextMenu" Value="{StaticResource lvInProgressContextMenu}" />
-                                <Setter Property="Padding" Value="10,7" />
+                                <Setter Property="Padding" Value="12,12" />
                                 <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick"/>
                                 <Style.Triggers>
                                     <Trigger Property="ItemsControl.AlternationIndex" Value="1">
@@ -755,7 +755,7 @@
                         </ListView.Resources>-->
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn  Width="400" >
+                                <GridViewColumn CanUserResize="True"  Width="400" >
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Name">
                                             <TextBlock Padding="40,0" Text="{StaticResource SORT_NAME}"/>
@@ -775,7 +775,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Width="80">
+                                <GridViewColumn CanUserResize="True" Width="80">
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="DateAdded" Name="lvFinished_DateAdded">
                                             <TextBlock Text="{StaticResource SORT_DATE}"/>
@@ -787,7 +787,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn  Width="60"
+                                <GridViewColumn CanUserResize="True"  Width="60"
                                     DisplayMemberBinding="{Binding Size, Converter={StaticResource FileSizeValueConverter}}" >
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Size">
@@ -800,7 +800,7 @@
                         <ListView.ItemContainerStyle>
                             <Style TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource {x:Type ListViewItem}}">
                                 <Setter Property="ContextMenu" Value="{StaticResource lvFinishedContextMenu}" />
-                                <Setter Property="Padding" Value="10,7" />
+                                <Setter Property="Padding" Value="12,12" />
                                 <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick"/>
                                 <Style.Triggers>
                                     <Trigger Property="ItemsControl.AlternationIndex" Value="1">

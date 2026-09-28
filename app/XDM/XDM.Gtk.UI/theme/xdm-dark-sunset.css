@@ -127,8 +127,8 @@ treeview.finished {
 treeview.unfinished row,
 treeview.finished row {
   margin: 5px 6px;
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 12px 12px;
+  border-radius: 10px;
   background-color: #2b2328;
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -1020,7 +1020,7 @@ button.titlebutton.close:active {
 treeview.unfinished row,
 treeview.finished row {
   margin: 5px 8px;
-  padding: 8px 12px;
+  padding: 12px 12px;
   color: #fff1f2;
 }
 
@@ -1120,27 +1120,127 @@ treeview.sidebar-list:selected:hover {
   color: #ffffff;
 }
 
-/* Download list sort header strip */
-.list-sort-header label {
-  color: #a0a0a0;
-}
-
-.list-sort-header:hover label {
-  color: #f0f0f0;
-}
-
-/* Download list header strip: theme accent surface, bold white labels */
-.list-header-bar {
+/* Download list column header: the real GTK header on the theme accent surface
+   (gutter | File name | Size), taller and every column drag-resizable */
+treeview.unfinished header,
+treeview.finished header {
   background-color: #f43f5e;
   border-bottom: 1px solid rgba(0, 0, 0, 0.22);
-  border-radius: 6px 6px 0 0;
+  border-radius: 10px 10px 0 0;
 }
 
-.list-header-bar label {
+treeview.unfinished header button,
+treeview.finished header button {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
   color: #ffffff;
+  padding: 14px 12px;
+}
+
+/* Column header captions line up with the text they label, so header and rows read
+   as one grid. Insets are measured against the rows: 64px lands "File name" on the
+   first pixel of the file titles (12 icon pad + 28 icon + 12 icon pad + 12 name
+   pad), 16px lands "Size" on the right edge of the metadata (16 meta pad).
+   The header button's own 2px inner padding accounts for the 2px difference. */
+treeview.unfinished header button.list-header-name,
+treeview.finished header button.list-header-name {
+  padding-left: 66px;
+}
+
+treeview.unfinished header button.list-header-size,
+treeview.finished header button.list-header-size {
+  padding-right: 18px;
+}
+
+treeview.unfinished header label,
+treeview.finished header label {
+  color: #ffffff;
+  font-size: 11.5px;
   font-weight: bold;
 }
 
-.list-header-bar .list-sort-header:hover label {
-  color: #ffffff;
+
+/* ── GTK4 (libadwaita) alignment ───────────────────────────────────────────
+   Adwaita on GTK4 is flat and generously rounded: solid surfaces instead of the
+   GTK3 bevel gradients, and larger corners on buttons, entries, cards, menus
+   and popovers. Appended so it is the last layer; each rule repeats the exact
+   selector it overrides because GTK3 CSS only cascades on equal specificity. */
+
+/* Buttons: drop the gradient, keep the surface, round to the libadwaita radius */
+button,
+button.suggested-action,
+button.destructive-action,
+button.card-button,
+headerbar button,
+treeview header button {
+  background-image: none;
+  border-radius: 12px;
+}
+
+button:hover,
+button.suggested-action:hover,
+button.destructive-action:hover,
+button.card-button:hover,
+headerbar button:hover,
+treeview header button:hover {
+  background-image: none;
+  border-radius: 12px;
+}
+
+button:active,
+button.suggested-action:active,
+button.destructive-action:active,
+button.card-button:active,
+headerbar button:active,
+treeview header button:active {
+  background-image: none;
+  border-radius: 12px;
+}
+
+/* Flat buttons keep a slightly tighter corner (no visible surface to round) */
+button.flat,
+button.flat:hover,
+button.flat:active,
+button.flat.checked,
+button.flat.suggested-action,
+button.flat.destructive-action {
+  border-radius: 10px;
+}
+
+/* Flat surfaces: selected rows, headerbar, progress fill */
+treeview.sidebar-list:selected,
+treeview.sidebar-list:selected:hover,
+treeview.sidebar-status-list:selected,
+treeview.finished:selected,
+treeview.finished:selected:hover,
+list.sidebar row:selected,
+list.sidebar > row:selected,
+headerbar,
+progressbar progress {
+  background-image: none;
+}
+
+/* Generous corners on the remaining interactive surfaces and cards */
+entry,
+popover,
+menu,
+frame > border,
+scrolledwindow,
+scrolledwindow.sidebar-scroll,
+list,
+listbox,
+list.sidebar {
+  border-radius: 12px;
+}
+
+menuitem,
+menuitem:hover,
+checkbutton check {
+  border-radius: 6px;
+}
+
+tooltip {
+  border-radius: 8px;
 }
