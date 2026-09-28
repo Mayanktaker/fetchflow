@@ -671,7 +671,7 @@
                           PreviewMouseRightButtonDown="DownloadList_PreviewMouseRightButtonDown">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn CanUserResize="True" Width="200">
+                                <GridViewColumn Width="200">
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Name">
                                             <TextBlock Padding="40,0" Text="{StaticResource SORT_NAME}" />
@@ -690,7 +690,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn CanUserResize="True" Width="80">
+                                <GridViewColumn Width="80">
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="DateAdded" Name="lvInProgress_DateAdded">
                                             <TextBlock Text="{StaticResource SORT_DATE}"/>
@@ -702,7 +702,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn CanUserResize="True" Width="60" 
+                                <GridViewColumn Width="60" 
                                             DisplayMemberBinding="{Binding Size, Converter={StaticResource FileSizeValueConverter}}" >
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Size">
@@ -710,7 +710,7 @@
                                         </GridViewColumnHeader>
                                     </GridViewColumn.Header>
                                 </GridViewColumn>
-                                <GridViewColumn CanUserResize="True" Header="%" Width="50" x:Name="p1" >
+                                <GridViewColumn Header="%" Width="50" x:Name="p1" >
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel>
@@ -721,7 +721,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn CanUserResize="True" Header="{StaticResource SORT_STATUS}" Width="150" DisplayMemberBinding="{Binding StatusText}" />
+                                <GridViewColumn Header="{StaticResource SORT_STATUS}" Width="150" DisplayMemberBinding="{Binding StatusText}" />
                             </GridView>
                         </ListView.View>
                         <ListView.ItemContainerStyle>
@@ -755,7 +755,7 @@
                         </ListView.Resources>-->
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn CanUserResize="True"  Width="400" >
+                                <GridViewColumn  Width="400" >
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Name">
                                             <TextBlock Padding="40,0" Text="{StaticResource SORT_NAME}"/>
@@ -775,7 +775,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn CanUserResize="True" Width="80">
+                                <GridViewColumn Width="80">
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="DateAdded" Name="lvFinished_DateAdded">
                                             <TextBlock Text="{StaticResource SORT_DATE}"/>
@@ -787,7 +787,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn CanUserResize="True"  Width="60"
+                                <GridViewColumn  Width="60"
                                     DisplayMemberBinding="{Binding Size, Converter={StaticResource FileSizeValueConverter}}" >
                                     <GridViewColumn.Header>
                                         <GridViewColumnHeader Tag="Size">

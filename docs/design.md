@@ -64,8 +64,8 @@ silhouette with a forced-radius reference.
 
 The Windows list mirrors the Linux spacing: `ListViewItem` padding `12,12` and a
 52px accent column header (`ListViewHeaderBackcolor` / `ListViewHeaderTextBrush`
-in both themes), with every `GridViewColumn` explicitly `CanUserResize="True"` and a
-visible header gripper. WPF cannot be built on Linux — `xdm-wpf-build.yml` is its
+in both themes), and the column-header gripper is now visible (it is the Thumb that
+makes a `GridViewColumn` drag-resizable — `GridViewColumn` has no `CanUserResize`). WPF cannot be built on Linux — `xdm-wpf-build.yml` is its
 only build gate, so treat WPF changes as CI-verified, not locally verified.
 
 ## Color
