@@ -12,10 +12,13 @@ namespace XDM.Core.Util
     public static class PlatformHelper
     {
         // Launch-at-login identifiers. Kept as tokens (no magic strings) and reused by every OS branch.
-        private const string AutoStartRegistryValue = "FetchFlow";
-        private const string LegacyAutoStartRegistryValue = "XDM";
-        private const string LinuxAutoStartFileName = "com.mayanktaker.fetchflow.desktop";
-        private const string LegacyLinuxAutoStartFileName = "xdm-app.desktop";
+        // Aliases onto the shared tokens in AutoStartEntry, so the app and the Inno Setup
+        // script can never drift apart (a mismatch silently resurfaces as double-launch
+        // or an untick that does nothing).
+        public const string AutoStartRegistryValue = AutoStartEntry.WindowsRunValueName;
+        public const string LegacyAutoStartRegistryValue = AutoStartEntry.LegacyWindowsRunValueName;
+        private const string LinuxAutoStartFileName = AutoStartEntry.LinuxDesktopFileName;
+        private const string LegacyLinuxAutoStartFileName = AutoStartEntry.LegacyLinuxDesktopFileName;
 
         // Tray glyph for StatusNotifierItem hosts; also installed into the user icon theme on startup.
         public const string TrayIconName = "fetchflow-tray";
@@ -554,6 +557,31 @@ namespace XDM.Core.Util
                 if (Environment.OSVersion.Platform != PlatformID.Win32NT) return false;
                 var path = LegacyStartupShortcutPath();
                 return !string.IsNullOrEmpty(path) && File.Exists(path);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, ex.Message);
+            }
+            return false;
+        }
+
+        // One-shot upgrade migration, safe to call on every launch. The current installer writes
+        // the HKCU Run key, and Inno Setup re-applies [Registry] on upgrade, so after an upgrade
+        // the Run key already reflects the user's chosen task state. Any Startup-folder shortcut
+        // left by an older install is therefore redundant: keep it and the app launches twice.
+        // Deleting it on startup means an upgrade is self-healing instead of waiting for the
+        // user to toggle the setting. No-op on non-Windows.
+        public static bool MigrateLegacyAutoStart()
+        {
+            try
+            {
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT) return false;
+                if (!HasLegacyStartupShortcut()) return false;
+                if (RemoveLegacyStartupShortcut())
+                {
+                    Log.Debug("AutoStart: migrated legacy Startup shortcut to the HKCU Run key.");
+                    return true;
+                }
             }
             catch (Exception ex)
             {

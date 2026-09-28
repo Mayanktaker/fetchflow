@@ -15,9 +15,34 @@ export PATH=$DOTNET_ROOT:$PATH
 export PATH="$HOME/.local/rpm-build-root/usr/bin:$PATH"
 
 # Fail fast when required tools are missing instead of producing an incomplete release
-for tool in dotnet zip tar rpmbuild; do
-    command -v "$tool" >/dev/null 2>&1 || { echo "ERROR: required tool '$tool' not found in PATH — install it before generating a release." >&2; exit 1; }
+for tool in dotnet zip tar; do
+    command -v "$tool" >/dev/null 2>&1 || {
+        echo "ERROR: required tool '$tool' not found in PATH — install it before generating a release." >&2
+        exit 1
+    }
 done
+
+# rpmbuild is mandatory (AGENTS.md rule 3: every release ships an .rpm) but is NOT packaged for
+# Arch/Manjaro, so this is the usual local-release blocker. Say exactly how to proceed instead
+# of a bare "not found".
+if ! command -v rpmbuild >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+ERROR: 'rpmbuild' not found — it is required because every release must ship an .rpm.
+
+  It is not available from the Arch/Manjaro repos or AUR, so you have two options:
+
+    1. Push a 'v*' tag and let GitHub Actions cut the release (recommended — CI is
+       ubuntu-latest and has rpmbuild):
+         git tag -a vX.Y.Z -m "..." && git push myfork vX.Y.Z
+
+    2. Build on Fedora, which ships rpm-build natively:
+         sudo dnf install rpm-build dpkg
+
+  For a local Arch-family install of just the Arch package, use:
+         ./scripts/rebuild-install.sh
+EOF
+    exit 1
+fi
 
 # Optional packagers: warn up front so an incomplete release never surprises us
 for tool in dpkg-deb makepkg; do

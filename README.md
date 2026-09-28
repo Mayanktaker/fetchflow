@@ -223,7 +223,13 @@ GTK3 Modern Shell (XDM.Gtk.UI)
 ### Prerequisites
 - .NET SDK 8.0 (`net8.0`)
 - GTK3 development libraries (`gtk3`, `glib2`, `cairo`, `pango`)
-- Packaging tools: `rpmbuild`, `tar`, `zip` (optional: `dpkg-deb`, `makepkg`)
+- Packaging tools: `tar`, `zip` (optional: `dpkg-deb`, `makepkg`)
+
+> **Note on `rpmbuild`:** `build_all.sh` requires it, because every release ships an `.rpm`.
+> It is **not packaged for Arch/Manjaro** and is not in the AUR, so a local full release build
+> is not possible on Arch-family systems. Either push a `v*` tag and let GitHub Actions cut the
+> release, or run `build_all.sh` on Fedora (`dnf install rpm-build`). For a local Arch-family
+> install of just the Arch package, use `./scripts/rebuild-install.sh`.
 
 ### Build Everything (Binaries + Packages + Extensions)
 ```bash

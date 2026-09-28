@@ -4,6 +4,13 @@ name: Sync gh-pages on Release
 on:
   release:
     types: [published]
+  # The release is published with the default GITHUB_TOKEN, and GitHub does not start new
+  # workflow runs from token-created events (only workflow_dispatch/repository_dispatch).
+  # That is why the `release:` trigger above never fired and the site silently went stale.
+  # `workflow_run` DOES fire for token-driven upstream runs, so it is the reliable path.
+  workflow_run:
+    workflows: ["Release FetchFlow"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       tag:
@@ -11,13 +18,29 @@ on:
         required: false
         default: ''
 
+concurrency:
+  group: sync-gh-pages
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
   sync-gh-pages:
     name: Sync gh-pages Download Links
+    # workflow_run also fires for failed/cancelled upstream runs — only sync a good release.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-latest
+    env:
+      # Tag to sync, resolved per trigger: manual input, upstream tag push, or release event.
+      # Empty means "use the latest published release".
+      RESOLVED_TAG: >-
+        ${{ github.event.inputs.tag
+        || (github.event_name == 'workflow_run' && github.event.workflow_run.head_branch) || ''
+        || (github.event_name == 'release' && github.event.release.tag_name) || '' }}
 
     steps:
       - name: Checkout gh-pages branch
@@ -34,7 +57,7 @@ jobs:
       - name: Sync download links and SHA-256 checksums
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SPECIFIC_TAG: ${{ github.event.inputs.tag }}
+          SPECIFIC_TAG: ${{ env.RESOLVED_TAG }}
           REPO: ${{ github.repository }}
         run: |
           python3 - << 'EOF'

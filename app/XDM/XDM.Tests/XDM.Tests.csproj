@@ -36,6 +36,8 @@
     <Compile Include="..\XDM.Core\Util\ThemePaletteHelper.cs" Link="Util\ThemePaletteHelper.cs" />
     <Compile Include="..\XDM.Core\Translations\TextResource.cs" Link="Translations\TextResource.cs" />
     <Compile Include="..\XDM.Core\BrowserMonitoring\ExtensionData.cs" Link="BrowserMonitoring\ExtensionData.cs" />
+    <!-- WindowsAutoStartInstallerTests: installer/app launch-at-login parity tokens -->
+    <Compile Include="..\XDM.Core\Util\AutoStartEntry.cs" Link="Util\AutoStartEntry.cs" />
     <!-- AutoStartTests: launch-at-login .desktop generation + stale-entry liveness rules -->
     <Compile Include="..\XDM.Core\Util\DesktopEntry.cs" Link="Util\DesktopEntry.cs" />
     <!-- TrayIconPolicyTests: IconName/IconThemePath/NeedsInstall decision rules -->

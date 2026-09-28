@@ -35,6 +35,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Util\ParsingHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\PlatformHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\DesktopEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\AutoStartEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\TrayIconPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)YDLWrapper\YtBinary.cs" />
     <Compile Include="..\XDM.Core\BrowserMonitoring\VideoTracker.cs" />

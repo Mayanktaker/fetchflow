@@ -14,7 +14,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | Database | SQLite (`System.Data.SQLite`), DB at `~/.fetchflow-app-data/downloads.db`, crash log `crash.log` (5 MB cap) |
 | Video | `yt-dlp` CLI wrapper via `VideoUrlHelper.cs` |
 | Extensions | Manifest V3 vanilla JS: `app/XDM/chrome-extension/`, `app/XDM/firefox-amo/` (shared `noise-filter.js` twin + core `NetworkHelper.cs` — keep all 3 blocklists identical) |
-| Toolchain | .NET SDK 8.0.424 at `~/.dotnet8`; `rpmbuild`, `dpkg-deb`, `zip`, `tar`; no root/sudo. WPF cannot build on Linux — windows-latest jobs in `xdm-wpf-build.yml` (per-push gate) and `release.yml` (tag builds) are its only build gates |
+| Toolchain | .NET SDK 8.0.424 at `~/.dotnet8`; `zip`, `tar`, `makepkg`; `dpkg-deb` user-installed at `~/.local/tools`. **`rpmbuild` is NOT available** (not in Arch/Manjaro official repos or AUR) so `build_all.sh` cannot produce the RPM locally — cut releases via the `v*` tag (CI has rpmbuild) or build RPMs on Fedora. WPF cannot build on Linux — windows-latest jobs in `xdm-wpf-build.yml` (per-push gate) and `release.yml` (tag builds) are its only build gates |
 | Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.16` (sync `AppInfo.cs` + both `manifest.json` + WPF `<AssemblyVersion>` + `.iss` `AppVersion` default) |
 
 ## Docs (don't duplicate, point here)
@@ -25,7 +25,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 
 | Command | Purpose |
 |:---|:---|
-| `bash build_all.sh` | Full Linux release (test gate → ZIP, XPI, tarball, RPM, DEB, SHA256SUMS) |
+| `bash build_all.sh` | Full Linux release (test gate → ZIP, XPI, tarball, RPM, DEB, SHA256SUMS) | — needs `rpmbuild` (see Toolchain row); `dpkg-deb` optional |
 | `scripts/rebuild-install.sh` | Dev loop: test gate → publish → Arch pkg → `pacman -U` → repair autostart (`--no-install` to skip sudo) |
 | `dotnet app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll` | Full automated suite (MSTest console runner) |
 | `node scripts/test-noise-filter.mjs` | Blocklist parity: chrome/firefox/core lists + junk vectors (also in build gate) |

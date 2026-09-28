@@ -66,6 +66,11 @@ namespace XDM.Wpf.UI
             }
             Log.Debug($"Application_Startup::args->: {string.Join(" ", Environment.GetCommandLineArgs())}");
 
+            // One-shot upgrade fix-up: drop any Startup-folder shortcut left by an older install so
+            // an upgraded app does not launch twice at login. The HKCU Run key is authoritative.
+            try { PlatformHelper.MigrateLegacyAutoStart(); }
+            catch (Exception ex) { Log.Debug("AutoStart migration: " + ex.Message); }
+
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             // Apply persisted theme mode + color scheme before any window is created

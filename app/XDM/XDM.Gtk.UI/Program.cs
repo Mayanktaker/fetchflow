@@ -181,6 +181,8 @@ namespace XDM.GtkUI
 
             Log.Debug("Processing arguments...");
 
+            MigrateLegacyAutoStart();
+
             ArgsProcessor.Process(args);
 
             Log.Debug("Gtk Run...");
@@ -191,6 +193,14 @@ namespace XDM.GtkUI
         private static void ApplicationContext_FirstRunCallback(object? sender, EventArgs e)
         {
             PlatformHelper.EnableAutoStart(true);
+        }
+
+        // One-shot upgrade fix-up: drop any Startup-folder shortcut left by an older Windows
+        // install so an upgraded app does not launch twice. No-op on Linux.
+        private static void MigrateLegacyAutoStart()
+        {
+            try { PlatformHelper.MigrateLegacyAutoStart(); }
+            catch (Exception ex) { Log.Debug("AutoStart migration: " + ex.Message); }
         }
 
         private static void ExceptionManager_UnhandledException(GLib.UnhandledExceptionArgs args)
