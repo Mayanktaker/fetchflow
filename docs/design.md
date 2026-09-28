@@ -34,6 +34,15 @@ Exceptions:
   in GTK3 — never "fix" list spacing there.
 - Download list column header: 14px vertical padding
   (`treeview.<view> header button`) → a 52px header bar, matching a GTK4 headerbar.
+  **The accent goes on the header BUTTON, not on `treeview.<view> header`** — GTK3's
+  `GtkTreeViewHeader` is not reachable as a `treeview header` CSS node (the header
+  buttons' parent IS the treeview), so styling the container matches nothing and the
+  bar renders transparent, i.e. invisible on a light surface. Pinned by
+  `DownloadListHeaderVisibilityTests`.
+- Column resizing needs `Sizing = Fixed` on all three columns, and `Resizable` must be
+  set **before** `Sizing`: setting it while the mode is AUTOSIZE makes GTK silently
+  rewrite the mode to GROW_ONLY, which re-derives the width from cell content and
+  throws the user's drag away. Same test pins this.
   Caption insets live on the `list-header-name` / `list-header-size` header-button
   classes (66px / 18px) so each caption lines up pixel-exact with the row text it
   labels — verified by `DownloadListColumnHeaderSmokeTests`.

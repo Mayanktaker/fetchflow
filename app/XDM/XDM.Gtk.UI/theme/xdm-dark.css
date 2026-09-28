@@ -1150,21 +1150,31 @@ treeview.sidebar-list:selected:hover {
 
 /* Download list column header: the real GTK header on the theme accent surface
    (gutter | File name | Size), taller and every column drag-resizable */
-treeview.unfinished header,
-treeview.finished header {
-  background-color: #3584e4;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.22);
-  border-radius: 10px 10px 0 0;
-}
-
+/* The header BUTTON is the header surface: GtkTreeViewHeader is not a CSS node
+   reachable as `treeview header` (the buttons' parent IS the treeview), so the
+   accent has to live on the buttons or the bar renders transparent and vanishes
+   on a light surface. */
 treeview.unfinished header button,
 treeview.finished header button {
-  background-color: transparent;
+  background-color: #3584e4;
   background-image: none;
   border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 0;
   box-shadow: none;
   color: #ffffff;
   padding: 14px 12px;
+}
+
+/* Rounded outer corners only, so the three captions read as one bar */
+treeview.unfinished header button:first-child,
+treeview.finished header button:first-child {
+  border-top-left-radius: 10px;
+}
+
+treeview.unfinished header button:last-child,
+treeview.finished header button:last-child {
+  border-top-right-radius: 10px;
 }
 
 /* Column header captions line up with the text they label, so header and rows read

@@ -20,6 +20,8 @@ For end users: what looks different, what's smoother, what no longer crashes.
 ### Bug fixes
 
 - Fixed the download list header on Linux looking clipped and misaligned against the file names and sizes
+- **The column header bar is visible again on light themes** — it had gone transparent and blended into the background
+- **Columns can be resized again** on every theme, light and dark
 
 ---
 ## v9.1.15.17 (2026-09-28)

@@ -178,6 +178,8 @@ namespace XDM.GtkUI
         private const int DownloadGutterWidth = 46;
         private const int DownloadGutterMinWidth = 36;
         private const int DownloadGutterMaxWidth = 200;
+        // File name column: starting width, then it absorbs the leftover space
+        private const int DownloadNameColumnWidth = 420;
         // File name column: takes the leftover width, clamped so drag stays usable
         private const int DownloadNameColumnMinWidth = 160;
         private const int DownloadNameColumnMaxWidth = 1200;
@@ -1458,11 +1460,16 @@ namespace XDM.GtkUI
             // gutter (selection) | File name (icon + title/sub) | Size meta
             var inprogressCardCol = new TreeViewColumn
             {
+                // Resizable MUST come before Sizing: setting it while the mode is
+                // AUTOSIZE makes GTK silently rewrite the mode to GROW_ONLY, which
+                // then re-calculates the width from the cell content and throws the
+                // user's drag away. FIXED keeps whatever the user dragged to.
+                Resizable = true,
+                Sizing = TreeViewColumnSizing.Fixed,
+                FixedWidth = DownloadNameColumnWidth,
                 Expand = true,
-                Sizing = TreeViewColumnSizing.Autosize,
                 Spacing = DownloadColumnSpacing,
                 SortColumnId = -1,
-                Resizable = true,
                 MinWidth = DownloadNameColumnMinWidth,
                 MaxWidth = DownloadNameColumnMaxWidth
             };
@@ -1470,10 +1477,10 @@ namespace XDM.GtkUI
             // multi-selection without Ctrl/Shift; state mirrors TreeSelection.
             inprogressCheckCol = new TreeViewColumn
             {
+                Resizable = true,   // before Sizing, or GTK may rewrite the mode
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = DownloadGutterWidth,
                 SortColumnId = -1,
-                Resizable = true,
                 MinWidth = DownloadGutterMinWidth,
                 MaxWidth = DownloadGutterMaxWidth
             };
@@ -1505,10 +1512,10 @@ namespace XDM.GtkUI
             // Size column: right-aligned progress/speed, resized from its header edge
             var inprogressSizeCol = new TreeViewColumn
             {
+                Resizable = true,   // before Sizing, or GTK may rewrite the mode
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = DownloadMetaActiveWidth,
                 SortColumnId = -1,
-                Resizable = true,
                 MinWidth = DownloadSizeColumnMinWidth,
                 MaxWidth = DownloadSizeColumnMaxWidth
             };
@@ -1662,11 +1669,13 @@ namespace XDM.GtkUI
             // gutter (selection) | File name (icon + title/sub) | Size meta
             var finishedCardCol = new TreeViewColumn
             {
+                // Resizable before Sizing — see the in-progress name column above
+                Resizable = true,
+                Sizing = TreeViewColumnSizing.Fixed,
+                FixedWidth = DownloadNameColumnWidth,
                 Expand = true,
-                Sizing = TreeViewColumnSizing.Autosize,
                 Spacing = DownloadColumnSpacing,
                 SortColumnId = -1,
-                Resizable = true,
                 MinWidth = DownloadNameColumnMinWidth,
                 MaxWidth = DownloadNameColumnMaxWidth
             };
@@ -1707,10 +1716,10 @@ namespace XDM.GtkUI
             // Size column: right-aligned size/date, resized from its header edge
             var finishedSizeCol = new TreeViewColumn
             {
+                Resizable = true,   // before Sizing, or GTK may rewrite the mode
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = DownloadMetaFinishedWidth,
                 SortColumnId = -1,
-                Resizable = true,
                 MinWidth = DownloadSizeColumnMinWidth,
                 MaxWidth = DownloadSizeColumnMaxWidth
             };
