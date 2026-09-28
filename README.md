@@ -1,13 +1,51 @@
-# Xtreme Download Manager
-Xtreme Download Manager is a powerful tool to increase download speed up-to 500%, save streaming videos from YouTube, DailyMotion, Facebook, Vimeo, Google Video and 1000+ other websites, resume broken/dead downloads, schedule and convert downloads. XDM seamlessly integrates with Google Chrome, Mozilla Firefox Quantum, Opera, Vivaldi and other Chroumium and Firefox based browsers, to take over downloads and saving streaming videos from web. XDM has a built in video converter which lets you convert your downloaded videos to different formats so that you can watch then on your mobile or TV (100+ devices are supported)
+# FetchFlow Download Manager
 
-# <a href="http://xdman.sourceforge.net/#downloads" download>Download Now</a>
+Fast, modern open-source download accelerator and video downloader for **Linux (Wayland & X11)** and **Windows**.
 
-<h3>Screenshots</h3>
+FetchFlow accelerates downloads using multi-connection segments, captures streaming video, and
+integrates natively with Wayland desktops and modern browsers. It is self-contained: no separate
+runtime, no installer prompts, no telemetry.
 
-<p><img src="https://a.fsdn.com/con/app/proj/xdman/screenshots/xdm1.PNG/max/max/1" height="150px"/>
-<img src="https://a.fsdn.com/con/app/proj/xdman/screenshots/xdm_prg.jpg/max/max/1" height="150px"/>
-<img src="https://a.fsdn.com/con/app/proj/xdman/screenshots/xdm2.PNG/max/max/1" height="150px"/>
-<img src="https://a.fsdn.com/con/app/proj/xdman/screenshots/xdm3.PNG/max/max/1" height="150px"/>
-<img src="https://a.fsdn.com/con/app/proj/xdman/screenshots/xdm4.PNG/max/max/1" height="150px"/>
-<img src="https://a.fsdn.com/con/app/proj/xdman/screenshots/xdm5.PNG/max/max/1" height="150px"/></p>
+**Based on the excellent work of the [XDM](https://github.com/subhra74/xdm) project.**
+
+## Download
+
+Head to the [project site](https://mayanktaker.github.io/fetchflow/) for one-click downloads of
+Linux (`.rpm`, `.deb`, Arch `.pkg.tar.zst`, portable `.tar.gz`) and Windows (installer `.exe`,
+portable `.zip`) packages, plus the Chrome MV3 extension and the Firefox `.xpi`.
+
+One-line installer (auto-detects your distro):
+
+```bash
+curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/install-fetchflow.sh | bash
+```
+
+## Verify your download
+
+Every release ships a `SHA256SUMS.txt`. Check it with:
+
+```bash
+sha256sum -c SHA256SUMS.txt
+```
+
+## Features
+
+- Multi-connection segmented downloading with pause, resume and retry
+- Streaming video capture via the bundled browser extension
+- `yt-dlp` integration for audio and video extraction from 1000+ sites
+- Native Wayland support, plus X11
+- Live GNOME, KDE, and Wayland system tray with a proper branded icon
+- Launch-at-login that survives updates and reinstalls
+- Dark and light themes, RTL layout, and 12 interface languages
+- Zero telemetry — nothing is collected or transmitted
+
+## Links
+
+- Source: https://github.com/Mayanktaker/fetchflow
+- Releases: https://github.com/Mayanktaker/fetchflow/releases
+- Privacy policy: https://mayanktaker.github.io/fetchflow/privacy.html
+- Signatures: see `docs/signing.md` in the source repository
+
+## License
+
+GNU GPL v2 — see the source repository for the full text. XDM is licensed under GPL v2 as well.
