@@ -11,6 +11,15 @@ namespace XDM.Core.Util
 {
     public static class PlatformHelper
     {
+        // Launch-at-login identifiers. Kept as tokens (no magic strings) and reused by every OS branch.
+        private const string AutoStartRegistryValue = "FetchFlow";
+        private const string LegacyAutoStartRegistryValue = "XDM";
+        private const string LinuxAutoStartFileName = "com.mayanktaker.fetchflow.desktop";
+        private const string LegacyLinuxAutoStartFileName = "xdm-app.desktop";
+
+        // Tray glyph for StatusNotifierItem hosts; also installed into the user icon theme on startup.
+        public const string TrayIconName = "fetchflow-tray";
+
         public static bool IsFirstRun()
         {
             var firstRunFile = Path.Combine(Config.AppDir, "xdm-" + AppInfo.APP_VERSION + ".first-run");
@@ -330,6 +339,8 @@ namespace XDM.Core.Util
             return null;
         }
 
+        // Adds/removes the per-user launch-at-login entry (Windows Run key, Linux autostart .desktop).
+        // Returns true only when the requested state was actually applied.
         public static bool EnableAutoStart(bool enable)
         {
             try
@@ -338,34 +349,48 @@ namespace XDM.Core.Util
                 if (os == PlatformID.Win32NT)
                 {
                     using var hkcuRun = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run");
-                    if (hkcuRun != null)
+                    if (enable)
                     {
-                        if (enable)
-                        {
-                            var appExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow.exe");
-                            hkcuRun.SetValue("FetchFlow", $"\"{appExe}\" --background");
-                        }
-                        else
-                        {
-                            hkcuRun.DeleteValue("FetchFlow", false);
-                            hkcuRun.DeleteValue("XDM", false);
-                        }
+                        var appExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow.exe");
+                        if (!File.Exists(appExe)) return false;
+                        hkcuRun.SetValue(AutoStartRegistryValue, $"\"{appExe}\" --background", RegistryValueKind.String);
+
+                        // The Run key is now the only autostart mechanism; drop the old Startup
+                        // shortcut so enabling from Settings cannot launch the app twice.
+                        RemoveLegacyStartupShortcut();
+                    }
+                    else
+                    {
+                        hkcuRun.DeleteValue(AutoStartRegistryValue, false);
+                        hkcuRun.DeleteValue(LegacyAutoStartRegistryValue, false);
+
+                        // Untick must also clear the installer-created shortcut, otherwise
+                        // launch-at-login silently stayed on.
+                        RemoveLegacyStartupShortcut();
                     }
                     return true;
                 }
 #if NET5_0_OR_GREATER
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    return true;
+                    // No macOS packaging exists yet — report "not enabled" instead of claiming success.
+                    Log.Debug("AutoStart: macOS launch agent not implemented; reporting disabled.");
+                    return false;
                 }
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     var autoStartDir = GetLinuxDesktopAutoStartDir();
-                    if (!Directory.Exists(autoStartDir))
+                    var desktopFile = Path.Combine(autoStartDir, LinuxAutoStartFileName);
+                    if (!enable)
                     {
-                        Directory.CreateDirectory(autoStartDir);
+                        // Disabling must actually remove the entry — writing it unconditionally
+                        // left launch-at-login switched on even after the user unticked the box.
+                        if (File.Exists(desktopFile)) File.Delete(desktopFile);
+                        var legacy = Path.Combine(autoStartDir, LegacyLinuxAutoStartFileName);
+                        if (File.Exists(legacy)) File.Delete(legacy);
+                        return !File.Exists(desktopFile);
                     }
-                    var desktopFile = Path.Combine(autoStartDir, "com.mayanktaker.fetchflow.desktop");
+                    if (!Directory.Exists(autoStartDir)) Directory.CreateDirectory(autoStartDir);
                     File.WriteAllText(desktopFile, GetLinuxDesktopFile());
                     SetExecutable(desktopFile);
                     return true;
@@ -391,92 +416,151 @@ namespace XDM.Core.Util
 
         public static string GetLinuxDesktopFile()
         {
-            var appPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow");
+            var appPath = GetExecutablePath();
             var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow-logo.svg");
-
-            return "[Desktop Entry]\r\n" +
-                "Encoding=UTF-8\r\n" +
-                "Version=1.0\r\n" +
-                "Type=Application\r\n" +
-                "Terminal=false\r\n" +
-                $"Exec=env GTK_USE_PORTAL=1 \"{appPath}\" --background\r\n" +
-                "Name=FetchFlow Download Manager\r\n" +
-                "Comment=FetchFlow Download Manager (Wayland Edition)\r\n" +
-                "Categories=Network;\r\n" +
-                $"Icon={iconPath}";
+            return DesktopEntry.BuildAutoStartEntry(appPath, iconPath);
         }
 
-        //     public static void addToStartup()
-        //     {
-        //         File dir = new File(System.getProperty("user.home"), "Library/LaunchAgents");
-        //         dir.mkdirs();
-        //         File f = new File(dir, "org.sdg.xdman.plist");
-        //         FileOutputStream fs = null;
-        //         try
-        //         {
-        //             fs = new FileOutputStream(f);
-        //             fs.write(getStartupPlist().getBytes());
-        //         }
-        //         catch (Exception e)
-        //         {
-        //             Logger.log(e);
-        //         }
-        //         finally
-        //         {
-        //             try
-        //             {
-        //                 if (fs != null)
-        //                     fs.close();
-        //             }
-        //             catch (Exception e2)
-        //             {
-        //             }
-        //         }
-        //         f.setExecutable(true);
-        //     }
+        // Absolute path of the running executable, so the autostart entry keeps pointing at a
+        // real binary instead of a relative guess that breaks when the install location changes.
+        public static string GetExecutablePath()
+        {
+            var fromProcess = Environment.ProcessPath;
+            if (!string.IsNullOrEmpty(fromProcess)) return fromProcess;
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fetchflow");
+        }
 
-        //     public static boolean isAlreadyAutoStart()
-        //     {
-        //         File f = new File(System.getProperty("user.home"), "Library/LaunchAgents/org.sdg.xdman.plist");
-        //         if (!f.exists())
-        //             return false;
-        //         FileInputStream in = null;
-        //         byte[] buf = new byte[(int)f.length()];
-        //         try
-        //         {
-        //in = new FileInputStream(f);
-        //             if (in.read(buf) != f.length()) {
-        //                 return false;
-        //             }
-        //         }
-        //         catch (Exception e)
-        //         {
-        //             Logger.log(e);
-        //         }
-        //         finally
-        //         {
-        //             try
-        //             {
-        //                 if (in != null)
-        //		in.close();
-        //             }
-        //             catch (Exception e2)
-        //             {
-        //             }
-        //         }
-        //         String str = new String(buf);
-        //         String s1 = getProperPath(System.getProperty("java.home"));
-        //         String s2 = XDMUtils.getJarFile().getAbsolutePath();
-        //         return str.contains(s1) && str.contains(s2);
-        //     }
+        // True when the autostart .desktop exists AND still points at a binary that is on disk.
+        // A file that merely *mentions* fetchflow (stale path from a moved/removed install) is dead.
+        public static bool IsLinuxAutoStartEntryLive()
+        {
+            try
+            {
+                var file = Path.Combine(GetLinuxDesktopAutoStartDir(), LinuxAutoStartFileName);
+                if (!File.Exists(file)) return false;
+                return DesktopEntry.IsEntryLive(File.ReadAllText(file), File.Exists);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, ex.Message);
+            }
+            return false;
+        }
 
-        //     public static void removeFromStartup()
-        //     {
-        //         File f = new File(System.getProperty("user.home"), "Library/LaunchAgents/org.sdg.xdman.plist");
-        //         f.delete();
-        //     }
+        // Copies the tray glyph into the per-user hicolor theme when the system theme lacks it.
+
+        // Packages already install it system-wide; this repairs existing installs (and distros
+        // whose package predates the glyph) without needing root.
+        public static bool EnsureTrayIconInstalled()
+        {
+            try
+            {
+                var source = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "svg-icons", TrayIconName + ".svg");
+
+                // Icons live under XDG_DATA_HOME (~/.local/share/icons), NOT SpecialFolder.
+                // ApplicationData — on Linux that maps to ~/.config, which GTK never searches.
+                var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+                if (string.IsNullOrEmpty(dataHome))
+                {
+                    var home = Environment.GetEnvironmentVariable("HOME");
+                    if (string.IsNullOrEmpty(home)) return false;
+                    dataHome = Path.Combine(home, ".local", "share");
+                }
+                var targetDir = Path.Combine(dataHome, "icons", "hicolor", "scalable", "apps");
+                var target = Path.Combine(targetDir, TrayIconName + ".svg");
+
+                var srcInfo = new FileInfo(source);
+                var needsCopy = TrayIconPolicy.NeedsInstall(
+                    srcInfo.Exists,
+                    File.Exists(target),
+                    File.Exists(target) && new FileInfo(target).Length != srcInfo.Length,
+                    File.Exists(target) && File.GetLastWriteTimeUtc(target) < srcInfo.LastWriteTimeUtc);
+
+                if (needsCopy)
+                {
+                    Directory.CreateDirectory(targetDir);
+                    File.Copy(source, target, true);
+                    Log.Debug($"Tray icon: installed '{TrayIconName}' into user icon theme ({target}).");
+                }
+                return File.Exists(target);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, ex.Message);
+            }
+            return false;
+        }
 
 #endif
+
+
+        /// <summary>
+        /// True when this platform can actually honour "start at login". macOS has no packaging
+
+
+        /// <summary>
+        /// True when this platform can actually honour "start at login". macOS has no packaging
+        /// and no LaunchAgent writer, so Settings hides the checkbox there instead of offering a
+        /// control that silently does nothing.
+        /// </summary>
+        public static bool SupportsAutoStart
+        {
+            get
+            {
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT) return true;
+#if NET5_0_OR_GREATER
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return false;
+                return RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+#else
+                return true;
+#endif
+            }
+        }
+
+        // Legacy Windows autostart: older installers created a Startup-folder shortcut while
+        // Settings wrote an HKCU Run key. The two mechanisms disagreed (duplicate launches, and
+        // an untick that left autostart on), so the Run key is now the single source of truth
+        // and these helpers migrate leftovers off the shortcut.
+        private static string LegacyStartupShortcutPath()
+        {
+            var startup = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            return string.IsNullOrEmpty(startup) ? string.Empty : Path.Combine(startup, "FetchFlow Download Manager.lnk");
+        }
+
+        // Deletes the legacy Startup-folder shortcut if present. No-op on non-Windows.
+        public static bool RemoveLegacyStartupShortcut()
+        {
+            try
+            {
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT) return false;
+                var path = LegacyStartupShortcutPath();
+                if (string.IsNullOrEmpty(path) || !File.Exists(path)) return false;
+                File.Delete(path);
+                Log.Debug("AutoStart: removed legacy Startup-folder shortcut.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, ex.Message);
+            }
+            return false;
+        }
+
+        // True when an older installer left a Startup-folder shortcut behind.
+        public static bool HasLegacyStartupShortcut()
+        {
+            try
+            {
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT) return false;
+                var path = LegacyStartupShortcutPath();
+                return !string.IsNullOrEmpty(path) && File.Exists(path);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, ex.Message);
+            }
+            return false;
+        }
 
         public static string GetAppPlatform()
         {
@@ -505,30 +589,29 @@ namespace XDM.Core.Util
                 var os = Environment.OSVersion.Platform;
                 if (os == PlatformID.Win32NT)
                 {
-                    using var hkcuRun = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run");
-                    if (hkcuRun != null)
+                    using (var hkcuRun = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"))
                     {
-                        var command = (string?)hkcuRun.GetValue("FetchFlow") ?? (string?)hkcuRun.GetValue("XDM");
+                        var command = (string?)hkcuRun?.GetValue(AutoStartRegistryValue)
+                            ?? (string?)hkcuRun?.GetValue(LegacyAutoStartRegistryValue);
                         var path = FileHelper.GetFileNameFromQuote(command);
-                        return !string.IsNullOrEmpty(path);
+                        if (!string.IsNullOrEmpty(path)) return true;
                     }
+
+                    // An older installer's Startup-folder shortcut also means "on" — reporting
+                    // otherwise made the checkbox read OFF while the app still launched at login.
+                    return HasLegacyStartupShortcut();
                 }
 #if NET5_0_OR_GREATER
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    var autoStartDir = GetLinuxDesktopAutoStartDir();
-                    if (!Directory.Exists(autoStartDir))
-                    {
-                        return false;
-                    }
-                    var file = Path.Combine(autoStartDir, "com.mayanktaker.fetchflow.desktop");
-                    if (!File.Exists(file))
-                    {
-                        file = Path.Combine(autoStartDir, "xdm-app.desktop");
-                        if (!File.Exists(file)) return false;
-                    }
-                    var text = File.ReadAllText(file);
-                    return text.Contains("fetchflow") || text.Contains("xdm-app");
+                    // Honest state: the entry counts as enabled only when its target binary exists.
+                    // A stale entry (moved/removed install) used to read as "on" while doing nothing.
+                    if (IsLinuxAutoStartEntryLive()) return true;
+
+                    // Legacy entry from older builds: accept it only if its command is still live.
+                    var legacy = Path.Combine(GetLinuxDesktopAutoStartDir(), LegacyLinuxAutoStartFileName);
+                    if (!File.Exists(legacy)) return false;
+                    return DesktopEntry.IsEntryLive(File.ReadAllText(legacy), File.Exists);
                 }
 #endif
             }

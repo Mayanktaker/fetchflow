@@ -184,6 +184,10 @@ EOF
         cp -f "$INSTALL_DIR/fetchflow-logo.svg" "/usr/share/icons/hicolor/scalable/apps/fetchflow.svg";
         cp -f "$INSTALL_DIR/fetchflow-logo.svg" "/usr/share/icons/hicolor/scalable/apps/$APP_ID.svg";
     fi
+    if [ -f "$INSTALL_DIR/svg-icons/fetchflow-tray.svg" ]; then
+        mkdir -p /usr/share/icons/hicolor/scalable/apps;
+        cp -f "$INSTALL_DIR/svg-icons/fetchflow-tray.svg" "/usr/share/icons/hicolor/scalable/apps/fetchflow-tray.svg";
+    fi
     update-desktop-database -q /usr/share/applications 2>/dev/null || :;
     gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor 2>/dev/null || :;
 }

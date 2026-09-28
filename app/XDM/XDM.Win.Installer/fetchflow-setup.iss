@@ -2,7 +2,7 @@
 ; Inno Setup compiler script for FetchFlow Download Manager (Windows x64)
 
 #ifndef AppVersion
-  #define AppVersion "9.1.15.15"
+  #define AppVersion "9.1.15.16"
 #endif
 
 #ifndef OutputBaseName
@@ -59,7 +59,15 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\xdm-logo.ico"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\xdm-logo.ico"; Tasks: desktopicon
-Name: "{userstartup}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Parameters: "--background"; Tasks: startupicon
+
+[Registry]
+; Launch-at-login is stored in HKCU\...\Run so it matches exactly what the app's Settings
+; checkbox reads and writes. An older installer used a Startup-folder shortcut, which the app
+; could not see — the two mechanisms disagreed (double launch, or untick doing nothing).
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; \
+  ValueName: "FetchFlow"; ValueData: """{app}\{#AppExeName}"" --background"; \
+  Tasks: startupicon; Flags: uninsdeletevalue
+
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

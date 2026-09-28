@@ -4,6 +4,22 @@ All notable user-facing changes to FetchFlow are documented here.
 For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
+## v9.1.15.16 (2026-09-28)
+
+### What's new
+
+- **Correct icon in the Linux system tray:** FetchFlow now shows its own orange download icon on GNOME, KDE, and Wayland panels instead of a generic three-dot placeholder
+- **Launch at login now actually works:** FetchFlow reliably starts in the background when you sign in, and repoints itself to the current install location after an update or reinstall
+- **Consistent start-at-login on Windows:** the installer and the in-app setting now use the same mechanism, so choosing it during setup and toggling it in Settings always agree
+
+### Bug fixes
+
+- Fixed the "Start FetchFlow when I sign in" option not switching launch-at-login off when unticked
+- Fixed the system tray showing three dots instead of the FetchFlow icon
+- Fixed launch-at-login silently failing after a reinstall while Settings still showed it as switched on
+- Fixed FetchFlow starting twice at login on Windows when the installer option and the in-app setting were both used
+- Fixed Settings showing start-at-login as off on Windows even though an earlier install had turned it on
+
 
 ## v9.1.15.15 (2026-09-27)
 

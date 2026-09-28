@@ -81,6 +81,8 @@ EOF
 cp "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.desktop" "${PKG}/usr/share/applications"
 cp "${SRC_DIR}/fetchflow-logo.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg" 2>/dev/null || cp "${PKG}/opt/fetchflow/fetchflow-logo.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg"
 cp "${PKG}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/com.mayanktaker.fetchflow.svg"
+# Light tray glyph for StatusNotifierItem hosts (dark & light panels)
+cp "${SRC_DIR}/svg-icons/fetchflow-tray.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/fetchflow-tray.svg" 2>/dev/null || cp "${PKG}/opt/fetchflow/svg-icons/fetchflow-tray.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/fetchflow-tray.svg"
 
 for sz in 16 22 24 32 48 64 128 256 512; do
     if [ -f "${SRC_DIR}/fetchflow-logo-${sz}.png" ]; then

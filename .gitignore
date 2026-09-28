@@ -405,3 +405,4 @@ screenshot_*.png
 *.log
 .zcode/
 .serena/
+app/XDM/XDM.Linux.Installer/pkg/

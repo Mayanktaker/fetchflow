@@ -210,10 +210,13 @@ namespace XDM.GtkUI
             clipboarMonitor = new PollingClipboardMonitor();
             clipboarMonitor.ClipboardChanged += (_, _) => this.ClipboardChanged?.Invoke(this, EventArgs.Empty);
 
-            // Tray: register a tray icon via the desktop's preferred protocol (SNI on KDE/GNOME/Wayland)
+            // Tray: install the tray glyph into the user icon theme first (repairs installs whose
+            // package predates it), then register via the desktop's preferred protocol (SNI).
+            PlatformHelper.EnsureTrayIconInstalled();
             trayManager = new TrayIconManager();
-            trayManager.Init(GtkHelper.LoadSvg("fetchflow-logo", 22), "FetchFlow Download Manager",
-                             ShowAndActivate, QuitFromTray);
+            trayManager.Init(GtkHelper.LoadSvg(PlatformHelper.TrayIconName, 22)
+                             ?? GtkHelper.LoadSvg("fetchflow-logo", 22),
+                             "FetchFlow Download Manager", ShowAndActivate, QuitFromTray);
 
             ApplicationContext.ApplicationEvent += ApplicationContext_ApplicationEvent;
             
@@ -2907,6 +2910,9 @@ namespace XDM.GtkUI
 
         public void ShowAndActivate()
         {
+            // Minimized windows report Visible=true, and Present() alone is only an
+            // urgency hint on Wayland — de-iconify first or "Show" appears to do nothing.
+            this.Deiconify();
             if (!this.Visible)
             {
                 this.Show();

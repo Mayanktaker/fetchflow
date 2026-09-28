@@ -14,6 +14,7 @@ using Gdk;
 using Gtk;
 using Tmds.DBus;
 using TraceLog;
+using XDM.Core.Util;
 using XDM.GtkUI.Utils;
 using GlSource = GLib.Source;
 using GlTimeout = GLib.Timeout;
@@ -178,6 +179,7 @@ namespace XDM.GtkUI.Utils
                 return false;
             }
 
+            var themedIconResolves = ThemedIconResolves(PlatformHelper.TrayIconName);
             var props = new SniProperties
             {
                 Id = "fetchflow",
@@ -185,12 +187,24 @@ namespace XDM.GtkUI.Utils
                 // Provide the DBusMenu path so KDE can render the right-click menu natively
                 ItemIsMenu = false,
                 Menu = new ObjectPath("/MenuBar"),
-                // Provide both IconName (for hosts that prefer theme) and multi-size IconPixmap (ARGB32)
-                IconName = "com.mayanktaker.fetchflow",
-                IconThemePath = AppDomain.CurrentDomain.BaseDirectory,
+                // Only advertise a themed IconName when the name ACTUALLY resolves. GNOME's SNI
+                // host prefers IconName and never falls back to IconPixmap, so advertising an
+                // unresolvable name made GNOME draw its generic "..." placeholder and ignore the
+                // pixmaps we already supply. An empty IconName makes the host use IconPixmap.
+                // Decision rule lives in TrayIconPolicy so it is unit-tested.
+                IconName = TrayIconPolicy.ResolveAdvertisedIconName(PlatformHelper.TrayIconName, themedIconResolves),
+                // Always empty: GNOME's AppIndicator extension builds a private theme from this
+                // path alone (ignoring the system theme), and our flat app dir has no theme
+                // structure, so pointing at it makes every lookup fail.
+                IconThemePath = TrayIconPolicy.ResolveIconThemePath(),
                 IconPixmap = BuildSniPixmaps(icon),
                 ToolTip = (0, 0, Array.Empty<byte>(), appName, ""),
             };
+            if (!themedIconResolves)
+            {
+                Log.Debug($"Tray: themed icon '{PlatformHelper.TrayIconName}' not in the icon theme; " +
+                          "using SNI IconPixmap so the app icon renders instead of a generic placeholder.");
+            }
             sniItem = new XdmSniItem(
                 props,
                 () => Gtk.Application.Invoke((_, _) => onActivate()),
@@ -397,7 +411,7 @@ namespace XDM.GtkUI.Utils
             {
                 try
                 {
-                    var pb = GtkHelper.LoadSvg("fetchflow-logo", sz);
+                    var pb = GtkHelper.LoadSvg("fetchflow-tray", sz);
                     if (pb != null)
                     {
                         list.Add(PixbufToSniArgb32(pb));
@@ -425,5 +439,29 @@ namespace XDM.GtkUI.Utils
             }
             return list.ToArray();
         }
+        // Asks the active icon theme whether a name resolves. GTK caches themes, so this is cheap
+        // and never throws — a false here is what stops us advertising a dead themed icon name.
+        private static bool ThemedIconResolves(string iconName)
+        {
+            try
+            {
+                var theme = IconTheme.Default;
+                if (theme == null) return false;
+                if (theme.HasIcon(iconName)) return true;
+
+                // Self-heal the user theme (no root needed), then re-check before giving up.
+                if (!PlatformHelper.EnsureTrayIconInstalled()) return false;
+                if (theme.HasIcon(iconName)) return true;
+
+                // A fresh IconTheme re-reads the search path, picking up the file we just wrote.
+                return new IconTheme().HasIcon(iconName);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Tray: icon theme probe failed: " + ex.Message);
+                return false;
+            }
+        }
+
     }
 }

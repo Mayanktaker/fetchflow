@@ -258,6 +258,30 @@ jobs:
           rm -f "fetchflow-release/fetchflow-aur-${VERSION}.tar.gz"
           tar -czf "fetchflow-release/fetchflow-aur-${VERSION}.tar.gz" -C fetchflow-release aur
 
+      - name: Sign Linux artifacts (optional)
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.FETCHFLOW_GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.FETCHFLOW_GPG_PASSPHRASE }}
+        run: |
+          cd fetchflow-release || exit 1
+          if [ -z "$GPG_PRIVATE_KEY" ]; then
+            echo "No signing key configured — shipping unsigned."
+            exit 0
+          fi
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          KEYID="$(gpg --batch --list-secret-keys --with-colons | awk -F: '/^sec:/ {print $5; exit}')"
+          [ -n "$KEYID" ] || { echo "ERROR: no secret key after import." >&2; exit 1; }
+          pass_args=()
+          [ -n "${GPG_PASSPHRASE:-}" ] && pass_args=(--pinentry-mode loopback --passphrase "$GPG_PASSPHRASE")
+          # Pacman expects a binary detached .sig next to the package URL
+          for f in *.rpm *.deb *.pkg.tar.* *.tar.gz; do
+            [ -e "$f" ] || continue
+            gpg --batch --yes "${pass_args[@]}" --local-user "$KEYID" --detach-sign --output "$f.sig" "$f"
+          done
+          # Publishable public key so users can trust the signatures
+          gpg --batch --armor --export "$KEYID" > fetchflow-signing-key.asc
+          ls -lh *.sig fetchflow-signing-key.asc
+
       - name: Generate Unified SHA256 Checksums
         run: |
           cd fetchflow-release
@@ -315,6 +339,8 @@ jobs:
             fetchflow-release/*.zip
             fetchflow-release/*.xpi
             fetchflow-release/*.exe
+            fetchflow-release/*.sig
+            fetchflow-release/*.asc
             fetchflow-release/SHA256SUMS.txt
           body_path: ${{ env.RELEASE_NOTES_PATH }}
           generate_release_notes: true

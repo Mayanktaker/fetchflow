@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+  <!-- Tray variant of the FetchFlow brand mark (fetchflow-mark.svg / fetchflow-logo.svg).
+       Identical orange + white "FF + play + download arrow" geometry, but WITHOUT the
+       navy #0f172a squircle container: a container-less glyph is legible on light and
+       dark panels, whereas the navy container drops to ~1.3:1 contrast on a dark panel
+       (WCAG 1.4.11 wants 3:1 for a non-text UI graphic). The orange mark measures
+       ~4.8-6.1:1 on typical dark panels. Keep this file byte-stable: it is shipped to
+       hicolor by every packager and is the name SNI hosts look up. -->
+  <g transform="translate(4, 0)">
+    <!-- First 'F' (Left Stem &amp; Top Arm) - Solid Brand Orange -->
+    <path d="M 130 110 L 320 110 L 320 170 L 200 170 L 200 230 L 290 230 L 290 290 L 200 290 L 200 370 L 130 370 Z"
+          fill="#f97316"/>
+
+    <!-- Second 'F' &amp; Integrated Downward Download Arrow - Solid White -->
+    <path d="M 230 170 L 382 170 L 382 230 L 280 230 L 280 290 L 340 290 L 340 330 L 390 330 L 256 425 L 170 330 L 230 330 Z"
+          fill="#ffffff"/>
+
+    <!-- Central Media Play Triangle (Embedded in Flow) - Brand Orange -->
+    <polygon points="215,225 215,295 275,260" fill="#f97316"/>
+  </g>
+</svg>

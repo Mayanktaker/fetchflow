@@ -15,17 +15,18 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | Video | `yt-dlp` CLI wrapper via `VideoUrlHelper.cs` |
 | Extensions | Manifest V3 vanilla JS: `app/XDM/chrome-extension/`, `app/XDM/firefox-amo/` (shared `noise-filter.js` twin + core `NetworkHelper.cs` — keep all 3 blocklists identical) |
 | Toolchain | .NET SDK 8.0.424 at `~/.dotnet8`; `rpmbuild`, `dpkg-deb`, `zip`, `tar`; no root/sudo. WPF cannot build on Linux — windows-latest jobs in `xdm-wpf-build.yml` (per-push gate) and `release.yml` (tag builds) are its only build gates |
-| Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.15` (sync `AppInfo.cs` + both `manifest.json` + WPF `<AssemblyVersion>` + `.iss` `AppVersion` default) |
+| Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.16` (sync `AppInfo.cs` + both `manifest.json` + WPF `<AssemblyVersion>` + `.iss` `AppVersion` default) |
 
 ## Docs (don't duplicate, point here)
 
-`README.md` (user/install) · `CHANGELOG.md` (end-user changelog) · `CHROMEWEBSTORE.md` (CWS listing + Limited Use) · `docs/privacy.html` (zero-telemetry policy) · `.github/workflows/release.yml` + `sync-gh-pages.yml` + `xdm-wpf-build.yml` + `lint.yml` (CI/release) · `docs/design.md` (UI tokens)
+`README.md` (user/install) · `CHANGELOG.md` (end-user changelog) · `CHROMEWEBSTORE.md` (CWS listing + Limited Use) · `docs/privacy.html` (zero-telemetry policy) · `docs/signing.md` (GPG setup/verify) · `.github/workflows/release.yml` + `sync-gh-pages.yml` + `xdm-wpf-build.yml` + `lint.yml` (CI/release) · `docs/design.md` (UI tokens)
 
 ## Commands
 
 | Command | Purpose |
 |:---|:---|
 | `bash build_all.sh` | Full Linux release (test gate → ZIP, XPI, tarball, RPM, DEB, SHA256SUMS) |
+| `scripts/rebuild-install.sh` | Dev loop: test gate → publish → Arch pkg → `pacman -U` → repair autostart (`--no-install` to skip sudo) |
 | `dotnet app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll` | Full automated suite (MSTest console runner) |
 | `node scripts/test-noise-filter.mjs` | Blocklist parity: chrome/firefox/core lists + junk vectors (also in build gate) |
 | `scripts/run-gtk-smoke.sh` | Headless GTK smoke under Xvfb |
@@ -46,3 +47,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 7. All GitHub Actions `uses:` refs in `.github/workflows/` MUST be pinned by full commit SHA, never floating tags (`@v4`).
 8. AUR submit (Mayank, post-publish): copy `fetchflow-release/aur/` (PKGBUILD + `.SRCINFO`) into the `fetchflow-bin` AUR repo checkout and push — no hash refresh needed, the hash is minted from the published build.
 9. Never strip single-file binaries: Arch `options=('!strip')` is mandatory (strip corrupts the .NET bundle → "Arithmetic overflow" on launch); RPM already disables strip, DEB never strips.
+10. Package signing is opt-in via `FETCHFLOW_GPG_PRIVATE_KEY` (+ optional `_PASSPHRASE`) secrets — see `docs/signing.md`. Unsigned until configured; direct `pacman -U <url>` needs the published `.sig`, local files don't.
+11. Launch-at-login single source of truth: Windows = `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` value `FetchFlow` (what `fetchflow-setup.iss` `[Registry]` writes under the `startupicon` task — never re-introduce a `{userstartup}` shortcut); Linux = `~/.config/autostart/com.mayanktaker.fetchflow.desktop`. Disabling MUST delete the entry, and `IsAutoStartEnabled()` MUST verify the target binary exists. Logic is pure/testable in `XDM.Core/Util/DesktopEntry.cs`.
+12. Tray icon rules (GNOME/KDE/Wayland SNI): `IconThemePath` MUST stay empty — a non-empty value makes GNOME build a private theme from it and ignore the system theme, which renders a generic "..." placeholder. Advertise `IconName` only when it resolves in the icon theme, else send an empty name so the host uses `IconPixmap`. `EnsureTrayIconInstalled()` self-installs `svg-icons/fetchflow-tray.svg` into `$XDG_DATA_HOME/icons/hicolor/scalable/apps/` (NOT `~/.config` — `SpecialFolder.ApplicationData` maps there on Linux). Decision rules live in `XDM.Core/Util/TrayIconPolicy.cs`.
+13. macOS has no packaging or launch-agent writer: `PlatformHelper.SupportsAutoStart` is false there, and both UIs hide the start-at-login checkbox. Do not add a macOS autostart implementation without also adding a macOS build gate.

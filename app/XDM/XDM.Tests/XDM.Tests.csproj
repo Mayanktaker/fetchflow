@@ -36,6 +36,10 @@
     <Compile Include="..\XDM.Core\Util\ThemePaletteHelper.cs" Link="Util\ThemePaletteHelper.cs" />
     <Compile Include="..\XDM.Core\Translations\TextResource.cs" Link="Translations\TextResource.cs" />
     <Compile Include="..\XDM.Core\BrowserMonitoring\ExtensionData.cs" Link="BrowserMonitoring\ExtensionData.cs" />
+    <!-- AutoStartTests: launch-at-login .desktop generation + stale-entry liveness rules -->
+    <Compile Include="..\XDM.Core\Util\DesktopEntry.cs" Link="Util\DesktopEntry.cs" />
+    <!-- TrayIconPolicyTests: IconName/IconThemePath/NeedsInstall decision rules -->
+    <Compile Include="..\XDM.Core\Util\TrayIconPolicy.cs" Link="Util\TrayIconPolicy.cs" />
     <!-- NoiseFilterTests: junk-URL gate shared by IPC handlers and ApplicationCore -->
     <Compile Include="..\XDM.Core\BrowserMonitoring\NetworkHelper.cs" Link="BrowserMonitoring\NetworkHelper.cs" />
     <!-- SingleInstancePolicyTests + NanoServerResilienceTests: arbitration policy and

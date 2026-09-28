@@ -88,6 +88,7 @@ namespace XDM.GtkUI.Utils
 
             children.Add(MakeMenuItem(ShowId, new Dictionary<string, object> {
                 { "label", "Show FetchFlow" },
+                { "icon-name", "view-restore" },
                 { "type", "standard" },
                 { "enabled", true },
                 { "visible", true }
@@ -100,6 +101,7 @@ namespace XDM.GtkUI.Utils
 
             children.Add(MakeMenuItem(QuitId, new Dictionary<string, object> {
                 { "label", "Quit" },
+                { "icon-name", "application-exit" },
                 { "type", "standard" },
                 { "enabled", true },
                 { "visible", true }
@@ -174,12 +176,14 @@ namespace XDM.GtkUI.Utils
                 },
                 ShowId => new Dictionary<string, object> {
                     { "label", "Show FetchFlow" },
+                    { "icon-name", "view-restore" },
                     { "type", "standard" },
                     { "enabled", true },
                     { "visible", true }
                 },
                 QuitId => new Dictionary<string, object> {
                     { "label", "Quit" },
+                    { "icon-name", "application-exit" },
                     { "type", "standard" },
                     { "enabled", true },
                     { "visible", true }

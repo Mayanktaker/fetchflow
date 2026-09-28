@@ -26,7 +26,9 @@ namespace XDM.Wpf.UI.Dialogs.Settings
         public AdvancedSettingsView()
         {
             InitializeComponent();
-            if (MsixHelper.IsAppContainer)
+            // MSIX containers have no HKCU Run key, and macOS has no launch-agent support:
+            // hide the control rather than offer one that silently does nothing.
+            if (MsixHelper.IsAppContainer || !PlatformHelper.SupportsAutoStart)
             {
                 ChkAutoRun.Visibility = Visibility.Collapsed;
             }
@@ -52,7 +54,10 @@ namespace XDM.Wpf.UI.Dialogs.Settings
             Config.Instance.KeepPCAwake = ChkKeepAwake.IsChecked ?? false;
             Config.Instance.RunCommandAfterCompletion = ChkRunCmd.IsChecked ?? false;
             Config.Instance.ScanWithAntiVirus = ChkRunAntivirus.IsChecked ?? false;
-            PlatformHelper.EnableAutoStart(ChkAutoRun.IsChecked ?? false);
+            if (PlatformHelper.SupportsAutoStart)
+            {
+                PlatformHelper.EnableAutoStart(ChkAutoRun.IsChecked ?? false);
+            }
 
             Config.Instance.AfterCompletionCommand = TxtCustomCmd.Text;
             Config.Instance.AntiVirusExecutable = TxtAntiVirusCmd.Text;

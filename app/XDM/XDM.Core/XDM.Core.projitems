@@ -34,6 +34,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Util\ThemePaletteHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\ParsingHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\PlatformHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\DesktopEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Util\TrayIconPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)YDLWrapper\YtBinary.cs" />
     <Compile Include="..\XDM.Core\BrowserMonitoring\VideoTracker.cs" />
     <Compile Include="..\XDM.Core\IVideoTracker.cs" />

@@ -776,6 +776,9 @@ namespace XDM.GtkUI.Dialogs.Settings
             ChkRunCmd.Label = TextResource.GetText("EXEC_CMD");
             ChkRunAntivirus.Label = TextResource.GetText("EXE_ANTI_VIR");
             ChkAutoRun.Label = TextResource.GetText("AUTO_START");
+            // macOS has no launch-agent support; hide the control rather than offer one
+            // that silently does nothing.
+            ChkAutoRun.Visible = PlatformHelper.SupportsAutoStart;
             BtnUserAgentReset.Label = TextResource.GetText("DESC_DEF");
 
             Label28.Text = TextResource.GetText("ANTIVIR_CMD");
@@ -966,7 +969,10 @@ namespace XDM.GtkUI.Dialogs.Settings
             Config.Instance.KeepPCAwake = ChkKeepAwake.Active;
             Config.Instance.RunCommandAfterCompletion = ChkRunCmd.Active;
             Config.Instance.ScanWithAntiVirus = ChkRunAntivirus.Active;
-            PlatformHelper.EnableAutoStart(ChkAutoRun.Active);
+            if (PlatformHelper.SupportsAutoStart)
+            {
+                PlatformHelper.EnableAutoStart(ChkAutoRun.Active);
+            }
 
             Config.Instance.AfterCompletionCommand = TxtCustomCmd.Text;
             Config.Instance.AntiVirusExecutable = TxtAntiVirusCmd.Text;
