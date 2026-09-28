@@ -15,7 +15,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | Video | `yt-dlp` CLI wrapper via `VideoUrlHelper.cs` |
 | Extensions | Manifest V3 vanilla JS: `app/XDM/chrome-extension/`, `app/XDM/firefox-amo/` (shared `noise-filter.js` twin + core `NetworkHelper.cs` — keep all 3 blocklists identical) |
 | Toolchain | .NET SDK 8.0.424 at `~/.dotnet8`; `zip`, `tar`, `makepkg`; `dpkg-deb` user-installed at `~/.local/tools`. **`rpmbuild` is NOT available** (not in Arch/Manjaro official repos or AUR) so `build_all.sh` cannot produce the RPM locally — cut releases via the `v*` tag (CI has rpmbuild) or build RPMs on Fedora. WPF cannot build on Linux — windows-latest jobs in `xdm-wpf-build.yml` (per-push gate) and `release.yml` (tag builds) are its only build gates |
-| Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.16` (sync `AppInfo.cs` + both `manifest.json` + WPF `<AssemblyVersion>` + `.iss` `AppVersion` default) |
+| Version | `app/XDM/XDM.Linux.Installer/version.env` — currently `9.1.15.17` (sync `AppInfo.cs` + both `manifest.json` + WPF `<AssemblyVersion>` + `.iss` `AppVersion` default) |
 
 ## Docs (don't duplicate, point here)
 

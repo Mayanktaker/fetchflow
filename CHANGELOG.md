@@ -4,6 +4,18 @@ All notable user-facing changes to FetchFlow are documented here.
 For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
+## v9.1.15.17 (2026-09-28)
+
+### What's new
+
+- **Cleaner upgrade on Windows:** if an older version left a startup shortcut behind, FetchFlow now clears it on first launch so the app no longer starts twice at login
+
+### Bug fixes
+
+- Fixed the download page on the website occasionally lagging one release behind
+
+---
+
 ## v9.1.15.16 (2026-09-28)
 
 ### What's new

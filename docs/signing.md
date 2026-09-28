@@ -35,7 +35,7 @@ gpg --show-keys /tmp/ffkey.asc   # confirm the fingerprint matches the published
 ```bash
 sudo pacman-key --add /tmp/ffkey.asc
 sudo pacman-key --lsign-key <FINGERPRINT>
-sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.16-1-x86_64.pkg.tar.zst
+sudo pacman -U https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.17-1-x86_64.pkg.tar.zst
 ```
 
 Without this, use the download-first form (no signature required for local files).
