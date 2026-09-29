@@ -9,13 +9,34 @@ namespace XDM.GtkUI
     // pure-toggle checkbox clicks that accumulate selection without Ctrl.
     internal static class TreeViewSelectionHelper
     {
+        // Maps a widget-space click (what button-press-event delivers) into the
+        // bin_window space that GetPathAtPos expects. With the column header visible
+        // the two differ by the header height, so skipping this conversion makes every
+        // click resolve to the row BELOW the one the user actually hit — and makes the
+        // last row in the list resolve to nothing at all.
+        private static bool TryPathAtPos(TreeView view, double widgetX, double widgetY,
+            out TreePath path, out TreeViewColumn? column)
+        {
+            path = null;
+            column = null;
+            int binX, binY;
+            view.ConvertWidgetToBinWindowCoords((int)widgetX, (int)widgetY, out binX, out binY);
+            return view.GetPathAtPos(binX, binY, out path, out column, out _, out _)
+                && path != null;
+        }
+
+        // Row under a widget-space click, with the widget -> bin_window conversion
+        internal static bool TryGetRowAtWidgetPos(TreeView view, double x, double y, out TreePath path)
+        {
+            return TryPathAtPos(view, x, y, out path, out _);
+        }
+
         // True when a right-click press at (x,y) lands on a row that is already part of
         // the view's current selection — the press must preserve the multi-selection
         // (context menu actions then apply to every selected row).
         internal static bool ShouldPreserveSelectionOnPress(TreeView view, double x, double y)
         {
-            if (!view.GetPathAtPos((int)x, (int)y, out TreePath hit, out _, out _, out _)
-                || hit == null)
+            if (!TryPathAtPos(view, x, y, out TreePath hit, out _))
             {
                 return false;
             }
@@ -40,8 +61,7 @@ namespace XDM.GtkUI
         // Column-reference comparison avoids all coordinate/allocator quirks.
         internal static bool HitTestToggleCell(TreeView view, TreeViewColumn checkboxColumn, double x, double y)
         {
-            if (!view.GetPathAtPos((int)x, (int)y, out TreePath path, out TreeViewColumn? hitColumn, out _, out _)
-                || path == null || hitColumn == null)
+            if (!TryPathAtPos(view, x, y, out TreePath path, out TreeViewColumn? hitColumn))
             {
                 return false;
             }

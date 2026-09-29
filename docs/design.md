@@ -92,9 +92,18 @@ effect). The gutter is a `CellRendererPixbuf` showing
 `GtkHelper.LoadSelectionCheckbox`, re-tinted when the theme accent changes). Gutter
 width 52px = 22px box + 8px padding each side.
 
-Two things must hold for that checkbox to work, both pinned by
+Three things must hold for that checkbox to work, all pinned by
 `DownloadListCheckboxTests`:
 
+- **Coordinates must be converted.** `button-press-event` delivers **widget**
+  coordinates, but `gtk_tree_view_get_path_at_pos()` expects **bin_window**
+  coordinates. With the header visible the two differ by the header height, so
+  skipping the conversion makes every click resolve to the row *below* the one
+  clicked, and the **last row in the list resolves to nothing at all** — which is
+  why the checkbox looked dead. `TreeViewSelectionHelper.TryPathAtPos` does the
+  conversion, and every hit-test in `MainWindow` goes through it (the sidebar
+  and both hover handlers had the same bug). Never call `GetPathAtPos` with raw
+  event coordinates.
 - The row must be re-rendered on selection change — the cell-data-func is not
   re-invoked on its own, so each `Selection.Changed` handler calls `QueueDraw()`.
 - The gutter click must **not** be suppressed. A `ConnectBefore` press handler that

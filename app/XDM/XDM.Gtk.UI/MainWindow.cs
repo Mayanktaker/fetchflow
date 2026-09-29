@@ -1167,7 +1167,7 @@ namespace XDM.GtkUI
             {
                 if (args.Event.Button == 3)
                 {
-                    if (categoryTree.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath path, out _, out _, out _))
+                    if (TreeViewSelectionHelper.TryGetRowAtWidgetPos(categoryTree, args.Event.X, args.Event.Y, out TreePath path))
                     {
                         categoryTree.Selection.SelectPath(path);
                         if (categoryTree.Model.GetIter(out TreeIter iter, path))
@@ -1545,7 +1545,7 @@ namespace XDM.GtkUI
 
             lvInprogress.MotionNotifyEvent += (o, args) =>
             {
-                if (lvInprogress.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath path, out _, out _, out _))
+                if (TreeViewSelectionHelper.TryGetRowAtWidgetPos(lvInprogress, args.Event.X, args.Event.Y, out TreePath path))
                 {
                     if (hoveredInprogressPath == null || hoveredInprogressPath.Compare(path) != 0)
                     {
@@ -1752,7 +1752,7 @@ namespace XDM.GtkUI
 
             lvFinished.MotionNotifyEvent += (o, args) =>
             {
-                if (lvFinished.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out TreePath path, out _, out _, out _))
+                if (TreeViewSelectionHelper.TryGetRowAtWidgetPos(lvFinished, args.Event.X, args.Event.Y, out TreePath path))
                 {
                     if (hoveredFinishedPath == null || hoveredFinishedPath.Compare(path) != 0)
                     {
@@ -1975,8 +1975,9 @@ namespace XDM.GtkUI
         private static bool ToggleDownloadRow(TreeView view, TreeViewColumn? gutterCol, double x, double y)
         {
             if (gutterCol == null) return false;
+            // HitTestToggleCell already maps widget -> bin_window and yields the row
             if (!TreeViewSelectionHelper.HitTestToggleCell(view, gutterCol, x, y)) return false;
-            if (!view.GetPathAtPos((int)x, (int)y, out TreePath path, out _, out _, out _)) return false;
+            if (!TreeViewSelectionHelper.TryGetRowAtWidgetPos(view, x, y, out TreePath path)) return false;
             TreeViewSelectionHelper.ToggleSelectionPath(view, path);
             return true;
         }

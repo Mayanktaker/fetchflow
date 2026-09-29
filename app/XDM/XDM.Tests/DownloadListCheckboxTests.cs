@@ -13,9 +13,11 @@
 //      gutter column is wide enough to show the box without clipping.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gtk;
+using XDM.GtkUI;
 using Pixbuf = Gdk.Pixbuf;
 
 namespace XDM.Tests
@@ -71,6 +73,101 @@ namespace XDM.Tests
             Assert.IsTrue(GutterWidth >= needed,
                 $"gutter column is {GutterWidth}px but the {CheckboxSize}px box plus "
                 + $"{CheckboxPadding}px padding each side needs {needed}px");
+        }
+
+        [TestMethod]
+        [TestCategory("GtkSmoke")]
+        public void GutterClick_ResolvesTheRowTheUserActuallyClicked()
+        {
+            var display = Environment.GetEnvironmentVariable("DISPLAY");
+            if (string.IsNullOrWhiteSpace(display))
+            {
+                Assert.Inconclusive("Skipped GtkSmoke: no DISPLAY — run via scripts/run-gtk-smoke.sh.");
+            }
+            try { Application.Init(); }
+            catch (Exception ex)
+            {
+                Assert.Inconclusive($"Skipped GtkSmoke: GTK init failed: {ex.Message}");
+            }
+
+            static void Pump(int n)
+            {
+                for (var i = 0; i < n; i++)
+                    while (Application.EventsPending()) Application.RunIteration();
+            }
+
+            var store = new ListStore(typeof(string));
+            var view = new TreeView(store);
+            view.Selection.Mode = SelectionMode.Multiple;
+            view.HeadersVisible = true;              // <-- the header is what broke it
+            view.StyleContext.AddClass("finished");
+
+            var gutter = new TreeViewColumn
+            {
+                Title = string.Empty,
+                Resizable = true,
+                Sizing = TreeViewColumnSizing.Fixed,
+                FixedWidth = GutterWidth,
+                SortColumnId = -1
+            };
+            var pix = new CellRendererPixbuf();
+            pix.SetPadding(CheckboxPadding, 12);
+            gutter.PackStart(pix, true);
+            view.AppendColumn(gutter);
+            var name = new TreeViewColumn
+            {
+                Title = "Name",
+                Resizable = true,
+                Sizing = TreeViewColumnSizing.Fixed,
+                FixedWidth = 320,
+                SortColumnId = -1
+            };
+            name.PackStart(new CellRendererText(), true);
+            view.AppendColumn(name);
+
+            const int RowCount = 4;
+            for (var i = 0; i < RowCount; i++) store.AppendValues("row" + i);
+
+            var window = new Window(WindowType.Toplevel);
+            window.SetDefaultSize(600, 320);
+            window.Add(view);
+            window.ShowAll();
+            Pump(25);
+
+            var failures = new List<string>();
+            for (var row = 0; row < RowCount; row++)
+            {
+                var path = new TreePath(row.ToString());
+                var area = view.GetCellArea(path, gutter);   // bin_window coords
+                // a real click lands in WIDGET coords: convert
+                int clickX, clickY;
+                view.ConvertBinWindowToWidgetCoords(
+                    area.X + area.Width / 2, area.Y + area.Height / 2,
+                    out clickX, out clickY);
+
+                var hit = TreeViewSelectionHelper.HitTestToggleCell(view, gutter, clickX, clickY);
+                if (!hit)
+                {
+                    failures.Add($"row {row}: a real click at widget({clickX},{clickY}) was "
+                        + "not recognised as a gutter click");
+                    continue;
+                }
+                if (!TreeViewSelectionHelper.TryGetRowAtWidgetPos(view, clickX, clickY, out var got))
+                {
+                    failures.Add($"row {row}: no row resolved from widget({clickX},{clickY})");
+                    continue;
+                }
+                if (got.ToString() != row.ToString())
+                {
+                    failures.Add($"row {row}: a click on it resolved to row {got} — the "
+                        + "widget->bin_window conversion is missing");
+                }
+            }
+
+            Assert.AreEqual(0, failures.Count,
+                "a gutter click must resolve to the row the user actually clicked:\n"
+                + string.Join("\n", failures));
+            window.Destroy();
         }
 
         [TestMethod]
