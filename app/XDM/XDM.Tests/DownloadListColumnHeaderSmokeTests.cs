@@ -189,7 +189,17 @@ namespace XDM.Tests
         {
             var dir = Path.Combine(RepoRoot, "app", "XDM", "XDM.Gtk.UI", "svg-icons");
             var file = Path.Combine(dir, isChecked ? "checkbox-checked.svg" : "checkbox-unchecked.svg");
-            return File.Exists(file) ? new Pixbuf(file, CheckboxSize, CheckboxSize, true) : null;
+            if (!File.Exists(file)) return null;
+            try
+            {
+                return new Pixbuf(file, CheckboxSize, CheckboxSize, true);
+            }
+            catch (GLib.GException)
+            {
+                // Some build environments have no gdk-pixbuf SVG loader; the gutter is
+                // empty in that case, which does not affect the geometry being asserted.
+                return new Pixbuf(Gdk.Colorspace.Rgb, false, 8, CheckboxSize, CheckboxSize);
+            }
         }
 
         private static void PumpEvents(int iterations)
