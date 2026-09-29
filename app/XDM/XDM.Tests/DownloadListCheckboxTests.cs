@@ -159,7 +159,16 @@ namespace XDM.Tests
 
             var binHandle = gtk_tree_view_get_bin_window(view.Handle);
             Assert.AreNotEqual(IntPtr.Zero, binHandle, "tree view has no bin window");
-            var binWindow = new Gdk.Window(binHandle);   // ONE wrapper, reused (re-wrapping corrupts refs)
+            // Take the Gdk.Window from the widget's own children — NEVER wrap the
+            // native handle ourselves: a foreign wrapper's finalizer later disposes
+            // GTK's real bin window (double free), which crashed the test host
+            // between tests on CI (blame reported no running test).
+            Gdk.Window binWindow = null;
+            foreach (var child in view.Window.Children)
+            {
+                if (child.Handle == binHandle) { binWindow = child; break; }
+            }
+            Assert.IsNotNull(binWindow, "bin window not found among the view's child windows");
             var device = Gdk.Display.Default.DefaultSeat?.Pointer;
             Assert.IsNotNull(device, "no pointer device for event dispatch");
 
