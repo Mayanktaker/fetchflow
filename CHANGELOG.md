@@ -24,6 +24,8 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - **Columns can be resized again** on every theme, light and dark
 - **You can now see where to drag a column:** a divider sits between the download list headings and lights up when you point at it
 - **Selecting several downloads works again:** the tick box now responds on click, and it is a larger, clearer box so it is easy to hit and easy to see. Row hover highlighting is fixed too
+- **The header's select-all tick is now big enough to read and hit**
+- **Softer unfocused rows:** when FetchFlow loses focus, selected downloads no longer turn the same colour as the header — they fade to a light tint instead
 - **Correct icon in the GNOME dock and taskbar:** the window now carries the same app ID as its launcher entry, so the shell shows the FetchFlow icon instead of a generic one
 
 ---

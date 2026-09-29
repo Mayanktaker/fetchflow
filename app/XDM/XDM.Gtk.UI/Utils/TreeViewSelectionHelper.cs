@@ -36,12 +36,26 @@ namespace XDM.GtkUI
         internal static bool IsRowEvent(TreeView view, Gdk.Window? eventWindow)
         {
             if (eventWindow == null) return false;
-            if (binWindowCacheOwner != view)
+            try
             {
-                binWindowCache = gtk_tree_view_get_bin_window(view.Handle);
-                binWindowCacheOwner = view;
+                if (binWindowCacheOwner != view)
+                {
+                    binWindowCache = gtk_tree_view_get_bin_window(view.Handle);
+                    binWindowCacheOwner = view;
+                }
+                return binWindowCache != IntPtr.Zero && eventWindow.Handle == binWindowCache;
             }
-            return binWindowCache != IntPtr.Zero && eventWindow.Handle == binWindowCache;
+            catch (DllNotFoundException)
+            {
+                // Different GTK soname than libgtk-3.so.0 (exotic distros/musl builds):
+                // behave like before the gate existed — treat the event as a row event
+                // rather than silently disabling the checkbox.
+                return true;
+            }
+            catch (EntryPointNotFoundException)
+            {
+                return true;
+            }
         }
 
         [DllImport("libgtk-3.so.0")]

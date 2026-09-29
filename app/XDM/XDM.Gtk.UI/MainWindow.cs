@@ -1802,6 +1802,8 @@ namespace XDM.GtkUI
         // persisted sort state instead (SetDownloadSort is the single source of truth).
         private const string HeaderNameClass = "list-header-name";
         private const string HeaderSizeClass = "list-header-size";
+        // Gutter header button (the select-all tick) — themes enlarge its label
+        private const string HeaderGutterClass = "list-header-gutter";
         private void WireListColumnHeaders(TreeViewColumn gutterCol, TreeViewColumn nameCol, TreeViewColumn sizeCol, bool inprogress)
         {
             if (inprogress)
@@ -1823,6 +1825,8 @@ namespace XDM.GtkUI
             // Caption insets (theme CSS) line each caption up with the text it labels
             nameCol.Button?.StyleContext.AddClass(HeaderNameClass);
             sizeCol.Button?.StyleContext.AddClass(HeaderSizeClass);
+            // The select-all tick must be clearly readable (it was 11.5px: too small)
+            gutterCol.Button?.StyleContext.AddClass(HeaderGutterClass);
 
             // GTK only emits a column's ::clicked for a CLICKABLE column — without
             // this the header select-all and the sort captions are dead.

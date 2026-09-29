@@ -31,7 +31,7 @@ namespace XDM.Tests
     public class DownloadListHeaderVisibilityTests
     {
         // Mirrors MainWindow's download-list column geometry
-        private const int GutterWidth = 46;
+        private const int GutterWidth = 52;   // 22px checkbox + 8px padding each side
         private const int GutterMin = 36;
         private const int GutterMax = 200;
         private const int NameWidth = 420;
@@ -40,6 +40,8 @@ namespace XDM.Tests
         private const int SizeWidth = 196;
         private const int SizeMin = 110;
         private const int SizeMax = 720;
+        // 17px font renders ~21px; the old 11.5px caption size only ~15px
+        private const int MinGlyphHeight = 18;
 
         private static string RepoRoot
         {
@@ -63,6 +65,78 @@ namespace XDM.Tests
             }
             reason = "Skipped GtkSmoke: no DISPLAY — run via scripts/run-gtk-smoke.sh.";
             return false;
+        }
+
+        // The select-all tick inherited the 11.5px caption size and was unreadable.
+        // This renders it against every real theme and checks the label that GTK
+        // actually measures — i.e. that the 17px rule beats the caption rule.
+        [TestMethod]
+        [TestCategory("GtkSmoke")]
+        public void EveryTheme_SelectAllGlyphRendersLarge()
+        {
+            if (!HasDisplay(out var skip)) Assert.Inconclusive(skip);
+            try { Application.Init(); }
+            catch (Exception ex)
+            {
+                Assert.Inconclusive($"Skipped GtkSmoke: GTK init failed: {ex.Message}");
+            }
+
+            var themeDir = Path.Combine(RepoRoot, "app", "XDM", "XDM.Gtk.UI", "theme");
+            var failures = new List<string>();
+            foreach (var theme in Directory.GetFiles(themeDir, "*.css"))
+            {
+                var name = Path.GetFileName(theme);
+                var provider = new CssProvider();
+                try { provider.LoadFromPath(theme); }
+                catch (Exception ex)
+                {
+                    failures.Add($"{name}: theme failed to parse: {ex.Message}");
+                    continue;
+                }
+                StyleContext.AddProviderForScreen(Gdk.Screen.Default, provider, 800);
+
+                var (window, gutter, _, _) = BuildHeader(provider);
+                var button = gutter.Button as Button;
+                if (button == null)
+                {
+                    failures.Add($"{name}: gutter header button missing");
+                }
+                else if (!button.StyleContext.HasClass("list-header-gutter"))
+                {
+                    failures.Add($"{name}: harness lost the list-header-gutter class");
+                }
+                else
+                {
+                    var label = DeepFindLabel(button);
+                    if (label == null)
+                    {
+                        failures.Add($"{name}: no label in the select-all header");
+                    }
+                    else if (label.Allocation.Height < MinGlyphHeight)
+                    {
+                        failures.Add($"{name}: select-all glyph renders only "
+                            + $"{label.Allocation.Height}px tall (need >= {MinGlyphHeight}px)");
+                    }
+                }
+                window.Destroy();
+                Pump(2);
+            }
+
+            Assert.AreEqual(0, failures.Count,
+                "the header select-all tick must render at an enlarged size in every "
+                + "theme:\n" + string.Join("\n", failures));
+        }
+
+        private static Label DeepFindLabel(Widget root, int depth = 0)
+        {
+            if (root is Label l) return l;
+            if (depth > 5 || root is not Container c) return null;
+            foreach (var child in c.Children)
+            {
+                var found = DeepFindLabel(child, depth + 1);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         private static void Pump(int iterations)
@@ -94,6 +168,10 @@ namespace XDM.Tests
             };
             gutter.PackStart(new CellRendererText(), true);
             view.AppendColumn(gutter);
+            // mirrors MainWindow.WireListColumnHeaders: caption first, then the class
+            // that the themes use to enlarge it
+            gutter.Title = "\u2610";
+            gutter.Button?.StyleContext.AddClass("list-header-gutter");
 
             var name = new TreeViewColumn
             {

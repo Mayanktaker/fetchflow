@@ -1199,6 +1199,13 @@ treeview.finished header button:last-child {
    = 102, plus the header button's own 2px inner padding), and "Size" ends on the
    right edge of the metadata (16 meta pad). Verified by
    DownloadListColumnHeaderSmokeTests. */
+
+/* Select-all tick in the gutter header: 11.5px inherited from the caption style
+   made it unreadable — give it a proper GTK4 headerbar-checkbox size. */
+treeview.unfinished header button.list-header-gutter label,
+treeview.finished header button.list-header-gutter label {
+  font-size: 17px;
+}
 treeview.unfinished header button.list-header-name,
 treeview.finished header button.list-header-name {
   padding-left: 104px;

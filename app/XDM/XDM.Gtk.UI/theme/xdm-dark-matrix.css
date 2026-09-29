@@ -1055,9 +1055,9 @@ treeview.unfinished row:selected:backdrop,
 treeview.finished row:selected:backdrop,
 treeview.unfinished:selected:backdrop,
 treeview.finished:selected:backdrop {
-  background-color: #06b6d4;
+  background-color: #1d3248;
   background-image: none;
-  border-color: #06b6d4;
+  border-color: #375e88;
   color: #ffffff;
 }
 
@@ -1170,6 +1170,13 @@ treeview.finished header button:last-child {
    edge of the metadata (16 meta pad). Verified by
    DownloadListColumnHeaderSmokeTests.
    The header button's own 2px inner padding accounts for the 2px difference. */
+
+/* Select-all tick in the gutter header: 11.5px inherited from the caption style
+   made it unreadable — give it a proper GTK4 headerbar-checkbox size. */
+treeview.unfinished header button.list-header-gutter label,
+treeview.finished header button.list-header-gutter label {
+  font-size: 17px;
+}
 treeview.unfinished header button.list-header-name,
 treeview.finished header button.list-header-name {
   padding-left: 104px;

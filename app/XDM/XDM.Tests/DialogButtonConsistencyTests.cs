@@ -130,6 +130,118 @@ namespace XDM.Tests
                 + string.Join("\n", failures));
         }
 
+        // An unfocused (backdrop) selected download row used to be painted with the
+        // FULL header accent in 12 of 14 themes — indistinguishable from the header
+        // and it swallowed the accent-coloured tick box. It must be derived from the
+        // theme's own focused-selection row instead.
+        [TestMethod]
+        public void EveryTheme_UnfocusedSelectedRow_IsLighterThanTheHeader()
+        {
+            var failures = new List<string>();
+            foreach (var theme in Directory.GetFiles(ThemeDir, "*.css"))
+            {
+                var name = Path.GetFileName(theme);
+                var rules = Parse(File.ReadAllText(theme));
+
+                string Accent() =>
+                    FirstDecl(rules, "treeview.unfinished header button", "background-color");
+                string Focused() =>
+                    FirstDecl(rules, "treeview.unfinished row:selected", "background-color");
+                string Backdrop() =>
+                    FirstDecl(rules, "treeview.unfinished row:selected:backdrop", "background-color");
+                string BackdropText() =>
+                    FirstDecl(rules, "treeview.unfinished row:selected:backdrop", "color");
+
+                var accent = Accent();
+                var backdrop = Backdrop();
+                var focused = Focused();
+                var text = BackdropText();
+
+                if (backdrop == null || accent == null)
+                {
+                    failures.Add($"{name}: missing backdrop or header rule");
+                    continue;
+                }
+                if (string.Equals(backdrop, accent, StringComparison.OrdinalIgnoreCase))
+                {
+                    failures.Add($"{name}: unfocused selected row ({backdrop}) IS the header "
+                        + "accent — the row blends into the header and hides its tick box");
+                }
+                if (text == null || backdrop == null
+                    || string.Equals(text.TrimStart('#'), backdrop.TrimStart('#'),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    failures.Add($"{name}: unfocused row text ({text}) equals its "
+                        + "background ({backdrop}) — unreadable");
+                }
+
+                if (backdrop.StartsWith("#") && focused.StartsWith("#")
+                    && name.StartsWith("xdm-light"))
+                {
+                    if (Luminance(backdrop) <= Luminance(focused))
+                        failures.Add($"{name}: unfocused backdrop {backdrop} is not "
+                            + $"lighter than the focused selection {focused}");
+                }
+                if (backdrop.StartsWith("#") && focused.StartsWith("#")
+                    && name.StartsWith("xdm-dark"))
+                {
+                    if (Luminance(backdrop) >= Luminance(focused))
+                        failures.Add($"{name}: unfocused backdrop {backdrop} is not "
+                            + $"dimmer than the focused selection {focused}");
+                }
+            }
+
+            Assert.AreEqual(0, failures.Count,
+                "unfocused selected download rows must read as a softer version of the "
+                + "focused selection, never as the header colour:\n"
+                + string.Join("\n", failures));
+        }
+
+        // The header's select-all tick was 11.5px (inherited caption size) — too small
+        [TestMethod]
+        public void EveryTheme_HeaderSelectAllGlyph_IsBigEnough()
+        {
+            var failures = new List<string>();
+            foreach (var theme in Directory.GetFiles(ThemeDir, "*.css"))
+            {
+                var name = Path.GetFileName(theme);
+                var rules = Parse(File.ReadAllText(theme));
+                var size = FirstDecl(rules,
+                    "treeview.unfinished header button.list-header-gutter label", "font-size");
+                var px = double.TryParse(
+                    size?.Replace("px", "").Trim(),
+                    System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
+                if (px < 14)
+                    failures.Add($"{name}: select-all glyph font-size is '{size ?? "<rule missing>"}'"
+                        + " (need >= 14px)");
+            }
+
+            Assert.AreEqual(0, failures.Count,
+                "the header select-all tick must be big enough to see and hit:\n"
+                + string.Join("\n", failures));
+        }
+
+        // First declaration of a property from the first selector in the group that matches
+        private static string FirstDecl(Dictionary<string, Dictionary<string, string>> rules,
+            string selectorPrefix, string property)
+        {
+            foreach (var (sel, props) in rules)
+            {
+                if (!sel.StartsWith(selectorPrefix, StringComparison.Ordinal)) continue;
+                if (props.TryGetValue(property, out var value)) return value;
+            }
+            return null;
+        }
+
+        private static int Luminance(string hex)
+        {
+            var h = hex.TrimStart('#');
+            var r = Convert.ToInt32(h.Substring(0, 2), 16);
+            var g = Convert.ToInt32(h.Substring(2, 2), 16);
+            var b = Convert.ToInt32(h.Substring(4, 2), 16);
+            return (r * 299 + g * 587 + b * 114) / 1000;
+        }
+
         [TestMethod]
         public void EveryTheme_FlatHover_IsVisibleEnough()
         {

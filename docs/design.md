@@ -132,6 +132,33 @@ Four rules must hold for that checkbox to work. All four are pinned by
 wash is invisible on a light surface and reads as a dead button. Both invariants
 are enforced by `DialogButtonConsistencyTests` across all 14 themes.
 
+## Unfocused (backdrop) states
+
+- An **unfocused selected download row must never be the header accent.** 12 of 14
+  themes painted it with the full accent (frost `#0891b2` = the header colour), which
+  made the row blend into the header and swallowed the accent-coloured tick box. The
+  `treeview.<view> row:selected:backdrop` block is now derived from that theme's own
+  focused selection: light themes mix the focused colour 55% toward white, dark themes
+  darken it to 85% — text colour and border are the focused selection's values.
+  Pinned by `DialogButtonConsistencyTests.
+  EveryTheme_UnfocusedSelectedRow_IsLighterThanTheHeader`.
+- The header select-all tick renders at **17px** via the
+  `list-header-gutter` class on the gutter header button (11.5px was inherited from
+  the caption rule and unreadable). Both halves are pinned: the CSS rule by
+  `EveryTheme_HeaderSelectAllGlyph_IsBigEnough`, the actual rendered height by
+  `EveryTheme_SelectAllGlyphRendersLarge` (fails at 14px rendered, passes at ~21px).
+
+## Portability
+
+- The GTK UI ships on Linux (Arch/Debian/Fedora/openSUSE/flatpak). Its only
+  added native call is `gtk_tree_view_get_bin_window` via `libgtk-3.so.0` — the
+  standard soname on all of those; `IsRowEvent` falls back to accepting the event
+  if the symbol is unavailable, so an exotic soname can never disable the checkbox.
+  New checkbox SVGs ship through the existing `svg-icons/**` content glob
+  (`CopyToPublishDirectory`), so packages, tarballs and flatpak all carry them.
+- **Windows is WPF** and takes none of the GTK changes; `xdm-wpf-build.yml` is its
+  build gate (green). No other OS ships a UI in this repo.
+
 ## WPF parity
 
 The Windows list mirrors the Linux spacing: `ListViewItem` padding `12,12` and a
