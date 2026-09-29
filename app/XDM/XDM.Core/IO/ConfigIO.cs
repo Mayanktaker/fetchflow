@@ -233,6 +233,12 @@ namespace XDM.Core.IO
                     case "AllowSystemDarkTheme":
                         instance.AllowSystemDarkTheme = r.ReadBoolean();
                         break;
+                    case "ThemeMode":
+                        instance.ThemeMode = r.ReadInt32();
+                        break;
+                    case "ColorScheme":
+                        instance.ColorScheme = r.ReadInt32();
+                        break;
                     case "DoubleClickOpenFile":
                         instance.DoubleClickOpenFile = r.ReadBoolean();
                         break;
@@ -400,6 +406,12 @@ namespace XDM.Core.IO
             WriteBoolean(w, instance.StartDownloadAutomatically, "StartDownloadAutomatically");
             count++;
             WriteBoolean(w, instance.AllowSystemDarkTheme, "AllowSystemDarkTheme");
+            count++;
+            // Theme mode + palette choice must survive restarts -- without these two
+            // fields the settings UI theme and color scheme silently reset every run
+            WriteInt32(w, instance.ThemeMode, "ThemeMode");
+            count++;
+            WriteInt32(w, instance.ColorScheme, "ColorScheme");
             count++;
             WriteBoolean(w, instance.DoubleClickOpenFile, "DoubleClickOpenFile");
             count++;

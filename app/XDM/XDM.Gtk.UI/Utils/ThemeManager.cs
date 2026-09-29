@@ -37,10 +37,15 @@ namespace XDM.GtkUI.Utils
         public static bool IsDarkActive { get; private set; }
 
         // Default scheme per mode (fresh installs / unset choice)
-        public static int DefaultDarkSchemeIndex => ColorSchemeTable.DefaultDarkSchemeIndex;   // Nord Emerald
-        public static int DefaultLightSchemeIndex => ColorSchemeTable.DefaultLightSchemeIndex;  // Nordic Frost
+        public static int DefaultDarkSchemeIndex => ColorSchemeTable.DefaultDarkSchemeIndex;   // Charcoal Blue
+        public static int DefaultLightSchemeIndex => ColorSchemeTable.DefaultLightSchemeIndex;  // Classic Blue
 
         // Resolves the default scheme index for the given mode
+        // Resolves a stored scheme index for a mode: -1/out-of-range -> that mode's
+        // default. The settings dropdown uses this so its closed state is never blank.
+        public static int ResolveSchemeIndex(bool isDark, int index) =>
+            ColorSchemeTable.ClampSchemeIndex(isDark, index);
+
         public static int DefaultSchemeIndex(bool isDark) =>
             ColorSchemeTable.DefaultSchemeIndex(isDark);
 

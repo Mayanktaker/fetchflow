@@ -158,13 +158,16 @@ namespace XDM.GtkUI.Dialogs.Settings
             CmbTheme.Active = Config.Instance.ThemeMode;
 
             PopulateColorSchemeOptions(IsDarkSelected());
-            CmbColorScheme.Active = Config.Instance.ColorScheme;
+            // Config.ColorScheme is -1 until the user picks one; assigning it raw left
+            // the closed dropdown BLANK. Show the resolved scheme (mode default).
+            CmbColorScheme.Active = ThemeManager.ResolveSchemeIndex(
+                IsDarkSelected(), Config.Instance.ColorScheme);
 
             CmbTheme.Changed += (_, _) =>
             {
                 var wasScheme = CmbColorScheme.Active;
                 PopulateColorSchemeOptions(IsDarkSelected());
-                CmbColorScheme.Active = (wasScheme >= 0 && wasScheme < 4) ? wasScheme : 0;
+                CmbColorScheme.Active = ThemeManager.ResolveSchemeIndex(IsDarkSelected(), wasScheme);
                 ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), CmbColorScheme.Active);
             };
 
@@ -512,7 +515,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             }
             else
             {
-                CmbColorScheme.Active = 0;
+                CmbColorScheme.Active = ThemeManager.DefaultSchemeIndex(isDark);
             }
         }
 
@@ -932,7 +935,9 @@ namespace XDM.GtkUI.Dialogs.Settings
             Config.Instance.FolderSelectionMode = ChkAutoCat.Active ? FolderSelectionMode.Auto : FolderSelectionMode.Manual;
             Config.Instance.DefaultDownloadFolder = TxtDownloadFolder.Text;
             Config.Instance.ThemeMode = CmbTheme.Active;
-            Config.Instance.ColorScheme = (CmbColorScheme != null && CmbColorScheme.Active >= 0) ? CmbColorScheme.Active : 0;
+            Config.Instance.ColorScheme = (CmbColorScheme != null && CmbColorScheme.Active >= 0)
+                ? CmbColorScheme.Active
+                : ThemeManager.DefaultSchemeIndex(IsDarkSelected());
             ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), Config.Instance.ColorScheme);
             Config.Instance.DoubleClickOpenFile = CmbDblClickAction.Active == 1;
         }

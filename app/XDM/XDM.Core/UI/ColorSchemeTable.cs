@@ -50,9 +50,9 @@ namespace XDM.Core.UI
         // Curated dark theme color schemes (1 Default + 6 Curated)
         public static readonly ColorSchemeDefinition[] DarkSchemes = new[]
         {
-            new ColorSchemeDefinition("charcoal_blue", "Charcoal Blue", "xdm-dark.css", 53, 132, 228, "#3584e4", "#262c36", "#323b4a", "#212121", "#262626"),
+            new ColorSchemeDefinition("charcoal_blue", "Charcoal Blue (Default)", "xdm-dark.css", 53, 132, 228, "#3584e4", "#262c36", "#323b4a", "#212121", "#262626"),
             new ColorSchemeDefinition("midnight_violet", "Midnight Violet", "xdm-dark-violet.css", 139, 92, 246, "#8b5cf6", "#282038", "#382d4e", "#1c1928", "#211e30"),
-            new ColorSchemeDefinition("nord_emerald", "Nord Emerald (Default)", "xdm-dark-emerald.css", 16, 185, 129, "#10b981", "#1b302a", "#27443c", "#172421", "#1d2c29"),
+            new ColorSchemeDefinition("nord_emerald", "Nord Emerald", "xdm-dark-emerald.css", 16, 185, 129, "#10b981", "#1b302a", "#27443c", "#172421", "#1d2c29"),
             new ColorSchemeDefinition("sunset_amber", "Sunset Amber", "xdm-dark-sunset.css", 244, 63, 94, "#f43f5e", "#332128", "#462e37", "#231c20", "#2b2328"),
             new ColorSchemeDefinition("dracula_orchid", "Dracula Orchid", "xdm-dark-orchid.css", 236, 72, 153, "#ec4899", "#301e38", "#422b4d", "#1c1726", "#221d2e"),
             new ColorSchemeDefinition("cyberpunk_matrix", "Cyberpunk Matrix", "xdm-dark-matrix.css", 6, 182, 212, "#06b6d4", "#162a3d", "#223b55", "#121b2b", "#182236"),
@@ -62,8 +62,8 @@ namespace XDM.Core.UI
         // Curated light theme color schemes (1 Default + 6 Curated)
         public static readonly ColorSchemeDefinition[] LightSchemes = new[]
         {
-            new ColorSchemeDefinition("classic_blue", "Classic Blue", "xdm-light.css", 53, 132, 228, "#3584e4", "#f0f4f9", "#dbe7f7", "#f4f6f9", "#ffffff"),
-            new ColorSchemeDefinition("nordic_frost", "Nordic Frost (Default)", "xdm-light-frost.css", 8, 145, 178, "#0891b2", "#e6f4f8", "#cfe2ea", "#edf3f6", "#f8fafb"),
+            new ColorSchemeDefinition("classic_blue", "Classic Blue (Default)", "xdm-light.css", 53, 132, 228, "#3584e4", "#f0f4f9", "#dbe7f7", "#f4f6f9", "#ffffff"),
+            new ColorSchemeDefinition("nordic_frost", "Nordic Frost", "xdm-light-frost.css", 8, 145, 178, "#0891b2", "#e6f4f8", "#cfe2ea", "#edf3f6", "#f8fafb"),
             new ColorSchemeDefinition("solarized_sand", "Solarized Sand", "xdm-light-sand.css", 217, 119, 6, "#d97706", "#f7eee0", "#ecddc5", "#f4eedd", "#fdfbf6"),
             new ColorSchemeDefinition("rose_garden", "Rose Garden", "xdm-light-rose.css", 225, 29, 72, "#e11d48", "#fbe8ee", "#f4d1dc", "#f8ecf1", "#fdf8fa"),
             new ColorSchemeDefinition("matcha_forest", "Matcha Forest", "xdm-light-matcha.css", 5, 150, 105, "#059669", "#e3f3eb", "#cbe7d7", "#edf6f1", "#ffffff"),
@@ -72,8 +72,8 @@ namespace XDM.Core.UI
         };
 
         // Default scheme per mode (fresh installs / unset choice)
-        public const int DefaultDarkSchemeIndex = 2;   // Nord Emerald
-        public const int DefaultLightSchemeIndex = 1;  // Nordic Frost
+        public const int DefaultDarkSchemeIndex = 0;   // Charcoal Blue
+        public const int DefaultLightSchemeIndex = 0;  // Classic Blue
 
         // Resolves the default scheme index for the given mode
         public static int DefaultSchemeIndex(bool isDark) =>

@@ -31,6 +31,8 @@
     <Compile Include="..\XDM.Core\IconResource.cs" Link="IconResource.cs" />
     <Compile Include="..\XDM.Core\RemixIcon.cs" Link="RemixIcon.cs" />
     <Compile Include="..\XDM.Core\UI\IconMap.cs" Link="UI\IconMap.cs" />
+    <!-- ColorSchemeDefaultsTests: per-mode palette defaults -->
+    <Compile Include="..\XDM.Core\UI\ColorSchemeTable.cs" Link="UI\ColorSchemeTable.cs" />
     <Compile Include="..\XDM.Core\Util\MimeTypes.cs" Link="Util\MimeTypes.cs" />
     <Compile Include="..\XDM.Core\Util\ChecksumHelper.cs" Link="Util\ChecksumHelper.cs" />
     <Compile Include="..\XDM.Core\Util\ThemePaletteHelper.cs" Link="Util\ThemePaletteHelper.cs" />
