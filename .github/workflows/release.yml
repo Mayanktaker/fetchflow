@@ -31,15 +31,19 @@ jobs:
           # pixel tests throw "Couldn't recognize the image file format"
           sudo apt-get install -y rpm dpkg-dev zip tar libgtk-3-0 xvfb librsvg2-common
 
-      - name: Run automated test suite
+      # Split gate: pure tests first, GTK (xvfb) tests second — isolates which
+      # batch takes the testhost down instead of one opaque 126/134 crash.
+      - name: Run automated test suite (pure)
         env:
-          # Headless runner has no AT-SPI/a11y bus; the accessibility bridge logs
-          # the "AT-SPI: Error retrieving accessibility bus address" warning that
-          # surrounds the testhost crash. Tests never need accessibility.
+          NO_AT_BRIDGE: "1"
+        run: |
+          dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --blame --filter "TestCategory!=GtkSmoke"
+      - name: Run automated test suite (GTK / xvfb)
+        env:
           NO_AT_BRIDGE: "1"
         run: |
           # --blame: if the test host crashes, VSTest names the test responsible
-          xvfb-run bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --blame
+          xvfb-run bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --blame --filter "TestCategory=GtkSmoke"
 
       - name: Build and package Linux release artifacts
         env:
