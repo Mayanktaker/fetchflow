@@ -32,6 +32,11 @@ jobs:
           sudo apt-get install -y rpm dpkg-dev zip tar libgtk-3-0 xvfb librsvg2-common
 
       - name: Run automated test suite
+        env:
+          # Headless runner has no AT-SPI/a11y bus; the accessibility bridge logs
+          # the "AT-SPI: Error retrieving accessibility bus address" warning that
+          # surrounds the testhost crash. Tests never need accessibility.
+          NO_AT_BRIDGE: "1"
         run: |
           # --blame: if the test host crashes, VSTest names the test responsible
           xvfb-run bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --blame
