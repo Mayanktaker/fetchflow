@@ -33,7 +33,8 @@ jobs:
 
       - name: Run automated test suite
         run: |
-          xvfb-run bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
+          # --blame: if the test host crashes, VSTest names the test responsible
+          xvfb-run bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --blame
 
       - name: Build and package Linux release artifacts
         env:
