@@ -1167,7 +1167,7 @@ namespace XDM.GtkUI
             {
                 if (args.Event.Button == 3)
                 {
-                    if (TreeViewSelectionHelper.TryGetRowAtWidgetPos(categoryTree, args.Event.X, args.Event.Y, out TreePath path))
+                    if (TreeViewSelectionHelper.TryGetRowAtEvent(categoryTree, args.Event.X, args.Event.Y, out TreePath path))
                     {
                         categoryTree.Selection.SelectPath(path);
                         if (categoryTree.Model.GetIter(out TreeIter iter, path))
@@ -1545,7 +1545,8 @@ namespace XDM.GtkUI
 
             lvInprogress.MotionNotifyEvent += (o, args) =>
             {
-                if (TreeViewSelectionHelper.TryGetRowAtWidgetPos(lvInprogress, args.Event.X, args.Event.Y, out TreePath path))
+                if (TreeViewSelectionHelper.IsRowEvent(lvInprogress, args.Event.Window)
+                    && TreeViewSelectionHelper.TryGetRowAtEvent(lvInprogress, args.Event.X, args.Event.Y, out TreePath path))
                 {
                     if (hoveredInprogressPath == null || hoveredInprogressPath.Compare(path) != 0)
                     {
@@ -1752,7 +1753,8 @@ namespace XDM.GtkUI
 
             lvFinished.MotionNotifyEvent += (o, args) =>
             {
-                if (TreeViewSelectionHelper.TryGetRowAtWidgetPos(lvFinished, args.Event.X, args.Event.Y, out TreePath path))
+                if (TreeViewSelectionHelper.IsRowEvent(lvFinished, args.Event.Window)
+                    && TreeViewSelectionHelper.TryGetRowAtEvent(lvFinished, args.Event.X, args.Event.Y, out TreePath path))
                 {
                     if (hoveredFinishedPath == null || hoveredFinishedPath.Compare(path) != 0)
                     {
@@ -1822,6 +1824,11 @@ namespace XDM.GtkUI
             nameCol.Button?.StyleContext.AddClass(HeaderNameClass);
             sizeCol.Button?.StyleContext.AddClass(HeaderSizeClass);
 
+            // GTK only emits a column's ::clicked for a CLICKABLE column — without
+            // this the header select-all and the sort captions are dead.
+            gutterCol.Clickable = true;
+            nameCol.Clickable = true;
+            sizeCol.Clickable = true;
             gutterCol.Clicked += (_, _) => ToggleSelectAll(inprogress);
             nameCol.Clicked += (_, _) => CycleListSort("Name");
             sizeCol.Clicked += (_, _) => CycleListSort("Size");
@@ -1906,19 +1913,23 @@ namespace XDM.GtkUI
         [GLib.ConnectBefore]
         private void OnInprogressButtonPress(object o, ButtonPressEventArgs args)
         {
+            var rowEvent = TreeViewSelectionHelper.IsRowEvent(lvInprogress, args.Event.Window);
             if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 3
+                && rowEvent
                 && TreeViewSelectionHelper.ShouldPreserveSelectionOnPress(lvInprogress, args.Event.X, args.Event.Y))
             {
                 inprogressRightClickSnapshot = lvInprogress.Selection.GetSelectedRows(out _);
                 args.RetVal = true;
             }
             else if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 1
-                && ToggleDownloadRow(lvInprogress, inprogressCheckCol, args.Event.X, args.Event.Y))
+                && ToggleDownloadRow(lvInprogress, inprogressCheckCol, args))
             {
-                // Toggle on press, like every file manager. The press event is NOT
-                // suppressed: claiming it (RetVal = true) stopped GTK's own handlers,
-                // which is what used to leave the checkbox dead. GTK's default
-                // selection still runs, so ctrl/shift-click keeps working.
+                // Toggle on press (file-manager semantics) and CLAIM the event: without
+                // the claim GTK's default handler runs afterwards and REPLACES the
+                // selection with this one row, which made multi-select impossible and
+                // made an untick instantly re-tick. [GLib.ConnectBefore] is what makes
+                // this claim effective — it puts us ahead of GTK's class handler.
+                args.RetVal = true;
             }
             else
             {
@@ -1939,16 +1950,19 @@ namespace XDM.GtkUI
         [GLib.ConnectBefore]
         private void OnFinishedButtonPress(object o, ButtonPressEventArgs args)
         {
+            var rowEvent = TreeViewSelectionHelper.IsRowEvent(lvFinished, args.Event.Window);
             if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 3
+                && rowEvent
                 && TreeViewSelectionHelper.ShouldPreserveSelectionOnPress(lvFinished, args.Event.X, args.Event.Y))
             {
                 finishedRightClickSnapshot = lvFinished.Selection.GetSelectedRows(out _);
                 args.RetVal = true;
             }
             else if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 1
-                && ToggleDownloadRow(lvFinished, finishedCheckCol, args.Event.X, args.Event.Y))
+                && ToggleDownloadRow(lvFinished, finishedCheckCol, args))
             {
-                // See OnInprogressButtonPress: toggle on press, never suppress.
+                // See OnInprogressButtonPress: toggle on press + claim
+                args.RetVal = true;
             }
             else
             {
@@ -1972,12 +1986,18 @@ namespace XDM.GtkUI
         // Checkbox click: toggle the row's membership in the selection. Runs on
         // button-PRESS (file-manager semantics) and returns true when it handled the
         // click, so the caller can treat a gutter press differently from a row press.
-        private static bool ToggleDownloadRow(TreeView view, TreeViewColumn? gutterCol, double x, double y)
+        private static bool ToggleDownloadRow(TreeView view, TreeViewColumn? gutterCol, ButtonPressEventArgs args)
         {
             if (gutterCol == null) return false;
-            // HitTestToggleCell already maps widget -> bin_window and yields the row
+            // Header-window events carry header coordinates and must never be
+            // mistaken for a row click (they would resolve to a row anyway)
+            if (!TreeViewSelectionHelper.IsRowEvent(view, args.Event.Window)) return false;
+            var x = args.Event.X;
+            var y = args.Event.Y;
+            // RAW event coordinates: rows live in the bin window, which starts below
+            // the header, so GTK has already excluded the header for us
             if (!TreeViewSelectionHelper.HitTestToggleCell(view, gutterCol, x, y)) return false;
-            if (!TreeViewSelectionHelper.TryGetRowAtWidgetPos(view, x, y, out TreePath path)) return false;
+            if (!TreeViewSelectionHelper.TryGetRowAtEvent(view, x, y, out TreePath path)) return false;
             TreeViewSelectionHelper.ToggleSelectionPath(view, path);
             return true;
         }

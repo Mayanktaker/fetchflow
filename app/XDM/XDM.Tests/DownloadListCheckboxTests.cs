@@ -15,6 +15,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gtk;
 using XDM.GtkUI;
@@ -64,6 +66,18 @@ namespace XDM.Tests
                 Path.Combine(GtkUiDir, "svg-icons", "checkbox-checked.svg"));
             Assert.AreNotEqual(uncheckedState, checkedState,
                 "the two checkbox states must differ, or selection is invisible");
+
+            // The checked box must be HOLLOW (outline + tick, no solid fill):
+            // GtkHelper tints it by replacing every opaque pixel's RGB, which turned a
+            // filled box + white tick into one solid square with no visible tick.
+            var boxShape = checkedState.Substring(checkedState.IndexOf("<rect"),
+                checkedState.IndexOf("/>", checkedState.IndexOf("<rect")) - checkedState.IndexOf("<rect"));
+            Assert.IsTrue(boxShape.Contains("fill=\"none\""),
+                $"the checked box must be an outline so tinting keeps the tick; got: {boxShape}");
+            Assert.IsTrue(boxShape.Contains("stroke="), "the box needs a stroke to exist at all");
+            // and there must be a separate tick stroke inside it
+            Assert.IsTrue(checkedState.IndexOf("/><path d=", StringComparison.Ordinal) > 0,
+                "the checked box must contain a tick path");
         }
 
         [TestMethod]
@@ -77,7 +91,7 @@ namespace XDM.Tests
 
         [TestMethod]
         [TestCategory("GtkSmoke")]
-        public void GutterClick_ResolvesTheRowTheUserActuallyClicked()
+        public void GutterClick_RealEvents_MultiSelectAccumulatesAndUnticks()
         {
             var display = Environment.GetEnvironmentVariable("DISPLAY");
             if (string.IsNullOrWhiteSpace(display))
@@ -90,16 +104,10 @@ namespace XDM.Tests
                 Assert.Inconclusive($"Skipped GtkSmoke: GTK init failed: {ex.Message}");
             }
 
-            static void Pump(int n)
-            {
-                for (var i = 0; i < n; i++)
-                    while (Application.EventsPending()) Application.RunIteration();
-            }
-
             var store = new ListStore(typeof(string));
             var view = new TreeView(store);
             view.Selection.Mode = SelectionMode.Multiple;
-            view.HeadersVisible = true;              // <-- the header is what broke it
+            view.HeadersVisible = true;
             view.StyleContext.AddClass("finished");
 
             var gutter = new TreeViewColumn
@@ -120,7 +128,8 @@ namespace XDM.Tests
                 Resizable = true,
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = 320,
-                SortColumnId = -1
+                SortColumnId = -1,
+                Clickable = true
             };
             name.PackStart(new CellRendererText(), true);
             view.AppendColumn(name);
@@ -128,46 +137,112 @@ namespace XDM.Tests
             const int RowCount = 4;
             for (var i = 0; i < RowCount; i++) store.AppendValues("row" + i);
 
+            // Production-shaped handler: same helper calls and the same claim the app
+            // uses ([GLib.ConnectBefore] on the real handler is what puts it ahead of
+            // GTK's class handler; this local function mirrors its body).
+            [GLib.ConnectBefore]   // without this GtkSharp connects AFTER the class handler and the claim is void
+            void OnPress(object o, ButtonPressEventArgs e)
+            {
+                if (e.Event.Type != Gdk.EventType.ButtonPress || e.Event.Button != 1) return;
+                if (!TreeViewSelectionHelper.HitTestToggleCell(view, gutter, e.Event.X, e.Event.Y)) return;
+                if (!TreeViewSelectionHelper.TryGetRowAtEvent(view, e.Event.X, e.Event.Y, out var path)) return;
+                TreeViewSelectionHelper.ToggleSelectionPath(view, path);
+                e.RetVal = true;   // claim, or GTK's default replaces the selection
+            }
+            view.ButtonPressEvent += OnPress;
+
             var window = new Window(WindowType.Toplevel);
             window.SetDefaultSize(600, 320);
             window.Add(view);
             window.ShowAll();
             Pump(25);
 
+            var binHandle = gtk_tree_view_get_bin_window(view.Handle);
+            Assert.AreNotEqual(IntPtr.Zero, binHandle, "tree view has no bin window");
+            var binWindow = new Gdk.Window(binHandle);   // ONE wrapper, reused (re-wrapping corrupts refs)
+            var device = Gdk.Display.Default.DefaultSeat?.Pointer;
+            Assert.IsNotNull(device, "no pointer device for event dispatch");
+
+            // Row clicks: real events are delivered on the bin window with RAW
+            // coordinates in that window's space — exactly what GetPathAtPos expects.
+            ClickRow(view, binWindow, device, 0);
+            ClickRow(view, binWindow, device, 1);
+            var two = view.Selection.CountSelectedRows();
+
+            ClickRow(view, binWindow, device, 0);          // untick row 0
+            var left = view.Selection.GetSelectedRows(out _);
+            var remaining = string.Join(",", left.Select(r => r.ToString()));
+
+            ClickRow(view, binWindow, device, RowCount - 1);   // tick the LAST row
+            var last = view.Selection.CountSelectedRows();
+
             var failures = new List<string>();
-            for (var row = 0; row < RowCount; row++)
-            {
-                var path = new TreePath(row.ToString());
-                var area = view.GetCellArea(path, gutter);   // bin_window coords
-                // a real click lands in WIDGET coords: convert
-                int clickX, clickY;
-                view.ConvertBinWindowToWidgetCoords(
-                    area.X + area.Width / 2, area.Y + area.Height / 2,
-                    out clickX, out clickY);
-
-                var hit = TreeViewSelectionHelper.HitTestToggleCell(view, gutter, clickX, clickY);
-                if (!hit)
-                {
-                    failures.Add($"row {row}: a real click at widget({clickX},{clickY}) was "
-                        + "not recognised as a gutter click");
-                    continue;
-                }
-                if (!TreeViewSelectionHelper.TryGetRowAtWidgetPos(view, clickX, clickY, out var got))
-                {
-                    failures.Add($"row {row}: no row resolved from widget({clickX},{clickY})");
-                    continue;
-                }
-                if (got.ToString() != row.ToString())
-                {
-                    failures.Add($"row {row}: a click on it resolved to row {got} — the "
-                        + "widget->bin_window conversion is missing");
-                }
-            }
-
+            if (two != 2)
+                failures.Add($"multi-select: ticking rows 0 and 1 selected {two}/2 — "
+                    + "the second click replaced instead of accumulated");
+            if (left.Length != 1 || remaining != "1")
+                failures.Add($"untick: clicking a ticked row left [{remaining}] — expected [1]; "
+                    + "an untick must not re-select itself");
+            if (last != 2)
+                failures.Add($"last row: {last} selected — expected 2; clicks on the "
+                    + "bottom row are being lost");
             Assert.AreEqual(0, failures.Count,
-                "a gutter click must resolve to the row the user actually clicked:\n"
+                "real button events must give checkbox multi-select semantics:\n"
                 + string.Join("\n", failures));
+
+            // A header-window event must never be mistaken for a row click
+            var beforeHeader = view.Selection.CountSelectedRows();
+            SendEvent(view, view.Window, Gdk.EventType.ButtonPress, 200, 16, device);
+            SendEvent(view, view.Window, Gdk.EventType.ButtonRelease, 200, 16, device);
+            Pump(10);
+            Assert.AreEqual(beforeHeader, view.Selection.CountSelectedRows(),
+                "an event on the HEADER window toggled a row — the bin-window gate is missing");
+
             window.Destroy();
+        }
+
+        private static void Pump(int n)
+        {
+            for (var i = 0; i < n; i++)
+                while (Application.EventsPending()) Application.RunIteration();
+        }
+
+        // A real press+release on a row's checkbox (row coords in bin-window space)
+        private static void ClickRow(TreeView view, Gdk.Window binWindow, Gdk.Device device, int row)
+        {
+            var area = view.GetCellArea(new TreePath(row.ToString()), null);
+            var x = area.X + 12;
+            var y = area.Y + area.Height / 2;
+            SendEvent(view, binWindow, Gdk.EventType.ButtonPress, x, y, device);
+            SendEvent(view, binWindow, Gdk.EventType.ButtonRelease, x, y, device);
+            Pump(6);
+        }
+
+        [DllImport("libgtk-3.so.0")]
+        private static extern bool gtk_widget_event(IntPtr widget, IntPtr ev);
+
+        [DllImport("libgdk-3.so.0")]
+        private static extern IntPtr gdk_event_new(int type);
+
+        [DllImport("libgtk-3.so.0")]
+        private static extern IntPtr gtk_tree_view_get_bin_window(IntPtr treeView);
+
+        // Dispatch a button event through GTK exactly as a physical click arrives
+        private static void SendEvent(Gtk.Widget target, Gdk.Window window, Gdk.EventType type,
+            double x, double y, Gdk.Device device)
+        {
+            var raw = gdk_event_new((int)type);
+            var ev = new Gdk.EventButton(raw);
+            ev.Window = window;
+            ev.X = x;
+            ev.Y = y;
+            ev.XRoot = x;
+            ev.YRoot = y;
+            ev.Button = 1;
+            ev.SendEvent = true;
+            ev.Device = device;
+            gtk_widget_event(target.Handle, ev.Handle);
+            Pump(6);
         }
 
         [TestMethod]

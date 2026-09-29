@@ -87,6 +87,7 @@ namespace XDM.Tests
                 Resizable = true,
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = GutterWidth,
+                Clickable = true,      // mirrors MainWindow.WireListColumnHeaders
                 SortColumnId = -1,
                 MinWidth = GutterMin,
                 MaxWidth = GutterMax
@@ -99,6 +100,7 @@ namespace XDM.Tests
                 Resizable = true,
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = NameWidth,
+                Clickable = true,      // mirrors MainWindow.WireListColumnHeaders
                 Expand = true,
                 SortColumnId = -1,
                 MinWidth = NameMin,
@@ -113,6 +115,7 @@ namespace XDM.Tests
                 Resizable = true,
                 Sizing = TreeViewColumnSizing.Fixed,
                 FixedWidth = SizeWidth,
+                Clickable = true,      // mirrors MainWindow.WireListColumnHeaders
                 SortColumnId = -1,
                 MinWidth = SizeMin,
                 MaxWidth = SizeMax
@@ -194,6 +197,12 @@ namespace XDM.Tests
                     if (!col.Resizable)
                     {
                         failures.Add($"{name}: {tag} column is not resizable");
+                    }
+                    if (!col.Clickable)
+                    {
+                        failures.Add($"{name}: {tag} column is NOT clickable — GTK only "
+                            + "emits a column's ::clicked for a CLICKABLE column, so the "
+                            + "header select-all and the sort captions would be dead");
                     }
                 }
 

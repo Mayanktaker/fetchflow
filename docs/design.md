@@ -89,21 +89,38 @@ renderer has no styleable CSS node, so a toggle cannot be themed at all (verifie
 `treeview row checkbutton`, `treeview cell` and `treeview toggle` all have zero
 effect). The gutter is a `CellRendererPixbuf` showing
 `svg-icons/checkbox-unchecked.svg` / `checkbox-checked.svg` (22px, accent-tinted via
-`GtkHelper.LoadSelectionCheckbox`, re-tinted when the theme accent changes). Gutter
+`GtkHelper.LoadSelectionCheckbox`, re-tinted when the theme accent changes). The
+checked box is deliberately **hollow** (outline + tick, `fill="none"`): tinting
+replaces the RGB of every opaque pixel, which is what turned a filled box's white
+tick into an invisible solid square — the outline survives tinting, a tick carved
+out of a fill does not. Gutter
 width 52px = 22px box + 8px padding each side.
 
-Three things must hold for that checkbox to work, all pinned by
-`DownloadListCheckboxTests`:
+Four rules must hold for that checkbox to work. All four are pinned by
+`DownloadListCheckboxTests` (the first two through *real* event dispatch):
 
-- **Coordinates must be converted.** `button-press-event` delivers **widget**
-  coordinates, but `gtk_tree_view_get_path_at_pos()` expects **bin_window**
-  coordinates. With the header visible the two differ by the header height, so
-  skipping the conversion makes every click resolve to the row *below* the one
-  clicked, and the **last row in the list resolves to nothing at all** — which is
-  why the checkbox looked dead. `TreeViewSelectionHelper.TryPathAtPos` does the
-  conversion, and every hit-test in `MainWindow` goes through it (the sidebar
-  and both hover handlers had the same bug). Never call `GetPathAtPos` with raw
-  event coordinates.
+- **Pass row-event coordinates through RAW.** `gtk_tree_view_get_path_at_pos()`
+  documents that its coordinates must be the raw coordinates of an event whose
+  `event->window` is the view's **bin window**. The bin window's origin sits
+  *below* the column header (verified: `bin origin y == header height`), so GTK
+  has already excluded the header — any extra widget→bin conversion shifts every
+  hit by the header height and makes the last row resolve to nothing at all.
+  `TreeViewSelectionHelper.TryPathAtPos` therefore does no conversion.
+- **Gate on the event window.** Header-window events carry header coordinates and
+  must never be mistaken for a row click; `IsRowEvent` compares the event's
+  window against `gtk_tree_view_get_bin_window()`. Toggle, hover and
+  right-click-preservation all check it.
+- **Toggle on press and CLAIM the event** (`args.RetVal = true` after toggling).
+  Without the claim, GTK's default handler runs afterwards and *replaces* the
+  selection with that one row — which made multi-select impossible and made an
+  untick instantly re-tick. The claim only works because the handlers carry
+  `[GLib.ConnectBefore]`; GtkSharp otherwise connects *after* the class handler
+  and the claim is void. Never remove that attribute.
+- **Columns must be `Clickable = true`.** GTK only emits a column's `::clicked`
+  for a clickable column, otherwise the header select-all and the sort captions
+  are dead (`gtk_tree_view_column_clicked`: "will only work if the column is
+  clickable"). `MainWindow.WireListColumnHeaders` sets it on all three.
+  Keep `SortColumnId = -1` — our own handler owns sorting.
 - The row must be re-rendered on selection change — the cell-data-func is not
   re-invoked on its own, so each `Selection.Changed` handler calls `QueueDraw()`.
 - The gutter click must **not** be suppressed. A `ConnectBefore` press handler that
