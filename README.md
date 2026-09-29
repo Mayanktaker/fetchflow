@@ -56,6 +56,23 @@
 
 ---
 
+## ✨ What's New in 9.1.15.18 — Reimagined Download List
+
+**What's new**
+- **Drag any column to size it your way:** the downloads list header is a real column header — pull the edge between the selection tick, file name and size, and the headings move with the columns. A divider marks the grab point.
+- **A list that breathes:** taller GTK4-style header, more air between downloads, roomier rows — on Linux and Windows alike.
+- **Cohesive, modern surfaces:** buttons, menus, popovers and cards now share one look — matching borders in a row, flat GTK4-style corners, and hovers you can actually see.
+- **Themes that stick:** your theme and color scheme now persist across restarts, with Charcoal Blue (dark) and Classic Blue (light) as the new defaults.
+
+**Bug fixes**
+- Fixed selecting multiple downloads with the tick box (ticks now accumulate, untick, and work on every row).
+- Fixed the list header bar disappearing on light themes and columns no longer being resizable.
+- Fixed selected rows turning header-coloured when FetchFlow is unfocused, and the tick box becoming invisible with them.
+- Fixed the Color Scheme dropdown opening empty, and theme/palette choices silently resetting on every launch.
+- Fixed the FetchFlow icon missing from the GNOME dock and taskbar.
+
+---
+
 ## ✨ What's New in 9.1.15.17 — Maintenance
 
 **What's new**
@@ -118,7 +135,7 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 ### Universal Installer (Recommended — CachyOS / Manjaro / Arch / Fedora / Debian / openSUSE)
 ```bash
 curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/install-fetchflow.sh | bash
-# Options: bash install-fetchflow.sh --version 9.1.15.17 --yes --check --uninstall
+# Options: bash install-fetchflow.sh --version 9.1.15.18 --yes --check --uninstall
 ```
 The script auto-detects your distro, installs system deps (`gtk3`, `ffmpeg`, `xdg-desktop-portal`), then installs the native package (`.pkg.tar.zst` on Arch-family, `.rpm` on Fedora, `.deb` on Debian/Ubuntu) with a portable `/opt/fetchflow` tarball fallback.
 
@@ -134,7 +151,7 @@ curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/ins
 # Or manually with the prebuilt package (download first:
 # direct-URL pacman needs a .sig we don't publish yet):
 sudo pacman -S --needed yt-dlp
-curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.17-1-x86_64.pkg.tar.zst -o /tmp/fetchflow.pkg.tar.zst
+curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.18-1-x86_64.pkg.tar.zst -o /tmp/fetchflow.pkg.tar.zst
 sudo pacman -U /tmp/fetchflow.pkg.tar.zst
 ```
 Package signatures (`.sig`) ship once signing is configured — see [docs/signing.md](docs/signing.md).
@@ -145,16 +162,16 @@ Package signatures (`.sig`) ship once signing is configured — see [docs/signin
   winget install Mayanktaker.FetchFlow
   ```
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.17.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.15.18.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.17-1.fc44.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.15.18-1.fc44.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.15.17_amd64.deb
+sudo apt install ./fetchflow_9.1.15.18_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS (legacy manual PKGBUILD)
@@ -165,7 +182,7 @@ cd app/XDM/XDM.Linux.Installer && makepkg -si
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.15.17.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.15.18.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
@@ -182,12 +199,12 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 
 | Browser Family | Supported Browsers | Package | Features |
 |---|---|---|---|
-| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.17.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
-| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.17.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.15.18.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.18.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
 
 
 ### Installation
-- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.17.xpi).
+- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.15.18.xpi).
 - **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.
 
 ---
