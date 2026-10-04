@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,6 +10,11 @@ namespace XDM.Core
 {
     public static class ApplicationContext
     {
+        // Registration-only container: every service field is written exactly once by
+        // AppInstanceConfigurer before s_Init flips, and is immutable afterwards. The
+        // volatile read of s_Init in each accessor is therefore the release/acquire
+        // barrier that publishes those writes to download and IPC threads — without it
+        // a reader can observe s_Init == true while still seeing a null service field.
         private static IApplicationCore? s_ApplicationCore;
         private static IApplication? s_IApplication;
         private static IApplicationWindow? s_ApplicationWindow;
@@ -16,7 +22,7 @@ namespace XDM.Core
         private static IVideoTracker? s_VideoTracker;
         private static IClipboardMonitor? s_ClipboardMonitor;
         private static IPlatformUIService? s_PlatformUIService;
-        private static bool s_Init = false;
+        private static volatile bool s_Init = false;
 
         public static event EventHandler? Initialized;
         public static event EventHandler<ApplicationEvent>? ApplicationEvent;
@@ -178,7 +184,7 @@ namespace XDM.Core
                     || s_VideoTracker == null || s_ClipboardMonitor == null
                     || s_PlatformUIService == null)
                 {
-                    throw new Exception("Please configure all dependecies");
+                    throw new Exception("Please configure all dependencies");
                 }
                 SingleInstance.Ensure();
                 s_Init = true;

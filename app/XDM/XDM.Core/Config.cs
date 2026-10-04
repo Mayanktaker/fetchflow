@@ -11,7 +11,7 @@ namespace XDM.Core
 {
     public class Config
     {
-        private static Config instance;
+        private static volatile Config instance;
         private static object lockObj = new();
         public static Config Instance
         {

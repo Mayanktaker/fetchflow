@@ -79,6 +79,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\CommonUtils.cs" />
     <Compile Include="..\XDM.Core\UI\ComponentUpdaterUIController.cs" />
     <Compile Include="..\XDM.Core\UI\DownloadCompleteUIController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\CategoryIconPalette.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DownloadSelectionUIController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\IconMap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\LinkRefreshDialogUIController.cs" />

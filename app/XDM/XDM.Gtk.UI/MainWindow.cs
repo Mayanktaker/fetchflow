@@ -990,48 +990,8 @@ namespace XDM.GtkUI
         }
 
         private (string iconName, byte r, byte g, byte b) GetCategoryIconConfig(Category cat)
-        {
-            string iconName = !string.IsNullOrEmpty(cat.CustomIcon) ? cat.CustomIcon : cat.Name switch
-            {
-                "CAT_DOCUMENTS" => "file-text-line",
-                "CAT_MUSIC" => "file-music-line",
-                "CAT_VIDEOS" => "movie-line",
-                "CAT_COMPRESSED" => "file-zip-line",
-                "CAT_PROGRAMS" => "function-line",
-                "CAT_IMAGES" => "image-line",
-                _ => "folder-shared-line"
-            };
-
-            if (!string.IsNullOrEmpty(cat.CustomColor) && cat.CustomColor.StartsWith("#") && cat.CustomColor.Length == 7)
-            {
-                try
-                {
-                    byte cr = Convert.ToByte(cat.CustomColor.Substring(1, 2), 16);
-                    byte cg = Convert.ToByte(cat.CustomColor.Substring(3, 2), 16);
-                    byte cb = Convert.ToByte(cat.CustomColor.Substring(5, 2), 16);
-                    return (iconName, cr, cg, cb);
-                }
-                catch { }
-            }
-
-            switch (cat.Name)
-            {
-                case "CAT_DOCUMENTS":
-                    return (iconName, AmberR, AmberG, AmberB);    // Amber / Orange
-                case "CAT_MUSIC":
-                    return (iconName, PurpleR, PurpleG, PurpleB);   // Purple / Violet
-                case "CAT_VIDEOS":
-                    return (iconName, DestructR, DestructG, DestructB);         // Coral / Red
-                case "CAT_COMPRESSED":
-                    return (iconName, TealR, TealG, TealB);     // Teal / Cyan
-                case "CAT_PROGRAMS":
-                    return (iconName, IndigoR, IndigoG, IndigoB);     // Indigo / Blue
-                case "CAT_IMAGES":
-                    return (iconName, RoseR, RoseG, RoseB);             // Rose / Pink
-                default:
-                    return (iconName, IndigoR, IndigoG, IndigoB);
-            }
-        }
+            // Pure decision table lives in Core so it is unit-testable without GTK.
+            => CategoryIconPalette.Resolve(cat);
 
         private Widget CreateCategoryTree()
         {

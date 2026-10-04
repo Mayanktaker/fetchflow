@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
@@ -144,7 +145,7 @@ namespace XDM.Core.Downloader.Progressive
         {
             Log.Debug("Stopping request");
             this.Dispose();
-            try { this.request?.Abort(); } catch { }
+            try { this.request?.Abort(); } catch (Exception ex) { Log.Warn(ex, "Abort on Stop failed"); }
         }
 
         public void Dispose()
@@ -154,7 +155,7 @@ namespace XDM.Core.Downloader.Progressive
             this.sleepHandle.Close();
             this.pieceId = null;
             this.callback = null;
-            try { this.fileWriterStream?.Dispose(); } catch { }
+            try { this.fileWriterStream?.Dispose(); } catch (Exception ex) { Log.Warn(ex, "Piece writer dispose failed"); }
         }
 
         private HttpResponse Connect()
@@ -211,8 +212,8 @@ namespace XDM.Core.Downloader.Progressive
             {
                 if (error)
                 {
-                    try { request?.Abort(); } catch { }
-                    try { response?.Close(); } catch { }
+                    try { request?.Abort(); } catch (Exception ex) { Log.Warn(ex, "Abort on connect failure failed"); }
+                    try { response?.Close(); } catch (Exception ex) { Log.Warn(ex, "Close on connect failure failed"); }
                 }
             }
         }
@@ -247,7 +248,7 @@ namespace XDM.Core.Downloader.Progressive
                 {
                     targetStream.Close();
                 }
-                catch { }
+                catch (Exception ex) { Log.Warn(ex, "Target stream close after copy failed"); }
             }
             finally
             {
@@ -321,7 +322,7 @@ namespace XDM.Core.Downloader.Progressive
                     Log.Debug("Disable connection reuse");
                     this.request?.Abort();
                 }
-                catch { }//Dont allow to reuse if entire content has not been read
+                catch (Exception ex) { Log.Warn(ex, "Abort to disable connection reuse failed"); }//Dont allow to reuse if entire content has not been read
             }
         }
 
