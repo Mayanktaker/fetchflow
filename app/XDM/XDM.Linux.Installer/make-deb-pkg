@@ -79,6 +79,27 @@ fetchflow|.deb
 EOF
 
 cp "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.desktop" "${PKG}/usr/share/applications"
+# Launch-at-login lives in /etc/xdg/autostart (the XDG system location), so it takes effect
+# from the first login after install instead of waiting for the app's first run. A per-user
+# ~/.config/autostart file of the same name shadows it, which is how Settings turns it off.
+# Exec uses --background: the menu entry's %U form would pop the window on every login.
+mkdir -p "${PKG}/etc/xdg/autostart"
+cat <<EOF > "${PKG}/etc/xdg/autostart/com.mayanktaker.fetchflow.desktop"
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+TryExec=/opt/fetchflow/fetchflow
+Exec=env GTK_USE_PORTAL=1 "/opt/fetchflow/fetchflow" --background
+Name=FetchFlow Download Manager
+Comment=FetchFlow Download Manager (Wayland Edition)
+Categories=Network;
+Icon=com.mayanktaker.fetchflow
+X-GNOME-Autostart-enabled=true
+StartupNotify=false
+EOF
+chmod 755 "${PKG}/etc/xdg/autostart/com.mayanktaker.fetchflow.desktop"
+
 cp "${SRC_DIR}/fetchflow-logo.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg" 2>/dev/null || cp "${PKG}/opt/fetchflow/fetchflow-logo.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg"
 cp "${PKG}/usr/share/icons/hicolor/scalable/apps/fetchflow.svg" "${PKG}/usr/share/icons/hicolor/scalable/apps/com.mayanktaker.fetchflow.svg"
 # Light tray glyph for StatusNotifierItem hosts (dark & light panels)
@@ -136,7 +157,17 @@ else
     BUILD_TMP="$(mktemp -d)"
     echo "2.0" > "${BUILD_TMP}/debian-binary"
     (cd "${PKG}/DEBIAN" && tar --owner=0 --group=0 --numeric-owner -czf "${BUILD_TMP}/control.tar.gz" *)
-    (cd "${PKG}" && tar --owner=0 --group=0 --numeric-owner --exclude="./DEBIAN" -czf "${BUILD_TMP}/data.tar.gz" opt usr)
+    # The fallback tars by name, so every top-level payload dir must be listed — a dir left
+    # out (etc/xdg/autostart) would vanish from the package with no error at all. Derived from
+    # the staging tree rather than hardcoded, so a future payload dir cannot be forgotten.
+    PAYLOAD=()
+    for _d in "${PKG}"/*/; do
+        [ -e "$_d" ] || continue
+        case "$(basename "$_d")" in DEBIAN) continue ;; esac
+        PAYLOAD+=("$(basename "$_d")")
+    done
+    echo "Deb payload dirs: ${PAYLOAD[*]}"
+    (cd "${PKG}" && tar --owner=0 --group=0 --numeric-owner -czf "${BUILD_TMP}/data.tar.gz" "${PAYLOAD[@]}")
     (cd "${BUILD_TMP}" && ar -rc "${DEB_OUT}" debian-binary control.tar.gz data.tar.gz)
     rm -rf "${BUILD_TMP}"
     echo "Built: ${DEB_OUT}"
