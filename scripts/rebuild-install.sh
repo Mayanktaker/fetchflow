@@ -175,6 +175,21 @@ AUTOSTART_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/autostart"
 AUTOSTART_FILE="${AUTOSTART_DIR}/com.mayanktaker.fetchflow.desktop"
 mkdir -p "$AUTOSTART_DIR"
 
+# Mirrors Config.AppDir (XDM.Core/Config.cs): XDG_CONFIG_HOME wins, else whichever
+# per-app data dir already exists (legacy .xdm-app-data), else the current default.
+# The app records a deliberate "launch-at-login off" here, and this repair must clear
+# it or the app would keep treating the user as opted out while the entry says "on".
+if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+    APP_DIR="${XDG_CONFIG_HOME}/fetchflow"
+elif [ -d "${HOME}/.fetchflow-app-data" ]; then
+    APP_DIR="${HOME}/.fetchflow-app-data"
+elif [ -d "${HOME}/.xdm-app-data" ]; then
+    APP_DIR="${HOME}/.xdm-app-data"
+else
+    APP_DIR="${HOME}/.fetchflow-app-data"
+fi
+OPTOUT_MARKER="${APP_DIR}/autostart-optout"
+
 # Always repoint at the real install: a stale path silently breaks login autostart.
 cat > "$AUTOSTART_FILE" <<'EOF'
 [Desktop Entry]
@@ -192,6 +207,17 @@ StartupNotify=false
 X-FetchFlow-Autostart=1
 EOF
 chmod +x "$AUTOSTART_FILE"
+
+# This script force-enables launch-at-login, so drop the opt-out sentinel as well —
+# clearing only the .desktop file would leave the app and this entry disagreeing.
+if [ -f "$OPTOUT_MARKER" ]; then
+    rm -f "$OPTOUT_MARKER"
+    log "Cleared launch-at-login opt-out sentinel ($OPTOUT_MARKER)"
+fi
+
+# The legacy file name is a different desktop-file id, so it is NOT shadowed by the new
+# one — leaving it behind starts the app twice at login.
+rm -f "${AUTOSTART_DIR}/xdm-app.desktop"
 
 if command -v desktop-file-validate >/dev/null; then
     if desktop-file-validate "$AUTOSTART_FILE"; then
