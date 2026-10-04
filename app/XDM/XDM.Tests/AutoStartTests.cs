@@ -83,6 +83,49 @@ namespace XDM.Tests
         }
 
         [TestMethod]
+        public void HiddenOptOut_MarksTheEntryHidden()
+        {
+            var entry = DesktopEntry.BuildAutoStartOptOutEntry();
+
+            Assert.IsTrue(DesktopEntry.GetValueOrNull(entry, "Hidden")
+                .Equals("true", StringComparison.OrdinalIgnoreCase));
+            Assert.IsFalse(DesktopEntry.IsEntryLive(entry, FileExists));
+        }
+
+        [TestMethod]
+        public void HiddenOptOut_OverLiveEntry_IsNotLive()
+        {
+            // The per-user override shadows a system-wide /etc/xdg/autostart copy, so it still
+            // carries a perfectly valid, live Exec. Liveness must therefore come from Hidden —
+            // without that check the Settings box would flip back to "on" while the app kept
+            // starting at login after the user explicitly turned it off.
+            var live = DesktopEntry.BuildAutoStartEntry(LiveBinary, "/icon.svg");
+            var hidden = live.Replace(
+                "X-GNOME-Autostart-enabled=true",
+                "X-GNOME-Autostart-enabled=true\r\nHidden=true");
+
+            Assert.IsTrue(DesktopEntry.IsEntryLive(live, FileExists));
+            Assert.IsFalse(DesktopEntry.IsEntryLive(hidden, FileExists));
+        }
+
+        [TestMethod]
+        public void IsExplicitOptOut_DetectsDeliberateOptOuts()
+        {
+            // Startup self-heal must only repair dead paths, never flip a deliberate "off"
+            // back to "on", so both opt-out spellings have to be recognised.
+            var hidden = DesktopEntry.BuildAutoStartOptOutEntry();
+            var gnome = DesktopEntry.BuildAutoStartEntry(LiveBinary, "/icon.svg")
+                .Replace("X-GNOME-Autostart-enabled=true", "X-GNOME-Autostart-enabled=false");
+            var live = DesktopEntry.BuildAutoStartEntry(LiveBinary, "/icon.svg");
+
+            Assert.IsTrue(DesktopEntry.IsExplicitOptOut(hidden));
+            Assert.IsTrue(DesktopEntry.IsExplicitOptOut(gnome));
+            Assert.IsFalse(DesktopEntry.IsExplicitOptOut(live));
+            Assert.IsFalse(DesktopEntry.IsExplicitOptOut(""));
+            Assert.IsFalse(DesktopEntry.IsExplicitOptOut(null));
+        }
+
+        [TestMethod]
         public void EmptyEntry_IsNotLive()
         {
             Assert.IsFalse(DesktopEntry.IsEntryLive("", FileExists));

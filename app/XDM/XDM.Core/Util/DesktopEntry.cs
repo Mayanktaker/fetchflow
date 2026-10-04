@@ -32,6 +32,22 @@ namespace XDM.Core.Util
                 "X-FetchFlow-Autostart=1\r\n";
         }
 
+        /// <summary>
+        /// Builds the per-user override that suppresses launch-at-login. Hidden=true is the
+        /// freedesktop opt-out: it overrides a system-wide /etc/xdg/autostart copy of the same
+        /// file name, so unticking in Settings keeps working once packages ship one. The GNOME
+        /// flag is repeated because that is what GNOME's Startup Applications UI reads.
+        /// </summary>
+        public static string BuildAutoStartOptOutEntry(string name = "FetchFlow Download Manager")
+        {
+            return "[Desktop Entry]\r\n" +
+                "Version=1.0\r\n" +
+                "Type=Application\r\n" +
+                $"Name={name}\r\n" +
+                "Hidden=true\r\n" +
+                "X-GNOME-Autostart-enabled=false\r\n";
+        }
+
         /// <summary>Reads a key from a desktop-entry file, tolerating whitespace and CRLF endings.</summary>
         public static bool TryGetValue(string? text, string key, out string? value)
         {
@@ -74,6 +90,24 @@ namespace XDM.Core.Util
         }
 
         /// <summary>
+        /// True when the entry carries a deliberate opt-out rather than a broken path: the
+        /// freedesktop <c>Hidden=true</c> key (which also shadows a system-wide
+        /// /etc/xdg/autostart copy), or GNOME's "Startup Applications" <c>X-GNOME-Autostart-enabled=false</c>.
+        /// Startup self-heal must never rewrite such a file — only a dead path is worth repairing.
+        /// </summary>
+        public static bool IsExplicitOptOut(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+            if (TryGetValue(text, "Hidden", out var hidden)
+                && string.Equals(hidden, "true", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            return TryGetValue(text, "X-GNOME-Autostart-enabled", out var gnomeFlag)
+                && string.Equals(gnomeFlag, "false", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
         /// Decides whether an autostart entry will really launch: it must be opted in, and its
         /// command must resolve to an existing file. A stale entry (moved or removed install)
         /// must read as disabled, otherwise Settings shows "on" while nothing happens at login.
@@ -83,12 +117,7 @@ namespace XDM.Core.Util
             if (fileExists == null) return false;
             if (string.IsNullOrEmpty(text)) return false;
 
-            // Respect an explicit opt-out written by GNOME's "Startup Applications" preferences.
-            if (TryGetValue(text, "X-GNOME-Autostart-enabled", out var gnomeFlag)
-                && string.Equals(gnomeFlag, "false", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
+            if (IsExplicitOptOut(text)) return false;
 
             var target = ExtractCommandPath(GetValueOrNull(text, "Exec"))
                 ?? ExtractCommandPath(GetValueOrNull(text, "TryExec"));

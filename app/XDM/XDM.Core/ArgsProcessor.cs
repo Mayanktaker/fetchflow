@@ -107,7 +107,9 @@ namespace XDM.Core
                 {
                     if (args.ContainsKey("--first-run"))
                     {
-                        Config.Instance.RunOnLogon = true;
+                        // Honour a recorded opt-out; a bare force-enable would resurrect
+                        // launch-at-login right after the user turned it off.
+                        PlatformHelper.ReconcileAutoStart();
                         Config.SaveConfig();
                         ApplicationContext.Application.RunOnUiThread(() =>
                         {

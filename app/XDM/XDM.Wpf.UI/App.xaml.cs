@@ -93,6 +93,10 @@ namespace XDM.Wpf.UI
 
             ArgsProcessor.Process(Environment.GetCommandLineArgs().Skip(1));
 
+            // Self-heal a launch-at-login entry that was deleted or went stale, so the app keeps
+            // starting with the system unless the user deliberately turned it off.
+            PlatformHelper.ReconcileAutoStart();
+
             AppTrayIcon.AttachToSystemTray();
             AppTrayIcon.TrayClick += (_, _) =>
             {
@@ -106,7 +110,9 @@ namespace XDM.Wpf.UI
             if (!MsixHelper.IsAppContainer)
             {
                 Log.Debug("Not running inside app container");
-                Config.Instance.RunOnLogon = true;
+                // Reconcile instead of forcing RunOnLogon: IsFirstRun() refires every upgrade
+                // and would otherwise wipe a recorded launch-at-login opt-out.
+                PlatformHelper.ReconcileAutoStart();
             }
             ApplicationContext.Application.RunOnUiThread(() =>
             {

@@ -190,6 +190,10 @@ namespace XDM.GtkUI
 
             MigrateLegacyAutoStart();
 
+            // Self-heal a launch-at-login entry that was deleted or went stale, so the app keeps
+            // starting with the system unless the user deliberately turned it off.
+            PlatformHelper.ReconcileAutoStart();
+
             ArgsProcessor.Process(args);
 
             Log.Debug("Gtk Run...");
@@ -199,7 +203,10 @@ namespace XDM.GtkUI
 
         private static void ApplicationContext_FirstRunCallback(object? sender, EventArgs e)
         {
-            PlatformHelper.EnableAutoStart(true);
+            // Must go through ReconcileAutoStart, not EnableAutoStart(true): IsFirstRun() is
+            // keyed by version, so this refires on every upgrade and a bare force-enable would
+            // erase a deliberate opt-out (sentinel + Hidden override) the user had recorded.
+            PlatformHelper.ReconcileAutoStart();
         }
 
         // One-shot upgrade fix-up: drop any Startup-folder shortcut left by an older Windows

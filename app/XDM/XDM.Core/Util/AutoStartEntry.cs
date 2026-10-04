@@ -23,5 +23,12 @@ namespace XDM.Core.Util
 
         /// <summary>.desktop file name used by older Linux builds.</summary>
         public const string LegacyLinuxDesktopFileName = "xdm-app.desktop";
+
+        /// <summary>
+        /// Marker recording that the user deliberately turned launch-at-login OFF. The OS entry
+        /// itself is not enough to tell "user opted out" from "entry vanished", so startup
+        /// self-healing must consult this file before recreating one.
+        /// </summary>
+        public const string OptOutMarkerFileName = "autostart-optout";
     }
 }

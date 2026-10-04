@@ -20,6 +20,9 @@ namespace XDM.Core.Util
         private const string LinuxAutoStartFileName = AutoStartEntry.LinuxDesktopFileName;
         private const string LegacyLinuxAutoStartFileName = AutoStartEntry.LegacyLinuxDesktopFileName;
 
+        // Records a deliberate user opt-out so startup self-heal never fights the user's choice.
+        private const string AutoStartOptOutMarkerFileName = AutoStartEntry.OptOutMarkerFileName;
+
         // Tray glyph for StatusNotifierItem hosts; also installed into the user icon theme on startup.
         public const string TrayIconName = "fetchflow-tray";
 
@@ -342,6 +345,85 @@ namespace XDM.Core.Util
             return null;
         }
 
+        /// <summary>Path of the marker recording a deliberate launch-at-login opt-out.</summary>
+        public static string GetAutoStartOptOutMarkerPath()
+            => Path.Combine(Config.AppDir, AutoStartOptOutMarkerFileName);
+
+        /// <summary>True when the user has explicitly turned launch-at-login off.</summary>
+        public static bool HasAutoStartOptOut() => File.Exists(GetAutoStartOptOutMarkerPath());
+
+        /// <summary>Records (or clears) the deliberate opt-out so self-heal can respect it.</summary>
+        private static void SetAutoStartOptOut(bool optedOut)
+        {
+            try
+            {
+                var marker = GetAutoStartOptOutMarkerPath();
+                if (optedOut)
+                {
+                    // Never truncate an existing marker: an empty new file would still count as opt-out.
+                    // AppDir is only created lazily (LoadConfig ensures DataDir, which can live
+                    // under a different root when XDG_DATA_HOME is set), so make it here.
+                    if (!File.Exists(marker))
+                    {
+                        var dir = Path.GetDirectoryName(marker);
+                        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                        File.Create(marker).Close();
+                    }
+                }
+                else if (File.Exists(marker))
+                {
+                    File.Delete(marker);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Restores a missing launch-at-login entry at startup. The OS entry alone cannot tell
+        /// "user opted out" from "entry was deleted or went stale after a reinstall/move", so a
+        /// vanished entry would otherwise leave the app silently never starting at login.
+        /// No-op on macOS (no autostart support) and for a user who deliberately opted out.
+        /// </summary>
+        public static void ReconcileAutoStart()
+        {
+            try
+            {
+                if (!SupportsAutoStart) return;
+                if (HasAutoStartOptOut()) return;
+
+#if NET5_0_OR_GREATER
+                // The .desktop helpers only exist on .NET 5+; net472 (WPF) has no Linux branch.
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    var file = Path.Combine(GetLinuxDesktopAutoStartDir(), LinuxAutoStartFileName);
+                    if (File.Exists(file))
+                    {
+                        var text = File.ReadAllText(file);
+                        // An existing file that reads "off" is a deliberate opt-out (GNOME's
+                        // Startup Applications UI writes those) — rewriting it would silently
+                        // turn launch-at-login back on after the user said no.
+                        if (DesktopEntry.IsExplicitOptOut(text)) return;
+                        if (DesktopEntry.IsEntryLive(text, File.Exists)) return;
+                        // Else the path went stale (reinstall/move): fall through and rewrite.
+                    }
+                }
+#endif
+
+                if (IsAutoStartEnabled()) return;
+                if (EnableAutoStart(true))
+                {
+                    Log.Debug("AutoStart: restored missing launch-at-login entry.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, ex.Message);
+            }
+        }
+
         // Adds/removes the per-user launch-at-login entry (Windows Run key, Linux autostart .desktop).
         // Returns true only when the requested state was actually applied.
         public static bool EnableAutoStart(bool enable)
@@ -358,6 +440,9 @@ namespace XDM.Core.Util
                         if (!File.Exists(appExe)) return false;
                         hkcuRun.SetValue(AutoStartRegistryValue, $"\"{appExe}\" --background", RegistryValueKind.String);
 
+                        // Re-enabling clears a previous opt-out so self-heal stops second-guessing it.
+                        SetAutoStartOptOut(false);
+
                         // The Run key is now the only autostart mechanism; drop the old Startup
                         // shortcut so enabling from Settings cannot launch the app twice.
                         RemoveLegacyStartupShortcut();
@@ -366,6 +451,7 @@ namespace XDM.Core.Util
                     {
                         hkcuRun.DeleteValue(AutoStartRegistryValue, false);
                         hkcuRun.DeleteValue(LegacyAutoStartRegistryValue, false);
+                        SetAutoStartOptOut(true);
 
                         // Untick must also clear the installer-created shortcut, otherwise
                         // launch-at-login silently stayed on.
@@ -384,18 +470,33 @@ namespace XDM.Core.Util
                 {
                     var autoStartDir = GetLinuxDesktopAutoStartDir();
                     var desktopFile = Path.Combine(autoStartDir, LinuxAutoStartFileName);
+                    SetAutoStartOptOut(!enable);
                     if (!enable)
                     {
-                        // Disabling must actually remove the entry — writing it unconditionally
-                        // left launch-at-login switched on even after the user unticked the box.
-                        if (File.Exists(desktopFile)) File.Delete(desktopFile);
+                        // A per-user entry with Hidden=true shadows a system-wide
+                        // /etc/xdg/autostart copy of the same name, so unticking keeps working
+                        // once packages ship one. Deleting it instead would let the system-wide
+                        // copy through and start the app at login after the user said no.
+                        if (!Directory.Exists(autoStartDir)) Directory.CreateDirectory(autoStartDir);
+                        File.WriteAllText(desktopFile, DesktopEntry.BuildAutoStartOptOutEntry());
+                        SetExecutable(desktopFile);
+
+                        // Older builds used a second file name and no system-wide twin to shadow,
+                        // so plain removal is still the right opt-out for it.
                         var legacy = Path.Combine(autoStartDir, LegacyLinuxAutoStartFileName);
                         if (File.Exists(legacy)) File.Delete(legacy);
-                        return !File.Exists(desktopFile);
+
+                        // Report the state we can actually observe rather than claiming success.
+                        return !DesktopEntry.IsEntryLive(File.ReadAllText(desktopFile), File.Exists);
                     }
                     if (!Directory.Exists(autoStartDir)) Directory.CreateDirectory(autoStartDir);
                     File.WriteAllText(desktopFile, GetLinuxDesktopFile());
                     SetExecutable(desktopFile);
+
+                    // The legacy file name is a different desktop-file id, so it is NOT shadowed
+                    // by this one — leaving it behind makes both fire at login (double launch).
+                    var legacyOnEnable = Path.Combine(autoStartDir, LegacyLinuxAutoStartFileName);
+                    if (File.Exists(legacyOnEnable)) File.Delete(legacyOnEnable);
                     return true;
                 }
 #endif
@@ -622,7 +723,9 @@ namespace XDM.Core.Util
                         var command = (string?)hkcuRun?.GetValue(AutoStartRegistryValue)
                             ?? (string?)hkcuRun?.GetValue(LegacyAutoStartRegistryValue);
                         var path = FileHelper.GetFileNameFromQuote(command);
-                        if (!string.IsNullOrEmpty(path)) return true;
+                        // Rule 11: a Run value pointing at a moved/removed install is NOT "on".
+                        // ReconcileAutoStart relies on this to repair a stale value.
+                        if (!string.IsNullOrEmpty(path) && File.Exists(path)) return true;
                     }
 
                     // An older installer's Startup-folder shortcut also means "on" — reporting
