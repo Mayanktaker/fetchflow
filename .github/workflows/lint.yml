@@ -6,10 +6,7 @@ on:
     branches: [ "master" ]
     paths:
       - 'scripts/**'
-      - 'app/XDM/XDM.Linux.Installer/make-*'
-      - 'build_all.sh'
-      - 'build_rpm.sh'
-      - 'xdm-updater.sh'
+      - 'app/XDM/**'
       - '.github/workflows/lint.yml'
   pull_request:
     branches: [ "master" ]
@@ -25,6 +22,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          # The credit-header gate diffs against the base branch, so it needs history.
+          fetch-depth: 0
 
       - name: Install ShellCheck
         run: |
@@ -35,3 +35,18 @@ jobs:
         # The target list lives in scripts/lint-shell.sh so a local run and this gate
         # cannot drift apart; add new scripts there, not here.
         run: bash scripts/lint-shell.sh
+
+  credit-headers:
+    name: Credit header on changed files (Rule 5)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          # Full history so the gate can diff against the merge base; upstream XDM
+          # files without a header are grandfathered, so only your changes are judged.
+          fetch-depth: 0
+
+      - name: Check credit headers on changed files
+        run: bash scripts/lint-credit-headers.sh

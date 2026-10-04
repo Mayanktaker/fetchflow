@@ -373,7 +373,10 @@ app/XDM/firefox-amo/xdm-v8-browser-helper.zip
 # XDM build & packaging artifacts
 rpmbuild/
 binary-source/
-build-output/
+# NOTE: build_output/ (underscore) is the LIVE CI publish dir used by release.yml
+# and xdm-wpf-build.yml. Do not "tidy" it into build-output/ — the hyphenated
+# spelling was never referenced by any script and only accumulated stale local
+# copies, so it is intentionally absent here.
 build_output/
 test-publish/
 xdm-release/
@@ -399,7 +402,6 @@ app/XDM/XDM.Linux.Installer/fetchflow*/
 .agents/
 deleted_files_folders/
 build_log.txt
-firebase-debug.log
 Screenshot_*.png
 screenshot_*.png
 *.log
