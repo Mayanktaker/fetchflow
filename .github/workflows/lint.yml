@@ -32,13 +32,6 @@ jobs:
           sudo apt-get install -y -qq shellcheck
 
       - name: Lint shell scripts
-        run: |
-          shellcheck -S warning \
-            scripts/install-fetchflow.sh \
-            scripts/*.sh \
-            build_all.sh \
-            build_rpm.sh \
-            xdm-updater.sh \
-            app/XDM/XDM.Linux.Installer/make-arch-pkg \
-            app/XDM/XDM.Linux.Installer/make-deb-pkg \
-            app/XDM/XDM.Linux.Installer/make-rpm-pkg
+        # The target list lives in scripts/lint-shell.sh so a local run and this gate
+        # cannot drift apart; add new scripts there, not here.
+        run: bash scripts/lint-shell.sh
