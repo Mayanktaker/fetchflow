@@ -44,6 +44,8 @@
     <Compile Include="..\XDM.Core\Util\DesktopEntry.cs" Link="Util\DesktopEntry.cs" />
     <!-- TrayIconPolicyTests: IconName/IconThemePath/NeedsInstall decision rules -->
     <Compile Include="..\XDM.Core\Util\TrayIconPolicy.cs" Link="Util\TrayIconPolicy.cs" />
+    <!-- TransactedIOTests: interrupted-write recovery order for settings.dat -->
+    <Compile Include="..\XDM.Core\IO\TransactedIO.cs" Link="IO\TransactedIO.cs" />
     <!-- NoiseFilterTests: junk-URL gate shared by IPC handlers and ApplicationCore -->
     <Compile Include="..\XDM.Core\BrowserMonitoring\NetworkHelper.cs" Link="BrowserMonitoring\NetworkHelper.cs" />
     <!-- SingleInstancePolicyTests + NanoServerResilienceTests: arbitration policy and

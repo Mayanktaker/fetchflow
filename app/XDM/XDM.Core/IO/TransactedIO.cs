@@ -38,19 +38,31 @@ namespace XDM.Core.IO
             return false;
         }
 
+        /// <summary>
+        /// Picks the file to load for <paramref name="fileName"/>. Order matters: a Write that
+        /// died between moving the live file aside and moving the new one in leaves the live file
+        /// absent while "<name>.bak" already holds the complete new payload (it is written first,
+        /// and only reaches this point after WriteAllBytes returned). Reading the rollback copy
+        /// "~<name>" instead silently discarded that save. The live file still wins whenever it
+        /// exists, so a stray or truncated .bak can never shadow valid settings.
+        /// </summary>
+        private static string ResolveReadablePath(string fileName, string folder)
+        {
+            var file = Path.Combine(folder, fileName);
+            if (File.Exists(file)) return file;
+            var pending = Path.Combine(folder, fileName + ".bak");
+            if (File.Exists(pending)) return pending;
+            return Path.Combine(folder, "~" + fileName);
+        }
+
         public static string? Read(string fileName, string folder)
         {
             try
             {
-                var file = Path.Combine(folder, fileName);
-                var bak = Path.Combine(folder, "~" + fileName);
-                if (File.Exists(file))
+                var path = ResolveReadablePath(fileName, folder);
+                if (File.Exists(path))
                 {
-                    return File.ReadAllText(file);
-                }
-                if (File.Exists(bak))
-                {
-                    return File.ReadAllText(bak);
+                    return File.ReadAllText(path);
                 }
             }
             catch (Exception ex)
@@ -189,15 +201,10 @@ namespace XDM.Core.IO
         {
             try
             {
-                var file = Path.Combine(folder, fileName);
-                var bak = Path.Combine(folder, "~" + fileName);
-                if (File.Exists(file))
+                var path = ResolveReadablePath(fileName, folder);
+                if (File.Exists(path))
                 {
-                    return File.ReadAllBytes(file);
-                }
-                if (File.Exists(bak))
-                {
-                    return File.ReadAllBytes(bak);
+                    return File.ReadAllBytes(path);
                 }
             }
             catch (Exception ex)
