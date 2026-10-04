@@ -52,6 +52,13 @@ Notes:
   - Without Xvfb and without DISPLAY, the GtkSmoke test is Skipped/Inconclusive
     so "dotnet test" still passes; GladeWiringTests already covers id drift headless.
   - Filter tag: [TestCategory("GtkSmoke")] / dotnet test --filter "TestCategory=GtkSmoke"
+  - Pixel-alignment assertions carry a deliberate 1px tolerance
+    (CaptionAlignmentTolerancePx). GTK rounds the column-header button's own inset
+    to whole pixels, and that inset differs by font/DPI: cellX-2 on ubuntu-latest
+    CI, cellX-1 on some local machines. A 1px miss is therefore NOT a layout bug.
+    Do not "fix" it by editing theme/xdm-dark.css padding — that flips the result
+    so local passes while CI fails. Anything beyond 1px is still a hard failure.
+    See DownloadListColumnHeaderSmokeTests.
 EOF
 }
 

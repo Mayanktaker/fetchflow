@@ -33,6 +33,7 @@ namespace XDM.Tests
         private const int NameMaxWidth = 1200;
         private const int MinHeaderHeight = 40;   // roomy GTK4-style column header
         private const int MinRowPitch = 64;         // airy gap between list items
+        private const int CaptionAlignmentTolerancePx = 1;  // GTK rounds header-button insets to whole px; they differ by font/DPI
         private const int IconPadding = 12;          // mirrors DownloadIconHorizontalPadding
         private const int NamePadding = 12;          // mirrors DownloadNameHorizontalPadding
         private const int IconSize = 28;             // mirrors DownloadIconSize
@@ -313,8 +314,11 @@ namespace XDM.Tests
             // gutter cell = checkbox padding + box + padding, then the file icon and its padding
             var rowTitleX = viewX + nameArea.X + CheckboxPadding + CheckboxSize + CheckboxPadding
                 + IconPadding + IconSize + IconPadding + NamePadding;
-            Assert.AreEqual(rowTitleX, captionX,
-                "the File name caption must start where the row titles start");
+            // GTK rounds the header button's own inset to whole pixels, and that inset differs
+            // by 1px between font/DPI environments (cellX-2 in CI, cellX-1 here). Stay exact on
+            // anything larger than a pixel: a real misalignment still fails the test.
+            Assert.IsTrue(Math.Abs(captionX - rowTitleX) <= CaptionAlignmentTolerancePx,
+                $"the File name caption must start where the row titles start (expected {rowTitleX} +/- {CaptionAlignmentTolerancePx}px, got {captionX}, delta {captionX - rowTitleX})");
         }
     }
 }
