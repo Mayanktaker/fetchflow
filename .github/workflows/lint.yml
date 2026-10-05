@@ -1,5 +1,5 @@
 # © Mayanktaker Computers & Web Development | https://mayanktaker.com
-name: Lint Shell Scripts
+name: Lint
 
 on:
   push:
@@ -50,3 +50,37 @@ jobs:
 
       - name: Check credit headers on changed files
         run: bash scripts/lint-credit-headers.sh
+
+  build-gtk:
+    name: Build GTK UI and run tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup .NET SDK 8.0
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install GTK and SVG loader
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libgtk-3-0 libgtk-3-dev libglib2.0-dev \
+            gdk-pixbuf2.0-bin librsvg2-common xvfb
+
+      # XDM.Tests links a hand-picked subset of XDM.Core instead of importing the
+      # shared project, so a change under Downloader/, Clients/Http/ or Config.cs
+      # is not compiled by `dotnet build` on the test project at all. A green test
+      # run therefore does NOT prove the GTK UI still builds — this step is the
+      # only PR-time check that does.
+      - name: Build GTK UI (compiles all of XDM.Core)
+        run: dotnet build app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release
+
+      - name: Run non-GTK tests
+        run: dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --filter "TestCategory!=GtkSmoke"
+
+      - name: Run GTK smoke tests under Xvfb
+        run: xvfb-run -a bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --filter "TestCategory=GtkSmoke"
