@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace XDM.Core
             ["Compressed"] = new HashSet<string> { ".zip", ".zipx", ".gz", ".tgz", ".tar", ".xz", ".txz", ".7z", ".rar", ".bz2", ".tbz2", ".zst", ".tzst", ".lz", ".lz4", ".lzh", ".cab", ".sit", ".sitx", ".ace", ".arj", ".z", ".iso", ".img", ".mdf", ".nrg", ".vhd", ".vhdx", ".vmdk", ".qcow2" },
             ["Music"] = new HashSet<string> { ".mp3", ".aac", ".flac", ".alac", ".wav", ".aiff", ".aif", ".ape", ".m4a", ".ogg", ".oga", ".opus", ".wma", ".mpa", ".amr", ".ac3", ".dts", ".eac3", ".mka", ".mid", ".midi", ".wv", ".tta" },
             ["Video"] = new HashSet<string> { ".mp4", ".mkv", ".webm", ".avi", ".mov", ".wmv", ".flv", ".m4v", ".f4v", ".ts", ".mts", ".m2ts", ".tp", ".trp", ".mpg", ".mpeg", ".m2v", ".mpv", ".vob", ".divx", ".xvid", ".3gp", ".3g2", ".ogv", ".rm", ".rmvb", ".asf" },
-            ["Document"] = new HashSet<string> { ".doc", ".docx", ".docm", ".dot", ".dotx", ".pdf", ".odt", ".ott", ".rtf", ".txt", ".md", ".tex", ".log", ".pages", ".xls", ".xlsx", ".xlsm", ".xlsb", ".ods", ".ots", ".csv", ".tsv", ".numbers", ".ppt", ".pptx", ".pps", ".ppsx", ".odp", ".otp", ".key", ".epub", ".mobi", ".azw", ".azw3", ".fb2", ".cbz", ".cbr", ".djvu", ".html" },
+            ["Document"] = new HashSet<string> { ".doc", ".docx", ".docm", ".dot", ".dotx", ".pdf", ".odt", ".ott", ".rtf", ".txt", ".md", ".tex", ".log", ".pages", ".xls", ".xlsx", ".xlsm", ".xlsb", ".ods", ".ots", ".csv", ".tsv", ".numbers", ".ppt", ".pptx", ".pps", ".ppsx", ".odp", ".otp", ".key", ".epub", ".mobi", ".azw", ".azw3", ".fb2", ".cbz", ".cbr", ".djvu", ".html", ".torrent" },
             ["Application"] = new HashSet<string> { ".appimage", ".deb", ".rpm", ".flatpakref", ".flatpak", ".snap", ".apk", ".run", ".bin", ".sh", ".exe", ".msi", ".msix", ".appx", ".bat", ".cmd", ".pkg", ".dmg", ".jar", ".war", ".ApplicationContext.Core" },
             ["Image"] = new HashSet<string> { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".svgz", ".bmp", ".ico", ".tiff", ".tif", ".avif", ".heic", ".heif", ".psd", ".ai", ".eps", ".raw", ".cr2", ".nef", ".dng", ".xcf" }
         };

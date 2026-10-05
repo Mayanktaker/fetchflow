@@ -82,7 +82,7 @@ namespace XDM.Core
                 "MIDI", "MKV", "MOBI", "MOV", "MP3", "MP4", "MPEG", "MPG", "MSI", "MSIX", "ODP", "ODS",
                 "ODT", "OGA", "OGG", "OGV", "OPUS", "PAGES", "PDF", "PKG", "PPT", "PPTX", "PSD",
                 "QCOW2", "RAR", "RAW", "RPM", "RTF", "RUN", "SH", "SIT", "SITX", "SNAP", "TAR",
-                "TGZ", "TS", "TXT", "VHD", "VHDX", "VMDK", "VOB", "WAV", "WEBM", "WMA",
+                "TGZ", "TORRENT", "TS", "TXT", "VHD", "VHDX", "VMDK", "VOB", "WAV", "WEBM", "WMA",
                 "WMV", "XLS", "XLSX", "XZ", "ZIP", "ZIPX", "ZST"
             };
 
@@ -212,7 +212,10 @@ namespace XDM.Core
                     ".RTF", ".TXT", ".MD", ".TEX", ".LOG", ".PAGES", ".XLS", ".XLSX",
                     ".XLSM", ".XLSB", ".ODS", ".OTS", ".CSV", ".TSV", ".NUMBERS",
                     ".PPT", ".PPTX", ".PPS", ".PPSX", ".ODP", ".OTP", ".KEY",
-                    ".EPUB", ".MOBI", ".AZW", ".AZW3", ".FB2", ".CBZ", ".CBR", ".DJVU"
+                    ".EPUB", ".MOBI", ".AZW", ".AZW3", ".FB2", ".CBZ", ".CBR", ".DJVU",
+                    // .torrent is a metadata file, not a transfer: FetchFlow has no
+                    // BitTorrent engine, so this only means "capture and save it".
+                    ".TORRENT"
                 },
                 DefaultFolder=Path.Combine(FetchFlowDownloadRoot, "Documents"),
                 IsPredefined=true

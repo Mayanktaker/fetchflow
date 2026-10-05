@@ -258,6 +258,7 @@ export default class App {
             "image/gif": ".gif", "video/mp4": ".mp4", "video/webm": ".webm",
             "audio/mpeg": ".mp3", "audio/ogg": ".ogg", "audio/wav": ".wav",
             "application/pdf": ".pdf", "application/zip": ".zip",
+            "application/x-bittorrent": ".torrent",
             "application/octet-stream": ".bin"
         };
         return map[mime] || "";
@@ -450,6 +451,7 @@ export default class App {
                 || m.indexOf("rar") >= 0
                 || m.indexOf("7z") >= 0
                 || m.indexOf("application/pdf") >= 0
+                || m.indexOf("x-bittorrent") >= 0
                 || m.indexOf("video/") === 0
                 || m.indexOf("audio/") === 0) {
                 return true;

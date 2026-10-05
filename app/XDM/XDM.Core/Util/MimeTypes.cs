@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -36,6 +37,7 @@ namespace XDM.Core.Util
             mimeBuilder["application/x-gzip"] = "gz";
             mimeBuilder["application/msword"] = "doc";
             mimeBuilder["application/pdf"] = "pdf";
+            mimeBuilder["application/x-bittorrent"] = "torrent";
             mimeBuilder["application/x-compress"] = "z";
             mimeBuilder["application/x-javascript"] = "js";
             mimeBuilder["video/3gpp"] = "3gp";

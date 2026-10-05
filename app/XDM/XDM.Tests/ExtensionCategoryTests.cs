@@ -65,6 +65,16 @@ namespace XDM.Tests
             Assert.AreEqual("webp", MimeTypes.Get("image/webp"));
             Assert.AreEqual("avif", MimeTypes.Get("image/avif"));
             Assert.AreEqual("zst", MimeTypes.Get("application/zstd"));
+            Assert.AreEqual("torrent", MimeTypes.Get("application/x-bittorrent"));
+        }
+
+        [TestMethod]
+        public void TestTorrentExtensionMappedToDocument()
+        {
+            // A .torrent is a metadata file FetchFlow saves, not a transfer it runs:
+            // it must land in the Documents category so the icon and folder are right.
+            Assert.AreEqual("Document", IconResource.GetFileType(".torrent"));
+            Assert.AreEqual("file-text-line", IconResource.GetSVGNameForFileType("archive.torrent"));
         }
     }
 }
