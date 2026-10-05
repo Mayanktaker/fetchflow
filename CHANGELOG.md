@@ -4,6 +4,20 @@ All notable user-facing changes to FetchFlow are documented here.
 For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
+## v9.1.16.0 (2026-10-05)
+
+### What's new
+
+- **FetchFlow now saves `.torrent` files:** if you click a torrent link, FetchFlow picks it up like any other download and files it under Documents with the rest of your documents. It saves the torrent file itself — opening it is up to your torrent client
+- **Extension pages now name themselves:** the connection-error, monitoring-disabled and register pages used to show a bare extension address in the tab. They now say what they are, so you can tell at a glance which one you are looking at
+
+### Bug fixes
+
+- **Fewer silent failures while finishing a download:** if something went wrong while closing a connection or saving a file, FetchFlow now writes it to its log instead of quietly forgetting it. If a download ever appeared to stall for no reason, this is the place to look
+- **Safer handling of settings that arrive from the browser:** the value a website can suggest for a file name is cleaned more consistently before it reaches your disk
+- **Settings and downloads start up more reliably under heavy threading:** two internal startup paths could in rare cases hand back a half-initialised object to a download running in the background
+
+---
 ## v9.1.15.18 (2026-09-29)
 
 ### What's new
