@@ -101,12 +101,21 @@ cd ../../..
 mkdir -p "$OUT_DIR/test/chrome-unpacked"
 cp -r app/XDM/chrome-extension/* "$OUT_DIR/test/chrome-unpacked/"
 
-echo "Publishing FetchFlow .NET Application..."
-rm -f build_output/xdm-app/fetchflow 2>/dev/null || :
+echo "Publishing FetchFlow .NET Application (GTK 4 primary + GTK 3 compatibility)..."
 rm -rf build_output
 mkdir -p build_output/xdm-app
+GTK4_TMP="$(mktemp -d)"
+dotnet restore app/XDM/XDM.Gtk4.UI/XDM.Gtk4.UI.csproj -r linux-x64
+dotnet publish app/XDM/XDM.Gtk4.UI/XDM.Gtk4.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o "$GTK4_TMP"
+cp "$GTK4_TMP/fetchflow-gtk4" build_output/xdm-app/fetchflow
+[ -f "$GTK4_TMP/SQLite.Interop.dll" ] && cp "$GTK4_TMP/SQLite.Interop.dll" build_output/xdm-app/
+rm -rf "$GTK4_TMP"
+
+GTK3_TMP="$(mktemp -d)"
 dotnet restore app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -r linux-x64
-dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o build_output/xdm-app
+dotnet publish app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o "$GTK3_TMP"
+cp "$GTK3_TMP/fetchflow" build_output/xdm-app/fetchflow-gtk3
+rm -rf "$GTK3_TMP"
 
 # Copy all runtime assets into publish directory
 cp -r app/XDM/chrome-extension build_output/xdm-app/
@@ -114,6 +123,10 @@ cp -r app/XDM/firefox-amo build_output/xdm-app/firefox-extension
 cp -r app/XDM/XDM.Gtk.UI/svg-icons build_output/xdm-app/
 cp -r app/XDM/XDM.Gtk.UI/glade build_output/xdm-app/
 cp -r app/XDM/XDM.Gtk.UI/theme build_output/xdm-app/
+if [ -d app/XDM/XDM.Gtk4.UI/theme ]; then
+    mkdir -p build_output/xdm-app/theme
+    cp -r app/XDM/XDM.Gtk4.UI/theme/* build_output/xdm-app/theme/
+fi
 cp -r app/XDM/XDM.Gtk.UI/images build_output/xdm-app/
 cp -r app/XDM/Lang build_output/xdm-app/
 cp app/XDM/fetchflow-logo.svg build_output/xdm-app/ 2>/dev/null || :

@@ -24,7 +24,8 @@ REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALLER_DIR="${REPO_ROOT}/app/XDM/XDM.Linux.Installer"
 PUBLISH_DIR="${REPO_ROOT}/build_output/xdm-app"
 DOTNET_DIR="${HOME}/.dotnet8"
-GTK_PROJECT="app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj"
+GTK3_PROJECT="app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj"
+GTK4_PROJECT="app/XDM/XDM.Gtk4.UI/XDM.Gtk4.UI.csproj"
 TEST_RUNNER="app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll"
 BRAND_SVG="app/XDM/fetchflow-logo.svg"
 TRAY_SVG="svg-icons/fetchflow-tray.svg"
@@ -85,13 +86,27 @@ fi
 rm -f /tmp/fetchflow-tests.log
 
 # --- 2. Publish -------------------------------------------------------------
-log "Publishing self-contained single-file binary"
+log "Publishing GTK 4 primary frontend (fetchflow)"
 rm -rf "$PUBLISH_DIR"
 mkdir -p "$PUBLISH_DIR"
-dotnet restore "$GTK_PROJECT" -r linux-x64 >/dev/null
-dotnet publish "$GTK_PROJECT" -c Release -r linux-x64 --self-contained true \
-    -p:PublishSingleFile=true -o "$PUBLISH_DIR" --nologo -v quiet
+GTK4_TMP="$(mktemp -d)"
+dotnet restore "$GTK4_PROJECT" -r linux-x64 >/dev/null
+dotnet publish "$GTK4_PROJECT" -c Release -r linux-x64 --self-contained true \
+    -p:PublishSingleFile=true -o "$GTK4_TMP" --nologo -v quiet
+cp "$GTK4_TMP/fetchflow-gtk4" "${PUBLISH_DIR}/fetchflow"
+[ -f "$GTK4_TMP/SQLite.Interop.dll" ] && cp "$GTK4_TMP/SQLite.Interop.dll" "${PUBLISH_DIR}/"
+rm -rf "$GTK4_TMP"
+
+log "Publishing GTK 3 compatibility frontend (fetchflow-gtk3)"
+GTK3_TMP="$(mktemp -d)"
+dotnet restore "$GTK3_PROJECT" -r linux-x64 >/dev/null
+dotnet publish "$GTK3_PROJECT" -c Release -r linux-x64 --self-contained true \
+    -p:PublishSingleFile=true -o "$GTK3_TMP" --nologo -v quiet
+cp "$GTK3_TMP/fetchflow" "${PUBLISH_DIR}/fetchflow-gtk3"
+rm -rf "$GTK3_TMP"
+
 [ -x "${PUBLISH_DIR}/fetchflow" ] || die "Publish did not produce ${PUBLISH_DIR}/fetchflow"
+[ -x "${PUBLISH_DIR}/fetchflow-gtk3" ] || die "Publish did not produce ${PUBLISH_DIR}/fetchflow-gtk3"
 
 # --- 3. Stage runtime assets ------------------------------------------------
 log "Staging runtime assets"
@@ -110,6 +125,11 @@ stage app/XDM/firefox-amo              "${PUBLISH_DIR}/firefox-extension"
 stage app/XDM/XDM.Gtk.UI/svg-icons     "$PUBLISH_DIR"
 stage app/XDM/XDM.Gtk.UI/glade         "$PUBLISH_DIR"
 stage app/XDM/XDM.Gtk.UI/theme         "$PUBLISH_DIR"
+# Stage GTK 4 theme stylesheets into the shared theme folder
+if [ -d app/XDM/XDM.Gtk4.UI/theme ]; then
+    mkdir -p "${PUBLISH_DIR}/theme"
+    cp -r app/XDM/XDM.Gtk4.UI/theme/* "${PUBLISH_DIR}/theme/"
+fi
 stage app/XDM/XDM.Gtk.UI/images        "$PUBLISH_DIR"
 stage app/XDM/Lang                     "$PUBLISH_DIR"
 
@@ -147,6 +167,8 @@ log "Built ${PKG} ($(du -h "$PKG_PATH" | cut -f1))"
 # Sanity-check the payload before handing it to pacman.
 bsdtar -tf "$PKG_PATH" | grep -q "opt/fetchflow/fetchflow$" \
     || die "Package is missing opt/fetchflow/fetchflow"
+bsdtar -tf "$PKG_PATH" | grep -q "opt/fetchflow/fetchflow-gtk3$" \
+    || die "Package is missing opt/fetchflow/fetchflow-gtk3"
 if ! bsdtar -tf "$PKG_PATH" | grep -q "icons/hicolor/scalable/apps/fetchflow-tray.svg"; then
     warn "Package has no themed tray icon (app will self-install one on first run)"
 fi

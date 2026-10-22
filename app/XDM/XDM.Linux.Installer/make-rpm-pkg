@@ -47,18 +47,41 @@ StartupNotify=true
 StartupWMClass=com.mayanktaker.fetchflow
 EOF
 
+cat <<EOF > "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop"
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Exec=env GTK_USE_PORTAL=1 /opt/fetchflow/fetchflow-gtk3 %U
+Type=Application
+Terminal=false
+Name=FetchFlow Download Manager (GTK 3)
+Comment=Fast, modern download accelerator (GTK 3 compatibility mode)
+Categories=Network;FileTransfer;
+Icon=com.mayanktaker.fetchflow
+MimeType=application/fetchflow;x-scheme-handler/fetchflow;x-scheme-handler/fetchflow+app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
+StartupNotify=true
+StartupWMClass=com.mayanktaker.fetchflow
+EOF
+
 cat <<EOF > "${SOURCE_NAME}/usr/bin/fetchflow"
 #!/bin/bash
-# Wayland-friendly launcher wrapper
+# Wayland-friendly launcher wrapper (GTK 4 default)
 export GTK_USE_PORTAL=1
-/opt/fetchflow/fetchflow "\$@"
+exec /opt/fetchflow/fetchflow "\$@"
+EOF
+
+cat <<EOF > "${SOURCE_NAME}/usr/bin/fetchflow-gtk3"
+#!/bin/bash
+# Wayland-friendly launcher wrapper (GTK 3 compatibility)
+export GTK_USE_PORTAL=1
+exec /opt/fetchflow/fetchflow-gtk3 "\$@"
 EOF
 
 # Legacy CLI symlink
 cat <<EOF > "${SOURCE_NAME}/usr/bin/xdman"
 #!/bin/bash
 export GTK_USE_PORTAL=1
-/opt/fetchflow/fetchflow "\$@"
+exec /opt/fetchflow/fetchflow "\$@"
 EOF
 
 cat <<EOF > "${SOURCE_NAME}/opt/fetchflow/source_pkg"
@@ -66,6 +89,7 @@ fetchflow|.rpm
 EOF
 
 cp "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.desktop" "${SOURCE_NAME}/usr/share/applications"
+cp "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop" "${SOURCE_NAME}/usr/share/applications"
 # Launch-at-login lives in /etc/xdg/autostart (the XDG system location), so it takes effect
 # from the first login after install instead of waiting for the app's first run. A per-user
 # ~/.config/autostart file of the same name shadows it, which is how Settings turns it off.
@@ -110,8 +134,10 @@ cat <<EOF > "${SOURCE_NAME}/usr/share/mime/packages/com.mayanktaker.fetchflow.xm
 EOF
 
 chmod 755 "${SOURCE_NAME}/usr/bin/fetchflow"
+chmod 755 "${SOURCE_NAME}/usr/bin/fetchflow-gtk3"
 chmod 755 "${SOURCE_NAME}/usr/bin/xdman"
-chmod 755 "${SOURCE_NAME}/opt/fetchflow/fetchflow"
+[ -f "${SOURCE_NAME}/opt/fetchflow/fetchflow" ] && chmod 755 "${SOURCE_NAME}/opt/fetchflow/fetchflow"
+[ -f "${SOURCE_NAME}/opt/fetchflow/fetchflow-gtk3" ] && chmod 755 "${SOURCE_NAME}/opt/fetchflow/fetchflow-gtk3"
 
 tar --create --file "${SOURCE_NAME}.tar.gz" "${SOURCE_NAME}"
 mv "${SOURCE_NAME}.tar.gz" "rpmbuild/SOURCES"
@@ -128,6 +154,7 @@ Release:    	1%{?dist}
 Summary:    	FetchFlow Download Manager
 AutoReqProv: 	no
 Requires:   	gtk3 >= 3.24
+Recommends: 	gtk4
 Recommends: 	(ffmpeg-free or ffmpeg)
 Recommends: 	xdg-desktop-portal
 Recommends: 	libnotify

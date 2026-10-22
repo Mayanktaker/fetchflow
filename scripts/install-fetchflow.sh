@@ -117,7 +117,7 @@ do_uninstall() {
     if command -v dnf >/dev/null 2>&1 && rpm -q fetchflow >/dev/null 2>&1; then dnf remove -y fetchflow || :; fi
     if command -v zypper >/dev/null 2>&1 && rpm -q fetchflow >/dev/null 2>&1; then zypper -n remove fetchflow || :; fi
     if command -v apt >/dev/null 2>&1 && dpkg -s fetchflow >/dev/null 2>&1; then apt remove -y fetchflow || :; fi
-    rm -rf "$INSTALL_DIR" "$BIN_LINK" "/usr/bin/xdman" "/usr/share/applications/$APP_ID.desktop" || :;
+    rm -rf "$INSTALL_DIR" "$BIN_LINK" "/usr/bin/fetchflow-gtk3" "/usr/bin/xdman" "/usr/share/applications/$APP_ID.desktop" "/usr/share/applications/$APP_ID.gtk3.desktop" || :;
     log "Uninstalled. User data in ~/.fetchflow-app-data left untouched.";
     exit 0
 }
@@ -144,6 +144,7 @@ install_tarball() {
     mkdir -p "$INSTALL_DIR";
     tar -xzf "$tmp/pkg.tar.gz" -C "$INSTALL_DIR";
     chmod +x "$INSTALL_DIR/fetchflow";
+    [ -f "$INSTALL_DIR/fetchflow-gtk3" ] && chmod +x "$INSTALL_DIR/fetchflow-gtk3";
     write_integration;
     rm -rf "$tmp"; trap - EXIT;
 }
@@ -172,6 +173,29 @@ exec $INSTALL_DIR/fetchflow "\$@"
 EOF
     chmod 755 "$BIN_LINK";
     ln -sf "$BIN_LINK" /usr/bin/xdman;
+    if [ -f "$INSTALL_DIR/fetchflow-gtk3" ]; then
+        cat > "/usr/share/applications/$APP_ID.gtk3.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Exec=env GTK_USE_PORTAL=1 $INSTALL_DIR/fetchflow-gtk3 %U
+Type=Application
+Terminal=false
+Name=FetchFlow Download Manager (GTK 3)
+Comment=Fast, modern download accelerator (GTK 3 compatibility mode)
+Categories=Network;FileTransfer;
+Icon=$APP_ID
+MimeType=application/fetchflow;x-scheme-handler/fetchflow;x-scheme-handler/fetchflow+app;x-scheme-handler/xdm-app;x-scheme-handler/xdm+app;
+StartupNotify=true
+StartupWMClass=$APP_ID
+EOF
+        cat > "/usr/bin/fetchflow-gtk3" <<EOF
+#!/bin/bash
+export GTK_USE_PORTAL=1
+exec $INSTALL_DIR/fetchflow-gtk3 "\$@"
+EOF
+        chmod 755 "/usr/bin/fetchflow-gtk3";
+    fi
     for sz in 16 22 24 32 48 64 128 256 512; do
         if [ -f "$INSTALL_DIR/fetchflow-logo-$sz.png" ]; then
             mkdir -p "/usr/share/icons/hicolor/${sz}x${sz}/apps";
