@@ -9,6 +9,7 @@ using TraceLog;
 using Translations;
 using XDM.Core;
 using XDM.Core.UI;
+using XDM.Gtk4UI.Utils;
 
 namespace XDM.Gtk4UI.Dialogs
 {
@@ -82,11 +83,17 @@ namespace XDM.Gtk4UI.Dialogs
             if (parentWindow != null) window.SetTransientFor(parentWindow);
 
             folderDropDown = DropDown.NewFromStrings(Array.Empty<string>());
-            browseButton = Button.NewWithLabel(TextResource.GetText("BTN_BROWSE") ?? "Browse...");
-            downloadNowButton = Button.NewWithLabel(TextResource.GetText("ND_DOWNLOAD_NOW") ?? "Download Now");
-            downloadNowButton.AddCssClass("suggested-action");
-            downloadLaterButton = Button.NewWithLabel(TextResource.GetText("ND_DOWNLOAD_LATER") ?? "Download Later");
-            cancelButton = Button.NewWithLabel(TextResource.GetText("BTN_CANCEL") ?? "Cancel");
+            browseButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(browseButton, "folder-shared-line", TextResource.GetText("BTN_BROWSE") ?? "Browse...", "Choose destination folder", null, 14);
+
+            downloadNowButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(downloadNowButton, "links-line", TextResource.GetText("ND_DOWNLOAD_NOW") ?? "Download Now", "Start download immediately", "suggested-action", 16);
+
+            downloadLaterButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(downloadLaterButton, "time-line", TextResource.GetText("ND_DOWNLOAD_LATER") ?? "Download Later", "Queue for later", null, 14);
+
+            cancelButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(cancelButton, "delete-bin-7-line", TextResource.GetText("ND_CANCEL") ?? "Cancel", "Cancel", null, 14);
 
             urlEntry.Hexpand = true;
             urlEntry.PlaceholderText = TextResource.GetText("ND_ADDRESS") ?? "http://...";
@@ -104,7 +111,15 @@ namespace XDM.Gtk4UI.Dialogs
         private Widget BuildHeaderBar()
         {
             var header = HeaderBar.New();
-            header.TitleWidget = Label.New(TextResource.GetText("ND_TITLE") ?? "New Download");
+            var titleBox = Box.New(Orientation.Horizontal, 6);
+            titleBox.Halign = Align.Center;
+            titleBox.Valign = Align.Center;
+            var icon = Gtk4IconHelper.CreateIcon("links-line", 18);
+            var title = Label.New(TextResource.GetText("ND_TITLE") ?? "New Download");
+            title.AddCssClass("heading");
+            titleBox.Append(icon);
+            titleBox.Append(title);
+            header.TitleWidget = titleBox;
             header.PackEnd(cancelButton);
             return header;
         }
@@ -112,32 +127,42 @@ namespace XDM.Gtk4UI.Dialogs
         // Assembles form controls in a vertical box
         private Widget BuildContent()
         {
-            var root = Box.New(Orientation.Vertical, 12);
+            var root = Box.New(Orientation.Horizontal, 16);
             root.MarginTop = 18;
             root.MarginBottom = 18;
             root.MarginStart = 20;
             root.MarginEnd = 20;
 
-            root.Append(BuildLabeledRow(TextResource.GetText("ND_ADDRESS") ?? "Address:", urlEntry));
-            root.Append(BuildLabeledRow(TextResource.GetText("ND_FILE") ?? "File Name:", fileEntry));
+            var bigIcon = Gtk4IconHelper.CreateIcon("file-download-line", 48);
+            bigIcon.Valign = Align.Start;
+            bigIcon.MarginTop = 4;
+            root.Append(bigIcon);
+
+            var formBox = Box.New(Orientation.Vertical, 10);
+            formBox.Hexpand = true;
+
+            formBox.Append(BuildLabeledRow(TextResource.GetText("ND_ADDRESS") ?? "Address:", urlEntry));
+            formBox.Append(BuildLabeledRow(TextResource.GetText("ND_FILE") ?? "File Name:", fileEntry));
 
             var folderBox = Box.New(Orientation.Horizontal, 8);
+            folderBox.Hexpand = true;
             folderBox.Append(folderDropDown);
             folderBox.Append(browseButton);
-            root.Append(BuildLabeledRow(TextResource.GetText("LBL_SAVE_IN") ?? "Save in:", folderBox));
+            formBox.Append(BuildLabeledRow(TextResource.GetText("LBL_SAVE_IN") ?? "Save in:", folderBox));
 
             var sizeBox = Box.New(Orientation.Horizontal, 8);
             sizeLabel.AddCssClass("dim-label");
             sizeBox.Append(sizeLabel);
-            root.Append(BuildLabeledRow(TextResource.GetText("ND_FILE_SIZE") ?? "File size:", sizeBox));
+            formBox.Append(BuildLabeledRow(TextResource.GetText("ND_FILE_SIZE") ?? "File size:", sizeBox));
 
             var buttonBox = Box.New(Orientation.Horizontal, 10);
             buttonBox.Halign = Align.End;
             buttonBox.MarginTop = 10;
             buttonBox.Append(downloadLaterButton);
             buttonBox.Append(downloadNowButton);
-            root.Append(buttonBox);
+            formBox.Append(buttonBox);
 
+            root.Append(formBox);
             return root;
         }
 
@@ -145,9 +170,11 @@ namespace XDM.Gtk4UI.Dialogs
         private static Widget BuildLabeledRow(string labelText, Widget widget)
         {
             var box = Box.New(Orientation.Horizontal, 12);
+            box.Hexpand = true;
             var label = Label.New(labelText);
             label.WidthRequest = 90;
             label.Halign = Align.Start;
+            widget.Hexpand = true;
             box.Append(label);
             box.Append(widget);
             return box;

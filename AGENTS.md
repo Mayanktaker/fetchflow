@@ -9,7 +9,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | Stack | Detail |
 |:---|:---|
 | Core | C# / .NET 8 (`net8.0`), AOT single-file binary; Windows UI on .NET Framework 4.7.2 (`XDM.Wpf.UI`, `XDM.WinForms.IntegrationUI`) |
-| Linux UI | Two frontends sharing `XDM.Core`: **`XDM.Gtk4.UI`** (primary, GTK 4 via GirCore 0.8.1, code-built UI, own `theme/gtk4-*.css`) and **`XDM.Gtk.UI`** (compatibility, GTK 3 via GtkSharp, Glade XML + 14 live CSS themes) for GTK 3-only desktops. Packaged side-by-side with dual launchers: `/usr/bin/fetchflow` -> GTK 4 default and `/usr/bin/fetchflow-gtk3` -> GTK 3 fallback. Neither UI may reference the other — see `docs/audit/gtk4-coupling-inventory.md` |
+| Linux UI | Two frontends sharing `XDM.Core`: **`XDM.Gtk4.UI`** (primary, GTK 4 via GirCore 0.8.1, code-built UI, own `theme/gtk4-*.css`) and **`XDM.Gtk.UI`** (compatibility, GTK 3 via GtkSharp, Glade XML + 14 live CSS themes) for GTK 3-only desktops. Installer & packages feature automatic GTK detection (GTK 4 preferred when available; fallback to GTK 3) installing only the matching frontend and launcher (`/usr/bin/fetchflow`), with explicit `--gtk4` and `--gtk3` overrides available. Neither UI may reference the other — see `docs/audit/gtk4-coupling-inventory.md` |
 | Windows UI | WPF `XDM.Wpf.UI` at GTK feature parity since 9.1.15.11: themes via `Utils/WpfThemeManager.cs` (live swap), Checksum + Import/Export dialogs, theme/scheme settings. Scheme data single-sourced in `XDM.Core/UI/ColorSchemeTable.cs` (both UIs consume it — keep hex tokens in sync there only) |
 | Database | SQLite (`System.Data.SQLite`), DB at `~/.fetchflow-app-data/downloads.db`, crash log `crash.log` (5 MB cap) |
 | Video | `yt-dlp` CLI wrapper via `VideoUrlHelper.cs` |

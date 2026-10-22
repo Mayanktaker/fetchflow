@@ -1,7 +1,7 @@
 /* © Mayanktaker Computers & Web Development | https://mayanktaker.com */
 
 /* FetchFlow GTK 4 dark theme — tokens from docs/design.md (Charcoal Blue).
-   GTK 4 CSS only: no GTK 3 node names (treeview/frame > border) here.
+   GTK 4 CSS only: no GTK 3 node names here.
    Colors are set explicitly on every surface because the base theme stays the
    user's system theme (FF-UI-001), so inherited colors cannot be assumed. */
 
@@ -14,6 +14,8 @@
 @define-color dim_text #b4b4b4;
 @define-color accent #3584e4;
 @define-color accent_hover #5a9bea;
+@define-color destruct #c01c28;
+@define-color destruct_hover #e01b24;
 
 window {
   background-color: @window_bg;
@@ -25,22 +27,73 @@ headerbar {
   color: @text_color;
   border-bottom: 1px solid @border_color;
   border-radius: 8px 8px 0 0;
+  padding: 4px 6px;
 }
 
 headerbar label {
   color: @text_color;
 }
 
+.heading {
+  font-weight: 600;
+  font-size: 15px;
+  color: @text_color;
+}
+
+/* Headerbar action buttons */
+headerbar button {
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: @text_color;
+  padding: 5px 10px;
+  margin: 0 2px;
+}
+
+headerbar button:hover {
+  background-color: alpha(@text_color, 0.08);
+  color: @text_color;
+}
+
+headerbar button:active {
+  background-color: alpha(@text_color, 0.14);
+}
+
+headerbar button.suggested-action {
+  background-color: @accent;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+headerbar button.suggested-action:hover {
+  background-color: @accent_hover;
+  color: #ffffff;
+}
+
+headerbar button.destructive-action {
+  background-color: @destruct;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+headerbar button.destructive-action:hover {
+  background-color: @destruct_hover;
+  color: #ffffff;
+}
+
 /* Sidebar: rounded selection pill on a darker rail */
 .sidebar {
   background-color: @sidebar_bg;
   color: @text_color;
+  border-right: 1px solid @border_color;
 }
 
 .sidebar row {
   border-radius: 6px;
-  margin: 2px 6px;
+  margin: 3px 6px;
+  padding: 2px 4px;
   color: @text_color;
+  font-weight: 500;
 }
 
 .sidebar row:hover {
@@ -52,7 +105,7 @@ headerbar label {
   color: #ffffff;
 }
 
-/* Download list: ColumnView + its internal listview share one surface */
+/* Download list: ColumnView + internal listview share one surface */
 columnview.download-list,
 columnview.download-list listview,
 columnview.download-list listview > row {
@@ -63,8 +116,15 @@ columnview.download-list listview > row {
 columnview.download-list header button {
   background-color: @headerbar_bg;
   color: @dim_text;
+  font-weight: 600;
   border-radius: 0;
   border-bottom: 1px solid @border_color;
+  padding: 8px 10px;
+}
+
+columnview.download-list listview > row {
+  padding: 4px 6px;
+  border-bottom: 1px solid alpha(@border_color, 0.35);
 }
 
 columnview.download-list listview > row:hover {
@@ -73,6 +133,23 @@ columnview.download-list listview > row:hover {
 
 columnview.download-list listview > row:selected {
   background-color: alpha(@accent, 0.35);
+}
+
+.download-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: @text_color;
+}
+
+.download-status {
+  font-size: 12px;
+  color: @dim_text;
+}
+
+.download-size {
+  font-size: 13px;
+  font-weight: 500;
+  color: @dim_text;
 }
 
 /* Pill progress: thin trough, accent fill */
@@ -89,35 +166,96 @@ progressbar.download-progress progress {
 }
 
 /* Search field (header) */
-entry {
+entry, .search-entry {
   background-color: @view_bg;
   color: @text_color;
   border: 1px solid @border_color;
   border-radius: 999px;
+  padding: 4px 10px;
 }
 
-/* Status bar */
-.status-bar {
+entry:focus, .search-entry:focus {
+  border-color: @accent;
+}
+
+/* Bottom status bar */
+.bottom-bar {
   background-color: @headerbar_bg;
   border-top: 1px solid @border_color;
   color: @dim_text;
   font-size: 12px;
+  padding: 5px 12px;
 }
 
-/* Buttons: flat Adwaita-like surface with a visible hover wash */
+.bottom-bar button {
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: @text_color;
+  padding: 3px 8px;
+}
+
+.bottom-bar button:hover {
+  background-color: alpha(@text_color, 0.08);
+}
+
+.status-bar-text {
+  font-size: 12px;
+  color: @dim_text;
+}
+
+.extension-status-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: @accent;
+  margin-right: 8px;
+}
+
+/* Dialog & general buttons */
 button {
   border-radius: 6px;
   border: 1px solid @border_color;
   background-color: @view_bg;
   color: @text_color;
+  padding: 6px 12px;
 }
 
 button:hover {
+  background-color: alpha(@text_color, 0.08);
+  border-color: @dim_text;
+}
+
+button:active {
+  background-color: alpha(@text_color, 0.14);
+}
+
+button.suggested-action {
+  background-color: @accent;
+  border-color: transparent;
+  color: #ffffff;
+}
+
+button.suggested-action:hover {
   background-color: @accent_hover;
   color: #ffffff;
 }
 
-button:active {
-  background-color: @accent;
+button.destructive-action {
+  background-color: @destruct;
+  border-color: transparent;
   color: #ffffff;
+}
+
+button.destructive-action:hover {
+  background-color: @destruct_hover;
+  color: #ffffff;
+}
+
+button.flat {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+button.flat:hover {
+  background-color: alpha(@text_color, 0.08);
 }

@@ -6,7 +6,9 @@ using System.IO;
 using System.Threading;
 using Gtk;
 using Translations;
+using XDM.Core;
 using XDM.Core.UI;
+using XDM.Gtk4UI.Utils;
 
 namespace XDM.Gtk4UI.Dialogs
 {
@@ -18,6 +20,7 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly int uiThreadId;
         private readonly Label fileNameLabel = Label.New("");
         private readonly Label folderLabel = Label.New("");
+        private readonly Image fileIcon = Gtk4IconHelper.CreateIcon("file-download-line", 48);
         private readonly CheckButton dontShowCheck;
         private readonly Button openFileButton;
         private readonly Button openFolderButton;
@@ -36,7 +39,12 @@ namespace XDM.Gtk4UI.Dialogs
             set
             {
                 fileName = value;
-                Post(() => fileNameLabel.SetText(value));
+                Post(() =>
+                {
+                    fileNameLabel.SetText(value);
+                    var svgName = IconResource.GetSVGNameForFileType(value);
+                    Gtk4IconHelper.UpdateIcon(fileIcon, svgName, 48);
+                });
             }
         }
 
@@ -62,10 +70,15 @@ namespace XDM.Gtk4UI.Dialogs
             window.Modal = true;
             if (parentWindow != null) window.SetTransientFor(parentWindow);
 
-            openFileButton = Button.NewWithLabel(TextResource.GetText("CTX_OPEN_FILE") ?? "Open File");
-            openFileButton.AddCssClass("suggested-action");
-            openFolderButton = Button.NewWithLabel(TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder");
-            closeButton = Button.NewWithLabel(TextResource.GetText("BTN_CLOSE") ?? "Close");
+            openFileButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(openFileButton, "external-link-line", TextResource.GetText("CTX_OPEN_FILE") ?? "Open File", "Open downloaded file", "suggested-action", 16);
+
+            openFolderButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(openFolderButton, "folder-shared-line", TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder", "Open destination folder", null, 16);
+
+            closeButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(closeButton, "check-line", TextResource.GetText("BTN_CLOSE") ?? "Close", "Close dialog", null, 14);
+
             dontShowCheck = CheckButton.NewWithLabel(TextResource.GetText("MSG_DONT_SHOW_AGAIN") ?? "Don't show this dialog again");
 
             fileNameLabel.Halign = Align.Start;
@@ -83,7 +96,15 @@ namespace XDM.Gtk4UI.Dialogs
         private Widget BuildHeaderBar()
         {
             var header = HeaderBar.New();
-            header.TitleWidget = Label.New(TextResource.GetText("MSG_DOWNLOAD_COMPLETE") ?? "Download Complete");
+            var titleBox = Box.New(Orientation.Horizontal, 6);
+            titleBox.Halign = Align.Center;
+            titleBox.Valign = Align.Center;
+            var icon = Gtk4IconHelper.CreateIcon("check-line", 18);
+            var title = Label.New(TextResource.GetText("MSG_DOWNLOAD_COMPLETE") ?? "Download Complete");
+            title.AddCssClass("heading");
+            titleBox.Append(icon);
+            titleBox.Append(title);
+            header.TitleWidget = titleBox;
             header.PackEnd(closeButton);
             return header;
         }
@@ -91,23 +112,30 @@ namespace XDM.Gtk4UI.Dialogs
         // Assembles completed file details and action buttons
         private Widget BuildContent()
         {
-            var root = Box.New(Orientation.Vertical, 10);
+            var root = Box.New(Orientation.Horizontal, 16);
             root.MarginTop = 18;
             root.MarginBottom = 18;
             root.MarginStart = 20;
             root.MarginEnd = 20;
 
-            root.Append(fileNameLabel);
-            root.Append(folderLabel);
-            root.Append(dontShowCheck);
+            fileIcon.Valign = Align.Start;
+            fileIcon.MarginTop = 4;
+            root.Append(fileIcon);
+
+            var infoBox = Box.New(Orientation.Vertical, 8);
+            infoBox.Hexpand = true;
+            infoBox.Append(fileNameLabel);
+            infoBox.Append(folderLabel);
+            infoBox.Append(dontShowCheck);
 
             var buttonBox = Box.New(Orientation.Horizontal, 8);
             buttonBox.Halign = Align.End;
             buttonBox.MarginTop = 12;
             buttonBox.Append(openFolderButton);
             buttonBox.Append(openFileButton);
-            root.Append(buttonBox);
+            infoBox.Append(buttonBox);
 
+            root.Append(infoBox);
             return root;
         }
 

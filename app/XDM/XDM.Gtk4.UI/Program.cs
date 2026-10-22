@@ -23,9 +23,31 @@ namespace XDM.Gtk4UI
         private const string AppId = "com.mayanktaker.fetchflow";
         private static bool isContextConfigured;
         private static MainWindow? activeMainWindow;
+        private static readonly object CrashLogLock = new();
+        private static readonly string CrashLogPath = Path.Combine(Config.AppDir, "crash.log");
+
+        // Appends fatal and unhandled exceptions to crash.log
+        private static void WriteCrashLine(string label, object detail)
+        {
+            try
+            {
+                Directory.CreateDirectory(Config.AppDir);
+                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {label}: {detail}";
+                if (detail is Exception ex) line += Environment.NewLine + ex;
+                line += Environment.NewLine;
+                lock (CrashLogLock)
+                {
+                    File.AppendAllText(CrashLogPath, line);
+                }
+            }
+            catch { }
+        }
 
         private static int Main(string[] args)
         {
+            // Burn assembly reference to prevent single-file trimming
+            _ = typeof(System.IO.Pipes.PipeStream);
+
             // Shared configuration load
             try
             {
@@ -42,11 +64,20 @@ namespace XDM.Gtk4UI
             }
             catch { }
 
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                WriteCrashLine("AppDomain.UnhandledException (IsTerminating=" + e.IsTerminating + ")", e.ExceptionObject);
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) =>
+            {
+                WriteCrashLine("TaskScheduler.UnobservedTaskException", e.Exception);
+                e.SetObserved();
+            };
+
             LoadLanguageTexts();
 
             var app = GtkApplication.New(AppId, Gio.ApplicationFlags.FlagsNone);
             var demo = Array.Exists(args, a => a == "--demo");
             var smoke = Array.Exists(args, a => a == "--smoke");
+            var background = Array.Exists(args, a => a == "--background");
             if (smoke)
             {
                 Environment.SetEnvironmentVariable("FETCHFLOW_SKIP_SINGLE_INSTANCE", "1");
@@ -91,12 +122,15 @@ namespace XDM.Gtk4UI
                         return;
                     }
 
-                    activeMainWindow.Present();
+                    if (!background)
+                    {
+                        activeMainWindow.ShowAndActivate();
+                    }
                     isContextConfigured = true;
                 }
                 else
                 {
-                    activeMainWindow?.Present();
+                    activeMainWindow?.ShowAndActivate();
                 }
             };
 

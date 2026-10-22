@@ -6,6 +6,17 @@
 # Single source of truth for the version
 source ./version.env
 
+TARGET_GTK="${TARGET_GTK:-}"
+if [ -z "$TARGET_GTK" ]; then
+    if ldconfig -p 2>/dev/null | grep -q 'libgtk-4\.so' || \
+       (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists gtk4) || \
+       (command -v dpkg-query >/dev/null 2>&1 && (dpkg-query -W libgtk-4-1 2>/dev/null || dpkg-query -W libgtk-4-0 2>/dev/null)); then
+        TARGET_GTK="4"
+    else
+        TARGET_GTK="3"
+    fi
+fi
+
 SRC_DIR=binary-source
 
 rm -rf "fetchflow_${VERSION}_amd64"
@@ -32,12 +43,22 @@ touch "${PKG}/DEBIAN/control"
 touch "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.desktop"
 touch "${PKG}/usr/bin/fetchflow"
 
+if [ "$TARGET_GTK" = "3" ]; then
+    DEB_DEPENDS="libgtk-3-0 (>= 3.24)"
+    DEB_RECOMMENDS="ffmpeg, libnotify-bin, xdg-desktop-portal, yt-dlp"
+else
+    DEB_DEPENDS="libgtk-4-1"
+    DEB_RECOMMENDS="ffmpeg, libnotify-bin, xdg-desktop-portal, yt-dlp"
+    rm -f "${PKG}/opt/fetchflow/fetchflow-gtk3" 2>/dev/null || true
+    rm -f "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop" 2>/dev/null || true
+fi
+
 cat <<EOF > "${PKG}/DEBIAN/control"
 Package: fetchflow
 Version: ${VERSION}
 Architecture: amd64
-Depends: libgtk-3-0 (>= 3.24)
-Recommends: libgtk-4-1, ffmpeg, libnotify-bin, xdg-desktop-portal, yt-dlp
+Depends: ${DEB_DEPENDS}
+Recommends: ${DEB_RECOMMENDS}
 Maintainer: Mayanktaker | Mayanktaker Computers & Web Development (https://mayanktaker.com)
 Description: Fast, modern open source download accelerator and video downloader.
  FetchFlow accelerates downloads using multi-connection segments, captures
@@ -60,7 +81,15 @@ StartupNotify=true
 StartupWMClass=com.mayanktaker.fetchflow
 EOF
 
-cat <<EOF > "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop"
+cat <<EOF > "${PKG}/usr/bin/fetchflow"
+#!/bin/bash
+# Wayland-friendly launcher wrapper
+export GTK_USE_PORTAL=1
+exec /opt/fetchflow/fetchflow "\$@"
+EOF
+
+if [ "$TARGET_GTK" != "4" ] && [ -f "${PKG}/opt/fetchflow/fetchflow-gtk3" ]; then
+    cat <<EOF > "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop"
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
@@ -76,19 +105,14 @@ StartupNotify=true
 StartupWMClass=com.mayanktaker.fetchflow
 EOF
 
-cat <<EOF > "${PKG}/usr/bin/fetchflow"
+    cat <<EOF > "${PKG}/usr/bin/fetchflow-gtk3"
 #!/bin/bash
-# Wayland-friendly launcher wrapper (GTK 4 default)
-export GTK_USE_PORTAL=1
-exec /opt/fetchflow/fetchflow "\$@"
-EOF
-
-cat <<EOF > "${PKG}/usr/bin/fetchflow-gtk3"
-#!/bin/bash
-# Wayland-friendly launcher wrapper (GTK 3 compatibility)
 export GTK_USE_PORTAL=1
 exec /opt/fetchflow/fetchflow-gtk3 "\$@"
 EOF
+    chmod 755 "${PKG}/usr/bin/fetchflow-gtk3"
+    cp "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop" "${PKG}/usr/share/applications"
+fi
 
 # Legacy CLI symlink
 cat <<EOF > "${PKG}/usr/bin/xdman"
@@ -102,7 +126,6 @@ fetchflow|.deb
 EOF
 
 cp "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.desktop" "${PKG}/usr/share/applications"
-cp "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop" "${PKG}/usr/share/applications"
 # Launch-at-login lives in /etc/xdg/autostart (the XDG system location), so it takes effect
 # from the first login after install instead of waiting for the app's first run. A per-user
 # ~/.config/autostart file of the same name shadows it, which is how Settings turns it off.

@@ -32,6 +32,7 @@ TRAY_SVG="svg-icons/fetchflow-tray.svg"
 
 DO_INSTALL=1
 ASSUME_YES=0
+TARGET_GTK="${TARGET_GTK:-}"
 
 # © Mayanktaker Computers & Web Development | https://mayanktaker.com
 log()  { printf '\n\033[1;36m==>\033[0m %s\n' "$*"; }
@@ -42,10 +43,33 @@ for arg in "$@"; do
     case "$arg" in
         --no-install) DO_INSTALL=0 ;;
         --yes|-y)    ASSUME_YES=1 ;;
+        --gtk4)      TARGET_GTK=4 ;;
+        --gtk3)      TARGET_GTK=3 ;;
         -h|--help)   sed -n '2,20p' "$0"; exit 0 ;;
         *)           die "Unknown option: $arg (try --help)" ;;
     esac
 done
+
+detect_gtk() {
+    if [ -n "$TARGET_GTK" ]; then
+        echo "$TARGET_GTK"
+        return
+    fi
+    # If GTK 4 is available on system, default to GTK 4; otherwise fallback to GTK 3
+    if ldconfig -p 2>/dev/null | grep -q 'libgtk-4\.so' || \
+       (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists gtk4) || \
+       (command -v pacman >/dev/null 2>&1 && pacman -Q gtk4 >/dev/null 2>&1); then
+        echo "4"
+    elif ldconfig -p 2>/dev/null | grep -q 'libgtk-3\.so' || \
+         (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists gtk+-3.0) || \
+         (command -v pacman >/dev/null 2>&1 && pacman -Q gtk3 >/dev/null 2>&1); then
+        echo "3"
+    else
+        echo "4"
+    fi
+}
+TARGET_GTK="$(detect_gtk)"
+export TARGET_GTK
 
 # Prefer the pinned SDK so the publish uses the same toolchain as the release build.
 if [ -d "$DOTNET_DIR" ]; then
@@ -86,27 +110,29 @@ fi
 rm -f /tmp/fetchflow-tests.log
 
 # --- 2. Publish -------------------------------------------------------------
-log "Publishing GTK 4 primary frontend (fetchflow)"
 rm -rf "$PUBLISH_DIR"
 mkdir -p "$PUBLISH_DIR"
-GTK4_TMP="$(mktemp -d)"
-dotnet restore "$GTK4_PROJECT" -r linux-x64 >/dev/null
-dotnet publish "$GTK4_PROJECT" -c Release -r linux-x64 --self-contained true \
-    -p:PublishSingleFile=true -o "$GTK4_TMP" --nologo -v quiet
-cp "$GTK4_TMP/fetchflow-gtk4" "${PUBLISH_DIR}/fetchflow"
-[ -f "$GTK4_TMP/SQLite.Interop.dll" ] && cp "$GTK4_TMP/SQLite.Interop.dll" "${PUBLISH_DIR}/"
-rm -rf "$GTK4_TMP"
 
-log "Publishing GTK 3 compatibility frontend (fetchflow-gtk3)"
-GTK3_TMP="$(mktemp -d)"
-dotnet restore "$GTK3_PROJECT" -r linux-x64 >/dev/null
-dotnet publish "$GTK3_PROJECT" -c Release -r linux-x64 --self-contained true \
-    -p:PublishSingleFile=true -o "$GTK3_TMP" --nologo -v quiet
-cp "$GTK3_TMP/fetchflow" "${PUBLISH_DIR}/fetchflow-gtk3"
-rm -rf "$GTK3_TMP"
+if [ "$TARGET_GTK" = "4" ]; then
+    log "Publishing GTK 4 frontend (fetchflow)"
+    GTK4_TMP="$(mktemp -d)"
+    dotnet restore "$GTK4_PROJECT" -r linux-x64 >/dev/null
+    dotnet publish "$GTK4_PROJECT" -c Release -r linux-x64 --self-contained true \
+        -p:PublishSingleFile=true -o "$GTK4_TMP" --nologo -v quiet
+    cp "$GTK4_TMP/fetchflow-gtk4" "${PUBLISH_DIR}/fetchflow"
+    [ -f "$GTK4_TMP/SQLite.Interop.dll" ] && cp "$GTK4_TMP/SQLite.Interop.dll" "${PUBLISH_DIR}/"
+    rm -rf "$GTK4_TMP"
+else
+    log "Publishing GTK 3 frontend (fetchflow)"
+    GTK3_TMP="$(mktemp -d)"
+    dotnet restore "$GTK3_PROJECT" -r linux-x64 >/dev/null
+    dotnet publish "$GTK3_PROJECT" -c Release -r linux-x64 --self-contained true \
+        -p:PublishSingleFile=true -o "$GTK3_TMP" --nologo -v quiet
+    cp "$GTK3_TMP/fetchflow" "${PUBLISH_DIR}/fetchflow"
+    rm -rf "$GTK3_TMP"
+fi
 
 [ -x "${PUBLISH_DIR}/fetchflow" ] || die "Publish did not produce ${PUBLISH_DIR}/fetchflow"
-[ -x "${PUBLISH_DIR}/fetchflow-gtk3" ] || die "Publish did not produce ${PUBLISH_DIR}/fetchflow-gtk3"
 
 # --- 3. Stage runtime assets ------------------------------------------------
 log "Staging runtime assets"
@@ -167,8 +193,11 @@ log "Built ${PKG} ($(du -h "$PKG_PATH" | cut -f1))"
 # Sanity-check the payload before handing it to pacman.
 bsdtar -tf "$PKG_PATH" | grep -q "opt/fetchflow/fetchflow$" \
     || die "Package is missing opt/fetchflow/fetchflow"
-bsdtar -tf "$PKG_PATH" | grep -q "opt/fetchflow/fetchflow-gtk3$" \
-    || die "Package is missing opt/fetchflow/fetchflow-gtk3"
+if [ "$TARGET_GTK" = "4" ]; then
+    if bsdtar -tf "$PKG_PATH" | grep -q "opt/fetchflow/fetchflow-gtk3$"; then
+        die "GTK 4 package unexpectedly contains opt/fetchflow/fetchflow-gtk3"
+    fi
+fi
 if ! bsdtar -tf "$PKG_PATH" | grep -q "icons/hicolor/scalable/apps/fetchflow-tray.svg"; then
     warn "Package has no themed tray icon (app will self-install one on first run)"
 fi
@@ -191,9 +220,17 @@ fi
 
 sudo pacman -U "$PKG_PATH"
 
+AUTOSTART_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/autostart"
+
+# Remove any legacy GTK 3 desktop entries and launchers when GTK 4 is installed
+if [ "$TARGET_GTK" = "4" ]; then
+    sudo rm -f /usr/bin/fetchflow-gtk3 /usr/share/applications/com.mayanktaker.fetchflow.gtk3.desktop /opt/fetchflow/fetchflow-gtk3 2>/dev/null || true
+    rm -f "${AUTOSTART_DIR}/com.mayanktaker.fetchflow.gtk3.desktop" 2>/dev/null || true
+    log "Removed any legacy GTK 3 files (system configured for GTK 4 only)."
+fi
+
 # --- 6. Post-install repair + verify ---------------------------------------
 log "Repairing launch-at-login entry"
-AUTOSTART_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/autostart"
 AUTOSTART_FILE="${AUTOSTART_DIR}/com.mayanktaker.fetchflow.desktop"
 mkdir -p "$AUTOSTART_DIR"
 

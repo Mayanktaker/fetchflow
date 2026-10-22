@@ -60,6 +60,8 @@ namespace XDM.Gtk4UI
             window.SelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
             window.ViewChanged += OnViewChanged;
             window.RefreshRequested += ReloadFromDatabase;
+            window.BrowserMonitoringButtonClicked += (_, _) => BrowserMonitoringButtonClicked?.Invoke(this, EventArgs.Empty);
+            window.SchedulerClicked += (_, _) => SchedulerClicked?.Invoke(this, EventArgs.Empty);
         }
 
         public IEnumerable<FinishedDownloadItem> FinishedDownloads
@@ -216,7 +218,7 @@ namespace XDM.Gtk4UI
         public void UpdateBrowserMonitorButton() { }
         public void ClearUpdateInformation() { }
         public IPlatformClipboardMonitor GetClipboardMonitor() => clipboardMonitor;
-        public void ShowAndActivate() => window.Window.Present();
+        public void ShowAndActivate() => window.ShowAndActivate();
 
         // Raises the core WindowLoaded event after context setup is complete
         public void NotifyWindowCreated() => WindowCreated?.Invoke(this, EventArgs.Empty);
@@ -268,15 +270,21 @@ namespace XDM.Gtk4UI
             RenderRows();
         }
 
-        // Runs immediately on the GTK thread, otherwise posts to its synchronization context
+        // Runs immediately on the GTK thread, otherwise posts to GLib's main context
         private void Post(Action action)
         {
             if (Environment.CurrentManagedThreadId == uiThreadId)
             {
-                action();
+                try { action(); }
+                catch (Exception ex) { TraceLog.Log.Debug(ex, "RunOnUIThread error: " + ex.Message); }
                 return;
             }
-            uiContext.Post(_ => action(), null);
+            GLib.Functions.IdleAdd(0, () =>
+            {
+                try { action(); }
+                catch (Exception ex) { TraceLog.Log.Debug(ex, "RunOnUIThread error: " + ex.Message); }
+                return false;
+            });
         }
     }
 

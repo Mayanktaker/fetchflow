@@ -10,8 +10,22 @@ Audit FetchFlow's Linux UI as a GNOME and KDE user, identify usability, accessib
 
 Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwaita 1.10.0, .NET SDK 8.0.424. KDE Plasma verification is **deferred** (no Plasma session available) and is not claimed as done.
 
-### Done and verified (Vertical Slice 6.1 & Phase 6.2 Complete)
+### Done and verified (Vertical Slice 6.1, Phase 6.2 & Phase 6.3 Complete)
 
+- Full GTK 3 visual & feature parity in GTK 4:
+  * Dynamic SVG color tinting via `Gtk4IconHelper` with memory/temp disk caching: generates vivid vector icons for sidebar categories and download row file types matching `CategoryIconPalette` (Documents=amber `#f59e0b`, Music=purple `#a855f7`, Videos=coral red `#ef4444`, Compressed=teal `#14b8a6`, Programs=indigo `#6366f1`, Images=pink `#f43f5e`, Incomplete=blue, Finished=green).
+  * Multi-select gutter checkbox column added to `DownloadListView` with interactive row selection, select-all bottom bar button, `Ctrl+A` accelerator, and selection count indicator.
+  * Interactive column sorting for Name, Size, and Date/Progress with ascending/descending toggle, sort indicators (`▲`/`▼`), and dedicated header dropdown menus.
+  * Full column resizing: enabled `Resizable = true` on all columns including Progress and Size.
+  * Polished download progress UI: finished downloads render a clean completion date badge and checkmark without awkward full-width 100% blue progress bars; in-progress downloads display a progress bar, percent text, and live speed/ETA status.
+  * Comprehensive 5-tab native GTK 4 Settings dialog:
+    - Tab 1: General (download folder, temp folder, simultaneous downloads, max segments, double-click behavior, autostart, notifications, completion dialog, theme mode).
+    - Tab 2: File Types / Categories (full category inspector/editor, target folders, file extension filters, default categories restore).
+    - Tab 3: Network & Proxy (timeout, retry limits, Direct / System / Custom proxy with host, port, credentials).
+    - Tab 4: Speed Limiter (speed limiter toggle, KB/s input, quick presets).
+    - Tab 5: Monitoring (clipboard monitoring, browser extension links, IPC relay status and restart).
+  * Fixed localization button fallback keys in all GTK 4 dialogs (`ND_CANCEL` for "Cancel", `DESC_SAVE_Q` for "Save").
+  * Double-click / Enter activation wired to standard core handler (`UIActions.OnDblClick`).
 - Audit scaffolding: `docs/audit/support-matrix.md`, `docs/audit/ui-ux-findings.md` (FF-UI-001…010), `docs/audit/gtk4-coupling-inventory.md`.
 - Separate `XDM.Gtk4.UI` project on `GirCore.Gtk-4.0` 0.8.1, added to the solution and to the CI compile gate. No reference to or from `XDM.Gtk.UI`.
 - GTK 4 app shell: `Gtk.Application` + `ApplicationWindow`, headerbar, search, theme toggle, category sidebar, `ColumnView` download list (name/status, size, progress), empty state, status bar, Gio actions/accelerators (`Ctrl+N/F/T/Q`, `F5`, `Ctrl+B`, `Ctrl+Shift+Q`, `Ctrl+I`, `Ctrl+,`, `F1`).
@@ -24,9 +38,21 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
 - Primary menu button with `Gio.Menu` for Batch Download, Queue & Scheduler, Import/Export, Settings, and About.
 - GTK 4 clipboard monitoring with native `Gdk.Clipboard` and change notification.
 - Tray/SNI parity: `Gtk4TrayIconManager` (D-Bus StatusNotifierItem), autostart reconciliation (`ReconcileAutoStart`).
-- Launcher split and packaging complete: GTK 4 primary default (`/usr/bin/fetchflow` -> `/opt/fetchflow/fetchflow`) and GTK 3 compatibility (`/usr/bin/fetchflow-gtk3` -> `/opt/fetchflow/fetchflow-gtk3`), with dual desktop entries (`com.mayanktaker.fetchflow.desktop` and `com.mayanktaker.fetchflow.gtk3.desktop`) across Arch, DEB, RPM, and tarball installers.
+- Launcher split, intelligent GTK detection, and packaging complete: GTK 4 primary default (`/usr/bin/fetchflow` -> `/opt/fetchflow/fetchflow`) and GTK 3 compatibility (`/usr/bin/fetchflow-gtk3` -> `/opt/fetchflow/fetchflow-gtk3`). All packaging tools (`make-arch-pkg`, `make-deb-pkg`, `make-rpm-pkg`, `install-fetchflow.sh`, `rebuild-install.sh`) now dynamically detect the system GTK version (GTK 4 preferred; fallback to GTK 3 when GTK 4 is absent) or accept explicit `--gtk4`/`--gtk3` flags, packaging/installing only the target GTK binary and launcher. GitHub Actions `build-arch` job in `.github/workflows/release.yml` and `make-arch-pkg` default to `TARGET_GTK=4` so release artifacts ship GTK 4 by default.
+- UI presentation and single-instance activation reliability:
+  * Ensured `Window.Visible = true` is explicitly asserted on `ShowAndActivate()` and `Present()` so hidden/tray windows re-map reliably on Wayland.
+  * Dispatched cross-thread UI actions (from HTTP IPC loopback `/args` relay, notifications, and download callbacks) via `GLib.Functions.IdleAdd` directly onto GLib's main loop.
+  * Packaged `System.IO.Pipes` into the single-file binary bundle to prevent `System.IO.FileNotFoundException` when launching external `yt-dlp` child processes with redirected streams.
+  * Added unhandled exception and task fault logging to `crash.log`.
+- Full UI icon parity & visual polish in GTK 4:
+  * HeaderBar action buttons equipped with crisp Remix/SVG vector icons (`links-line`, `delete-bin-7-line`, `pause-line`, `play-line`, `external-link-line`, `folder-shared-line`).
+  * Dynamic sun/moon theme switcher icon reflecting active dark/light mode with live visual state update.
+  * Sidebar categories configured with 18px vector icons for all system and built-in download categories.
+  * Download list item rows rendered with 24px file-type vector icons based on file extensions.
+  * Secondary dialogs (`NewDownloadDialog`, `DownloadCompleteDialog`, `ProgressWindow`) polished with action button icons and 44-48px category/file-type visual emblems.
+  * CSS cards, bottom bar (`.bottom-bar`), search entry (`.search-entry`), and header action button hover effects polished.
 - Automated GTK 4 smoke harness `scripts/run-gtk4-smoke.sh` and `--smoke` CLI flag verifying the complete vertical slice headless or on active displays.
-- Test suites: `XDM.Tests.dll` (153 passed, 0 failed), GTK 4 smoke test passed, credit headers lint passed, shell lint passed.
+- Test suites: `XDM.Tests.dll` (153 passed, 0 failed), GTK 4 smoke test passed on live Wayland display, credit headers lint passed, shell lint passed.
 
 ### Next phase: 7.0 Verification, documentation, and release gates
 

@@ -72,8 +72,8 @@ namespace XDM.Gtk4UI.Dialogs
             buttonBox.Halign = Align.End;
             buttonBox.MarginTop = 8;
 
-            var cancelBtn = Button.NewWithLabel(TextResource.GetText("BTN_CANCEL") ?? "Cancel");
-            var okBtn = Button.NewWithLabel(TextResource.GetText("BTN_OK") ?? "OK");
+            var cancelBtn = Button.NewWithLabel(TextResource.GetText("ND_CANCEL") ?? "Cancel");
+            var okBtn = Button.NewWithLabel(TextResource.GetText("MSG_OK") ?? "OK");
             okBtn.AddCssClass("suggested-action");
 
             buttonBox.Append(cancelBtn);
@@ -138,7 +138,7 @@ namespace XDM.Gtk4UI.Dialogs
             buttonBox.Halign = Align.End;
             buttonBox.MarginTop = 8;
 
-            var cancelBtn = Button.NewWithLabel(TextResource.GetText("BTN_CANCEL") ?? "Cancel");
+            var cancelBtn = Button.NewWithLabel(TextResource.GetText("ND_CANCEL") ?? "Cancel");
             var deleteListBtn = Button.NewWithLabel(TextResource.GetText("DESC_DEL") ?? "Delete from list");
             var deleteFileBtn = Button.NewWithLabel(TextResource.GetText("LBL_DEL_FILE") ?? "Delete file and entry");
             deleteFileBtn.AddCssClass("destructive-action");

@@ -8,6 +8,7 @@ using Gtk;
 using Translations;
 using XDM.Core;
 using XDM.Core.UI;
+using XDM.Gtk4UI.Utils;
 
 namespace XDM.Gtk4UI.Dialogs
 {
@@ -19,6 +20,7 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly int uiThreadId;
         private readonly Label fileNameLabel = Label.New("");
         private readonly Label urlLabel = Label.New("");
+        private readonly Image fileIcon = Gtk4IconHelper.CreateIcon("file-download-line", 44);
         private readonly ProgressBar progressBar = ProgressBar.New();
         private readonly Label sizeLabel = Label.New("");
         private readonly Label speedLabel = Label.New("");
@@ -43,6 +45,8 @@ namespace XDM.Gtk4UI.Dialogs
             {
                 fileNameLabel.SetText(value);
                 window.Title = value;
+                var svgName = IconResource.GetSVGNameForFileType(value);
+                Gtk4IconHelper.UpdateIcon(fileIcon, svgName, 44);
             });
         }
 
@@ -93,8 +97,11 @@ namespace XDM.Gtk4UI.Dialogs
             window.SetDefaultSize(520, 220);
             if (parentWindow != null) window.SetTransientFor(parentWindow);
 
-            pauseButton = Button.NewWithLabel(TextResource.GetText("MENU_PAUSE") ?? "Pause");
-            cancelButton = Button.NewWithLabel(TextResource.GetText("BTN_CANCEL") ?? "Cancel");
+            pauseButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(pauseButton, "pause-line", TextResource.GetText("MENU_PAUSE") ?? "Pause", "Pause download", null, 14);
+
+            cancelButton = Button.New();
+            Gtk4IconHelper.ConfigureButton(cancelButton, "delete-bin-7-line", TextResource.GetText("ND_CANCEL") ?? "Cancel", "Cancel download", "destructive-action", 14);
 
             progressBar.Hexpand = true;
             progressBar.SetShowText(true);
@@ -116,40 +123,52 @@ namespace XDM.Gtk4UI.Dialogs
         private Widget BuildHeaderBar()
         {
             var header = HeaderBar.New();
-            header.TitleWidget = Label.New(TextResource.GetText("TITLE_PROGRESS") ?? "Downloading");
+            var titleBox = Box.New(Orientation.Horizontal, 6);
+            titleBox.Halign = Align.Center;
+            titleBox.Valign = Align.Center;
+            var icon = Gtk4IconHelper.CreateIcon("download-2-line", 18);
+            var title = Label.New(TextResource.GetText("TITLE_PROGRESS") ?? "Downloading");
+            title.AddCssClass("heading");
+            titleBox.Append(icon);
+            titleBox.Append(title);
+            header.TitleWidget = titleBox;
             return header;
         }
 
         // Assembles progress information and control buttons
         private Widget BuildContent()
         {
-            var root = Box.New(Orientation.Vertical, 8);
+            var root = Box.New(Orientation.Horizontal, 16);
             root.MarginTop = 16;
             root.MarginBottom = 16;
             root.MarginStart = 20;
             root.MarginEnd = 20;
 
-            root.Append(fileNameLabel);
-            root.Append(urlLabel);
-            root.Append(progressBar);
+            fileIcon.Valign = Align.Start;
+            fileIcon.MarginTop = 4;
+            root.Append(fileIcon);
+
+            var infoBox = Box.New(Orientation.Vertical, 8);
+            infoBox.Hexpand = true;
+
+            infoBox.Append(fileNameLabel);
+            infoBox.Append(urlLabel);
+            infoBox.Append(progressBar);
 
             var statsBox = Box.New(Orientation.Horizontal, 16);
             statsBox.Append(sizeLabel);
             statsBox.Append(speedLabel);
             statsBox.Append(etaLabel);
-            root.Append(statsBox);
-
-            statusLabel.Halign = Align.Start;
-            statusLabel.AddCssClass("dim-label");
-            root.Append(statusLabel);
+            infoBox.Append(statsBox);
 
             var buttonBox = Box.New(Orientation.Horizontal, 8);
             buttonBox.Halign = Align.End;
-            buttonBox.MarginTop = 12;
+            buttonBox.MarginTop = 8;
             buttonBox.Append(pauseButton);
             buttonBox.Append(cancelButton);
-            root.Append(buttonBox);
+            infoBox.Append(buttonBox);
 
+            root.Append(infoBox);
             return root;
         }
 
@@ -190,7 +209,7 @@ namespace XDM.Gtk4UI.Dialogs
         public void DownloadStarted() => Post(() =>
         {
             isPaused = false;
-            pauseButton.SetLabel(TextResource.GetText("MENU_PAUSE") ?? "Pause");
+            Gtk4IconHelper.ConfigureButton(pauseButton, "pause-line", TextResource.GetText("MENU_PAUSE") ?? "Pause", "Pause download", null, 14);
             statusLabel.SetText(TextResource.GetText("STAT_DOWNLOADING") ?? "Downloading...");
         });
 
@@ -198,7 +217,7 @@ namespace XDM.Gtk4UI.Dialogs
         public void DownloadCancelled() => Post(() =>
         {
             isPaused = true;
-            pauseButton.SetLabel(TextResource.GetText("MENU_RESUME") ?? "Resume");
+            Gtk4IconHelper.ConfigureButton(pauseButton, "play-line", TextResource.GetText("MENU_RESUME") ?? "Resume", "Resume download", "suggested-action", 14);
             statusLabel.SetText(TextResource.GetText("MSG_DWN_STOP") ?? "Paused");
             speedLabel.SetText("");
             etaLabel.SetText("");
@@ -208,7 +227,7 @@ namespace XDM.Gtk4UI.Dialogs
         public void DownloadFailed(ErrorDetails error) => Post(() =>
         {
             isPaused = true;
-            pauseButton.SetLabel(TextResource.GetText("MENU_RESUME") ?? "Resume");
+            Gtk4IconHelper.ConfigureButton(pauseButton, "play-line", TextResource.GetText("MENU_RESUME") ?? "Resume", "Resume download", "suggested-action", 14);
             statusLabel.SetText(error.Message);
             speedLabel.SetText("");
             etaLabel.SetText("");

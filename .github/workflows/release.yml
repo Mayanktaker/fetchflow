@@ -110,8 +110,8 @@ jobs:
           rm -rf binary-source/*
           cp -r ../../../build_output/xdm-app/* binary-source/
 
-          bash make-rpm-pkg
-          bash make-deb-pkg
+          TARGET_GTK=4 bash make-rpm-pkg
+          TARGET_GTK=4 bash make-deb-pkg
 
           cp rpmbuild/RPMS/x86_64/*.rpm "$OUT_DIR/" 2>/dev/null || :
           cp *.deb "$OUT_DIR/" 2>/dev/null || :
@@ -166,7 +166,7 @@ jobs:
           # makepkg refuses to run as root — build as an unprivileged user
           useradd -m builder
           chown -R builder:builder .
-          su builder -c "cd app/XDM/XDM.Linux.Installer && bash make-arch-pkg"
+          su builder -c "cd app/XDM/XDM.Linux.Installer && TARGET_GTK=4 bash make-arch-pkg"
           cp app/XDM/XDM.Linux.Installer/*.pkg.tar.zst fetchflow-release/
           su builder -c "cd app/XDM/XDM.Linux.Installer && bash make-aur-pkg"
           rm -rf fetchflow-release/aur

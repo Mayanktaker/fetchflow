@@ -13,6 +13,7 @@ INSTALL_DIR="/opt/fetchflow"
 BIN_LINK="/usr/bin/fetchflow"
 VERSION_DEFAULT="9.1.15.15"
 VERSION="${FETCHFLOW_VERSION:-$VERSION_DEFAULT}"
+FETCHFLOW_GTK="${FETCHFLOW_GTK:-}"
 
 # CLI flags
 ASSUME_YES=0
@@ -22,7 +23,7 @@ DO_CHECK=0
 # Print usage
 usage() {
     echo "FetchFlow universal installer — Arch/CachyOS/Manjaro, Fedora, Debian/Ubuntu, openSUSE, generic tarball"
-    echo "Usage: $0 [--version X.Y.Z.W] [--yes] [--uninstall] [--check] [--help]"
+    echo "Usage: $0 [--version X.Y.Z.W] [--gtk4|--gtk3] [--yes] [--uninstall] [--check] [--help]"
 }
 
 # Parse args
@@ -30,6 +31,8 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --version=*) VERSION="${1#*=}"; shift ;;
         --version) VERSION="${2:-$VERSION_DEFAULT}"; shift 2 || shift ;;
+        --gtk4) FETCHFLOW_GTK=4; shift ;;
+        --gtk3) FETCHFLOW_GTK=3; shift ;;
         -y|--yes|--noconfirm) ASSUME_YES=1; shift ;;
         --uninstall|--remove) DO_UNINSTALL=1; shift ;;
         --check|--verify) DO_CHECK=1; shift ;;
@@ -67,6 +70,29 @@ detect_family() {
     esac
 }
 
+# Detect installed GTK version (GTK 4 preferred; fallback to GTK 3 if only GTK 3 is installed)
+detect_gtk_version() {
+    if [ -n "${FETCHFLOW_GTK:-}" ]; then
+        echo "$FETCHFLOW_GTK"
+        return
+    fi
+    if ldconfig -p 2>/dev/null | grep -q 'libgtk-4\.so' || \
+       (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists gtk4) || \
+       (command -v pacman >/dev/null 2>&1 && pacman -Q gtk4 >/dev/null 2>&1) || \
+       (command -v dpkg-query >/dev/null 2>&1 && (dpkg-query -W libgtk-4-1 2>/dev/null || dpkg-query -W libgtk-4-0 2>/dev/null)) || \
+       (command -v rpm >/dev/null 2>&1 && rpm -q gtk4 >/dev/null 2>&1); then
+        echo "4"
+    elif ldconfig -p 2>/dev/null | grep -q 'libgtk-3\.so' || \
+         (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists gtk+-3.0) || \
+         (command -v pacman >/dev/null 2>&1 && pacman -Q gtk3 >/dev/null 2>&1) || \
+         (command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W libgtk-3-0 2>/dev/null) || \
+         (command -v rpm >/dev/null 2>&1 && rpm -q gtk3 >/dev/null 2>&1); then
+        echo "3"
+    else
+        echo "4"
+    fi
+}
+
 # Ensure root for system install
 need_root() {
     if [ "$(id -u)" -ne 0 ]; then
@@ -76,6 +102,7 @@ need_root() {
             [ $ASSUME_YES = 1 ] && extra="$extra --yes";
             [ $DO_UNINSTALL = 1 ] && extra="$extra --uninstall";
             [ $DO_CHECK = 1 ] && extra="$extra --check";
+            [ -n "${FETCHFLOW_GTK:-}" ] && extra="$extra --gtk$FETCHFLOW_GTK";
             script="$0";
             # Piped install (curl|bash): $0 is not a file, so stage a stable copy
             if [ ! -f "$script" ]; then
@@ -83,7 +110,7 @@ need_root() {
                 fetch "https://github.com/$REPO/releases/latest/download/install-fetchflow.sh" "$script" || die "Could not stage installer for sudo re-exec.";
             fi
             # shellcheck disable=SC2086
-            exec sudo FETCHFLOW_VERSION="$VERSION" bash "$script" $extra --version="$VERSION";
+            exec sudo FETCHFLOW_VERSION="$VERSION" FETCHFLOW_GTK="$FETCHFLOW_GTK" bash "$script" $extra --version="$VERSION";
         else
             die "Run as root (or install sudo).";
         fi
@@ -173,7 +200,11 @@ exec $INSTALL_DIR/fetchflow "\$@"
 EOF
     chmod 755 "$BIN_LINK";
     ln -sf "$BIN_LINK" /usr/bin/xdman;
-    if [ -f "$INSTALL_DIR/fetchflow-gtk3" ]; then
+    local target_gtk
+    target_gtk="$(detect_gtk_version)"
+    if [ "$target_gtk" = "4" ]; then
+        rm -f "$INSTALL_DIR/fetchflow-gtk3" "/usr/bin/fetchflow-gtk3" "/usr/share/applications/$APP_ID.gtk3.desktop" || :;
+    elif [ -f "$INSTALL_DIR/fetchflow-gtk3" ]; then
         cat > "/usr/share/applications/$APP_ID.gtk3.desktop" <<EOF
 [Desktop Entry]
 Version=1.0
@@ -219,11 +250,15 @@ EOF
 # Per-family flows
 install_arch() {
     local ver="$1" tmp="" pkg="";
+    local target_gtk;
+    target_gtk="$(detect_gtk_version)";
+    local gtk_pkg="gtk4";
+    [ "$target_gtk" = "3" ] && gtk_pkg="gtk3";
     tmp="$(mktemp -d)";
     # shellcheck disable=SC2064
     trap "rm -rf '$tmp'" EXIT;
-    log "Installing deps (gtk3 ffmpeg xdg-desktop-portal libnotify)…";
-    pacman -Sy --needed --noconfirm gtk3 ffmpeg xdg-desktop-portal libnotify desktop-file-utils yt-dlp || pacman -Sy --needed --noconfirm gtk3 ffmpeg xdg-desktop-portal libnotify desktop-file-utils;
+    log "Installing deps ($gtk_pkg ffmpeg xdg-desktop-portal libnotify)…";
+    pacman -Sy --needed --noconfirm "$gtk_pkg" ffmpeg xdg-desktop-portal libnotify desktop-file-utils yt-dlp || pacman -Sy --needed --noconfirm "$gtk_pkg" ffmpeg xdg-desktop-portal libnotify desktop-file-utils;
     pkg="$tmp/fetchflow-$ver-1-x86_64.pkg.tar.zst";
     log "Downloading Arch package v$ver…";
     if ! fetch "https://github.com/$REPO/releases/download/v$ver/fetchflow-$ver-1-x86_64.pkg.tar.zst" "$pkg"; then
