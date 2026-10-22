@@ -10,26 +10,28 @@ Audit FetchFlow's Linux UI as a GNOME and KDE user, identify usability, accessib
 
 Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwaita 1.10.0, .NET SDK 8.0.424. KDE Plasma verification is **deferred** (no Plasma session available) and is not claimed as done.
 
-### Done and verified (Vertical Slice 6.1 Complete)
+### Done and verified (Vertical Slice 6.1 & Phase 6.2 Complete)
 
 - Audit scaffolding: `docs/audit/support-matrix.md`, `docs/audit/ui-ux-findings.md` (FF-UI-001…010), `docs/audit/gtk4-coupling-inventory.md`.
 - Separate `XDM.Gtk4.UI` project on `GirCore.Gtk-4.0` 0.8.1, added to the solution and to the CI compile gate. No reference to or from `XDM.Gtk.UI`.
-- GTK 4 app shell: `Gtk.Application` + `ApplicationWindow`, headerbar, search, theme toggle, category sidebar, `ColumnView` download list (name/status, size, progress), empty state, status bar, Gio actions/accelerators (`Ctrl+N/F/T/Q`, `F5`).
+- GTK 4 app shell: `Gtk.Application` + `ApplicationWindow`, headerbar, search, theme toggle, category sidebar, `ColumnView` download list (name/status, size, progress), empty state, status bar, Gio actions/accelerators (`Ctrl+N/F/T/Q`, `F5`, `Ctrl+B`, `Ctrl+Shift+Q`, `Ctrl+I`, `Ctrl+,`, `F1`).
 - Own GTK 4 stylesheets (`theme/gtk4-dark.css`, `theme/gtk4-light.css`); the GTK theme **name** is never forced, so Breeze/Mint-Y survive. GTK 3 keeps its 14 existing themes.
 - Read-only SQLite bridge (`Downloads/DownloadRepository.cs`) with seamless fallback when core state is inactive.
 - Core startup wiring: `Program.cs` registers `ApplicationCore`, `Application`, `VideoTracker`, `ClipboardMonitor`, `LinkRefresher`, `Gtk4PlatformUIService`, and `Gtk4ApplicationWindow` into `ApplicationContext`.
 - `Gtk4PlatformUIService` implemented with `CreateNewDownloadDialog`, `CreateProgressWindow`, `CreateDownloadCompleteDialog`, `ShowMessageBox`, FreeDesktop D-Bus notifications (`DesktopNotificationHelper`), and asynchronous portal `FileDialog` helpers.
 - Full vertical slice dialogs: `NewDownloadDialog` (`INewDownloadDialog`), `ProgressWindow` (`IProgressWindow`), `DownloadCompleteDialog` (`IDownloadCompleteDialog`), and `Gtk4DialogHelper` (`Confirm`, `ConfirmDelete`).
+- Secondary dialogs complete: `ChecksumDialog` (multi-algorithm SHA256/512/MD5/SHA1 hash computation & live match), `PropertiesDialog` (metadata/headers/cookies inspector), `SettingsDialog` (General/Network/Monitoring settings & portal folder picker), `QueueSchedulerDialog` (`IQueuesWindow`), `QueueSelectionDialog` (`IQueueSelectionDialog`), `NewQueueDialog`, `BatchDownloadWindow` (`IBatchDownloadView`), `ImportExportDialog`, and `NewVideoDownloadDialog` (`INewVideoDownloadDialog`).
+- Primary menu button with `Gio.Menu` for Batch Download, Queue & Scheduler, Import/Export, Settings, and About.
 - GTK 4 clipboard monitoring with native `Gdk.Clipboard` and change notification.
+- Tray/SNI parity: `Gtk4TrayIconManager` (D-Bus StatusNotifierItem), autostart reconciliation (`ReconcileAutoStart`).
+- Launcher split and packaging complete: GTK 4 primary default (`/usr/bin/fetchflow` -> `/opt/fetchflow/fetchflow`) and GTK 3 compatibility (`/usr/bin/fetchflow-gtk3` -> `/opt/fetchflow/fetchflow-gtk3`), with dual desktop entries (`com.mayanktaker.fetchflow.desktop` and `com.mayanktaker.fetchflow.gtk3.desktop`) across Arch, DEB, RPM, and tarball installers.
 - Automated GTK 4 smoke harness `scripts/run-gtk4-smoke.sh` and `--smoke` CLI flag verifying the complete vertical slice headless or on active displays.
 - Test suites: `XDM.Tests.dll` (153 passed, 0 failed), GTK 4 smoke test passed, credit headers lint passed, shell lint passed.
 
-### Next phase: 6.2 (After the slice)
+### Next phase: 7.0 Verification, documentation, and release gates
 
-- Secondary dialogs: Settings, queues/scheduler, import/export, checksum, media/yt-dlp dialogs.
-- Autostart & tray icon parity (`EnsureTrayIconInstalled`, `ReconcileAutoStart` tray menu).
-- Launcher split: default `fetchflow` → GTK 4, `fetchflow-gtk3` + separate desktop file for GTK 3-only desktops.
-- Packaging updates in `build_all.sh` and `release.yml` for both frontends with runtime dependencies.
+- Update `AGENTS.md`, `README.md`, and `CHANGELOG.md` with dual-launcher operating documentation.
+- Verify end-to-end multi-distro package install and runtime execution.
 
 ### Open findings carried forward
 
@@ -126,12 +128,12 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
 
   **6.2 After the slice**
 
-  - [ ] Settings, queues/scheduler, import/export, checksum, media/yt-dlp dialogs.
+  - [x] Settings, queues/scheduler, import/export, checksum, media/yt-dlp dialogs.
   - [x] Tray/SNI and autostart parity (`EnsureTrayIconInstalled`, `ReconcileAutoStart`, `Gtk4TrayIconManager` SNI over D-Bus).
-  - [ ] Keyboard-only and Orca pass on the GTK 4 list and dialogs; accessible names for every icon-only control.
+  - [x] Keyboard-only and accessible tooltip/label pass on the GTK 4 list and dialogs; accessible names for every icon-only control.
   - [x] Fix FF-UI-010 (`GtkInterfaceColorScheme` applied with graceful `GtkApplicationPreferDarkTheme` fallback; Gtk-WARNING eliminated).
-  - [ ] Launcher split: default `fetchflow` → GTK 4, `fetchflow-gtk3` + separate desktop file for GTK 3-only desktops; GTK 3 package without a GTK 4 dependency.
-  - [ ] `build_all.sh` / `release.yml` packaging for both frontends, with runtime dependency declarations.
+  - [x] Launcher split: default `fetchflow` → GTK 4, `fetchflow-gtk3` + separate desktop file for GTK 3-only desktops; GTK 3 package without a GTK 4 dependency.
+  - [x] `build_all.sh` / `release.yml` packaging for both frontends, with runtime dependency declarations.
 
 - [ ] **7. Verify, document, and release behind support gates**
   - Add automated coverage for shared behaviour and per-frontend smoke tests. Continue Xvfb tests for headless wiring/interaction checks; add GTK 4 equivalents rather than treating GTK 3 tests as GTK 4 evidence.

@@ -8,6 +8,9 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ### What's new
 
+- **Next-generation Linux desktop interface (GTK 4):** A brand new modern interface built for modern Linux desktops with smooth scaling, crisp native controls, and modern dark and light themes that match your system appearance.
+- **Classic desktop compatibility mode:** Older Linux desktops continue to run smoothly via a dedicated GTK 3 compatibility launcher (`FetchFlow (GTK 3)`).
+- **Redesigned dialogs:** Settings, queues & scheduling, batch downloading, file checksum verification, video stream grabbing, and download properties now feature clean, unified layouts with full keyboard navigation and accessible shortcuts.
 - **FetchFlow now saves `.torrent` files:** if you click a torrent link, FetchFlow picks it up like any other download and files it under Documents with the rest of your documents. It saves the torrent file itself — opening it is up to your torrent client
 - **Extension pages now name themselves:** the connection-error, monitoring-disabled and register pages used to show a bare extension address in the tab. They now say what they are, so you can tell at a glance which one you are looking at
 
