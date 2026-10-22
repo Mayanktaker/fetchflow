@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
+
+  <!-- GTK 4 frontend (primary). The GTK 3 frontend (XDM.Gtk.UI) stays as the
+       compatibility build for desktops that only ship GTK 3. See
+       docs/audit/gtk4-coupling-inventory.md before adding shared code here. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AssemblyName>fetchflow-gtk4</AssemblyName>
+    <RootNamespace>XDM.Gtk4UI</RootNamespace>
+    <Platforms>x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <DefineConstants>LINUX</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- GTK 4 .NET binding (GtkSharp targets GTK 3.22 only) -->
+    <PackageReference Include="GirCore.Gtk-4.0" Version="0.8.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116" />
+    <PackageReference Include="Tmds.DBus" Version="0.94.2" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="theme/**" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="..\XDM.Gtk.UI\svg-icons\**" LinkBase="svg-icons" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="..\XDM.Gtk.UI\images\**" LinkBase="images" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="..\Lang\**" LinkBase="Lang" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    <Content Include="..\fetchflow-logo.svg" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+  </ItemGroup>
+
+  <Import Project="..\XDM.Core\XDM.Core.projitems" Label="Shared" />
+  <Import Project="..\XDM.Messaging\XDM.Messaging.projitems" Label="Shared" />
+  <Import Project="..\XDM.Compatibility\XDM.Compatibility.projitems" Label="Shared" />
+
+</Project>

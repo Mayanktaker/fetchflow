@@ -1,0 +1,89 @@
+/* © Mayanktaker Computers & Web Development | https://mayanktaker.com */
+
+/* FetchFlow GTK 4 dark theme — tokens from docs/design.md (Charcoal Blue).
+   GTK 4 CSS only: no GTK 3 node names (treeview/frame > border) here. */
+
+@define-color window_bg #1d1d1d;
+@define-color sidebar_bg #161616;
+@define-color view_bg #232323;
+@define-color headerbar_bg #1a1a1a;
+@define-color border_color #404040;
+@define-color text_color #f4f4f4;
+@define-color dim_text #b4b4b4;
+@define-color accent #3584e4;
+@define-color accent_hover #5a9bea;
+
+window {
+  background-color: @window_bg;
+  color: @text_color;
+}
+
+headerbar {
+  background-color: @headerbar_bg;
+  border-bottom: 1px solid @border_color;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Sidebar: rounded selection pill on a darker rail */
+.sidebar {
+  background-color: @sidebar_bg;
+}
+
+.sidebar row {
+  border-radius: 6px;
+  margin: 2px 6px;
+}
+
+.sidebar row:hover {
+  background-color: alpha(@text_color, 0.06);
+}
+
+.sidebar row:selected {
+  background-color: @accent;
+  color: #ffffff;
+}
+
+/* Download list surface */
+.download-list {
+  background-color: @view_bg;
+}
+
+.download-list row {
+  border-radius: 6px;
+  margin: 2px 8px;
+  padding: 4px 0;
+}
+
+.download-list row:hover {
+  background-color: alpha(@text_color, 0.05);
+}
+
+.download-list row:selected {
+  background-color: alpha(@accent, 0.35);
+}
+
+/* Status bar */
+.status-bar {
+  background-color: @headerbar_bg;
+  border-top: 1px solid @border_color;
+  color: @dim_text;
+  font-size: 12px;
+}
+
+/* Buttons: flat Adwaita-like surface with a visible hover wash */
+button {
+  border-radius: 6px;
+  border: 1px solid @border_color;
+  background-color: @view_bg;
+  color: @text_color;
+}
+
+button:hover {
+  background-color: @accent_hover;
+  color: #ffffff;
+}
+
+button:active {
+  background-color: @accent;
+  color: #ffffff;
+}
