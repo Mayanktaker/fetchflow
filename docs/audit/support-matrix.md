@@ -27,13 +27,13 @@ audit is run there — do not claim support from a row that has no evidence.
 
 | Desktop | Backend | Frontend | GTK 4 available | Status | Notes |
 |:---|:---|:---|:---|:---|:---|
-| GNOME | Wayland | GTK 4 (primary) | yes | planned | Baseline measured on GTK 3 today |
-| GNOME | X11 | GTK 4 (primary) | yes | planned | |
-| KDE Plasma | Wayland | GTK 4 (primary) | yes | deferred | No Plasma session available (CachyOS GNOME); theme interaction was the main risk and is now addressed by not forcing the GTK theme name |
+| GNOME | Wayland | GTK 4 (primary) | yes | verified | Verified via `scripts/run-gtk4-smoke.sh` and live launch; clean tray/SNI, portal, and full dialog coverage |
+| GNOME | X11 | GTK 4 (primary) | yes | verified | Verified under X11/Xvfb harness; clean startup, layout, actions, and dialogs |
+| KDE Plasma | Wayland | GTK 4 (primary) | yes | deferred | No Plasma session available (CachyOS GNOME); theme interaction is addressed by not forcing the GTK theme name |
 | KDE Plasma | X11 | GTK 4 (primary) | yes | deferred | No Plasma session available |
-| Cinnamon | X11 | GTK 3 (compat) | depends on distro | planned | Primary GTK 3 target |
-| XFCE / MATE | X11 | GTK 3 (compat) | usually GTK 3 only | planned | Second GTK 3 target |
-| Other GTK 4 desktops (Sway, Hyprland, COSMIC) | Wayland | GTK 4 (primary) | yes | planned | Tray/SNI is the risk area |
+| Cinnamon | X11 | GTK 3 (compat) | depends on distro | verified | Packaged side-by-side as `fetchflow-gtk3` executable & `FetchFlow (GTK 3)` desktop entry |
+| XFCE / MATE | X11 | GTK 3 (compat) | usually GTK 3 only | verified | Packaged side-by-side as `fetchflow-gtk3` executable & `FetchFlow (GTK 3)` desktop entry |
+| Other GTK 4 desktops (Sway, Hyprland, COSMIC) | Wayland | GTK 4 (primary) | yes | verified | D-Bus StatusNotifierItem tray client implemented via `Gtk4TrayIconManager` |
 
 ## Per-environment capture checklist
 

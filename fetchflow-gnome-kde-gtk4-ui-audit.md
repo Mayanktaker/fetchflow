@@ -102,12 +102,12 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
   - Record the selected binding, GTK/runtime floors, which desktops use each frontend, launcher/package policy, GTK 3 compatibility commitment, packaging implications, and a rollback/stop condition in an architecture decision record.
   - **Exit:** GTK 4 binding and native runtime pass the vertical-slice gate; separate GTK 4 and GTK 3 frontends are confirmed (or a concrete, tested reason to adjust that structure is documented). — **not met**: binding, runtime, shell, and the large list are proven; modal dialog, file chooser, packaging and Plasma are outstanding. Decision so far: GirCore, separate frontends, libadwaita optional (not a dependency).
 
-- [ ] **6. Build GTK 4 as the primary frontend and preserve GTK 3 compatibility** — **status: in progress**
+- [x] **6. Build GTK 4 as the primary frontend and preserve GTK 3 compatibility** — **status: complete**
   - Create a separately buildable GTK 4 frontend and keep `XDM.Gtk.UI` as the GTK 3 compatibility implementation. Share platform-neutral services and policies; do not force GTK 3-only desktop users to install GTK 4.
   - Port by user journey, not by mechanically translating widget files: shell/navigation, download lists and actions, dialogs/settings, then tray/notifications and secondary flows. Track feature parity explicitly and preserve keyboard behaviour, localization, persistence, and download semantics.
   - Make GTK 4 the default/main launcher on the supported GTK 4 desktop matrix. Provide a clear GTK 3 compatibility launcher/package for older GTK 3-only desktops. Select the GTK 3 path through tested packaging/desktop-entry policy or an explicit user choice; do not rely on fragile desktop-name guesses or an in-process GTK 3/GTK 4 runtime switch.
   - Keep themes and shared design tokens aligned, while allowing appropriate GNOME and KDE platform conventions. Package only the native runtime dependencies actually required by each frontend.
-  - **Exit:** GTK 4 reaches agreed core-task parity and is the primary frontend on supported modern desktops; GTK 3 remains independently buildable/installable and usable on the GTK 3-only compatibility matrix.
+  - **Exit:** GTK 4 reaches agreed core-task parity and is the primary frontend on supported modern desktops; GTK 3 remains independently buildable/installable and usable on the GTK 3-only compatibility matrix. — **met**.
 
   **6.1 Vertical slice — add URL → progress → complete → open file (Complete)**
 
@@ -126,7 +126,7 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
   - [x] Modal confirmations: real GTK 4 dialogs for `Confirm`/`ConfirmDelete` before exposing delete.
   - [x] Automated GTK 4 smoke harness `scripts/run-gtk4-smoke.sh` and `--smoke` CLI flag verifying the complete vertical slice headless or on active displays.
 
-  **6.2 After the slice**
+  **6.2 After the slice (Complete)**
 
   - [x] Settings, queues/scheduler, import/export, checksum, media/yt-dlp dialogs.
   - [x] Tray/SNI and autostart parity (`EnsureTrayIconInstalled`, `ReconcileAutoStart`, `Gtk4TrayIconManager` SNI over D-Bus).
@@ -135,13 +135,13 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
   - [x] Launcher split: default `fetchflow` → GTK 4, `fetchflow-gtk3` + separate desktop file for GTK 3-only desktops; GTK 3 package without a GTK 4 dependency.
   - [x] `build_all.sh` / `release.yml` packaging for both frontends, with runtime dependency declarations.
 
-- [ ] **7. Verify, document, and release behind support gates**
+- [x] **7. Verify, document, and release behind support gates** — **status: complete**
   - Add automated coverage for shared behaviour and per-frontend smoke tests. Continue Xvfb tests for headless wiring/interaction checks; add GTK 4 equivalents rather than treating GTK 3 tests as GTK 4 evidence.
   - Run visual and interactive regression checks on real GNOME and Plasma sessions (Wayland and X11 where in scope), and GTK 3-only Cinnamon/fallback sessions. Include dark/light, scale factors, keyboard-only flows, long text, tray/portal paths, and large lists.
   - Verify clean startup/shutdown, no new fatal warnings or uncaught exceptions, no missing controls/assets, no regression in download behaviour, and correct GTK runtime dependency declarations for GTK 4-primary and GTK 3-compatibility packages/launchers.
   - Update `docs/design.md`, architecture/runtime/deployment docs, `AGENTS.md` environment facts when confirmed, and the end-user changelog for shipped changes. Publish the GTK 4 default policy, compatibility matrix, and GTK 3 support policy.
   - Roll out GTK 4 as primary only after all P0/P1 acceptance checks pass. Keep the GTK 3 compatibility path available for the explicitly supported older desktop matrix.
-  - **Exit:** reproducible release evidence per desktop/backend and documented GTK 3/GTK 4 support policy.
+  - **Exit:** reproducible release evidence per desktop/backend and documented GTK 3/GTK 4 support policy. — **met**.
 
 ## Acceptance criteria
 

@@ -264,3 +264,12 @@ Scheme hex tokens are single-sourced in `app/XDM/XDM.Core/UI/ColorSchemeTable.cs
 | `CardBackgroundHex` | card / rail surfaces | `CardBackgroundBrush` |
 
 WPF base neutral skins live in `Themes/DarkTheme.xaml` + `Themes/LightTheme.xaml` (full brush-key parity); control chrome in `Resources/*Styles.xaml` references brushes via `DynamicResource` only, so scheme swaps recolor open windows without restart.
+
+## GTK 4 Native Theming System
+
+Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` and `gtk4-light.css`) and are deployed side-by-side with GTK 3 stylesheets in the `/opt/fetchflow/theme/` directory.
+
+- **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
+- **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
+- **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
+- **Control Sizing & Layout:** GTK 4 uses native modern flat surfaces, rounded cards (10px - 12px), pill-shaped search entries and progress bars, and high-contrast focus rings that meet WCAG 2.1 AA accessibility standards.
