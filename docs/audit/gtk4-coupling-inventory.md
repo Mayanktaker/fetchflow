@@ -35,10 +35,13 @@ app/XDM/
 The GTK 4 scaffold currently provides: application/window shell, headerbar with a
 search entry and theme toggle, category sidebar from shared `Config`, a
 `ColumnView` download list (`Downloads/`) with name/status, size and pill-progress
-columns, empty state, status bar, Gio app actions with accelerators
-(`Ctrl+N/F/T/Q`), and its own `theme/gtk4-dark.css` / `gtk4-light.css`. It is in the
-solution and has a CI compile gate, but is **not** in release packaging. `--demo`
-fills the list with sample rows because the download engine is not wired yet.
+columns, per-view filtering (unfinished / finished / category), empty state, status
+bar, Gio app actions with accelerators (`Ctrl+N/F/T/Q`, `F5`), and its own
+`theme/gtk4-dark.css` / `gtk4-light.css`. Rows are read from the shared
+`downloads.db` through a **read-only** connection (`DownloadRepository`), so the
+frontend can display real downloads while the download engine still belongs to the
+GTK 3 frontend. It is in the solution and has a CI compile gate, but is **not** in
+release packaging. `--demo` swaps the DB rows for sample data.
 
 Rules for the split:
 

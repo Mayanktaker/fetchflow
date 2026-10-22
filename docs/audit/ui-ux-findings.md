@@ -27,8 +27,11 @@ Status values: `open` · `fixed` · `accepted` (documented limitation) · `needs
 
 These need a live session and are **not** claimed as findings yet:
 
-- KDE Plasma: CSD vs SSD titlebar behaviour, Breeze contrast against the 14 app themes,
-  tray/SNI rendering in the Plasma system tray, portal file-chooser behaviour.
+- **KDE Plasma — deferred.** There is no Plasma session in the current environment
+  (CachyOS GNOME), so CSD/SSD behaviour, Breeze contrast, tray/SNI rendering and
+  portal file-chooser behaviour are unverified. The GTK 4 frontend now leaves the GTK
+  theme name alone, which removes the known Breeze-override cause by design, but this
+  is not the same as a live pass.
 - GNOME: headerbar button ordering against the platform default, notification
   appearance in the GNOME message tray, Orca navigation through the download list.
 - Cinnamon/XFCE/MATE: GTK 3 compatibility run of the P0 journeys.
