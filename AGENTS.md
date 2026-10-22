@@ -9,7 +9,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | Stack | Detail |
 |:---|:---|
 | Core | C# / .NET 8 (`net8.0`), AOT single-file binary; Windows UI on .NET Framework 4.7.2 (`XDM.Wpf.UI`, `XDM.WinForms.IntegrationUI`) |
-| Linux UI | GTK3 via GtkSharp (`XDM.Gtk.UI`, Glade XML + live CSS) |
+| Linux UI | GTK3 via GtkSharp (`XDM.Gtk.UI`, Glade XML + live CSS). Target direction: GTK 4 becomes the primary Linux frontend, GTK 3 stays as the compatibility frontend for GTK 3-only desktops — see `docs/audit/gtk4-coupling-inventory.md` before starting GTK 4 work |
 | Windows UI | WPF `XDM.Wpf.UI` at GTK feature parity since 9.1.15.11: themes via `Utils/WpfThemeManager.cs` (live swap), Checksum + Import/Export dialogs, theme/scheme settings. Scheme data single-sourced in `XDM.Core/UI/ColorSchemeTable.cs` (both UIs consume it — keep hex tokens in sync there only) |
 | Database | SQLite (`System.Data.SQLite`), DB at `~/.fetchflow-app-data/downloads.db`, crash log `crash.log` (5 MB cap) |
 | Video | `yt-dlp` CLI wrapper via `VideoUrlHelper.cs` |
@@ -20,7 +20,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 
 ## Docs (don't duplicate, point here)
 
-`README.md` (user/install) · `CHANGELOG.md` (end-user changelog) · `CHROMEWEBSTORE.md` (CWS listing + Limited Use) · `docs/privacy.html` (zero-telemetry policy) · `docs/signing.md` (GPG setup/verify) · `.github/workflows/release.yml` + `sync-gh-pages.yml` + `xdm-wpf-build.yml` + `lint.yml` (CI/release) · `docs/design.md` (UI tokens)
+`README.md` (user/install) · `CHANGELOG.md` (end-user changelog) · `CHROMEWEBSTORE.md` (CWS listing + Limited Use) · `docs/privacy.html` (zero-telemetry policy) · `docs/signing.md` (GPG setup/verify) · `.github/workflows/release.yml` + `sync-gh-pages.yml` + `xdm-wpf-build.yml` + `lint.yml` (CI/release) · `docs/design.md` (UI tokens) · `docs/audit/` (GNOME/KDE support matrix, findings register, GTK 3→4 coupling inventory)
 
 ## Commands
 
