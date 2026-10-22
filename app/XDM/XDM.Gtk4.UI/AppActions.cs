@@ -16,13 +16,15 @@ namespace XDM.Gtk4UI
         public const string Search = "search";
         public const string ToggleTheme = "toggle-theme";
         public const string Quit = "quit";
+        public const string Refresh = "refresh";
 
         // Registers every action and its accelerator on the application
-        public static void Register(Gtk.Application app, SysAction newDownload, SysAction search, SysAction toggleTheme)
+        public static void Register(Gtk.Application app, SysAction newDownload, SysAction search, SysAction toggleTheme, SysAction refresh)
         {
             Add(app, NewDownload, "<Control>n", newDownload);
             Add(app, Search, "<Control>f", search);
             Add(app, ToggleTheme, "<Control>t", toggleTheme);
+            Add(app, Refresh, "F5", refresh);
             Add(app, Quit, "<Control>q", () => app.Quit());
         }
 
