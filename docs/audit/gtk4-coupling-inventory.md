@@ -74,6 +74,26 @@ Must work before any porting work is committed to:
 | Theme work doubles | Single token source (`docs/design.md`), two generated-by-hand stylesheets |
 | GTK 3 users stranded | GTK 3 frontend stays a build + release target until an explicit deprecation decision |
 
+## Spike results (measured 2026-10-22)
+
+Throwaway probe projects (not in the repo) were built against `GirCore.Gtk-4.0` 0.8.1 on .NET 8.
+
+| Check | Result |
+|:---|:---|
+| NuGet restore + compile (.NET 8) | pass |
+| Native GTK 4.24.1 load | pass |
+| `Application` + `ApplicationWindow` + `HeaderBar` + `Box` + `Button` | pass |
+| `ListView` + `StringList` + `SingleSelection` + `SignalListItemFactory` | pass |
+| Run on GNOME **Wayland** | pass, exit 0, no warnings |
+| Run on **X11** (XWayland) | pass, exit 0, no warnings |
+| Load the app's GTK 3 theme CSS under GTK 4 | **fail** — one parse error aborts the rest of the file (`Theme parser error: <data>:1360:28: Expected '{' after selectors`) |
+| Individual GTK 3 selectors (`treeview header button`, `button.a.b`, `frame > border`) in isolation | pass |
+
+Conclusion: the binding and native runtime are viable, and the list-model API needed to
+replace `GtkTreeView` works. The theme layer is the part that cannot be reused — GTK 4
+needs its own stylesheet even though individual selectors are accepted, because a single
+rejected construct discards everything after it.
+
 ## Related
 
 - `docs/audit/support-matrix.md`
