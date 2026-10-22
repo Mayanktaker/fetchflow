@@ -69,7 +69,12 @@ namespace XDM.Gtk4UI
                 newDownload: main.OnNewDownload,
                 search: main.FocusSearch,
                 toggleTheme: main.ToggleTheme,
-                refresh: main.Refresh);
+                refresh: main.Refresh,
+                batchDownload: main.OnBatchDownload,
+                scheduler: main.OnScheduler,
+                importExport: main.OnImportExport,
+                settings: main.OnSettings,
+                about: main.OnAbout);
             if (demo)
             {
                 main.SetRows(DemoRows(), InProgressKey);
@@ -81,12 +86,23 @@ namespace XDM.Gtk4UI
         private MainWindow(GtkApplication app)
         {
             this.app = app;
-            NewButton = Button.NewWithLabel(TextResource.GetText("DESC_NEW"));
-            DeleteButton = Button.NewWithLabel(TextResource.GetText("DESC_DEL"));
-            PauseButton = Button.NewWithLabel(TextResource.GetText("MENU_PAUSE"));
-            ResumeButton = Button.NewWithLabel(TextResource.GetText("MENU_RESUME"));
-            OpenFileButton = Button.NewWithLabel(TextResource.GetText("CTX_OPEN_FILE"));
-            OpenFolderButton = Button.NewWithLabel(TextResource.GetText("CTX_OPEN_FOLDER"));
+            NewButton = Button.NewWithLabel(TextResource.GetText("DESC_NEW") ?? "New");
+            NewButton.TooltipText = TextResource.GetText("DESC_NEW") ?? "New Download (Ctrl+N)";
+
+            DeleteButton = Button.NewWithLabel(TextResource.GetText("DESC_DEL") ?? "Delete");
+            DeleteButton.TooltipText = TextResource.GetText("DESC_DEL") ?? "Delete selected downloads";
+
+            PauseButton = Button.NewWithLabel(TextResource.GetText("MENU_PAUSE") ?? "Pause");
+            PauseButton.TooltipText = TextResource.GetText("MENU_PAUSE") ?? "Pause selected downloads";
+
+            ResumeButton = Button.NewWithLabel(TextResource.GetText("MENU_RESUME") ?? "Resume");
+            ResumeButton.TooltipText = TextResource.GetText("MENU_RESUME") ?? "Resume selected downloads";
+
+            OpenFileButton = Button.NewWithLabel(TextResource.GetText("CTX_OPEN_FILE") ?? "Open");
+            OpenFileButton.TooltipText = TextResource.GetText("CTX_OPEN_FILE") ?? "Open downloaded file";
+
+            OpenFolderButton = Button.NewWithLabel(TextResource.GetText("CTX_OPEN_FOLDER") ?? "Folder");
+            OpenFolderButton.TooltipText = TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open destination folder";
 
             Window = ApplicationWindow.New(app);
             Window.Title = "FetchFlow";
@@ -118,7 +134,7 @@ namespace XDM.Gtk4UI
             Gtk4Theme.Apply(Window, Gtk4Theme.IsDarkActive);
         }
 
-        // Packs the app title, core actions, search and theme toggle
+        // Packs the app title, core actions, search, theme toggle and application menu
         private Widget BuildHeaderBar()
         {
             var header = HeaderBar.New();
@@ -130,7 +146,8 @@ namespace XDM.Gtk4UI
             header.PackStart(OpenFileButton);
             header.PackStart(OpenFolderButton);
 
-            searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH");
+            searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH") ?? "Search";
+            searchEntry.TooltipText = "Search downloads (Ctrl+F)";
             searchEntry.WidthRequest = 210;
             searchEntry.OnSearchChanged += (_, _) => ApplyView(currentView);
             header.PackEnd(searchEntry);
@@ -138,6 +155,20 @@ namespace XDM.Gtk4UI
             themeButton.TooltipText = "Switch theme (Ctrl+T)";
             themeButton.OnClicked += (_, _) => ToggleTheme();
             header.PackEnd(themeButton);
+
+            var menuButton = MenuButton.New();
+            menuButton.IconName = "open-menu-symbolic";
+            menuButton.TooltipText = "Main Menu";
+
+            var menu = Gio.Menu.New();
+            menu.Append(TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch Download...", "app." + AppActions.BatchDownload);
+            menu.Append(TextResource.GetText("DESC_Q_TITLE") ?? "Queue & Scheduler...", "app." + AppActions.Scheduler);
+            menu.Append(TextResource.GetText("MENU_IMPORT_EXPORT") ?? "Import / Export...", "app." + AppActions.ImportExport);
+            menu.Append(TextResource.GetText("TITLE_SETTINGS") ?? "Settings...", "app." + AppActions.Settings);
+            menu.Append("About FetchFlow", "app." + AppActions.About);
+            menuButton.SetMenuModel(menu);
+            header.PackEnd(menuButton);
+
             return header;
         }
 
@@ -332,6 +363,29 @@ namespace XDM.Gtk4UI
 
         // F5 delegates to the core database-backed row adapter
         private void Refresh() => RefreshRequested?.Invoke();
+
+        // Ctrl+B opens Batch Download pattern and list window
+        private void OnBatchDownload() =>
+            (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowBatchDownloadWindow();
+
+        // Ctrl+Shift+Q opens Queue and Scheduler window
+        private void OnScheduler() =>
+            (ApplicationContext.MainWindow as Gtk4ApplicationWindow)?.TriggerScheduler();
+
+        // Ctrl+I opens Import/Export backup and restore dialog
+        private void OnImportExport() =>
+            (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowImportExportDialog();
+
+        // Ctrl+, opens Settings preferences dialog
+        private void OnSettings() =>
+            (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(0);
+
+        // F1 displays About FetchFlow information
+        private void OnAbout() =>
+            Gtk4DialogHelper.ShowAlert(
+                Window,
+                "FetchFlow Download Manager (Wayland & GTK 4 Edition)\nVersion 9.1.16.0\n\n© Mayanktaker Computers & Web Development\nhttps://mayanktaker.com",
+                "About FetchFlow");
 
         // Ctrl+T swaps the GTK 4 stylesheet
         private void ToggleTheme()

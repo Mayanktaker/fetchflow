@@ -17,14 +17,34 @@ namespace XDM.Gtk4UI
         public const string ToggleTheme = "toggle-theme";
         public const string Quit = "quit";
         public const string Refresh = "refresh";
+        public const string BatchDownload = "batch-download";
+        public const string Scheduler = "scheduler";
+        public const string ImportExport = "import-export";
+        public const string Settings = "settings";
+        public const string About = "about";
 
         // Registers every action and its accelerator on the application
-        public static void Register(Gtk.Application app, SysAction newDownload, SysAction search, SysAction toggleTheme, SysAction refresh)
+        public static void Register(
+            Gtk.Application app,
+            SysAction newDownload,
+            SysAction search,
+            SysAction toggleTheme,
+            SysAction refresh,
+            SysAction batchDownload,
+            SysAction scheduler,
+            SysAction importExport,
+            SysAction settings,
+            SysAction about)
         {
             Add(app, NewDownload, "<Control>n", newDownload);
             Add(app, Search, "<Control>f", search);
             Add(app, ToggleTheme, "<Control>t", toggleTheme);
             Add(app, Refresh, "F5", refresh);
+            Add(app, BatchDownload, "<Control>b", batchDownload);
+            Add(app, Scheduler, "<Control><Shift>q", scheduler);
+            Add(app, ImportExport, "<Control>i", importExport);
+            Add(app, Settings, "<Control>comma", settings);
+            Add(app, About, "F1", about);
             Add(app, Quit, "<Control>q", () => app.Quit());
         }
 
