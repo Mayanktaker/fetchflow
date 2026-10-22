@@ -612,6 +612,7 @@ namespace XDM.GtkUI
             updateDot.Relief = ReliefStyle.None;
             updateDot.Valign = Align.Center;
             updateDot.TooltipText = TextResource.GetText("MSG_UPDATE_AVAILABLE");
+            updateDot.Accessible.Name = TextResource.GetText("MSG_UPDATE_AVAILABLE");
             updateDot.StyleContext.AddClass("flat");
             updateDot.StyleContext.AddClass("update-dot-button");
             updateDot.Clicked += (_, _) => UpdateClicked?.Invoke(this, EventArgs.Empty);
@@ -634,6 +635,8 @@ namespace XDM.GtkUI
             {
                 themeIcon.Pixbuf = LoadSvg(isDark ? "sun-line" : "moon-line", 18);
                 themeToggleBtn.TooltipText = isDark ? "Switch to Light theme" : "Switch to Dark theme";
+                // Icon-only: the ATK name is the only label assistive tech can read
+                themeToggleBtn.Accessible.Name = themeToggleBtn.TooltipText;
             }
             UpdateThemeIcon(ThemeManager.IsDarkActive);
             ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) => UpdateThemeIcon(isDark));
@@ -666,7 +669,7 @@ namespace XDM.GtkUI
             return vbMain;
         }
 
-        private Button CreateButtonWithContent(string icon, string? text = null, byte? r = null, byte? g = null, byte? b = null)
+        private Button CreateButtonWithContent(string icon, string? text = null, byte? r = null, byte? g = null, byte? b = null, string? accessibleName = null)
         {
             Label? lbl = null;
             if (!string.IsNullOrEmpty(text))
@@ -678,10 +681,10 @@ namespace XDM.GtkUI
                 ? GtkHelper.TintPixbuf(rawPixbuf, r.Value, g.Value, b.Value)
                 : rawPixbuf;
             var image = pixbuf != null ? new Image(pixbuf) : new Image();
-            return CreateButtonWithContent(image, lbl);
+            return CreateButtonWithContent(image, lbl, accessibleName);
         }
 
-        private Button CreateButtonWithContent(Image image, Label? label)
+        private Button CreateButtonWithContent(Image image, Label? label, string? accessibleName = null)
         {
             // Icon-only buttons: no side margins/spacing; the image expands and GtkMisc's
             // default 0.5 xalign centers the glyph inside the button. Labeled buttons unchanged.
@@ -706,6 +709,13 @@ namespace XDM.GtkUI
             button.Add(hbox);
             // Register as flat so the theme's toolbar hover/active states apply
             button.StyleContext.AddClass("flat");
+            // Screen readers announce icon-only buttons by this name (GNOME/KDE both
+            // read the ATK name; an Image child contributes nothing readable)
+            var name = accessibleName ?? label?.Text;
+            if (!string.IsNullOrEmpty(name))
+            {
+                button.Accessible.Name = name;
+            }
             return button;
         }
 
@@ -732,7 +742,7 @@ namespace XDM.GtkUI
             lblTotalSpeed.StyleContext.AddClass("total-speed-label");
             hbox.PackStart(lblTotalSpeed, false, false, 0);
 
-            btnSpeedLimit = CreateButtonWithContent("time-line", null, DimR, DimG, DimB);
+            btnSpeedLimit = CreateButtonWithContent("time-line", null, DimR, DimG, DimB, TextResource.GetText("MENU_SPEED_LIMITER"));
             btnSpeedLimit.Clicked += BtnSpeedLimit_Clicked;
             btnSpeedLimit.ButtonPressEvent += (o, args) =>
             {
@@ -940,7 +950,7 @@ namespace XDM.GtkUI
             btnPause = CreateButtonWithContent("pause-line", TextResource.GetText("MENU_PAUSE"), AmberR, AmberG, AmberB);
             toolbar.PackStart(btnPause, false, false, 0);
 
-            btnMenu = CreateButtonWithContent("menu-line");
+            btnMenu = CreateButtonWithContent("menu-line", accessibleName: TextResource.GetText("LBL_MENU"));
             toolbar.PackEnd(btnMenu, false, false, 0);
 
             searchEntry = new Entry()
