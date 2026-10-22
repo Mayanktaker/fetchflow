@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gtk;
+using XDM.Core;
 
 namespace XDM.Gtk4UI.Downloads
 {
@@ -41,6 +42,19 @@ namespace XDM.Gtk4UI.Downloads
         // Row count of the filtered view
         public int Count => items.Count;
 
+        // Initializes sort preferences from persistent application configuration
+        public DownloadStore()
+        {
+            var savedCol = Config.Instance.DownloadSortColumn;
+            CurrentSortColumn = savedCol switch
+            {
+                "Name" => DownloadSortColumn.Name,
+                "Size" => DownloadSortColumn.Size,
+                _ => DownloadSortColumn.ProgressOrDate
+            };
+            SortAscending = !Config.Instance.DownloadSortDescending;
+        }
+
         // Replaces the whole data set (used while core wiring is pending)
         public void SetAll(IEnumerable<DownloadItem> source)
         {
@@ -56,11 +70,19 @@ namespace XDM.Gtk4UI.Downloads
             Rebuild();
         }
 
-        // Sorts by the specified column and direction
+        // Sorts by the specified column and direction and saves preference
         public void SortBy(DownloadSortColumn col, bool ascending)
         {
             CurrentSortColumn = col;
             SortAscending = ascending;
+            Config.Instance.DownloadSortColumn = col switch
+            {
+                DownloadSortColumn.Name => "Name",
+                DownloadSortColumn.Size => "Size",
+                _ => "Date"
+            };
+            Config.Instance.DownloadSortDescending = !ascending;
+            try { Config.SaveConfig(); } catch { }
             Rebuild();
         }
 
@@ -69,14 +91,12 @@ namespace XDM.Gtk4UI.Downloads
         {
             if (CurrentSortColumn == col)
             {
-                SortAscending = !SortAscending;
+                SortBy(col, !SortAscending);
             }
             else
             {
-                CurrentSortColumn = col;
-                SortAscending = true;
+                SortBy(col, true);
             }
-            Rebuild();
         }
 
         // Rebuilds items + StringList from allItems, keyword, and active sort

@@ -69,6 +69,7 @@ namespace XDM.Gtk4UI.Downloads
             view.AppendColumn(colProgress);
 
             WireColumnSorting();
+            UpdateSortHeaderTitles();
 
             // Double click / Enter key activation: executes standard double-click action (open file/folder/progress)
             view.OnActivate += (_, args) =>
@@ -289,6 +290,7 @@ namespace XDM.Gtk4UI.Downloads
                 rowBox.Append(icon);
                 rowBox.Append(textBox);
                 item.SetChild(rowBox);
+                AttachContextMenu(item, rowBox);
             };
             factory.OnBind += (_, args) =>
             {
@@ -338,6 +340,7 @@ namespace XDM.Gtk4UI.Downloads
                 label.MarginEnd = 12;
                 label.AddCssClass("download-size");
                 item.SetChild(label);
+                AttachContextMenu(item, label);
             };
             factory.OnBind += (_, args) =>
             {
@@ -403,6 +406,7 @@ namespace XDM.Gtk4UI.Downloads
                 rootBox.Append(finishedBox);
                 rootBox.Append(inprogressBox);
                 item.SetChild(rootBox);
+                AttachContextMenu(item, rootBox);
             };
             factory.OnBind += (_, args) =>
             {
@@ -514,6 +518,84 @@ namespace XDM.Gtk4UI.Downloads
             }
             row = store.Items[(int)position];
             return true;
+        }
+
+        private PopoverMenu? activeContextMenu;
+
+        // Attaches right-click context gesture to a cell's widget
+        private void AttachContextMenu(ListItem item, Widget child)
+        {
+            var gesture = GestureClick.New();
+            gesture.SetButton(3);
+            gesture.OnPressed += (_, clickArgs) =>
+            {
+                var pos = item.Position;
+                if (pos != uint.MaxValue && pos < (uint)store.Count)
+                {
+                    if (!selection.IsSelected(pos))
+                    {
+                        selection.SelectItem(pos, true);
+                    }
+                    ShowContextMenu(store.Items[(int)pos], clickArgs.X, clickArgs.Y, child);
+                }
+            };
+            child.AddController(gesture);
+        }
+
+        // Displays context popover menu for the clicked download row
+        private void ShowContextMenu(DownloadItem item, double x, double y, Widget anchor)
+        {
+            if (activeContextMenu != null)
+            {
+                activeContextMenu.Popdown();
+                activeContextMenu.Unparent();
+                activeContextMenu = null;
+            }
+
+            var menu = Gio.Menu.New();
+            if (!item.IsComplete)
+            {
+                menu.Append(TextResource.GetText("MENU_RESUME") ?? "Resume", "app." + AppActions.ResumeDownload);
+                menu.Append(TextResource.GetText("MENU_PAUSE") ?? "Pause", "app." + AppActions.PauseDownload);
+                menu.Append(TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show Progress", "app." + AppActions.ShowProgress);
+                menu.Append(TextResource.GetText("CTX_SAVE_AS") ?? "Save As...", "app." + AppActions.SaveAs);
+                menu.Append(TextResource.GetText("MENU_REFRESH_LINK") ?? "Refresh Download Link...", "app." + AppActions.RefreshLink);
+                menu.Append(TextResource.GetText("Q_MOVE_TO") ?? "Move to Queue...", "app." + AppActions.MoveToQueue);
+                menu.Append(TextResource.GetText("CTX_COPY_URL") ?? "Copy Download Link", "app." + AppActions.CopyUrl);
+                menu.Append(TextResource.GetText("MENU_PROPERTIES") ?? "Properties...", "app." + AppActions.DownloadProperties);
+                menu.Append(TextResource.GetText("DESC_DEL") ?? "Delete", "app." + AppActions.DeleteDownload);
+            }
+            else
+            {
+                menu.Append(TextResource.GetText("CTX_OPEN_FILE") ?? "Open File", "app." + AppActions.OpenFile);
+                menu.Append(TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder", "app." + AppActions.OpenFolder);
+                menu.Append(TextResource.GetText("CTX_CHECKSUM") ?? "Verify Checksum...", "app." + AppActions.VerifyChecksum);
+                menu.Append(TextResource.GetText("CTX_COPY_URL") ?? "Copy Download Link", "app." + AppActions.CopyUrl);
+                menu.Append(TextResource.GetText("CTX_COPY_FILE") ?? "Copy File", "app." + AppActions.CopyFile);
+                menu.Append(TextResource.GetText("MENU_RESTART") ?? "Download Again", "app." + AppActions.RestartDownload);
+                menu.Append(TextResource.GetText("MENU_PROPERTIES") ?? "Properties...", "app." + AppActions.DownloadProperties);
+                menu.Append(TextResource.GetText("MENU_DELETE_DWN") ?? "Remove from List", "app." + AppActions.DeleteDownload);
+            }
+
+            var popover = PopoverMenu.NewFromModel(menu);
+            popover.SetParent(anchor);
+            popover.SetHasArrow(false);
+            var rect = new Gdk.Rectangle { X = (int)x, Y = (int)y, Width = 1, Height = 1 };
+            popover.PointingTo = rect;
+            popover.OnClosed += (_, _) =>
+            {
+                GLib.Functions.IdleAdd(0, () =>
+                {
+                    if (activeContextMenu == popover)
+                    {
+                        popover.Unparent();
+                        activeContextMenu = null;
+                    }
+                    return false;
+                });
+            };
+            activeContextMenu = popover;
+            popover.Popup();
         }
     }
 }

@@ -1,7 +1,7 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
 // Native GTK 4 Settings dialog providing comprehensive configuration for
-// General, File Types / Categories, Network & Proxy, Speed Limiter, and Monitoring.
+// General, File Types / Categories, Network & Proxy, Speed Limiter, Monitoring, and Advanced.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,22 +27,29 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly DropDown dropMaxDownloads;
         private readonly DropDown dropMaxSegments;
         private readonly DropDown dropDoubleClick;
+        private readonly DropDown dropTheme;
         private readonly CheckButton chkAutoStart;
         private readonly CheckButton chkNotification;
         private readonly CheckButton chkShowComplete;
-        private readonly DropDown dropTheme;
+        private readonly CheckButton chkShowProgress;
+        private readonly CheckButton chkPlaySound;
+        private readonly CheckButton chkStartAuto;
+        private readonly CheckButton chkTimestamp;
+        private readonly CheckButton chkKeepAwake;
 
-        // Categories tab controls
+        // Categories & File Types tab controls
         private readonly ListBox categoryList;
         private readonly Entry txtCatFolder;
         private readonly Entry txtCatExts;
         private readonly Label lblSelectedCat;
         private readonly List<Category> workingCategories;
         private int selectedCategoryIndex = 0;
+        private readonly Entry txtBlockedHosts;
 
-        // Network tab controls
+        // Network & Proxy tab controls
         private readonly Entry txtNetworkTimeout;
         private readonly Entry txtMaxRetries;
+        private readonly Entry txtFallbackUserAgent;
         private readonly DropDown dropProxyType;
         private readonly Entry txtProxyHost;
         private readonly Entry txtProxyPort;
@@ -59,13 +66,21 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly Label lblIpcStatus;
         private readonly Button btnRestartIpc;
 
+        // Advanced & Automation tab controls
+        private readonly CheckButton chkShutdownAll;
+        private readonly CheckButton chkRunCmd;
+        private readonly Entry txtCustomCmd;
+        private readonly CheckButton chkRunAntivirus;
+        private readonly Entry txtAntiVirusCmd;
+        private readonly Entry txtAntiVirusArgs;
+
         // Constructs the Settings dialog with current configuration values
         public SettingsDialog(Window? parent, int initialPage = 0)
         {
             window = Window.New();
             window.Title = TextResource.GetText("TITLE_SETTINGS") ?? "Settings";
             window.Modal = true;
-            window.SetDefaultSize(720, 560);
+            window.SetDefaultSize(740, 580);
             if (parent != null) window.SetTransientFor(parent);
 
             var header = HeaderBar.New();
@@ -169,7 +184,8 @@ namespace XDM.Gtk4UI.Dialogs
             themeRow.Append(dropTheme);
             generalBox.Append(themeRow);
 
-            chkAutoStart = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_AUTOSTART") ?? "Start FetchFlow automatically on system login");
+            // General options checkboxes
+            chkAutoStart = CheckButton.NewWithLabel(TextResource.GetText("AUTO_START") ?? "Launch FetchFlow when system starts");
             chkAutoStart.Active = PlatformHelper.IsAutoStartEnabled();
             generalBox.Append(chkAutoStart);
 
@@ -181,7 +197,30 @@ namespace XDM.Gtk4UI.Dialogs
             chkShowComplete.Active = Config.Instance.ShowDownloadCompleteWindow;
             generalBox.Append(chkShowComplete);
 
-            notebook.AppendPage(generalBox, Label.New(TextResource.GetText("SETTINGS_GENERAL") ?? "General"));
+            chkShowProgress = CheckButton.NewWithLabel(TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show download progress window");
+            chkShowProgress.Active = Config.Instance.ShowProgressWindow;
+            generalBox.Append(chkShowProgress);
+
+            chkPlaySound = CheckButton.NewWithLabel(TextResource.GetText("MSG_PLAY_SOUND") ?? "Play sound when download finishes");
+            chkPlaySound.Active = Config.Instance.PlayCompletionSound;
+            generalBox.Append(chkPlaySound);
+
+            chkStartAuto = CheckButton.NewWithLabel(TextResource.GetText("LBL_START_AUTO") ?? "Start download automatically without prompt");
+            chkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
+            generalBox.Append(chkStartAuto);
+
+            chkTimestamp = CheckButton.NewWithLabel(TextResource.GetText("LBL_GET_TIMESTAMP") ?? "Get file creation timestamp from server");
+            chkTimestamp.Active = Config.Instance.FetchServerTimeStamp;
+            generalBox.Append(chkTimestamp);
+
+            chkKeepAwake = CheckButton.NewWithLabel(TextResource.GetText("MSG_AWAKE") ?? "Prevent hibernate or sleep during downloads");
+            chkKeepAwake.Active = Config.Instance.KeepPCAwake;
+            generalBox.Append(chkKeepAwake);
+
+            var generalScroll = ScrolledWindow.New();
+            generalScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            generalScroll.SetChild(generalBox);
+            notebook.AppendPage(generalScroll, Label.New(TextResource.GetText("SETTINGS_GENERAL") ?? "General"));
 
             // -----------------------------------------------------------------
             // --- Page 2: File Types & Categories ---
@@ -303,8 +342,40 @@ namespace XDM.Gtk4UI.Dialogs
             catActionsRow.Append(btnResetCats);
             categoriesBox.Append(catActionsRow);
 
+            var sepCats = Separator.New(Orientation.Horizontal);
+            sepCats.MarginTop = 6;
+            sepCats.MarginBottom = 6;
+            categoriesBox.Append(sepCats);
+
+            var lblExceptions = Label.New(TextResource.GetText("DESC_SITEEXCEPTIONS") ?? "Do not automatically capture downloads from below web sites:");
+            lblExceptions.AddCssClass("heading");
+            lblExceptions.Halign = Align.Start;
+            categoriesBox.Append(lblExceptions);
+
+            var exceptionsRow = Box.New(Orientation.Horizontal, 8);
+            txtBlockedHosts = Entry.New();
+            txtBlockedHosts.Hexpand = true;
+            txtBlockedHosts.SetText(string.Join(", ", Config.Instance.BlockedHosts ?? Config.DefaultBlockedHosts));
+            var btnResetExceptions = Button.NewWithLabel("Restore Default Sites");
+            btnResetExceptions.OnClicked += (_, _) =>
+            {
+                txtBlockedHosts.SetText(string.Join(", ", Config.DefaultBlockedHosts));
+            };
+            exceptionsRow.Append(txtBlockedHosts);
+            exceptionsRow.Append(btnResetExceptions);
+            categoriesBox.Append(exceptionsRow);
+
+            var excHint = Label.New("Separate domains with commas or spaces (e.g. *.bank.com, example.com)");
+            excHint.AddCssClass("dim-label");
+            excHint.Halign = Align.Start;
+            categoriesBox.Append(excHint);
+
             LoadCategoryFields(0);
-            notebook.AppendPage(categoriesBox, Label.New(TextResource.GetText("SETTINGS_CAT") ?? "Categories"));
+
+            var catScroll = ScrolledWindow.New();
+            catScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            catScroll.SetChild(categoriesBox);
+            notebook.AppendPage(catScroll, Label.New(TextResource.GetText("SETTINGS_CAT") ?? "Categories"));
 
             // -----------------------------------------------------------------
             // --- Page 3: Network & Proxy ---
@@ -335,6 +406,20 @@ namespace XDM.Gtk4UI.Dialogs
             retriesRow.Append(lblRetries);
             retriesRow.Append(txtMaxRetries);
             networkBox.Append(retriesRow);
+
+            var uaRow = Box.New(Orientation.Horizontal, 8);
+            var lblUa = Label.New("Fallback User-Agent:");
+            lblUa.WidthRequest = 180;
+            lblUa.Halign = Align.Start;
+            txtFallbackUserAgent = Entry.New();
+            txtFallbackUserAgent.Hexpand = true;
+            txtFallbackUserAgent.SetText(Config.Instance.FallbackUserAgent ?? Config.DefaultFallbackUserAgent);
+            var btnResetUa = Button.NewWithLabel("Reset");
+            btnResetUa.OnClicked += (_, _) => txtFallbackUserAgent.SetText(Config.DefaultFallbackUserAgent);
+            uaRow.Append(lblUa);
+            uaRow.Append(txtFallbackUserAgent);
+            uaRow.Append(btnResetUa);
+            networkBox.Append(uaRow);
 
             var proxyHeader = Label.New("Proxy Configuration:");
             proxyHeader.AddCssClass("heading");
@@ -417,7 +502,10 @@ namespace XDM.Gtk4UI.Dialogs
             };
             networkBox.Append(proxyManualBox);
 
-            notebook.AppendPage(networkBox, Label.New(TextResource.GetText("SETTINGS_NETWORK") ?? "Network"));
+            var netScroll = ScrolledWindow.New();
+            netScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            netScroll.SetChild(networkBox);
+            notebook.AppendPage(netScroll, Label.New(TextResource.GetText("SETTINGS_NETWORK") ?? "Network"));
 
             // -----------------------------------------------------------------
             // --- Page 4: Speed Limiter ---
@@ -523,7 +611,92 @@ namespace XDM.Gtk4UI.Dialogs
 
             notebook.AppendPage(monitoringBox, Label.New(TextResource.GetText("SETTINGS_MONITORING") ?? "Monitoring"));
 
-            if (initialPage >= 0 && initialPage < 5)
+            // -----------------------------------------------------------------
+            // --- Page 6: Advanced & Automation ---
+            // -----------------------------------------------------------------
+            var advancedBox = Box.New(Orientation.Vertical, 12);
+            advancedBox.MarginTop = 12;
+            advancedBox.MarginStart = 8;
+            advancedBox.MarginEnd = 8;
+
+            var automationHeader = Label.New("Post-Download Automation:");
+            automationHeader.AddCssClass("heading");
+            automationHeader.Halign = Align.Start;
+            advancedBox.Append(automationHeader);
+
+            chkShutdownAll = CheckButton.NewWithLabel(TextResource.GetText("MSG_HALT") ?? "Shutdown computer after all downloads complete");
+            chkShutdownAll.Active = Config.Instance.ShutdownAfterAllFinished;
+            advancedBox.Append(chkShutdownAll);
+
+            chkRunCmd = CheckButton.NewWithLabel(TextResource.GetText("EXEC_CMD") ?? "Run a program after all downloads finish");
+            chkRunCmd.Active = Config.Instance.RunCommandAfterCompletion;
+            advancedBox.Append(chkRunCmd);
+
+            var cmdRow = Box.New(Orientation.Horizontal, 8);
+            cmdRow.MarginStart = 24;
+            var lblCmd = Label.New("Command:");
+            lblCmd.WidthRequest = 90;
+            lblCmd.Halign = Align.Start;
+            txtCustomCmd = Entry.New();
+            txtCustomCmd.Hexpand = true;
+            txtCustomCmd.SetText(Config.Instance.AfterCompletionCommand ?? "");
+            cmdRow.Append(lblCmd);
+            cmdRow.Append(txtCustomCmd);
+            advancedBox.Append(cmdRow);
+
+            var sepAdv = Separator.New(Orientation.Horizontal);
+            sepAdv.MarginTop = 6;
+            sepAdv.MarginBottom = 6;
+            advancedBox.Append(sepAdv);
+
+            var avHeader = Label.New("Antivirus Scanning:");
+            avHeader.AddCssClass("heading");
+            avHeader.Halign = Align.Start;
+            advancedBox.Append(avHeader);
+
+            chkRunAntivirus = CheckButton.NewWithLabel("Scan downloaded files with antivirus scanner");
+            chkRunAntivirus.Active = Config.Instance.ScanWithAntiVirus;
+            advancedBox.Append(chkRunAntivirus);
+
+            var avRow = Box.New(Orientation.Horizontal, 8);
+            avRow.MarginStart = 24;
+            var lblAv = Label.New(TextResource.GetText("ANTIVIR_CMD") ?? "Antivirus Executable:");
+            lblAv.WidthRequest = 160;
+            lblAv.Halign = Align.Start;
+            txtAntiVirusCmd = Entry.New();
+            txtAntiVirusCmd.Hexpand = true;
+            txtAntiVirusCmd.SetText(Config.Instance.AntiVirusExecutable ?? "");
+            var btnBrowseAv = Button.NewWithLabel("Browse...");
+            btnBrowseAv.OnClicked += (_, _) => BrowseFile(txtAntiVirusCmd);
+            avRow.Append(lblAv);
+            avRow.Append(txtAntiVirusCmd);
+            avRow.Append(btnBrowseAv);
+            advancedBox.Append(avRow);
+
+            var argsRow = Box.New(Orientation.Horizontal, 8);
+            argsRow.MarginStart = 24;
+            var lblArgs = Label.New(TextResource.GetText("ANTIVIR_ARGS") ?? "Command line parameters:");
+            lblArgs.WidthRequest = 160;
+            lblArgs.Halign = Align.Start;
+            txtAntiVirusArgs = Entry.New();
+            txtAntiVirusArgs.Hexpand = true;
+            txtAntiVirusArgs.SetText(Config.Instance.AntiVirusArgs ?? "[file]");
+            argsRow.Append(lblArgs);
+            argsRow.Append(txtAntiVirusArgs);
+            advancedBox.Append(argsRow);
+
+            var avHint = Label.New("Use [file] placeholder for the downloaded file path (e.g. clamscan [file])");
+            avHint.AddCssClass("dim-label");
+            avHint.MarginStart = 24;
+            avHint.Halign = Align.Start;
+            advancedBox.Append(avHint);
+
+            var advScroll = ScrolledWindow.New();
+            advScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            advScroll.SetChild(advancedBox);
+            notebook.AppendPage(advScroll, Label.New("Advanced"));
+
+            if (initialPage >= 0 && initialPage < 6)
             {
                 notebook.SetCurrentPage(initialPage);
             }
@@ -599,6 +772,29 @@ namespace XDM.Gtk4UI.Dialogs
             });
         }
 
+        // Asynchronously opens file chooser and updates the target entry with selected file
+        private void BrowseFile(Entry targetEntry)
+        {
+            var dialog = FileDialog.New();
+            dialog.Title = "Select Executable";
+            dialog.Modal = true;
+            dialog.OpenAsync(window).ContinueWith(t =>
+            {
+                if (t.IsCompletedSuccessfully && t.Result != null)
+                {
+                    var selected = t.Result.GetPath();
+                    if (!string.IsNullOrEmpty(selected))
+                    {
+                        GLib.Functions.IdleAdd(0, () =>
+                        {
+                            targetEntry.SetText(selected);
+                            return false;
+                        });
+                    }
+                }
+            });
+        }
+
         // Commits modified settings to Config instance and filesystem
         private void SaveSettings()
         {
@@ -618,6 +814,11 @@ namespace XDM.Gtk4UI.Dialogs
 
             Config.Instance.ShowNotification = chkNotification.Active;
             Config.Instance.ShowDownloadCompleteWindow = chkShowComplete.Active;
+            Config.Instance.ShowProgressWindow = chkShowProgress.Active;
+            Config.Instance.PlayCompletionSound = chkPlaySound.Active;
+            Config.Instance.StartDownloadAutomatically = chkStartAuto.Active;
+            Config.Instance.FetchServerTimeStamp = chkTimestamp.Active;
+            Config.Instance.KeepPCAwake = chkKeepAwake.Active;
             Config.Instance.MonitorClipboard = chkMonitorClipboard.Active;
 
             // Simultaneous downloads
@@ -643,6 +844,13 @@ namespace XDM.Gtk4UI.Dialogs
             // Categories
             Config.Instance.Categories = new List<Category>(workingCategories);
 
+            // Blocked hosts / exceptions
+            var blockedText = txtBlockedHosts.GetText() ?? "";
+            Config.Instance.BlockedHosts = blockedText.Split(new[] { ',', ' ', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(h => h.Trim().ToLowerInvariant())
+                .Where(h => !string.IsNullOrEmpty(h))
+                .ToArray();
+
             // Network timeout and retries
             if (int.TryParse(txtNetworkTimeout.GetText(), out int timeout))
             {
@@ -652,6 +860,12 @@ namespace XDM.Gtk4UI.Dialogs
             if (int.TryParse(txtMaxRetries.GetText(), out int retries))
             {
                 Config.Instance.MaxRetry = Math.Max(0, retries);
+            }
+
+            var ua = txtFallbackUserAgent.GetText()?.Trim();
+            if (!string.IsNullOrEmpty(ua))
+            {
+                Config.Instance.FallbackUserAgent = ua;
             }
 
             // Proxy settings
@@ -683,6 +897,14 @@ namespace XDM.Gtk4UI.Dialogs
             {
                 Config.Instance.DefaltDownloadSpeed = Math.Max(0, speed);
             }
+
+            // Advanced & Automation settings
+            Config.Instance.ShutdownAfterAllFinished = chkShutdownAll.Active;
+            Config.Instance.RunCommandAfterCompletion = chkRunCmd.Active;
+            Config.Instance.AfterCompletionCommand = txtCustomCmd.GetText()?.Trim() ?? "";
+            Config.Instance.ScanWithAntiVirus = chkRunAntivirus.Active;
+            Config.Instance.AntiVirusExecutable = txtAntiVirusCmd.GetText()?.Trim() ?? "";
+            Config.Instance.AntiVirusArgs = txtAntiVirusArgs.GetText()?.Trim() ?? "";
 
             // Autostart
             try

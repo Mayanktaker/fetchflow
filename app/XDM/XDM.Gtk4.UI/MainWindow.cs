@@ -91,7 +91,23 @@ namespace XDM.Gtk4UI
                 sortSizeAsc: () => main.downloadList.SortBy(DownloadSortColumn.Size, true),
                 sortSizeDesc: () => main.downloadList.SortBy(DownloadSortColumn.Size, false),
                 sortDateAsc: () => main.downloadList.SortBy(DownloadSortColumn.ProgressOrDate, true),
-                sortDateDesc: () => main.downloadList.SortBy(DownloadSortColumn.ProgressOrDate, false));
+                sortDateDesc: () => main.downloadList.SortBy(DownloadSortColumn.ProgressOrDate, false),
+                openFile: () => UIActions.OpenSelectedFile(),
+                openFolder: () => UIActions.OpenSelectedFolder(),
+                pauseDownload: () => UIActions.StopSelectedDownloads(),
+                resumeDownload: () => UIActions.ResumeDownloads(),
+                deleteDownload: () => UIActions.DeleteDownloads(main.IsInProgressView, null),
+                copyUrl: () => { if (main.IsInProgressView) UIActions.CopyURL1(); else UIActions.CopyURL2(); },
+                copyFile: () => UIActions.CopyFile(),
+                downloadProperties: () => UIActions.ShowSeletectedItemProperties(),
+                verifyChecksum: () => UIActions.VerifySelectedFileChecksum(),
+                restartDownload: () => UIActions.RestartDownload(),
+                saveAs: () => UIActions.SaveAs(),
+                refreshLink: () => UIActions.RefreshLink(),
+                moveToQueue: () => UIActions.MoveToQueue(),
+                showProgress: () => UIActions.ShowProgressWindow(),
+                speedLimiter: () => (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(3),
+                videoDownload: () => ApplicationContext.PlatformUIService?.ShowYoutubeDLDialog());
             if (demo)
             {
                 main.SetRows(DemoRows(), InProgressKey);
@@ -184,7 +200,7 @@ namespace XDM.Gtk4UI
                 14);
             btnSpeedLimit.OnClicked += (_, _) =>
             {
-                (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(1);
+                (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(3);
             };
 
             btnScheduler = Gtk4IconHelper.CreateActionButton(
@@ -211,7 +227,8 @@ namespace XDM.Gtk4UI
             Window.SetTitlebar(BuildHeaderBar());
             Window.SetChild(BuildBody());
 
-            DeleteButton.Visible = false;
+            DeleteButton.Visible = true;
+            DeleteButton.Sensitive = false;
             PauseButton.Visible = false;
             ResumeButton.Visible = false;
             OpenFileButton.Visible = false;
@@ -295,7 +312,10 @@ namespace XDM.Gtk4UI
 
             var menu = Gio.Menu.New();
             menu.Append(TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch Download...", "app." + AppActions.BatchDownload);
+            menu.Append(TextResource.GetText("LBL_VIDEO_DOWNLOAD") ?? "Video Downloader...", "app." + AppActions.VideoDownload);
             menu.Append(TextResource.GetText("DESC_Q_TITLE") ?? "Queue & Scheduler...", "app." + AppActions.Scheduler);
+            menu.Append(TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter...", "app." + AppActions.SpeedLimiter);
+            menu.Append(TextResource.GetText("CTX_CHECKSUM") ?? "Calculate Checksum...", "app." + AppActions.VerifyChecksum);
             menu.Append(TextResource.GetText("MENU_IMPORT_EXPORT") ?? "Import / Export...", "app." + AppActions.ImportExport);
             menu.Append(TextResource.GetText("TITLE_SETTINGS") ?? "Settings...", "app." + AppActions.Settings);
             menu.Append("About FetchFlow", "app." + AppActions.About);

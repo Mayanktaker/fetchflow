@@ -30,6 +30,24 @@ namespace XDM.Gtk4UI
         public const string SortDateAsc = "sort-date-asc";
         public const string SortDateDesc = "sort-date-desc";
 
+        // Row context menu and keyboard command actions
+        public const string OpenFile = "open-file";
+        public const string OpenFolder = "open-folder";
+        public const string PauseDownload = "pause-download";
+        public const string ResumeDownload = "resume-download";
+        public const string DeleteDownload = "delete-download";
+        public const string CopyUrl = "copy-url";
+        public const string CopyFile = "copy-file";
+        public const string DownloadProperties = "download-properties";
+        public const string VerifyChecksum = "verify-checksum";
+        public const string RestartDownload = "restart-download";
+        public const string SaveAs = "save-as";
+        public const string RefreshLink = "refresh-link";
+        public const string MoveToQueue = "move-to-queue";
+        public const string ShowProgress = "show-progress";
+        public const string SpeedLimiter = "speed-limiter";
+        public const string VideoDownload = "video-download";
+
         // Registers every action and its accelerator on the application
         public static void Register(
             Gtk.Application app,
@@ -48,7 +66,23 @@ namespace XDM.Gtk4UI
             SysAction? sortSizeAsc = null,
             SysAction? sortSizeDesc = null,
             SysAction? sortDateAsc = null,
-            SysAction? sortDateDesc = null)
+            SysAction? sortDateDesc = null,
+            SysAction? openFile = null,
+            SysAction? openFolder = null,
+            SysAction? pauseDownload = null,
+            SysAction? resumeDownload = null,
+            SysAction? deleteDownload = null,
+            SysAction? copyUrl = null,
+            SysAction? copyFile = null,
+            SysAction? downloadProperties = null,
+            SysAction? verifyChecksum = null,
+            SysAction? restartDownload = null,
+            SysAction? saveAs = null,
+            SysAction? refreshLink = null,
+            SysAction? moveToQueue = null,
+            SysAction? showProgress = null,
+            SysAction? speedLimiter = null,
+            SysAction? videoDownload = null)
         {
             Add(app, NewDownload, "<Control>n", newDownload);
             Add(app, Search, "<Control>f", search);
@@ -68,6 +102,23 @@ namespace XDM.Gtk4UI
             if (sortSizeDesc != null) Add(app, SortSizeDesc, null, sortSizeDesc);
             if (sortDateAsc != null) Add(app, SortDateAsc, null, sortDateAsc);
             if (sortDateDesc != null) Add(app, SortDateDesc, null, sortDateDesc);
+
+            if (openFile != null) Add(app, OpenFile, "<Control>o", openFile);
+            if (openFolder != null) Add(app, OpenFolder, null, openFolder);
+            if (pauseDownload != null) Add(app, PauseDownload, null, pauseDownload);
+            if (resumeDownload != null) Add(app, ResumeDownload, null, resumeDownload);
+            if (deleteDownload != null) Add(app, DeleteDownload, "Delete", deleteDownload);
+            if (copyUrl != null) Add(app, CopyUrl, "<Control>c", copyUrl);
+            if (copyFile != null) Add(app, CopyFile, null, copyFile);
+            if (downloadProperties != null) Add(app, DownloadProperties, "<Alt>Return", downloadProperties);
+            if (verifyChecksum != null) Add(app, VerifyChecksum, null, verifyChecksum);
+            if (restartDownload != null) Add(app, RestartDownload, "<Control>r", restartDownload);
+            if (saveAs != null) Add(app, SaveAs, "<Control>s", saveAs);
+            if (refreshLink != null) Add(app, RefreshLink, null, refreshLink);
+            if (moveToQueue != null) Add(app, MoveToQueue, null, moveToQueue);
+            if (showProgress != null) Add(app, ShowProgress, null, showProgress);
+            if (speedLimiter != null) Add(app, SpeedLimiter, null, speedLimiter);
+            if (videoDownload != null) Add(app, VideoDownload, "<Control><Shift>v", videoDownload);
         }
 
         // Adds one parameterless action with its accelerator
