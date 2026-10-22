@@ -33,9 +33,12 @@ app/XDM/
 ```
 
 The GTK 4 scaffold currently provides: application/window shell, headerbar with a
-theme toggle, category sidebar from shared `Config`, `ListView` content area,
-status bar, and its own `theme/gtk4-dark.css` / `gtk4-light.css`. It is in the
-solution and has a CI compile gate, but is **not** in release packaging.
+search entry and theme toggle, category sidebar from shared `Config`, a
+`ColumnView` download list (`Downloads/`) with name/status, size and pill-progress
+columns, empty state, status bar, Gio app actions with accelerators
+(`Ctrl+N/F/T/Q`), and its own `theme/gtk4-dark.css` / `gtk4-light.css`. It is in the
+solution and has a CI compile gate, but is **not** in release packaging. `--demo`
+fills the list with sample rows because the download engine is not wired yet.
 
 Rules for the split:
 
