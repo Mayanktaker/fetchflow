@@ -183,6 +183,26 @@ namespace XDM.Gtk4UI
 
             var settingsDlg = new SettingsDialog(null, 0);
 
+            var importExportDlg = new ImportExportDialog(null);
+            importExportDlg.Close();
+
+            var qSelectDlg = uiService.CreateQueueSelectionDialog();
+            qSelectDlg.SetData(new[] { "Default queue" }, new[] { "q-1" }, new[] { "d-1" });
+            qSelectDlg.Dispose();
+
+            var qSchedDlg = uiService.CreateQueuesAndSchedulerWindow();
+            qSchedDlg.SetData(new[] { new DownloadQueue("q-1", "Default queue") { DownloadIds = new List<string> { testInProgress.Id } } });
+            qSchedDlg.RefreshView();
+
+            var newQDlg = new NewQueueDialog(null, (_, _) => { });
+
+            var batchWin = new BatchDownloadWindow(null);
+            batchWin.Url = "https://example.com/file_*.png";
+            batchWin.IsLetterMode = true;
+            batchWin.SetStartLetterRange(new[] { "A", "B", "C" });
+            batchWin.SetEndLetterRange(new[] { "A", "B", "C" });
+            batchWin.DestroyWindow();
+
             Console.WriteLine("[GTK4 SMOKE PASS] Vertical slice & secondary dialog components verified successfully.");
             gtkApp.Quit();
         }

@@ -142,9 +142,13 @@ namespace XDM.Gtk4UI
         public void ShowYoutubeDLDialog() =>
             ShowMessageBox(mainWindow.Window, "YouTube stream grabber is scheduled for GTK 4 parity in Step 6.2.");
 
-        // Shows batch downloader (stubbed for Step 6.2)
-        public void ShowBatchDownloadWindow() =>
-            ShowMessageBox(mainWindow.Window, "Batch downloader is scheduled for GTK 4 parity in Step 6.2.");
+        // Shows batch downloader
+        public void ShowBatchDownloadWindow()
+        {
+            var view = new BatchDownloadWindow(mainWindow.Window);
+            var controller = new BatchDownloadUIController(view);
+            controller.Run();
+        }
 
         // Displays settings window
         public void ShowSettingsDialog(int page = 0)
@@ -156,6 +160,13 @@ namespace XDM.Gtk4UI
         // Displays browser monitoring settings
         public void ShowBrowserMonitoringDialog() =>
             ShowSettingsDialog(2);
+
+        // Displays Import/Export backup and restore dialog
+        public void ShowImportExportDialog()
+        {
+            var dlg = new ImportExportDialog(mainWindow.Window);
+            dlg.Show();
+        }
 
         // Displays speed limiter dialog (stubbed for Step 6.2)
         public void ShowSpeedLimiterWindow() =>
@@ -185,13 +196,13 @@ namespace XDM.Gtk4UI
         public INewVideoDownloadDialog CreateNewVideoDialog() =>
             new Gtk4NewVideoDownloadDialogStub(mainWindow.Window);
 
-        // Creates queue scheduler window stub
+        // Creates queue scheduler window
         public IQueuesWindow CreateQueuesAndSchedulerWindow() =>
-            new Gtk4QueuesWindowStub();
+            new QueueSchedulerDialog(mainWindow.Window);
 
-        // Creates queue selection dialog stub
+        // Creates queue selection dialog
         public IQueueSelectionDialog CreateQueueSelectionDialog() =>
-            new Gtk4QueueSelectionDialogStub();
+            new QueueSelectionDialog(mainWindow.Window);
 
         // Creates updater dialog stub
         public IUpdaterUI CreateUpdateUIDialog() =>
@@ -226,24 +237,7 @@ namespace XDM.Gtk4UI
         public void ShowWindow() { }
     }
 
-    internal sealed class Gtk4QueuesWindowStub : IQueuesWindow
-    {
-        public event EventHandler<QueueListEventArgs>? QueuesModified;
-        public event EventHandler<DownloadListEventArgs>? QueueStartRequested;
-        public event EventHandler<DownloadListEventArgs>? QueueStopRequested;
-        public event EventHandler? WindowClosing;
-        public void RefreshView() { }
-        public void SetData(IEnumerable<DownloadQueue> queues) { }
-        public void ShowWindow(object window) { }
-    }
 
-    internal sealed class Gtk4QueueSelectionDialogStub : IQueueSelectionDialog
-    {
-        public event EventHandler<QueueSelectionEventArgs>? QueueSelected;
-        public void Dispose() { }
-        public void SetData(IEnumerable<string> queueNames, IEnumerable<string> queueIds, IEnumerable<string> downloadIds) { }
-        public void ShowWindow() { }
-    }
 
     internal sealed class Gtk4UpdaterUIStub : IUpdaterUI
     {

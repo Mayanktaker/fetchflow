@@ -117,6 +117,18 @@ namespace XDM.Gtk4UI
         public event EventHandler? ClearAllFinishedClicked;
         public event EventHandler? ExportClicked;
         public event EventHandler? ImportClicked;
+
+        // Triggers import flow programmatically
+        public void TriggerImport() => ImportClicked?.Invoke(this, EventArgs.Empty);
+
+        // Triggers export flow programmatically
+        public void TriggerExport() => ExportClicked?.Invoke(this, EventArgs.Empty);
+
+        // Triggers queue scheduler window programmatically
+        public void TriggerScheduler() => SchedulerClicked?.Invoke(this, EventArgs.Empty);
+
+        // Triggers batch download window programmatically
+        public void TriggerBatchDownload() => BatchDownloadClicked?.Invoke(this, EventArgs.Empty);
         public event EventHandler? BrowserMonitoringButtonClicked;
         public event EventHandler? BrowserMonitoringSettingsClicked;
         public event EventHandler? UpdateClicked;
