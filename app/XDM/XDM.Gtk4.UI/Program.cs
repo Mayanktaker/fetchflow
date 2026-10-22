@@ -3,6 +3,7 @@
 // GTK 4 frontend entry point. The GTK 3 frontend (XDM.Gtk.UI) remains the
 // compatibility build for GTK 3-only desktops; this project is the primary UI.
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Gtk;
 using TraceLog;
@@ -11,6 +12,7 @@ using XDM.Core;
 using XDM.Core.BrowserMonitoring;
 using XDM.Core.Downloader;
 using XDM.Core.Util;
+using XDM.Gtk4UI.Dialogs;
 using GtkApplication = Gtk.Application;
 
 namespace XDM.Gtk4UI
@@ -173,7 +175,15 @@ namespace XDM.Gtk4UI
             cmpldDlg.FileNameText = "test.iso";
             cmpldDlg.FolderText = "/tmp";
 
-            Console.WriteLine("[GTK4 SMOKE PASS] Vertical slice components verified successfully.");
+            // Verify secondary dialog components
+            var checksumDlg = new ChecksumDialog(null, typeof(Program).Assembly.Location);
+            checksumDlg.Close();
+
+            var propDlg = new PropertiesDialog(null, testFinished, "session=123", new Dictionary<string, List<string>> { { "User-Agent", new List<string> { "TestAgent" } } });
+
+            var settingsDlg = new SettingsDialog(null, 0);
+
+            Console.WriteLine("[GTK4 SMOKE PASS] Vertical slice & secondary dialog components verified successfully.");
             gtkApp.Quit();
         }
 

@@ -131,9 +131,12 @@ namespace XDM.Gtk4UI
         public void ShowRefreshLinkDialog(InProgressDownloadItem entry) =>
             ShowMessageBox(mainWindow.Window, "Link refresher is scheduled for GTK 4 parity in Step 6.2.");
 
-        // Displays download properties (stubbed for Step 6.2)
-        public void ShowPropertiesDialog(DownloadItemBase ent, string cookies, Dictionary<string, List<string>> headers) =>
-            ShowMessageBox(mainWindow.Window, $"{ent.Name}\n{ent.PrimaryUrl}\nSize: {FormattingHelper.FormatSize(ent.Size)}");
+        // Displays download properties
+        public void ShowPropertiesDialog(DownloadItemBase ent, string cookies, Dictionary<string, List<string>> headers)
+        {
+            var dlg = new PropertiesDialog(mainWindow.Window, ent, cookies, headers);
+            dlg.Show();
+        }
 
         // Shows YouTube downloader (stubbed for Step 6.2)
         public void ShowYoutubeDLDialog() =>
@@ -143,11 +146,14 @@ namespace XDM.Gtk4UI
         public void ShowBatchDownloadWindow() =>
             ShowMessageBox(mainWindow.Window, "Batch downloader is scheduled for GTK 4 parity in Step 6.2.");
 
-        // Displays settings window (stubbed for Step 6.2)
-        public void ShowSettingsDialog(int page = 0) =>
-            ShowMessageBox(mainWindow.Window, "Settings dialog is scheduled for GTK 4 parity in Step 6.2.");
+        // Displays settings window
+        public void ShowSettingsDialog(int page = 0)
+        {
+            var dlg = new SettingsDialog(mainWindow.Window, page);
+            dlg.Show();
+        }
 
-        // Displays browser monitoring settings (stubbed for Step 6.2)
+        // Displays browser monitoring settings
         public void ShowBrowserMonitoringDialog() =>
             ShowSettingsDialog(2);
 
@@ -163,9 +169,13 @@ namespace XDM.Gtk4UI
         public void ShowExtensionRegistrationWindow() =>
             ShowMessageBox(mainWindow.Window, "Extension registration is scheduled for GTK 4 parity in Step 6.2.");
 
-        // Displays checksum dialog (stubbed for Step 6.2)
-        public void ShowChecksumDialog(object? window, string filePath) =>
-            ShowMessageBox(mainWindow.Window, $"Checksum verification for: {filePath}\nScheduled for Step 6.2.");
+        // Displays checksum verification dialog
+        public void ShowChecksumDialog(object? window, string filePath)
+        {
+            var parent = (window as Window) ?? mainWindow.Window;
+            var dlg = new ChecksumDialog(parent, filePath);
+            dlg.Show();
+        }
 
         // Displays download selection dialog (stubbed for Step 6.2)
         public void ShowDownloadSelectionWindow(FileNameFetchMode mode, IEnumerable<IRequestData> downloads) =>
