@@ -1,14 +1,14 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
-// GTK 4 main window: headerbar with search + theme toggle, category sidebar,
-// ColumnView download list, status bar, and the app action/accelerator map.
-// Rows are read from the shared download database (read-only) until the download
-// engine itself is ported — see docs/audit/gtk4-coupling-inventory.md.
+// GTK 4 main window: headerbar actions, category sidebar, ColumnView download
+// list, search, and status. Core rows enter through Gtk4ApplicationWindow.
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gtk;
+using Translations;
 using XDM.Core;
+using XDM.Core.Downloader;
 using XDM.Core.Util;
 using XDM.Gtk4UI.Downloads;
 using GtkApplication = Gtk.Application;
@@ -19,68 +19,101 @@ namespace XDM.Gtk4UI
     {
         // Sidebar width token from docs/design.md spacing scale
         private const int SidebarWidth = 200;
-        // Default window size
+        // Default desktop window size
         private const int DefaultWidth = 900;
         private const int DefaultHeight = 560;
-        // Sidebar keys for the two fixed views
-        private const string InProgressKey = "inprogress";
-        private const string FinishedKey = "finished";
+        // Fixed sidebar view keys
+        internal const string InProgressKey = "inprogress";
+        internal const string FinishedKey = "finished";
 
-        // The window this instance owns
-        private readonly ApplicationWindow window;
+        // Native GTK window presented by the host
+        public ApplicationWindow Window { get; }
         // Download list (ColumnView) widget
         private readonly DownloadListView downloadList = new();
-        // Toolbar search entry (Ctrl+F target)
+        // Search action target
         private readonly SearchEntry searchEntry = SearchEntry.New();
-        // Header theme toggle (Ctrl+T target)
+        // Toolbar buttons exposed through GTK-neutral core adapters
+        public Button NewButton { get; }
+        public Button DeleteButton { get; }
+        public Button PauseButton { get; }
+        public Button ResumeButton { get; }
+        public Button OpenFileButton { get; }
+        public Button OpenFolderButton { get; }
+        // Header theme toggle
         private readonly Button themeButton = Button.NewWithLabel("Light");
-        // Status bar text
+        // Status bar
         private readonly Label statusLabel = Label.New("");
-        // Every loaded row (unfiltered by view)
+        // Every row in the active sidebar view
         private List<DownloadItem> allRows = new();
-        // Sidebar key currently applied to the list
+        // Current sidebar view key
         private string currentView = InProgressKey;
+        // Sidebar category values keyed by their persisted category name
+        private readonly Dictionary<string, Category> categories = new();
 
-        // Builds the window, wires actions and shows the initial view
-        public static ApplicationWindow Create(GtkApplication app, bool demo)
+        // Events consumed by the core window adapter
+        public event EventHandler? SelectionChanged;
+        public event Action<string>? ViewChanged;
+        public event Action? RefreshRequested;
+
+        // Builds the main window and registers its application actions
+        public static MainWindow Create(GtkApplication app, bool demo)
         {
-            var main = new MainWindow(app, demo);
+            var main = new MainWindow(app);
             AppActions.Register(
                 app,
                 newDownload: main.OnNewDownload,
                 search: main.FocusSearch,
                 toggleTheme: main.ToggleTheme,
                 refresh: main.Refresh);
-            return main.window;
+            if (demo)
+            {
+                main.SetRows(DemoRows(), InProgressKey);
+            }
+            return main;
         }
 
-        // Assembles the window once; all wiring happens here
-        private MainWindow(GtkApplication app, bool demo)
+        // Assembles widgets before the core context is initialized
+        private MainWindow(GtkApplication app)
         {
-            window = ApplicationWindow.New(app);
-            window.Title = "FetchFlow";
-            window.SetDefaultSize(DefaultWidth, DefaultHeight);
+            NewButton = Button.NewWithLabel(TextResource.GetText("DESC_NEW"));
+            DeleteButton = Button.NewWithLabel(TextResource.GetText("DESC_DEL"));
+            PauseButton = Button.NewWithLabel(TextResource.GetText("MENU_PAUSE"));
+            ResumeButton = Button.NewWithLabel(TextResource.GetText("MENU_RESUME"));
+            OpenFileButton = Button.NewWithLabel(TextResource.GetText("CTX_OPEN_FILE"));
+            OpenFolderButton = Button.NewWithLabel(TextResource.GetText("CTX_OPEN_FOLDER"));
 
-            window.SetTitlebar(BuildHeaderBar());
-            window.SetChild(BuildBody());
+            Window = ApplicationWindow.New(app);
+            Window.Title = "FetchFlow";
+            Window.SetDefaultSize(DefaultWidth, DefaultHeight);
+            Window.SetTitlebar(BuildHeaderBar());
+            Window.SetChild(BuildBody());
 
-            // Real rows come from the read-only DB bridge; --demo keeps a sample set
-            allRows = (demo ? DemoRows() : DownloadRepository.LoadAll()).ToList();
-            ApplyView(currentView);
+            DeleteButton.Visible = false;
+            PauseButton.Visible = false;
+            ResumeButton.Visible = false;
+            OpenFileButton.Visible = false;
+            OpenFolderButton.Visible = false;
+            downloadList.SelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
 
-            Gtk4Theme.Apply(window, Gtk4Theme.IsDarkActive);
+            Gtk4Theme.Apply(Window, Gtk4Theme.IsDarkActive);
         }
 
-        // Title bar: brand title, search entry, theme toggle
+        // Packs the app title, core actions, search and theme toggle
         private Widget BuildHeaderBar()
         {
             var header = HeaderBar.New();
             header.TitleWidget = Label.New("FetchFlow");
+            header.PackStart(NewButton);
+            header.PackStart(PauseButton);
+            header.PackStart(ResumeButton);
+            header.PackStart(DeleteButton);
+            header.PackStart(OpenFileButton);
+            header.PackStart(OpenFolderButton);
 
-            searchEntry.PlaceholderText = "Search downloads";
-            searchEntry.WidthRequest = 220;
-            searchEntry.OnSearchChanged += (_, _) => downloadList.Filter(searchEntry.GetText());
-            header.PackStart(searchEntry);
+            searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH");
+            searchEntry.WidthRequest = 210;
+            searchEntry.OnSearchChanged += (_, _) => ApplyView(currentView);
+            header.PackEnd(searchEntry);
 
             themeButton.TooltipText = "Switch theme (Ctrl+T)";
             themeButton.OnClicked += (_, _) => ToggleTheme();
@@ -88,7 +121,7 @@ namespace XDM.Gtk4UI
             return header;
         }
 
-        // Two-pane body: category sidebar + list over a status bar
+        // Builds the resizable category pane and status bar
         private Widget BuildBody()
         {
             var paned = Paned.New(Orientation.Horizontal);
@@ -104,25 +137,28 @@ namespace XDM.Gtk4UI
             return root;
         }
 
-        // Category sidebar: the two fixed views plus every configured category
+        // Creates fixed views plus the user's configured download categories
         private Widget BuildSidebar()
         {
             var list = ListBox.New();
             list.AddCssClass("sidebar");
             list.SelectionMode = SelectionMode.Browse;
+            list.Append(BuildSidebarRow(TextResource.GetText("ALL_UNFINISHED"), InProgressKey));
+            list.Append(BuildSidebarRow(TextResource.GetText("ALL_FINISHED"), FinishedKey));
 
-            list.Append(BuildSidebarRow("All Unfinished", InProgressKey));
-            list.Append(BuildSidebarRow("All Finished", FinishedKey));
             foreach (var category in Config.Instance.Categories)
             {
+                categories[category.Name] = category;
                 list.Append(BuildSidebarRow(category.DisplayName, category.Name));
             }
 
             list.OnRowSelected += (_, args) =>
             {
-                if (args.Row is ListBoxRow row)
+                if (args.Row is ListBoxRow row && !string.IsNullOrEmpty(row.Name))
                 {
-                    ApplyView(row.TooltipText ?? InProgressKey);
+                    currentView = row.Name;
+                    ApplyView(currentView);
+                    ViewChanged?.Invoke(currentView);
                 }
             };
 
@@ -133,7 +169,7 @@ namespace XDM.Gtk4UI
             return scrolled;
         }
 
-        // One selectable sidebar row (label + view key in the tooltip)
+        // Creates one accessible sidebar row
         private static ListBoxRow BuildSidebarRow(string text, string key)
         {
             var label = Label.New(text);
@@ -145,11 +181,12 @@ namespace XDM.Gtk4UI
 
             var row = ListBoxRow.New();
             row.SetChild(label);
-            row.TooltipText = key;
+            row.Name = key;
+            row.TooltipText = text;
             return row;
         }
 
-        // Status bar: view, row count and category count
+        // Builds the status bar below the resizable panes
         private Widget BuildStatusBar()
         {
             statusLabel.Halign = Align.Start;
@@ -160,71 +197,142 @@ namespace XDM.Gtk4UI
             return statusLabel;
         }
 
-        // Applies a sidebar view key to the loaded rows
-        private void ApplyView(string key)
+        // Sets all rows from the core model and selects the requested view
+        public void SetRows(IEnumerable<DownloadItem> rows, string view)
+        {
+            allRows = rows.ToList();
+            currentView = view;
+            ApplyView(view);
+        }
+
+        // Adds or replaces one in-progress core row
+        public void AddInProgress(InProgressDownloadItem entry)
+        {
+            allRows.RemoveAll(row => row.ProgressRow?.DownloadEntry.Id == entry.Id || row.FinishedRow?.DownloadEntry.Id == entry.Id);
+            allRows.Insert(0, ToItem(new Gtk4InProgressRow(entry)));
+            ApplyView(currentView);
+        }
+
+        // Adds or replaces one finished core row
+        public void AddFinished(FinishedDownloadItem entry)
+        {
+            allRows.RemoveAll(row => row.ProgressRow?.DownloadEntry.Id == entry.Id || row.FinishedRow?.DownloadEntry.Id == entry.Id);
+            allRows.Insert(0, ToItem(new Gtk4FinishedRow(entry)));
+            ApplyView(currentView);
+        }
+
+        // Removes the row with the specified transfer id
+        public void Remove(string id)
+        {
+            allRows.RemoveAll(row => row.ProgressRow?.DownloadEntry.Id == id || row.FinishedRow?.DownloadEntry.Id == id);
+            ApplyView(currentView);
+        }
+
+        // Resolves visible list selection to the core row adapters
+        public IReadOnlyList<DownloadItem> GetSelectedItems() => downloadList.GetSelectedItems();
+
+        // Selects the fixed sidebar view and refreshes the displayed rows
+        public void SelectView(string key)
         {
             currentView = key;
+            ApplyView(key);
+            ViewChanged?.Invoke(key);
+        }
+
+        // Returns whether the active view is the in-progress list
+        public bool IsInProgressView => currentView == InProgressKey;
+
+        // Clears current row selection
+        public void ClearSelection() => downloadList.ClearSelection();
+
+        // Applies the current category and search filters
+        private void ApplyView(string key)
+        {
             IEnumerable<DownloadItem> rows = key switch
             {
-                InProgressKey => allRows.Where(r => !r.IsComplete),
-                FinishedKey => allRows.Where(r => r.IsComplete),
+                InProgressKey => allRows.Where(row => !row.IsComplete),
+                FinishedKey => allRows.Where(row => row.IsComplete),
                 _ => FilterByCategory(key)
             };
             downloadList.Reload(rows);
             UpdateStatus();
         }
 
-        // Category rows use the same keyword/category matcher as the GTK 3 frontend
+        // Filters category rows using the same predicate as the GTK 3 UI
         private IEnumerable<DownloadItem> FilterByCategory(string key)
         {
-            // Category is a struct, so "not found" is an empty Name, not null
-            var category = Config.Instance.Categories.FirstOrDefault(c => c.Name == key);
-            if (string.IsNullOrEmpty(category.Name))
+            if (!categories.TryGetValue(key, out var category))
             {
                 return allRows;
             }
-            return allRows.Where(r => Helpers.IsOfCategoryOrMatchesKeyword(r.Name, null, category));
+            return allRows.Where(row => Helpers.IsOfCategoryOrMatchesKeyword(row.Name, null, category));
         }
 
-        // F5: re-read the download database (engine still belongs to the GTK 3 frontend)
-        private void Refresh()
+        // Converts a mutable core row into the GTK 4 projection
+        internal static DownloadItem ToItem(Gtk4InProgressRow row) => new()
         {
-            allRows = DownloadRepository.LoadAll().ToList();
-            ApplyView(currentView);
-        }
+            Name = row.Name,
+            Status = FormatStatus(row),
+            SizeText = FormattingHelper.FormatSize(row.Size),
+            Progress = Math.Clamp(row.Progress / 100.0, 0.0, 1.0),
+            ProgressRow = row
+        };
 
-        // Ctrl+N: download engine is not wired yet, so report it instead of doing nothing
-        private void OnNewDownload()
+        // Converts a finished core row into the GTK 4 projection
+        internal static DownloadItem ToItem(Gtk4FinishedRow row) => new()
         {
-            SetStatus("New download: engine wiring pending");
-        }
+            Name = row.Name,
+            Status = TextResource.GetText("STAT_FINISHED"),
+            SizeText = FormattingHelper.FormatSize(row.Size),
+            Progress = 1.0,
+            IsComplete = true,
+            FinishedRow = row
+        };
 
-        // Ctrl+F: focus the toolbar search
-        private void FocusSearch()
+        // Builds a compact status line from core transfer state
+        private static string FormatStatus(Gtk4InProgressRow row)
         {
-            searchEntry.GrabFocus();
+            var status = row.Status.ToString();
+            if (!string.IsNullOrWhiteSpace(row.DownloadSpeed))
+            {
+                status += " · " + row.DownloadSpeed;
+            }
+            else if (!string.IsNullOrWhiteSpace(row.ETA))
+            {
+                status += " · " + row.ETA;
+            }
+            return status;
         }
 
-        // Ctrl+T / header button: swap the stylesheet
+        // Ctrl+F focuses the search entry
+        private void FocusSearch() => searchEntry.GrabFocus();
+
+        // Ctrl+N activates the core New button path
+        private void OnNewDownload() => NewButton.Activate();
+
+        // F5 delegates to the core database-backed row adapter
+        private void Refresh() => RefreshRequested?.Invoke();
+
+        // Ctrl+T swaps the GTK 4 stylesheet
         private void ToggleTheme()
         {
             Gtk4Theme.Toggle();
             themeButton.SetLabel(Gtk4Theme.IsDarkActive ? "Light" : "Dark");
         }
 
-        // Updates the status bar with the active view and row count
+        // Updates the footer summary for the active view
         private void UpdateStatus()
         {
-            SetStatus($"GTK 4 · {currentView} · {downloadList.Count} of {allRows.Count} downloads · {Config.Instance.Categories.Count()} categories");
+            SetStatus($"GTK 4 · {currentView} · {downloadList.Count} downloads · {Config.Instance.Categories.Count()} categories");
         }
 
-        // Sets the status bar text
-        private void SetStatus(string text)
-        {
-            statusLabel.SetText(text);
-        }
+        // Sets the footer message
+        public void SetStatus(string text) => statusLabel.SetText(text);
 
-        // Sample rows for --demo runs (no engine is attached to this frontend yet)
+        // Presents the native GTK window
+        public void Present() => Window.Present();
+
+        // Formats an in-progress row for display
         private static IEnumerable<DownloadItem> DemoRows() => new List<DownloadItem>
         {
             new() { Name = "ubuntu-24.04-desktop-amd64.iso", Status = "Downloading · 4.2 MB/s", SizeText = "1.8 GB", Progress = 0.42 },

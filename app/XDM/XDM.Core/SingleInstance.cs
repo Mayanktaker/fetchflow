@@ -35,6 +35,10 @@ namespace XDM.Core
         // recovers by taking over as primary when the mutex holder exists but its IPC is dead
         public static void Ensure()
         {
+            if (Environment.GetEnvironmentVariable("FETCHFLOW_SKIP_SINGLE_INSTANCE") == "1")
+            {
+                return;
+            }
             try
             {
                 GlobalMutex = new Mutex(false, MutexName);

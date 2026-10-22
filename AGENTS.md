@@ -20,7 +20,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 
 ## Docs (don't duplicate, point here)
 
-`README.md` (user/install) · `CHANGELOG.md` (end-user changelog) · `CHROMEWEBSTORE.md` (CWS listing + Limited Use) · `docs/privacy.html` (zero-telemetry policy) · `docs/signing.md` (GPG setup/verify) · `.github/workflows/release.yml` + `sync-gh-pages.yml` + `xdm-wpf-build.yml` + `lint.yml` (CI/release) · `docs/design.md` (UI tokens) · `docs/audit/` (GNOME/KDE support matrix, findings register, GTK 3→4 coupling inventory)
+`README.md` (user/install) · `CHANGELOG.md` (end-user changelog) · `CHROMEWEBSTORE.md` (CWS listing + Limited Use) · `docs/privacy.html` (zero-telemetry policy) · `docs/signing.md` (GPG setup/verify) · `.github/workflows/release.yml` + `sync-gh-pages.yml` + `xdm-wpf-build.yml` + `lint.yml` (CI/release) · `docs/design.md` (UI tokens) · `docs/audit/` (GNOME/KDE support matrix, findings register, GTK 3→4 coupling inventory) · `fetchflow-gnome-kde-gtk4-ui-audit.md` (GTK 4 roadmap + current status)
 
 ## Commands
 
@@ -31,6 +31,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | `dotnet app/XDM/XDM.Tests/bin/Release/net8.0/XDM.Tests.dll` | Full automated suite (MSTest console runner) |
 | `node scripts/test-noise-filter.mjs` | Blocklist parity: chrome/firefox/core lists + junk vectors (also in build gate) |
 | `scripts/run-gtk-smoke.sh` | Headless GTK smoke under Xvfb |
+| `scripts/run-gtk4-smoke.sh` | GTK 4 vertical slice smoke harness (Xvfb or active display) |
 | `dotnet build app/XDM/XDM.Gtk4.UI/XDM.Gtk4.UI.csproj` | GTK 4 (primary) frontend build — no Xvfb needed; run with `WAYLAND_DISPLAY`/`DISPLAY` set |
 | `bash scripts/build-windows-local.sh` | Local standalone Windows portable ZIP release (`fetchflow-windows-x64-portable-*.zip`) |
 | `bash scripts/generate-winget-manifest.sh` | Generate Windows Package Manager (Winget) v1.6.0 manifests |

@@ -2,6 +2,8 @@
 
 // One row in the GTK 4 download list. Plain managed model: the list widget maps
 // ListItem.Position back to this object, so no GObject subclassing is required.
+using XDM.Core.UI;
+
 namespace XDM.Gtk4UI.Downloads
 {
     internal sealed class DownloadItem
@@ -16,6 +18,10 @@ namespace XDM.Gtk4UI.Downloads
         public double Progress { get; init; }
         // True once the transfer is finished (drives the progress column)
         public bool IsComplete { get; init; }
+        // Original core row when this entry belongs to the live UI model
+        public IInProgressDownloadRow? ProgressRow { get; init; }
+        // Original core row for a completed entry
+        public IFinishedDownloadRow? FinishedRow { get; init; }
 
         // Case-insensitive match used by the toolbar search filter
         public bool Matches(string keyword) =>

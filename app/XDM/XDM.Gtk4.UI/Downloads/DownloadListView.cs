@@ -19,6 +19,8 @@ namespace XDM.Gtk4UI.Downloads
         private readonly DownloadStore store = new();
         // The column view itself
         private readonly ColumnView view;
+        // Selection model is retained for IApplicationWindow row queries
+        private MultiSelection selection;
         // Swaps between the empty-state page and the list page
         private readonly Stack stack;
 
@@ -27,11 +29,17 @@ namespace XDM.Gtk4UI.Downloads
 
         // Current row count (filtered)
         public int Count => store.Count;
+        // Current filtered items backing the visible rows
+        public IReadOnlyList<DownloadItem> Items => store.Items;
+        // Fires after the GTK selection changes
+        public event EventHandler? SelectionChanged;
 
         // Builds the list widget and its empty state
         public DownloadListView()
         {
-            view = ColumnView.New(MultiSelection.New(store.Model));
+            selection = MultiSelection.New(store.Model);
+            view = ColumnView.New(selection);
+            selection.OnSelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
             view.AddCssClass("download-list");
             view.Hexpand = true;
             view.Vexpand = true;
@@ -66,10 +74,29 @@ namespace XDM.Gtk4UI.Downloads
             Bind();
         }
 
+        // Returns the selected rows in visible order
+        public IReadOnlyList<DownloadItem> GetSelectedItems()
+        {
+            var selected = new List<DownloadItem>();
+            for (uint i = 0; i < store.Count; i++)
+            {
+                if (selection.IsSelected(i))
+                {
+                    selected.Add(store.Items[(int)i]);
+                }
+            }
+            return selected;
+        }
+
+        // Clears selection before switching sidebar views
+        public void ClearSelection() => selection.UnselectAll();
+
         // Points the view at the store's current model and updates the empty state
         private void Bind()
         {
-            view.SetModel(MultiSelection.New(store.Model));
+            selection = MultiSelection.New(store.Model);
+            selection.OnSelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
+            view.SetModel(selection);
             stack.VisibleChildName = store.Count == 0 ? "empty" : "list";
         }
 
