@@ -10,7 +10,9 @@ using Translations;
 using XDM.Core;
 using XDM.Core.Downloader;
 using XDM.Core.Util;
+using XDM.Gtk4UI.Dialogs;
 using XDM.Gtk4UI.Downloads;
+using XDM.Gtk4UI.Utils;
 using GtkApplication = Gtk.Application;
 
 namespace XDM.Gtk4UI
@@ -49,6 +51,9 @@ namespace XDM.Gtk4UI
         private string currentView = InProgressKey;
         // Sidebar category values keyed by their persisted category name
         private readonly Dictionary<string, Category> categories = new();
+        // GTK application host and system tray manager
+        private readonly GtkApplication app;
+        private readonly Gtk4TrayIconManager trayManager;
 
         // Events consumed by the core window adapter
         public event EventHandler? SelectionChanged;
@@ -75,6 +80,7 @@ namespace XDM.Gtk4UI
         // Assembles widgets before the core context is initialized
         private MainWindow(GtkApplication app)
         {
+            this.app = app;
             NewButton = Button.NewWithLabel(TextResource.GetText("DESC_NEW"));
             DeleteButton = Button.NewWithLabel(TextResource.GetText("DESC_DEL"));
             PauseButton = Button.NewWithLabel(TextResource.GetText("MENU_PAUSE"));
@@ -94,6 +100,20 @@ namespace XDM.Gtk4UI
             OpenFileButton.Visible = false;
             OpenFolderButton.Visible = false;
             downloadList.SelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
+
+            PlatformHelper.EnsureTrayIconInstalled();
+            trayManager = new Gtk4TrayIconManager();
+            trayManager.Init("FetchFlow Download Manager", ShowAndActivate, QuitFromTray);
+
+            Window.OnCloseRequest += (sender, args) =>
+            {
+                if (trayManager.IsTrayActive)
+                {
+                    Window.Hide();
+                    return true;
+                }
+                return false;
+            };
 
             Gtk4Theme.Apply(Window, Gtk4Theme.IsDarkActive);
         }
@@ -328,6 +348,48 @@ namespace XDM.Gtk4UI
 
         // Sets the footer message
         public void SetStatus(string text) => statusLabel.SetText(text);
+
+        // Presents and activates the main window
+        public void ShowAndActivate() => Window.Present();
+
+        // Quits the application from the tray context menu
+        private void QuitFromTray()
+        {
+            var active = CountActiveDownloads();
+            if (active > 0 && !Gtk4DialogHelper.Confirm(
+                Window,
+                active == 1
+                    ? "1 download is in progress. Quit FetchFlow anyway?"
+                    : $"{active} downloads are in progress. Quit FetchFlow anyway?",
+                "Quit FetchFlow"))
+            {
+                return;
+            }
+
+            try
+            {
+                trayManager.Dispose();
+            }
+            catch (Exception ex)
+            {
+                TraceLog.Log.Debug(ex, "Tray dispose on quit: " + ex.Message);
+            }
+
+            app.Quit();
+        }
+
+        // Counts downloads that are currently active in the core engine
+        private static int CountActiveDownloads()
+        {
+            try
+            {
+                return ApplicationContext.CoreService?.ActiveDownloadCount ?? 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
 
         // Presents the native GTK window
         public void Present() => Window.Present();

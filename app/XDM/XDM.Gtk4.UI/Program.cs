@@ -76,6 +76,8 @@ namespace XDM.Gtk4UI
                         .RegisterPlatformUIService(uiService)
                         .Configure();
 
+                    try { PlatformHelper.MigrateLegacyAutoStart(); }
+                    catch (Exception ex) { Log.Debug(ex, "AutoStart migration: " + ex.Message); }
                     PlatformHelper.ReconcileAutoStart();
                     ArgsProcessor.Process(args);
 

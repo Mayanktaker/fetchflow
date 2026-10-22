@@ -127,9 +127,9 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
   **6.2 After the slice**
 
   - [ ] Settings, queues/scheduler, import/export, checksum, media/yt-dlp dialogs.
-  - [ ] Tray/SNI and autostart parity (`EnsureTrayIconInstalled`, `ReconcileAutoStart`).
+  - [x] Tray/SNI and autostart parity (`EnsureTrayIconInstalled`, `ReconcileAutoStart`, `Gtk4TrayIconManager` SNI over D-Bus).
   - [ ] Keyboard-only and Orca pass on the GTK 4 list and dialogs; accessible names for every icon-only control.
-  - [ ] Fix FF-UI-010 (`gtk-interface-color-scheme`) once the binding API or a scoped `g_object_set` fallback is confirmed.
+  - [x] Fix FF-UI-010 (`GtkInterfaceColorScheme` applied with graceful `GtkApplicationPreferDarkTheme` fallback; Gtk-WARNING eliminated).
   - [ ] Launcher split: default `fetchflow` → GTK 4, `fetchflow-gtk3` + separate desktop file for GTK 3-only desktops; GTK 3 package without a GTK 4 dependency.
   - [ ] `build_all.sh` / `release.yml` packaging for both frontends, with runtime dependency declarations.
 

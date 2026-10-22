@@ -74,10 +74,20 @@ namespace XDM.Gtk4UI
                 // keep the light Adwaita palette inside a dark window. The GTK theme NAME
                 // is deliberately left alone so a Plasma (Breeze) or Cinnamon (Mint-Y) user
                 // keeps their system theme — see FF-UI-001 in docs/audit/ui-ux-findings.md.
+                // Match the base theme's color scheme to the stylesheet.
+                // In GTK 4.20+, GtkInterfaceColorScheme replaces the deprecated GtkApplicationPreferDarkTheme (FF-UI-010).
                 var settings = Settings.GetDefault();
                 if (settings != null)
                 {
-                    settings.GtkApplicationPreferDarkTheme = dark;
+                    try
+                    {
+                        settings.GtkInterfaceColorScheme = dark ? InterfaceColorScheme.Dark : InterfaceColorScheme.Light;
+                    }
+                    catch
+                    {
+                        // Fallback for GTK 4 environments before 4.20
+                        settings.GtkApplicationPreferDarkTheme = dark;
+                    }
                 }
             }
             catch (Exception ex)
