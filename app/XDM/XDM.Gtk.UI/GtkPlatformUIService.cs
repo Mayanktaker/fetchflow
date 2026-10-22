@@ -202,23 +202,17 @@ namespace XDM.GtkUI
             throw new NotImplementedException();
         }
 
+        // Media capture notice: same D-Bus transport as download-complete notifications
         public void ShowMediaNotification()
         {
-            try
-            {
-                PlatformHelper.SpawnSubProcess("notify-send", new string[] { TextResource.GetText("MSG_VID_CAP") });
-            }
-            catch { }
+            DesktopNotificationHelper.Show("FetchFlow", TextResource.GetText("MSG_VID_CAP"));
         }
 
+        // Generic desktop notification, gated by the user's notification preference
         public void ShowDesktopNotification(string message)
         {
-            try
-            {
-                if (!Config.Instance.ShowNotification) return;
-                PlatformHelper.SpawnSubProcess("notify-send", new string[] { "FetchFlow", message });
-            }
-            catch { }
+            if (!Config.Instance.ShowNotification) return;
+            DesktopNotificationHelper.Show("FetchFlow", message);
         }
 
         public void CreateAndShowMediaGrabber()

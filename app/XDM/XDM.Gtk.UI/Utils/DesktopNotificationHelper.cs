@@ -80,5 +80,51 @@ namespace XDM.GtkUI.Utils
                 }
             });
         }
+
+        // Sends a generic notification: D-Bus first (GNOME/KDE standard), then
+        // notify-send as a fallback for sessions without a notification service.
+        // One transport for every notification keeps GNOME and KDE behaviour identical.
+        public static void Show(string summary, string body)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await EnsureConnectionAsync();
+                    if (notifyProxy != null)
+                    {
+                        await notifyProxy.NotifyAsync(
+                            "FetchFlow",
+                            0,
+                            "com.mayanktaker.fetchflow",
+                            summary,
+                            body,
+                            Array.Empty<string>(),
+                            new Dictionary<string, object>
+                            {
+                                { "urgency", (byte)1 },
+                                { "category", "transfer" }
+                            },
+                            5000
+                        );
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "D-Bus notification failed, falling back to notify-send: " + ex.Message);
+                }
+
+                // Fallback only: some minimal sessions ship notify-send without a bus proxy
+                try
+                {
+                    PlatformHelper.SpawnSubProcess("notify-send", new[] { summary, body });
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "notify-send fallback failed: " + ex.Message);
+                }
+            });
+        }
     }
 }
