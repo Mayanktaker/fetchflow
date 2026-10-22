@@ -662,6 +662,7 @@ namespace XDM.GtkUI
         {
             var vbMain = new VBox();
             vbMain.PackStart(CreateToolbar(), false, false, 0);
+            WireKeyboardShortcuts();
             vbMain.PackStart(CreateInProgressListView(), true, true, 0);
             vbMain.PackStart(CreateFinishedListView(), true, true, 0);
             vbMain.PackStart(CreateBottombar(), false, false, 0);
@@ -992,6 +993,31 @@ namespace XDM.GtkUI
             btnMenu.Clicked += BtnMenu_Clicked;
 
             return toolbarCard;
+        }
+
+        // Ctrl+F focuses search, Ctrl+N opens the New menu — parity with the GTK 4
+        // frontend's app actions. Window-level key handling keeps it independent of
+        // which widget currently has focus; GTK bubbles unhandled keys up here.
+        private void WireKeyboardShortcuts()
+        {
+            KeyPressEvent += (_, args) =>
+            {
+                if ((args.Event.State & Gdk.ModifierType.ControlMask) == 0)
+                {
+                    return;
+                }
+                switch (args.Event.Key)
+                {
+                    case Gdk.Key.f:
+                        searchEntry.GrabFocus();
+                        args.RetVal = true;
+                        break;
+                    case Gdk.Key.n:
+                        btnNew.Activate();
+                        args.RetVal = true;
+                        break;
+                }
+            };
         }
 
         private void BtnMenu_Clicked(object? sender, EventArgs e)
