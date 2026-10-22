@@ -203,6 +203,13 @@ namespace XDM.Gtk4UI
             batchWin.SetEndLetterRange(new[] { "A", "B", "C" });
             batchWin.DestroyWindow();
 
+            var vidDlg = uiService.CreateNewVideoDialog();
+            vidDlg.SelectedFileName = "sample.mp4";
+            vidDlg.FileSize = "50 MB";
+            vidDlg.ShowMp3Checkbox = true;
+            vidDlg.IsMp3CheckboxChecked = false;
+            vidDlg.DisposeWindow();
+
             Console.WriteLine("[GTK4 SMOKE PASS] Vertical slice & secondary dialog components verified successfully.");
             gtkApp.Quit();
         }

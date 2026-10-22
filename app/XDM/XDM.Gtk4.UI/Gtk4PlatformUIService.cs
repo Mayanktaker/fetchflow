@@ -192,9 +192,9 @@ namespace XDM.Gtk4UI
         public void ShowDownloadSelectionWindow(FileNameFetchMode mode, IEnumerable<IRequestData> downloads) =>
             ShowMessageBox(mainWindow.Window, "Download selection dialog is scheduled for GTK 4 parity in Step 6.2.");
 
-        // Creates video download dialog stub
+        // Creates video download dialog
         public INewVideoDownloadDialog CreateNewVideoDialog() =>
-            new Gtk4NewVideoDownloadDialogStub(mainWindow.Window);
+            new NewVideoDownloadDialog(mainWindow.Window);
 
         // Creates queue scheduler window
         public IQueuesWindow CreateQueuesAndSchedulerWindow() =>
@@ -209,33 +209,7 @@ namespace XDM.Gtk4UI
             new Gtk4UpdaterUIStub();
     }
 
-    // Stub implementations for secondary interfaces scheduled for Step 6.2
-    internal sealed class Gtk4NewVideoDownloadDialogStub : INewVideoDownloadDialog
-    {
-        private readonly Window parent;
-        public Gtk4NewVideoDownloadDialogStub(Window parent) => this.parent = parent;
-        public string FileSize { get; set; } = "---";
-        public AuthenticationInfo? Authentication { get; set; }
-        public ProxyInfo? Proxy { get; set; }
-        public int SpeedLimit { get; set; }
-        public bool EnableSpeedLimit { get; set; }
-        public bool ShowMp3Checkbox { get; set; }
-        public bool IsMp3CheckboxChecked { get; set; }
-        public string SelectedFileName { get; set; } = string.Empty;
-        public int SeletedFolderIndex { get; set; }
-        public event EventHandler? DownloadClicked;
-        public event EventHandler? DestroyEvent;
-        public event EventHandler? QueueSchedulerClicked;
-        public event EventHandler? Mp3CheckChanged;
-        public event EventHandler<DownloadLaterEventArgs>? DownloadLaterClicked;
-        public event EventHandler<FileBrowsedEventArgs>? FileBrowsedEvent;
-        public event EventHandler<FileBrowsedEventArgs>? DropdownSelectionChangedEvent;
-        public void DisposeWindow() { }
-        public void Invoke(Action callback) => callback();
-        public void SetFolderValues(string[] values) { }
-        public void ShowMessageBox(string text) { }
-        public void ShowWindow() { }
-    }
+
 
 
 
