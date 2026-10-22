@@ -1,7 +1,9 @@
 /* © Mayanktaker Computers & Web Development | https://mayanktaker.com */
 
 /* FetchFlow GTK 4 dark theme — tokens from docs/design.md (Charcoal Blue).
-   GTK 4 CSS only: no GTK 3 node names (treeview/frame > border) here. */
+   GTK 4 CSS only: no GTK 3 node names (treeview/frame > border) here.
+   Colors are set explicitly on every surface because the base theme stays the
+   user's system theme (FF-UI-001), so inherited colors cannot be assumed. */
 
 @define-color window_bg #1d1d1d;
 @define-color sidebar_bg #161616;
@@ -20,18 +22,25 @@ window {
 
 headerbar {
   background-color: @headerbar_bg;
+  color: @text_color;
   border-bottom: 1px solid @border_color;
   border-radius: 8px 8px 0 0;
+}
+
+headerbar label {
+  color: @text_color;
 }
 
 /* Sidebar: rounded selection pill on a darker rail */
 .sidebar {
   background-color: @sidebar_bg;
+  color: @text_color;
 }
 
 .sidebar row {
   border-radius: 6px;
   margin: 2px 6px;
+  color: @text_color;
 }
 
 .sidebar row:hover {
@@ -43,23 +52,48 @@ headerbar {
   color: #ffffff;
 }
 
-/* Download list surface */
-.download-list {
+/* Download list: ColumnView + its internal listview share one surface */
+columnview.download-list,
+columnview.download-list listview,
+columnview.download-list listview > row {
   background-color: @view_bg;
+  color: @text_color;
 }
 
-.download-list row {
-  border-radius: 6px;
-  margin: 2px 8px;
-  padding: 4px 0;
+columnview.download-list header button {
+  background-color: @headerbar_bg;
+  color: @dim_text;
+  border-radius: 0;
+  border-bottom: 1px solid @border_color;
 }
 
-.download-list row:hover {
+columnview.download-list listview > row:hover {
   background-color: alpha(@text_color, 0.05);
 }
 
-.download-list row:selected {
+columnview.download-list listview > row:selected {
   background-color: alpha(@accent, 0.35);
+}
+
+/* Pill progress: thin trough, accent fill */
+progressbar.download-progress trough {
+  background-color: alpha(@text_color, 0.14);
+  border-radius: 999px;
+  min-height: 6px;
+}
+
+progressbar.download-progress progress {
+  background-color: @accent;
+  border-radius: 999px;
+  min-height: 6px;
+}
+
+/* Search field (header) */
+entry {
+  background-color: @view_bg;
+  color: @text_color;
+  border: 1px solid @border_color;
+  border-radius: 999px;
 }
 
 /* Status bar */

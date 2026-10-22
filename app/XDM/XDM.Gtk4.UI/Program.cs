@@ -27,9 +27,11 @@ namespace XDM.Gtk4UI
             }
 
             var app = GtkApplication.New(AppId, Gio.ApplicationFlags.FlagsNone);
+            // --demo fills the list with sample rows (no engine is wired yet)
+            var demo = Array.Exists(args, a => a == "--demo");
             app.OnActivate += (sender, _) =>
             {
-                var window = MainWindow.Create((GtkApplication)sender!);
+                var window = MainWindow.Create((GtkApplication)sender!, demo);
                 window.Present();
             };
             return app.RunWithSynchronizationContext(null);

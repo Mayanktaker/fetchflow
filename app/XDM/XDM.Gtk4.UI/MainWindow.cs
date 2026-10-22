@@ -1,63 +1,92 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
-// GTK 4 main window scaffold: headerbar, category sidebar, download-list area.
-// Scope is the shell only — the GTK 3 frontend keeps shipping until list/action
-// parity lands (docs/audit/gtk4-coupling-inventory.md).
+// GTK 4 main window: headerbar with search + theme toggle, category sidebar,
+// ColumnView download list, status bar, and the app action/accelerator map.
+// Scope is the shell + list widget; download-engine wiring is the next step
+// (docs/audit/gtk4-coupling-inventory.md).
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Gtk;
 using XDM.Core;
+using XDM.Gtk4UI.Downloads;
 using GtkApplication = Gtk.Application;
 
 namespace XDM.Gtk4UI
 {
-    internal static class MainWindow
+    internal sealed class MainWindow
     {
-        // Sidebar width token from docs/design.md spacing/radius scale
+        // Sidebar width token from docs/design.md spacing scale
         private const int SidebarWidth = 200;
-        // Default window size and responsive floor
+        // Default window size
         private const int DefaultWidth = 900;
         private const int DefaultHeight = 560;
 
-        private static Label? statusLabel;
+        // The window this instance owns
+        private readonly ApplicationWindow window;
+        // Download list (ColumnView) widget
+        private readonly DownloadListView downloadList = new();
+        // Toolbar search entry (Ctrl+F target)
+        private readonly SearchEntry searchEntry = SearchEntry.New();
+        // Header theme toggle (Ctrl+T target)
+        private readonly Button themeButton = Button.NewWithLabel("Light");
+        // Status bar text
+        private readonly Label statusLabel = Label.New("");
 
-        // Builds the GTK 4 application window (one per activation)
-        public static ApplicationWindow Create(GtkApplication app)
+        // Builds the window, wires actions and shows the initial view
+        public static ApplicationWindow Create(GtkApplication app, bool demo)
         {
-            var window = ApplicationWindow.New(app);
+            var main = new MainWindow(app, demo);
+            AppActions.Register(
+                app,
+                newDownload: main.OnNewDownload,
+                search: main.FocusSearch,
+                toggleTheme: main.ToggleTheme);
+            return main.window;
+        }
+
+        // Assembles the window once; all wiring happens here
+        private MainWindow(GtkApplication app, bool demo)
+        {
+            window = ApplicationWindow.New(app);
             window.Title = "FetchFlow";
             window.SetDefaultSize(DefaultWidth, DefaultHeight);
 
             window.SetTitlebar(BuildHeaderBar());
             window.SetChild(BuildBody());
 
+            if (demo)
+            {
+                downloadList.Reload(DemoRows());
+            }
+            UpdateStatus();
+
             Gtk4Theme.Apply(window, Gtk4Theme.IsDarkActive);
-            return window;
         }
 
-        // Title bar: brand title on the left, theme toggle on the right
-        private static HeaderBar BuildHeaderBar()
+        // Title bar: brand title, search entry, theme toggle
+        private Widget BuildHeaderBar()
         {
             var header = HeaderBar.New();
             header.TitleWidget = Label.New("FetchFlow");
 
-            var themeButton = Button.NewWithLabel(Gtk4Theme.IsDarkActive ? "Light" : "Dark");
-            themeButton.TooltipText = "Switch theme";
-            themeButton.OnClicked += (_, _) =>
-            {
-                Gtk4Theme.Toggle();
-                themeButton.SetLabel(Gtk4Theme.IsDarkActive ? "Light" : "Dark");
-            };
+            searchEntry.PlaceholderText = "Search downloads";
+            searchEntry.WidthRequest = 220;
+            searchEntry.OnSearchChanged += (_, _) => downloadList.Filter(searchEntry.GetText());
+            header.PackStart(searchEntry);
+
+            themeButton.TooltipText = "Switch theme (Ctrl+T)";
+            themeButton.OnClicked += (_, _) => ToggleTheme();
             header.PackEnd(themeButton);
             return header;
         }
 
-        // Two-pane body: category sidebar + content area over a status bar
-        private static Widget BuildBody()
+        // Two-pane body: category sidebar + list over a status bar
+        private Widget BuildBody()
         {
             var paned = Paned.New(Orientation.Horizontal);
             paned.StartChild = BuildSidebar();
-            paned.EndChild = BuildContent();
+            paned.EndChild = downloadList.Root;
             paned.Position = SidebarWidth;
             paned.ResizeStartChild = false;
             paned.ShrinkStartChild = false;
@@ -69,7 +98,7 @@ namespace XDM.Gtk4UI
         }
 
         // Category sidebar: the two fixed views plus every configured category
-        private static Widget BuildSidebar()
+        private Widget BuildSidebar()
         {
             var list = ListBox.New();
             list.AddCssClass("sidebar");
@@ -86,7 +115,7 @@ namespace XDM.Gtk4UI
             {
                 if (args.Row is ListBoxRow row)
                 {
-                    SetStatus("Selected: " + (row.TooltipText ?? "view"));
+                    SetStatus($"Selected: {row.TooltipText} · {downloadList.Count} downloads");
                 }
             };
 
@@ -97,7 +126,7 @@ namespace XDM.Gtk4UI
             return scrolled;
         }
 
-        // One selectable sidebar row (label + dim view key)
+        // One selectable sidebar row (label + view key in the tooltip)
         private static ListBoxRow BuildSidebarRow(string text, string key)
         {
             var label = Label.New(text);
@@ -113,52 +142,9 @@ namespace XDM.Gtk4UI
             return row;
         }
 
-        // Content area: list widget that replaces the GTK 3 TreeView
-        private static Widget BuildContent()
+        // Status bar: row count + last action feedback
+        private Widget BuildStatusBar()
         {
-            var factory = SignalListItemFactory.New();
-            factory.OnSetup += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var label = Label.New("");
-                label.Halign = Align.Start;
-                label.MarginStart = 12;
-                label.MarginEnd = 12;
-                item.SetChild(label);
-            };
-            factory.OnBind += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                if (item.Child is Label label && item.Item is StringObject text)
-                {
-                    label.SetText(text.GetString());
-                }
-            };
-
-            // Placeholder rows: the real model arrives with the list-parity port
-            var model = SingleSelection.New(StringList.New(new[]
-            {
-                "GTK 4 frontend scaffold",
-                "Download list parity pending",
-                "GTK 3 frontend remains the shipping UI"
-            }));
-
-            var list = ListView.New(model, factory);
-            list.AddCssClass("download-list");
-            list.Vexpand = true;
-
-            var scrolled = ScrolledWindow.New();
-            scrolled.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
-            scrolled.SetChild(list);
-            scrolled.Hexpand = true;
-            scrolled.Vexpand = true;
-            return scrolled;
-        }
-
-        // Status bar: proves shared-config access from the GTK 4 frontend
-        private static Widget BuildStatusBar()
-        {
-            statusLabel = Label.New($"GTK 4 scaffold · {Config.Instance.Categories.Count()} categories");
             statusLabel.Halign = Align.Start;
             statusLabel.MarginTop = 6;
             statusLabel.MarginBottom = 6;
@@ -167,10 +153,44 @@ namespace XDM.Gtk4UI
             return statusLabel;
         }
 
-        // Updates the status bar text (sidebar selection feedback)
-        private static void SetStatus(string text)
+        // Ctrl+N: download engine is not wired yet, so report it instead of doing nothing
+        private void OnNewDownload()
         {
-            statusLabel?.SetText(text);
+            SetStatus("New download: engine wiring pending");
         }
+
+        // Ctrl+F: focus the toolbar search
+        private void FocusSearch()
+        {
+            searchEntry.GrabFocus();
+        }
+
+        // Ctrl+T / header button: swap the stylesheet
+        private void ToggleTheme()
+        {
+            Gtk4Theme.Toggle();
+            themeButton.SetLabel(Gtk4Theme.IsDarkActive ? "Light" : "Dark");
+        }
+
+        // Updates the status bar with the current row count
+        private void UpdateStatus()
+        {
+            SetStatus($"GTK 4 · {downloadList.Count} downloads · {Config.Instance.Categories.Count()} categories");
+        }
+
+        // Sets the status bar text
+        private void SetStatus(string text)
+        {
+            statusLabel.SetText(text);
+        }
+
+        // Sample rows for --demo runs (no engine is attached to this frontend yet)
+        private static IEnumerable<DownloadItem> DemoRows() => new List<DownloadItem>
+        {
+            new() { Name = "ubuntu-24.04-desktop-amd64.iso", Status = "Downloading · 4.2 MB/s", SizeText = "1.8 GB", Progress = 0.42 },
+            new() { Name = "annual-report-2026.pdf", Status = "Paused", SizeText = "12.4 MB", Progress = 0.68 },
+            new() { Name = "conference-talk.mp4", Status = "Complete", SizeText = "740 MB", Progress = 1.0, IsComplete = true },
+            new() { Name = "dataset-2026-10.zip", Status = "Downloading · 900 KB/s", SizeText = "3.1 GB", Progress = 0.11 }
+        };
     }
 }

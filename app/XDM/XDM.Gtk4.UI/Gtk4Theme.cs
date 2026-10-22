@@ -38,7 +38,7 @@ namespace XDM.Gtk4UI
             Apply(Gdk.Display.GetDefault(), !IsDarkActive);
         }
 
-        // Loads the mode's stylesheet and swaps the display provider
+        // Loads the mode's stylesheet, swaps the display provider, syncs the base theme flag
         private static void Apply(Gdk.Display? display, bool dark)
         {
             IsDarkActive = dark;
@@ -69,6 +69,16 @@ namespace XDM.Gtk4UI
                 }
                 StyleContext.AddProviderForDisplay(display, provider, ProviderPriority);
                 currentProvider = provider;
+
+                // Match the base theme's dark flag to the stylesheet, or unstyled widgets
+                // keep the light Adwaita palette inside a dark window. The GTK theme NAME
+                // is deliberately left alone so a Plasma (Breeze) or Cinnamon (Mint-Y) user
+                // keeps their system theme — see FF-UI-001 in docs/audit/ui-ux-findings.md.
+                var settings = Settings.GetDefault();
+                if (settings != null)
+                {
+                    settings.GtkApplicationPreferDarkTheme = dark;
+                }
             }
             catch (Exception ex)
             {
