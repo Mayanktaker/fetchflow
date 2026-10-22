@@ -29,8 +29,13 @@ app/XDM/
   XDM.Messaging/       shared
   XDM.Compatibility/   shared
   XDM.Gtk.UI/          GTK 3 frontend  (compatibility)
-  XDM.Gtk4.UI/         GTK 4 frontend  (primary)   <- to be created after the spike
+  XDM.Gtk4.UI/         GTK 4 frontend  (primary)   <- scaffold created 2026-10-22
 ```
+
+The GTK 4 scaffold currently provides: application/window shell, headerbar with a
+theme toggle, category sidebar from shared `Config`, `ListView` content area,
+status bar, and its own `theme/gtk4-dark.css` / `gtk4-light.css`. It is in the
+solution and has a CI compile gate, but is **not** in release packaging.
 
 Rules for the split:
 
@@ -93,6 +98,16 @@ Conclusion: the binding and native runtime are viable, and the list-model API ne
 replace `GtkTreeView` works. The theme layer is the part that cannot be reused — GTK 4
 needs its own stylesheet even though individual selectors are accepted, because a single
 rejected construct discards everything after it.
+
+### GTK 4 gotchas found while building the scaffold
+
+- `CssProvider.LoadFromData(string, nint length)` takes a **byte** count, not a char
+  count. Passing `string.Length` silently truncates the tail of any stylesheet whose
+  comments contain non-ASCII characters (`—`, `·`), which shows up as
+  `Theme parser warning: ... Unterminated block at end of document`.
+- `XDM.Core.Application` collides with `Gtk.Application`; the GTK 4 project aliases
+  `using GtkApplication = Gtk.Application;`.
+- `Config.Instance.Categories` is `IEnumerable<Category>`, so counts need LINQ `.Count()`.
 
 ## Related
 

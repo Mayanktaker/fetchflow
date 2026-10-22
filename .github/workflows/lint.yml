@@ -79,6 +79,12 @@ jobs:
       - name: Build GTK UI (compiles all of XDM.Core)
         run: dotnet build app/XDM/XDM.Gtk.UI/XDM.Gtk.UI.csproj -c Release
 
+      # GTK 4 is the primary frontend target and is a separate project, so the
+      # GTK 3 build above proves nothing about it. Compile gate only — runtime
+      # GTK 4 smoke arrives with the list-parity port.
+      - name: Build GTK 4 UI (primary frontend)
+        run: dotnet build app/XDM/XDM.Gtk4.UI/XDM.Gtk4.UI.csproj -c Release
+
       - name: Run non-GTK tests
         run: dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --filter "TestCategory!=GtkSmoke"
 
