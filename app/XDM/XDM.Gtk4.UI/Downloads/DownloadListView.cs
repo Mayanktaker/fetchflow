@@ -102,7 +102,7 @@ namespace XDM.Gtk4UI.Downloads
                 }
             };
 
-            view.OnMap += (_, _) => TryWireSelectAllHeader();
+            view.OnMap += (_, _) => TryWireHeaders();
 
             var scrolled = ScrolledWindow.New();
             scrolled.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
@@ -371,37 +371,111 @@ namespace XDM.Gtk4UI.Downloads
         private static string? IdOf(ListItem item) =>
             (item.Item as StringObject)?.GetString();
 
-        // True once the gutter header carries the select-all click gesture
-        internal bool SelectAllHeaderWired => selectAllHeaderWired;
-        private bool selectAllHeaderWired;
+        // True once the column headers carry their click gestures
+        internal bool HeadersWired => headersWired;
+        private bool headersWired;
 
-        // Gives the gutter header a click gesture. GtkColumnViewColumn exposes no
-        // header-click signal and GtkColumnHeader is not bound, so the header widget
-        // is located by the select-all glyph it renders.
-        private void TryWireSelectAllHeader()
+        // Gives every column header its click behaviour: the gutter toggles select-all
+        // and Name/Size/Progress cycle the sort, like the GTK 3 header buttons.
+        // GtkColumnViewColumn exposes no header-click signal and GtkColumnHeader is not
+        // bound, so each header widget is located by the caption it renders.
+        private void TryWireHeaders()
         {
-            if (selectAllHeaderWired)
+            if (headersWired)
             {
                 return;
             }
 
+            var wired = 0;
+            // GTK groups the column headers in one container child of the view, so the
+            // individual header widgets are the container's children.
             for (var child = view.GetFirstChild(); child != null; child = child.GetNextSibling())
             {
-                if (child is ListView || !ContainsGutterGlyph(child))
+                if (child is ListView)
                 {
                     continue;
                 }
 
-                var gesture = GestureClick.New();
-                gesture.SetButton(1);
-                // Capture phase: run before the header's own click handling
-                gesture.SetPropagationPhase(PropagationPhase.Capture);
-                gesture.OnPressed += (_, _) => ToggleSelectAll();
-                child.AddController(gesture);
-                selectAllHeaderWired = true;
-                TraceLog.Log.Debug("Select-all gutter header wired for click");
-                return;
+                var inner = child.GetFirstChild();
+                if (inner == null)
+                {
+                    wired += WireHeader(child) ? 1 : 0;
+                    continue;
+                }
+
+                for (var header = inner; header != null; header = header.GetNextSibling())
+                {
+                    wired += WireHeader(header) ? 1 : 0;
+                }
             }
+
+            headersWired = wired > 0;
+            if (headersWired)
+            {
+                TraceLog.Log.Debug($"GTK 4 list headers wired: {wired} (select-all + sorting)");
+            }
+        }
+
+        // Wires one header widget by the caption (or select-all glyph) it renders
+        private bool WireHeader(Widget header)
+        {
+            if (ContainsGutterGlyph(header))
+            {
+                AttachClick(header, ToggleSelectAll);
+                return true;
+            }
+
+            var caption = FirstLabelText(header);
+            if (caption == null)
+            {
+                return false;
+            }
+
+            if (caption.StartsWith(TextResource.GetText("SORT_NAME") ?? "File name", StringComparison.Ordinal))
+            {
+                AttachClick(header, () => ToggleSort(DownloadSortColumn.Name));
+                return true;
+            }
+            if (caption.StartsWith(TextResource.GetText("SORT_SIZE") ?? "Size", StringComparison.Ordinal))
+            {
+                AttachClick(header, () => ToggleSort(DownloadSortColumn.Size));
+                return true;
+            }
+            if (caption.StartsWith(TextResource.GetText("LBL_PROGRESS") ?? "Progress", StringComparison.Ordinal))
+            {
+                AttachClick(header, () => ToggleSort(DownloadSortColumn.ProgressOrDate));
+                return true;
+            }
+            return false;
+        }
+
+        // Attaches a capture-phase left click so the header reacts before GTK's own handler
+        private static void AttachClick(Widget header, Action action)
+        {
+            var gesture = GestureClick.New();
+            gesture.SetButton(1);
+            gesture.SetPropagationPhase(PropagationPhase.Capture);
+            gesture.OnPressed += (_, _) => action();
+            header.AddController(gesture);
+        }
+
+        // First label text found in a header subtree
+        private static string? FirstLabelText(Widget widget)
+        {
+            if (widget is Label label)
+            {
+                return label.GetText();
+            }
+
+            for (var child = widget.GetFirstChild(); child != null; child = child.GetNextSibling())
+            {
+                var text = FirstLabelText(child);
+                if (text != null)
+                {
+                    return text;
+                }
+            }
+            return null;
         }
 
         // True when a widget subtree renders one of the tri-state select-all glyphs

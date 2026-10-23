@@ -297,8 +297,10 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   finished rows) and is middle-ellipsized; without that the column's natural width pushes
   Size/Progress out of a 900 px window. Falls back to the transfer status when no meta exists.
 - **Sidebar counts:** Active, Complete and every category append `(n)` while they contain rows.
-- **Select-all header:** the gutter header renders ☐/▣/☑ and carries a capture-phase click
-  gesture (located by its glyph, since `GtkColumnViewColumn` exposes no header-click signal).
+- **Header clicks:** GTK groups the column headers in one container child of the view, and
+  `GtkColumnViewColumn` exposes no header-click signal, so each header widget is located by
+  the caption (or select-all glyph) it renders and given a capture-phase click gesture.
+  The gutter toggles select-all; Name, Size and Progress cycle the sort like GTK 3.
 - **Media downloader:** `VideoDownloaderWindow` is a four-page `Gtk.Stack` view over the shared
   `VideoDownloaderUIController` (URL + optional browser cookies + credentials → resolving
   spinner → ticked result list with quality and download actions → error page).
