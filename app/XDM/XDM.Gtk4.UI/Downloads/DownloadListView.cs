@@ -23,6 +23,7 @@ namespace XDM.Gtk4UI.Downloads
     internal sealed class DownloadListView
     {
         // Fixed geometry tokens
+        private const int CheckboxWidth = 34;
         private const int SizeWidth = 90;
         private const int ProgressWidth = 160;
 
@@ -39,8 +40,6 @@ namespace XDM.Gtk4UI.Downloads
 
         // Authoritative selection, kept as transfer ids so it survives reloads
         private readonly HashSet<string> selectedIds = new(StringComparer.Ordinal);
-        // Guard against recursive selection bookkeeping
-        private bool isUpdatingSelection;
 
         // Currently bound cell widgets, so a progress tick can refresh them in place
         private readonly Dictionary<string, RowCells> boundCells = new(StringComparer.Ordinal);
@@ -159,34 +158,6 @@ namespace XDM.Gtk4UI.Downloads
             view.AddCssClass("unfinished");
         }
 
-        // Toggles one row's membership in the selection; returns the new state
-        internal bool ToggleRowAt(uint position)
-        {
-            if (position == uint.MaxValue || position >= (uint)store.Count)
-            {
-                return false;
-            }
-
-            var select = !selection.IsSelected(position);
-            isUpdatingSelection = true;
-            try
-            {
-                if (select)
-                {
-                    selection.SelectItem(position, false);
-                }
-                else
-                {
-                    selection.UnselectItem(position);
-                }
-            }
-            finally
-            {
-                isUpdatingSelection = false;
-            }
-            return select;
-        }
-
         // Returns the selected rows in visible order
         public IReadOnlyList<DownloadItem> GetSelectedItems()
         {
@@ -256,26 +227,18 @@ namespace XDM.Gtk4UI.Downloads
         private void SyncModel()
         {
             var keep = new HashSet<string>(selectedIds, StringComparer.Ordinal);
-            isUpdatingSelection = true;
-            try
+            selection.UnselectAll();
+            rowStore.RemoveAll();
+            foreach (var item in store.Items)
             {
-                selection.UnselectAll();
-                rowStore.RemoveAll();
-                foreach (var item in store.Items)
-                {
-                    rowStore.Append(StringObject.New(item.Id));
-                }
-                for (uint i = 0; i < (uint)store.Count; i++)
-                {
-                    if (keep.Contains(store.Items[(int)i].Id))
-                    {
-                        selection.SelectItem(i, false);
-                    }
-                }
+                rowStore.Append(StringObject.New(item.Id));
             }
-            finally
+            for (uint i = 0; i < (uint)store.Count; i++)
             {
-                isUpdatingSelection = false;
+                if (keep.Contains(store.Items[(int)i].Id))
+                {
+                    selection.SelectItem(i, false);
+                }
             }
 
             CaptureSelection();
@@ -287,25 +250,17 @@ namespace XDM.Gtk4UI.Downloads
         // views' saved selections untouched
         private void ApplySelection(HashSet<string> ids)
         {
-            isUpdatingSelection = true;
-            try
+            selection.UnselectAll();
+            foreach (var item in store.Items)
             {
-                selection.UnselectAll();
-                foreach (var item in store.Items)
-                {
-                    selectedIds.Remove(item.Id);
-                }
-                for (uint i = 0; i < (uint)store.Count; i++)
-                {
-                    if (ids.Contains(store.Items[(int)i].Id))
-                    {
-                        selection.SelectItem(i, false);
-                    }
-                }
+                selectedIds.Remove(item.Id);
             }
-            finally
+            for (uint i = 0; i < (uint)store.Count; i++)
             {
-                isUpdatingSelection = false;
+                if (ids.Contains(store.Items[(int)i].Id))
+                {
+                    selection.SelectItem(i, false);
+                }
             }
 
             CaptureSelection();
@@ -315,10 +270,6 @@ namespace XDM.Gtk4UI.Downloads
         // Recomputes the id set from the model and notifies listeners
         private void OnSelectionChanged()
         {
-            if (isUpdatingSelection)
-            {
-                return;
-            }
             CaptureSelection();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -350,11 +301,11 @@ namespace XDM.Gtk4UI.Downloads
             var rowBox = Box.New(Orientation.Horizontal, 10);
             rowBox.MarginTop = 4;
             rowBox.MarginBottom = 4;
-            rowBox.MarginStart = 10;
+            rowBox.MarginStart = 8;
             rowBox.MarginEnd = 6;
 
-            // File-type icon (selection is by click / Ctrl / Shift / Select All,
-            // so rows carry no checkbox)
+            // File-type icon
+            // File-type icon
             var icon = Gtk4IconHelper.CreateIcon("file-download-line", 24);
             icon.Valign = Align.Center;
             rowBox.Append(icon);
@@ -444,7 +395,7 @@ namespace XDM.Gtk4UI.Downloads
                 return;
             }
 
-            var icon = GetChildAt(rowBox, 0) as Image;
+            var icon = rowBox.GetFirstChild() as Image;
             var textBox = GetChildAt(rowBox, 1) as Box;
             var size = GetChildAt(rowBox, 2) as Label;
             var progressHost = GetChildAt(rowBox, 3) as Box;

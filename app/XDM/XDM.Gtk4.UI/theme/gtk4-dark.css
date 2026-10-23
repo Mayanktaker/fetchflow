@@ -60,12 +60,6 @@ listview.download-list > row:selected {
   color: @accent;
 }
 
-/* The bar is a distinct surface so it never blends into the list */
-.bottom-bar {
-  border-top: 1px solid @border_color;
-  padding: 4px 10px;
-}
-
 /* Bandwidth limiter is active */
 .bottom-bar button.speed-limit-enabled {
   color: @accent;
@@ -87,4 +81,18 @@ listview.download-list > row:selected {
 /* Section headings inside dialogs */
 .heading {
   font-weight: 600;
+}
+
+/* Active / Complete sit on their own card again */
+.sidebar-status-card {
+  background-color: @view_bg;
+  border: 1px solid @border_color;
+  border-radius: 10px;
+  margin: 8px;
+  padding: 4px;
+}
+
+/* Bottom bar sits below a hairline so it never melts into the list */
+.bottom-bar {
+  border-top: 1px solid #404040;
 }

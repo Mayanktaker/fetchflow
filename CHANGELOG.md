@@ -14,10 +14,10 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - **Media Grabber:** a new window lists the streams FetchFlow captures from your browser — pick one and download it
 - **Video downloader:** paste a video page address, optionally reuse your browser cookies, choose a quality and download
 - **A calmer Settings window:** pages are listed down the side and Cancel/Save sit in the window header, the way other GNOME apps work
-- **Cleaner rows:** the row checkboxes are gone — click, Ctrl+click, Shift+click or Select All handle selection, so rows show more of the file
-- **Bottom bar tidied:** a divider separates it from the list, the selection controls sit on the left and Sort / Speed limiter / Queue on the right, and all its icons now match the theme
-- **Simpler list, smarter bottom bar:** the column header is gone (no more dragging columns); Select All sits on the left of the bottom bar and a new Sort menu on the right shows what you are sorting by
-- **Sidebar tidied:** Active and Complete sit on their own card again, share the same accent icon colour at rest, and turn white while selected
+- **Less fussy list:** the per-row checkboxes are gone — select with Ctrl/Shift-click or the bottom-bar Select All
+- **Simpler list, smarter bottom bar:** the Select All, sort, limiter and scheduler buttons share one accent-coloured icon tone, and a hairline separates the bar from the list; Active and Complete sit on a card again with matching icons
+ the column header is gone (no more dragging columns); Select All sits on the left of the bottom bar and a new Sort menu on the right shows what you are sorting by
+- **Sidebar tidied:** Active and Complete no longer look raised, and their icons turn white while selected
 - **Multi-select works again:** ticking several checkboxes now keeps every ticked row selected instead of collapsing to one
 - **Clearer rows:** the source site and the save folder now sit on separate, very quiet lines under the file name, so the name is the first thing you see; the list header is easier to read and the scrollbar no longer covers the cards
 - **Download rows are cards:** each download sits on its own rounded card, so Active and Complete are easier to scan; the Net button icon and the title bar no longer repeat the app mark

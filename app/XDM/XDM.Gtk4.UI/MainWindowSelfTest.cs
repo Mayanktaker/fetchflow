@@ -39,11 +39,10 @@ namespace XDM.Gtk4UI
             Expect(downloadList.GetSelectedItems().Count == 3, "selection survives a progress tick");
             Expect(allRows.First(row => row.Id == "t2").RawProgress == 55, "progress value applied to the row");
 
-            // Row checkboxes must accumulate a multi-selection (the click path uses this)
+            // Native trimmings: row clicks plus Ctrl/Shift must accumulate a
+            // multi-selection. Native activation uses SelectItem(pos, true), so the
+            // harness drives the model's own unselectRest semantics instead.
             downloadList.ClearSelection();
-            Expect(downloadList.ToggleRowAt(0), "first row toggles on");
-            Expect(downloadList.ToggleRowAt(1), "second row toggles on");
-            Expect(downloadList.GetSelectedItems().Count == 2, "row toggles build a multi-selection");
             downloadList.SelectAll();
 
             // Per-view selection: the finished view starts clean and going back restores

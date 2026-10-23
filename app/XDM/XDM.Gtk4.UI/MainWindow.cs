@@ -143,25 +143,22 @@ namespace XDM.Gtk4UI
             NewButton = Button.New();
             var newBox = Box.New(Orientation.Horizontal, 6);
             newBox.Valign = Align.Center;
-            // Symbolic icon inherits the button's foreground, so it stays legible in both themes
-            var newIcon = Image.NewFromIconName("list-add-symbolic");
-            newIcon.PixelSize = 16;
-            newBox.Append(newIcon);
+            newBox.Append(Gtk4IconHelper.CreateTintedIcon("links-line", 255, 255, 255, 16));
             newBox.Append(Label.New(TextResource.GetText("DESC_NEW") ?? "New"));
             NewButton.SetChild(newBox);
             NewButton.TooltipText = TextResource.GetText("DESC_NEW") ?? "New Download (Ctrl+N)";
             NewButton.AddCssClass("suggested-action");
 
             // Secondary actions are icon-only so the header stays inside the window width
-            DeleteButton = CreateHeaderIconButton("edit-delete-symbolic", "destructive-action",
+            DeleteButton = CreateHeaderIconButton("delete-bin-7-line", "destructive-action",
                 TextResource.GetText("DESC_DEL") ?? "Delete");
-            PauseButton = CreateHeaderIconButton("media-playback-pause-symbolic", null,
+            PauseButton = CreateHeaderIconButton("pause-line", null,
                 TextResource.GetText("MENU_PAUSE") ?? "Pause");
-            ResumeButton = CreateHeaderIconButton("media-playback-start-symbolic", null,
+            ResumeButton = CreateHeaderIconButton("play-line", null,
                 TextResource.GetText("MENU_RESUME") ?? "Resume");
-            OpenFileButton = CreateHeaderIconButton("document-open-symbolic", null,
+            OpenFileButton = CreateHeaderIconButton("external-link-line", null,
                 TextResource.GetText("CTX_OPEN_FILE") ?? "Open");
-            OpenFolderButton = CreateHeaderIconButton("folder-open-symbolic", null,
+            OpenFolderButton = CreateHeaderIconButton("folder-shared-line", null,
                 TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder");
 
             // Update-available indicator: hidden until an update lands
@@ -187,25 +184,31 @@ namespace XDM.Gtk4UI
 
             lblExtensionStatus.AddCssClass("extension-status-label");
 
-            btnSpeedLimit = CreateBarButton(
-                "alarm-symbolic",
-                TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed limiter",
-                "Speed limiter (click for settings)");
+            btnSpeedLimit = Gtk4IconHelper.CreateActionButton(
+                "time-line",
+                TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter",
+                "Speed Limiter (Click for settings)",
+                "flat",
+                14);
             btnSpeedLimit.OnClicked += (_, _) =>
             {
                 (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(3);
             };
 
-            btnScheduler = CreateBarButton(
-                "view-list-symbolic",
+            btnScheduler = Gtk4IconHelper.CreateActionButton(
+                "list-settings-line",
                 TextResource.GetText("DESC_Q_TITLE") ?? "Queue & Scheduler",
-                "Queue and scheduler (Ctrl+Shift+Q)");
+                "Queue and Scheduler (Ctrl+Shift+Q)",
+                "flat",
+                14);
             btnScheduler.OnClicked += (_, _) => OnScheduler();
 
-            btnSelectAll = CreateBarButton(
-                "object-select-symbolic",
+            btnSelectAll = Gtk4IconHelper.CreateActionButton(
+                "checkbox-line",
                 TextResource.GetText("LBL_SELECT_ALL") ?? "Select All",
-                "Select all downloads (Ctrl+A)");
+                "Select all downloads (Ctrl+A)",
+                "flat",
+                14);
             btnSelectAll.OnClicked += (_, _) => downloadList.ToggleSelectAll();
 
             // Bottom bar owns the list controls: select-all on the left, sort on the right
@@ -285,32 +288,10 @@ namespace XDM.Gtk4UI
             UpdateSpeedLimitButtonState();
         }
 
-        // Bottom-bar action: symbolic icon plus label, both theme-tinted
-        private static Button CreateBarButton(string iconName, string text, string tooltip)
-        {
-            var button = Button.New();
-            button.AddCssClass("flat");
-            button.TooltipText = tooltip;
-
-            var box = Box.New(Orientation.Horizontal, 6);
-            box.Valign = Align.Center;
-            var icon = Image.NewFromIconName(iconName);
-            icon.PixelSize = 14;
-            box.Append(icon);
-            box.Append(Label.New(text));
-            button.SetChild(box);
-            return button;
-        }
-
-        // Creates an icon-only header button from a symbolic icon (theme-tinted)
+        // Creates an icon-only header button with a tooltip and optional style class
         private static Button CreateHeaderIconButton(string iconName, string? cssClass, string tooltip)
         {
-            var button = Button.New();
-            var icon = Image.NewFromIconName(iconName);
-            icon.PixelSize = 16;
-            button.SetChild(icon);
-            button.AddCssClass("flat");
-            button.TooltipText = tooltip;
+            var button = Gtk4IconHelper.CreateActionButton(iconName, null, tooltip, "flat", 16);
             if (!string.IsNullOrEmpty(cssClass))
             {
                 button.AddCssClass(cssClass);
@@ -568,11 +549,7 @@ namespace XDM.Gtk4UI
         }
 
         // Ctrl+T swaps light/dark and remembers the choice
-        private void ToggleTheme()
-        {
-            Gtk4Theme.Toggle(Window);
-            UpdateSidebarIcons();
-        }
+        private void ToggleTheme() => Gtk4Theme.Toggle(Window);
 
         // Asks before clearing the finished list, then raises the core handler
         private void ConfirmRemoveFinished()

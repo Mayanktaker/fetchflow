@@ -168,12 +168,9 @@ namespace XDM.Gtk4UI
             statusList = ListBox.New();
             // Native GNOME sidebar rows + a grouped card for the Active/Complete block
             statusList.AddCssClass("navigation-sidebar");
-            statusList.AddCssClass("boxed-list");
             statusList.SelectionMode = SelectionMode.Browse;
-            statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_UNFINISHED") ?? "Active", InProgressKey,
-                "download-2-line", 59, 130, 246, useAccent: true));
-            statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_FINISHED") ?? "Complete", FinishedKey,
-                "check-line", 46, 194, 126, useAccent: true));
+            statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_UNFINISHED") ?? "Active", InProgressKey, "arrow-down-line", 53, 132, 228));
+            statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_FINISHED") ?? "Complete", FinishedKey, "check-line", 53, 132, 228));
             statusList.OnRowSelected += (_, args) => OnSidebarRowSelected(args, statusList, true);
             // Preselect Active so the sidebar always shows where the list is pointing
             if (statusList.GetRowAtIndex(0) is { } activeRow)
@@ -195,7 +192,7 @@ namespace XDM.Gtk4UI
             {
                 categories[category.Name] = category;
                 var (iconName, r, g, b) = CategoryIconPalette.Resolve(category);
-                categoryList.Append(BuildSidebarRow(category.DisplayName, category.Name, iconName, r, g, b, useAccent: false));
+                categoryList.Append(BuildSidebarRow(category.DisplayName, category.Name, iconName, r, g, b));
             }
             categoryList.OnRowSelected += (_, args) => OnSidebarRowSelected(args, categoryList, false);
 
@@ -212,20 +209,40 @@ namespace XDM.Gtk4UI
             return sidebar;
         }
 
+        // Keeps every control in tune with the active colour scheme
+        private void UpdateBottomBarIcons()
+        {
+            var (ar, ag, ab) = AccentForState();
+            TintButtonIcon(btnSelectAll, "checkbox-line", ar, ag, ab, 14);
+            TintButtonIcon(btnScheduler, "list-settings-line", ar, ag, ab, 14);
+            TintButtonIcon(btnSpeedLimit, "time-line", ar, ag, ab, 14);
+        }
+
+        // Active accent from the shared scheme table, matching Gtk4Theme.ApplyColorScheme
+        private static (byte R, byte G, byte B) AccentForState()
+        {
+            try
+            {
+                var index = ColorSchemeTable.ClampSchemeIndex(Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
+                var scheme = ColorSchemeTable.GetScheme(Gtk4Theme.IsDarkActive, index);
+                return Gtk4IconHelper.ParseHex(scheme.AccentHex);
+            }
+            catch
+            {
+                return (53, 132, 228);
+            }
+        }
+
         // Keeps sidebar icons legible: white on the accent row, own colour otherwise
         private void UpdateSidebarIcons()
         {
-            // Active/Complete follow the active colour scheme accent so both views
-            // look the same at rest, and every icon turns white when its row is selected.
-            var accent = ColorSchemeTable.GetScheme(Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme).AccentRgb;
-
             foreach (var entry in sidebarEntries)
             {
                 var selected = entry.Row.IsSelected();
-                var r = selected ? (byte)255 : entry.UseAccent ? accent.R : entry.R;
-                var g = selected ? (byte)255 : entry.UseAccent ? accent.G : entry.G;
-                var b = selected ? (byte)255 : entry.UseAccent ? accent.B : entry.B;
-                Gtk4IconHelper.UpdateTintedIcon(entry.Icon, entry.IconName, r, g, b, 18);
+                Gtk4IconHelper.UpdateTintedIcon(entry.Icon, entry.IconName,
+                    selected ? (byte)255 : entry.R,
+                    selected ? (byte)255 : entry.G,
+                    selected ? (byte)255 : entry.B, 18);
             }
         }
 
@@ -364,9 +381,8 @@ namespace XDM.Gtk4UI
             public byte R { get; }
             public byte G { get; }
             public byte B { get; }
-            public bool UseAccent { get; }
 
-            public SidebarEntry(ListBoxRow row, Image icon, string iconName, byte r, byte g, byte b, bool useAccent)
+            public SidebarEntry(ListBoxRow row, Image icon, string iconName, byte r, byte g, byte b)
             {
                 Row = row;
                 Icon = icon;
@@ -374,12 +390,39 @@ namespace XDM.Gtk4UI
                 R = r;
                 G = g;
                 B = b;
-                UseAccent = useAccent;
+            }
+        }
+
+        // First image inside a widget subtree (buttons wrap their icons in a box)
+        private static Image? FirstImage(Widget widget)
+        {
+            if (widget is Image image)
+            {
+                return image;
+            }
+            for (var child = widget.GetFirstChild(); child != null; child = child.GetNextSibling())
+            {
+                var found = FirstImage(child);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            return null;
+        }
+
+        // Applies one RGB tone to a button's icon widget
+        private static void TintButtonIcon(Button button, string iconName, byte r, byte g, byte b, int size)
+        {
+            var image = FirstImage(button);
+            if (image != null)
+            {
+                Gtk4IconHelper.UpdateTintedIcon(image, iconName, r, g, b, size);
             }
         }
 
         // Creates one accessible sidebar row with tinted category icon and text
-        private ListBoxRow BuildSidebarRow(string text, string key, string iconName, byte r, byte g, byte b, bool useAccent)
+        private ListBoxRow BuildSidebarRow(string text, string key, string iconName, byte r, byte g, byte b)
         {
             var rowBox = Box.New(Orientation.Horizontal, 10);
             rowBox.MarginTop = 6;
@@ -404,7 +447,7 @@ namespace XDM.Gtk4UI
             row.SetChild(rowBox);
             row.Name = key;
             row.TooltipText = text;
-            sidebarEntries.Add(new SidebarEntry(row, icon, iconName, r, g, b, useAccent));
+            sidebarEntries.Add(new SidebarEntry(row, icon, iconName, r, g, b));
             return row;
         }
 
@@ -414,15 +457,8 @@ namespace XDM.Gtk4UI
             var bar = Box.New(Orientation.Horizontal, 10);
             bar.AddCssClass("bottom-bar");
 
-            // Selection first, then the monitoring/status group
             bar.Append(btnSelectAll);
             bar.Append(lblSelectionCount);
-
-            var separator = Separator.New(Orientation.Vertical);
-            separator.MarginTop = 2;
-            separator.MarginBottom = 2;
-            bar.Append(separator);
-
             bar.Append(btnMonitoring);
             bar.Append(lblExtensionStatus);
 
@@ -431,9 +467,12 @@ namespace XDM.Gtk4UI
             spacer.Hexpand = true;
             bar.Append(spacer);
 
+            UpdateBottomBarIcons();
+            TintButtonIcon(btnSelectAll, "checkbox-line", 53, 132, 228, 14);
+            TintButtonIcon(btnScheduler, "list-settings-line", 53, 132, 228, 14);
+            TintButtonIcon(btnSpeedLimit, "time-line", 53, 132, 228, 14);
+
             bar.Append(btnSort);
-            bar.Append(btnSpeedLimit);
-            bar.Append(btnScheduler);
 
             return bar;
         }

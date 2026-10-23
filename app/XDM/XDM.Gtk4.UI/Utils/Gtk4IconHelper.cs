@@ -244,5 +244,23 @@ namespace XDM.Gtk4UI.Utils
                 button.AddCssClass(cssClass);
             }
         }
+
+        // Parses a #rrggbb accent hex into bytes (falling back to the default blue)
+        public static (byte R, byte G, byte B) ParseHex(string hex)
+        {
+            try
+            {
+                var value = hex.TrimStart('#');
+                if (value.Length == 6)
+                {
+                    return (
+                        Convert.ToByte(value.Substring(0, 2), 16),
+                        Convert.ToByte(value.Substring(2, 2), 16),
+                        Convert.ToByte(value.Substring(4, 2), 16));
+                }
+            }
+            catch { }
+            return (53, 132, 228);
+        }
     }
 }
