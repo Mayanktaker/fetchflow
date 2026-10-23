@@ -104,19 +104,19 @@ namespace XDM.Gtk4UI.Dialogs
             leftBox.Append(queueScroll);
 
             var queueToolbar = Box.New(Orientation.Horizontal, 6);
-            btnNewQueue = Button.NewWithLabel("+ New");
+            btnNewQueue = Button.NewWithLabel(TextResource.GetText("BTN_NEW_QUEUE_SHORT") ?? "+ New");
             btnNewQueue.TooltipText = "Create a new queue";
             btnNewQueue.OnClicked += (_, _) => OnNewQueueClicked();
 
-            btnDeleteQueue = Button.NewWithLabel("Delete");
+            btnDeleteQueue = Button.NewWithLabel(TextResource.GetText("DESC_DEL") ?? "Delete");
             btnDeleteQueue.TooltipText = "Delete selected queue";
             btnDeleteQueue.OnClicked += (_, _) => OnDeleteQueueClicked();
 
-            btnStartQueue = Button.NewWithLabel("Start");
+            btnStartQueue = Button.NewWithLabel(TextResource.GetText("BTN_START") ?? "Start");
             btnStartQueue.TooltipText = "Start all downloads in this queue";
             btnStartQueue.OnClicked += (_, _) => OnStartQueueClicked();
 
-            btnStopQueue = Button.NewWithLabel("Stop");
+            btnStopQueue = Button.NewWithLabel(TextResource.GetText("BTN_STOP") ?? "Stop");
             btnStopQueue.TooltipText = "Stop all downloads in this queue";
             btnStopQueue.OnClicked += (_, _) => OnStopQueueClicked();
 
@@ -144,19 +144,19 @@ namespace XDM.Gtk4UI.Dialogs
             downloadsTab.MarginEnd = 8;
 
             var downloadsToolbar = Box.New(Orientation.Horizontal, 6);
-            btnMoveUp = Button.NewWithLabel("Move Up");
+            btnMoveUp = Button.NewWithLabel(TextResource.GetText("BTN_MOVE_UP") ?? "Move Up");
             btnMoveUp.OnClicked += (_, _) => OnMoveUpClicked();
 
-            btnMoveDown = Button.NewWithLabel("Move Down");
+            btnMoveDown = Button.NewWithLabel(TextResource.GetText("BTN_MOVE_DOWN") ?? "Move Down");
             btnMoveDown.OnClicked += (_, _) => OnMoveDownClicked();
 
-            btnAddDownloads = Button.NewWithLabel("+ Add...");
+            btnAddDownloads = Button.NewWithLabel(TextResource.GetText("BTN_ADD_SHORT") ?? "+ Add...");
             btnAddDownloads.OnClicked += (_, _) => OnAddDownloadsClicked();
 
-            btnRemoveDownloads = Button.NewWithLabel("Remove");
+            btnRemoveDownloads = Button.NewWithLabel(TextResource.GetText("BTN_REMOVE") ?? "Remove");
             btnRemoveDownloads.OnClicked += (_, _) => OnRemoveDownloadsClicked();
 
-            btnMoveToQueue = Button.NewWithLabel("Move To...");
+            btnMoveToQueue = Button.NewWithLabel(TextResource.GetText("BTN_MOVE_TO") ?? "Move To...");
             btnMoveToQueue.OnClicked += (_, _) => OnMoveToQueueClicked();
 
             downloadsToolbar.Append(btnMoveUp);
@@ -176,7 +176,7 @@ namespace XDM.Gtk4UI.Dialogs
             downloadsScroll.SetChild(downloadsListBox);
             downloadsTab.Append(downloadsScroll);
 
-            notebook.AppendPage(downloadsTab, Label.New("Downloads"));
+            notebook.AppendPage(downloadsTab, Label.New(TextResource.GetText("LBL_DOWNLOADS") ?? "Downloads"));
 
             // Tab 2: Scheduler
             var schedulerTab = Box.New(Orientation.Vertical, 12);
@@ -184,7 +184,7 @@ namespace XDM.Gtk4UI.Dialogs
             schedulerTab.MarginStart = 12;
             schedulerTab.MarginEnd = 12;
 
-            chkEnableScheduler = CheckButton.NewWithLabel("Enable Scheduler for this queue");
+            chkEnableScheduler = CheckButton.NewWithLabel(TextResource.GetText("LBL_ENABLE_SCHEDULER") ?? "Enable Scheduler for this queue");
             chkEnableScheduler.OnToggled += (_, _) => OnEnableSchedulerToggled();
             schedulerTab.Append(chkEnableScheduler);
 
@@ -192,12 +192,12 @@ namespace XDM.Gtk4UI.Dialogs
             schedulerContainer.Sensitive = false;
 
             // Days selection
-            var daysHeader = Label.New("Active Days:");
+            var daysHeader = Label.New(TextResource.GetText("LBL_ACTIVE_DAYS") ?? "Active Days:");
             daysHeader.Halign = Align.Start;
             daysHeader.AddCssClass("heading");
             schedulerContainer.Append(daysHeader);
 
-            chkEveryday = CheckButton.NewWithLabel("Every day");
+            chkEveryday = CheckButton.NewWithLabel(TextResource.GetText("LBL_EVERY_DAY") ?? "Every day");
             chkEveryday.OnToggled += (_, _) => OnEverydayToggled();
             schedulerContainer.Append(chkEveryday);
 
@@ -256,7 +256,7 @@ namespace XDM.Gtk4UI.Dialogs
             schedulerContainer.Append(stopBox);
 
             schedulerTab.Append(schedulerContainer);
-            notebook.AppendPage(schedulerTab, Label.New("Scheduler"));
+            notebook.AppendPage(schedulerTab, Label.New(TextResource.GetText("LBL_SCHEDULER") ?? "Scheduler"));
 
             paned.EndChild = notebook;
             rootBox.Append(paned);

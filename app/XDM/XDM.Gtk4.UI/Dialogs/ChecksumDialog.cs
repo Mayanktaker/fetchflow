@@ -76,7 +76,7 @@ namespace XDM.Gtk4UI.Dialogs
             prgHash.Fraction = 0;
             rootBox.Append(prgHash);
 
-            lblStatus = Label.New("Calculating hashes...");
+            lblStatus = Label.New(TextResource.GetText("MSG_CALC_HASHES") ?? "Calculating hashes...");
             lblStatus.Halign = Align.Start;
             rootBox.Append(lblStatus);
 
@@ -88,7 +88,7 @@ namespace XDM.Gtk4UI.Dialogs
             rootBox.Append(hashesBox);
 
             var compareBox = Box.New(Orientation.Vertical, 6);
-            var compareHeader = Label.New("Verify against expected hash:");
+            var compareHeader = Label.New(TextResource.GetText("LBL_VERIFY_HASH") ?? "Verify against expected hash:");
             compareHeader.Halign = Align.Start;
             compareBox.Append(compareHeader);
 
@@ -98,7 +98,7 @@ namespace XDM.Gtk4UI.Dialogs
             txtExpected.PlaceholderText = "Paste expected SHA-256, MD5, SHA-512, or SHA-1 hash...";
             txtExpected.OnChanged += (_, _) => CheckMatch();
 
-            lblMatchBadge = Label.New("No match yet");
+            lblMatchBadge = Label.New(TextResource.GetText("MSG_NO_MATCH") ?? "No match yet");
             lblMatchBadge.Halign = Align.End;
             compareInputRow.Append(txtExpected);
             compareInputRow.Append(lblMatchBadge);
@@ -109,11 +109,11 @@ namespace XDM.Gtk4UI.Dialogs
             buttonBox.Halign = Align.End;
             buttonBox.MarginTop = 12;
 
-            btnRecalculate = Button.NewWithLabel("Recalculate");
+            btnRecalculate = Button.NewWithLabel(TextResource.GetText("BTN_RECALCULATE") ?? "Recalculate");
             btnRecalculate.OnClicked += (_, _) => StartCalculation();
-            btnCopyAll = Button.NewWithLabel("Copy All");
+            btnCopyAll = Button.NewWithLabel(TextResource.GetText("BTN_COPY_ALL") ?? "Copy All");
             btnCopyAll.OnClicked += (_, _) => CopyAllHashes();
-            btnClose = Button.NewWithLabel("Close");
+            btnClose = Button.NewWithLabel(TextResource.GetText("BTN_CLOSE") ?? "Close");
             btnClose.OnClicked += (_, _) => Close();
 
             buttonBox.Append(btnRecalculate);
@@ -143,7 +143,7 @@ namespace XDM.Gtk4UI.Dialogs
             entry.Hexpand = true;
             entry.Editable = false;
 
-            var btnCopy = Button.NewWithLabel("Copy");
+            var btnCopy = Button.NewWithLabel(TextResource.GetText("BTN_COPY") ?? "Copy");
             btnCopy.OnClicked += (_, _) =>
             {
                 var text = entry.GetText();

@@ -21,9 +21,9 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
   Browser Monitoring link opened the wrong page; the footer printed developer text; About
   hardcoded the version; the extension badge was static; Active and Complete shared one
   surface; and the header overflowed with labelled buttons. Still open: FF-UI-026…035
-  (localization gaps, header select-all click, settings sidebar, colour schemes, media
-  grabber, rubber-band selection, sidebar counts, libadwaita shell, row meta lines). The
-  yt-dlp media downloader landed in the parity pass.
+  (rubber-band selection, media grabber/extension-registration entry points). The yt-dlp
+  media downloader, sidebar counts, row meta lines, header select-all click, colour schemes,
+  settings sidebar, libadwaita shell and the localization pass all landed in the parity work.
 - Feature areas already at GTK 3 parity in GTK 4 (not "full parity": see the open findings above):
   * Dynamic SVG color tinting via `Gtk4IconHelper` with memory/temp disk caching: generates vivid vector icons for sidebar categories and download row file types matching `CategoryIconPalette` (Documents=amber `#f59e0b`, Music=purple `#a855f7`, Videos=coral red `#ef4444`, Compressed=teal `#14b8a6`, Programs=indigo `#6366f1`, Images=pink `#f43f5e`, Incomplete=blue, Finished=green).
   * Multi-select gutter checkbox column added to `DownloadListView` with interactive row selection, select-all bottom bar button, `Ctrl+A` accelerator, and selection count indicator.

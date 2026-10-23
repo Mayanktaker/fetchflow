@@ -98,11 +98,11 @@ namespace XDM.Gtk4UI.Dialogs
 
             // Letter controls
             letterBox = Box.New(Orientation.Horizontal, 8);
-            var lblFromL = Label.New("From:");
+            var lblFromL = Label.New(TextResource.GetText("LBL_FROM") ?? "From:");
             cmbLetterFrom = DropDown.NewFromStrings(Array.Empty<string>());
             cmbLetterFrom.OnNotify += (_, args) => { if (args.Pspec.GetName() == "selected") OnPatternInputChanged(); };
 
-            var lblToL = Label.New("To:");
+            var lblToL = Label.New(TextResource.GetText("LBL_TO") ?? "To:");
             cmbLetterTo = DropDown.NewFromStrings(Array.Empty<string>());
             cmbLetterTo.OnNotify += (_, args) => { if (args.Pspec.GetName() == "selected") OnPatternInputChanged(); };
 
@@ -116,19 +116,19 @@ namespace XDM.Gtk4UI.Dialogs
             numberBox = Box.New(Orientation.Horizontal, 8);
             numberBox.Visible = false;
 
-            var lblFromN = Label.New("From:");
+            var lblFromN = Label.New(TextResource.GetText("LBL_FROM") ?? "From:");
             txtNumberFrom = Entry.New();
             txtNumberFrom.SetText("1");
             txtNumberFrom.WidthRequest = 60;
             txtNumberFrom.OnChanged += (_, _) => OnPatternInputChanged();
 
-            var lblToN = Label.New("To:");
+            var lblToN = Label.New(TextResource.GetText("LBL_TO") ?? "To:");
             txtNumberTo = Entry.New();
             txtNumberTo.SetText("10");
             txtNumberTo.WidthRequest = 60;
             txtNumberTo.OnChanged += (_, _) => OnPatternInputChanged();
 
-            chkLeadingZero = CheckButton.NewWithLabel("Leading zeros:");
+            chkLeadingZero = CheckButton.NewWithLabel(TextResource.GetText("LBL_LEADING_ZEROS") ?? "Leading zeros:");
             chkLeadingZero.OnToggled += (_, _) => OnPatternInputChanged();
 
             txtLeadingZeroCount = Entry.New();
@@ -146,7 +146,7 @@ namespace XDM.Gtk4UI.Dialogs
 
             // Preview Box
             var previewBox = Box.New(Orientation.Vertical, 6);
-            var lblPreview = Label.New("Preview URLs:");
+            var lblPreview = Label.New(TextResource.GetText("LBL_PREVIEW_URLS") ?? "Preview URLs:");
             lblPreview.Halign = Align.Start;
             lblPreview.AddCssClass("heading");
             previewBox.Append(lblPreview);
@@ -156,7 +156,7 @@ namespace XDM.Gtk4UI.Dialogs
             txtPreviewN = CreateReadonlyPreviewRow(previewBox, "N:");
             patternTab.Append(previewBox);
 
-            notebook.AppendPage(patternTab, Label.New("Pattern"));
+            notebook.AppendPage(patternTab, Label.New(TextResource.GetText("LBL_PATTERN") ?? "Pattern"));
 
             // --- Tab 2: Batch Address List ---
             var listTab = Box.New(Orientation.Vertical, 8);
@@ -164,7 +164,7 @@ namespace XDM.Gtk4UI.Dialogs
             listTab.MarginStart = 8;
             listTab.MarginEnd = 8;
 
-            var lblListPrompt = Label.New("Enter one URL per line:");
+            var lblListPrompt = Label.New(TextResource.GetText("MSG_ONE_URL_PER_LINE") ?? "Enter one URL per line:");
             lblListPrompt.Halign = Align.Start;
             listTab.Append(lblListPrompt);
 
@@ -177,7 +177,7 @@ namespace XDM.Gtk4UI.Dialogs
             scrollList.SetChild(txtBatchList);
             listTab.Append(scrollList);
 
-            notebook.AppendPage(listTab, Label.New("Address List"));
+            notebook.AppendPage(listTab, Label.New(TextResource.GetText("LBL_ADDRESS_LIST") ?? "Address List"));
             rootBox.Append(notebook);
 
             // --- Footer ---

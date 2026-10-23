@@ -50,7 +50,7 @@ namespace XDM.Gtk4UI.Dialogs
             AddGridRow(grid, ref row, "Download Type:", entry.DownloadType ?? "Standard");
             rootBox.Append(grid);
 
-            var headersLabel = Label.New("HTTP Headers & Cookies:");
+            var headersLabel = Label.New(TextResource.GetText("LBL_HEADERS_COOKIES") ?? "HTTP Headers & Cookies:");
             headersLabel.Halign = Align.Start;
             headersLabel.AddCssClass("title-4");
             headersLabel.MarginTop = 8;
@@ -86,7 +86,7 @@ namespace XDM.Gtk4UI.Dialogs
             buttonBox.Halign = Align.End;
             buttonBox.MarginTop = 8;
 
-            var copyUrlBtn = Button.NewWithLabel("Copy URL");
+            var copyUrlBtn = Button.NewWithLabel(TextResource.GetText("CTX_COPY_URL") ?? "Copy URL");
             copyUrlBtn.OnClicked += (_, _) => window.GetClipboard().SetText(entry.PrimaryUrl);
 
             var closeBtn = Button.NewWithLabel(TextResource.GetText("BTN_CLOSE") ?? "Close");

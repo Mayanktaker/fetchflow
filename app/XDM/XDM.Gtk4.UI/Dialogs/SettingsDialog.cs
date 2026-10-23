@@ -122,7 +122,7 @@ namespace XDM.Gtk4UI.Dialogs
             txtDownloadFolder = Entry.New();
             txtDownloadFolder.Hexpand = true;
             txtDownloadFolder.SetText(Config.Instance.DefaultDownloadFolder ?? string.Empty);
-            var btnBrowseDownload = Button.NewWithLabel("Browse...");
+            var btnBrowseDownload = Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse...");
             btnBrowseDownload.OnClicked += (_, _) => BrowseFolder(txtDownloadFolder);
             downloadFolderRow.Append(lblDownload);
             downloadFolderRow.Append(txtDownloadFolder);
@@ -136,7 +136,7 @@ namespace XDM.Gtk4UI.Dialogs
             txtTempFolder = Entry.New();
             txtTempFolder.Hexpand = true;
             txtTempFolder.SetText(Config.Instance.TempDir ?? string.Empty);
-            var btnBrowseTemp = Button.NewWithLabel("Browse...");
+            var btnBrowseTemp = Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse...");
             btnBrowseTemp.OnClicked += (_, _) => BrowseFolder(txtTempFolder);
             tempFolderRow.Append(lblTemp);
             tempFolderRow.Append(txtTempFolder);
@@ -159,7 +159,7 @@ namespace XDM.Gtk4UI.Dialogs
 
             // Segments per download
             var segRow = Box.New(Orientation.Horizontal, 8);
-            var lblSeg = Label.New("Max Segments per Download:");
+            var lblSeg = Label.New(TextResource.GetText("SETTINGS_MAX_SEGMENTS") ?? "Max Segments per Download:");
             lblSeg.WidthRequest = 180;
             lblSeg.Halign = Align.Start;
             var segOptions = new[] { "1", "2", "4", "8", "16", "32" };
@@ -320,12 +320,12 @@ namespace XDM.Gtk4UI.Dialogs
             catDetailBox.Append(lblSelectedCat);
 
             var catFolderRow = Box.New(Orientation.Horizontal, 8);
-            var lblCatFolder = Label.New("Target Folder:");
+            var lblCatFolder = Label.New(TextResource.GetText("SETTINGS_TARGET_FOLDER") ?? "Target Folder:");
             lblCatFolder.WidthRequest = 110;
             lblCatFolder.Halign = Align.Start;
             txtCatFolder = Entry.New();
             txtCatFolder.Hexpand = true;
-            var btnBrowseCatFolder = Button.NewWithLabel("Browse...");
+            var btnBrowseCatFolder = Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse...");
             btnBrowseCatFolder.OnClicked += (_, _) => BrowseFolder(txtCatFolder);
             catFolderRow.Append(lblCatFolder);
             catFolderRow.Append(txtCatFolder);
@@ -333,7 +333,7 @@ namespace XDM.Gtk4UI.Dialogs
             catDetailBox.Append(catFolderRow);
 
             var catExtsRow = Box.New(Orientation.Horizontal, 8);
-            var lblCatExts = Label.New("File Extensions:");
+            var lblCatExts = Label.New(TextResource.GetText("SETTINGS_FILE_EXT") ?? "File Extensions:");
             lblCatExts.WidthRequest = 110;
             lblCatExts.Halign = Align.Start;
             txtCatExts = Entry.New();
@@ -342,7 +342,7 @@ namespace XDM.Gtk4UI.Dialogs
             catExtsRow.Append(txtCatExts);
             catDetailBox.Append(catExtsRow);
 
-            var catHint = Label.New("Separate extensions with spaces or commas (e.g. mp4, mkv, webm)");
+            var catHint = Label.New(TextResource.GetText("MSG_EXT_HINT") ?? "Separate extensions with spaces or commas (e.g. mp4, mkv, webm)");
             catHint.AddCssClass("dim-label");
             catHint.Halign = Align.Start;
             catDetailBox.Append(catHint);
@@ -361,7 +361,7 @@ namespace XDM.Gtk4UI.Dialogs
             categoriesBox.Append(catPaned);
 
             var catActionsRow = Box.New(Orientation.Horizontal, 8);
-            var btnResetCats = Button.NewWithLabel("Restore Default Categories");
+            var btnResetCats = Button.NewWithLabel(TextResource.GetText("BTN_RESTORE_CATEGORIES") ?? "Restore Default Categories");
             btnResetCats.OnClicked += (_, _) =>
             {
                 workingCategories.Clear();
@@ -396,7 +396,7 @@ namespace XDM.Gtk4UI.Dialogs
             txtBlockedHosts = Entry.New();
             txtBlockedHosts.Hexpand = true;
             txtBlockedHosts.SetText(string.Join(", ", Config.Instance.BlockedHosts ?? Config.DefaultBlockedHosts));
-            var btnResetExceptions = Button.NewWithLabel("Restore Default Sites");
+            var btnResetExceptions = Button.NewWithLabel(TextResource.GetText("BTN_RESTORE_SITES") ?? "Restore Default Sites");
             btnResetExceptions.OnClicked += (_, _) =>
             {
                 txtBlockedHosts.SetText(string.Join(", ", Config.DefaultBlockedHosts));
@@ -405,7 +405,7 @@ namespace XDM.Gtk4UI.Dialogs
             exceptionsRow.Append(btnResetExceptions);
             categoriesBox.Append(exceptionsRow);
 
-            var excHint = Label.New("Separate domains with commas or spaces (e.g. *.bank.com, example.com)");
+            var excHint = Label.New(TextResource.GetText("MSG_DOMAIN_HINT") ?? "Separate domains with commas or spaces (e.g. *.bank.com, example.com)");
             excHint.AddCssClass("dim-label");
             excHint.Halign = Align.Start;
             categoriesBox.Append(excHint);
@@ -426,7 +426,7 @@ namespace XDM.Gtk4UI.Dialogs
             networkBox.MarginEnd = 8;
 
             var timeoutRow = Box.New(Orientation.Horizontal, 8);
-            var lblTimeout = Label.New("Network Timeout (sec):");
+            var lblTimeout = Label.New(TextResource.GetText("SETTINGS_NET_TIMEOUT") ?? "Network Timeout (sec):");
             lblTimeout.WidthRequest = 180;
             lblTimeout.Halign = Align.Start;
             txtNetworkTimeout = Entry.New();
@@ -437,7 +437,7 @@ namespace XDM.Gtk4UI.Dialogs
             networkBox.Append(timeoutRow);
 
             var retriesRow = Box.New(Orientation.Horizontal, 8);
-            var lblRetries = Label.New("Max Retry Attempts:");
+            var lblRetries = Label.New(TextResource.GetText("SETTINGS_RETRY") ?? "Max Retry Attempts:");
             lblRetries.WidthRequest = 180;
             lblRetries.Halign = Align.Start;
             txtMaxRetries = Entry.New();
@@ -448,26 +448,26 @@ namespace XDM.Gtk4UI.Dialogs
             networkBox.Append(retriesRow);
 
             var uaRow = Box.New(Orientation.Horizontal, 8);
-            var lblUa = Label.New("Fallback User-Agent:");
+            var lblUa = Label.New(TextResource.GetText("SETTINGS_FALLBACK_UA") ?? "Fallback User-Agent:");
             lblUa.WidthRequest = 180;
             lblUa.Halign = Align.Start;
             txtFallbackUserAgent = Entry.New();
             txtFallbackUserAgent.Hexpand = true;
             txtFallbackUserAgent.SetText(Config.Instance.FallbackUserAgent ?? Config.DefaultFallbackUserAgent);
-            var btnResetUa = Button.NewWithLabel("Reset");
+            var btnResetUa = Button.NewWithLabel(TextResource.GetText("BTN_RESET") ?? "Reset");
             btnResetUa.OnClicked += (_, _) => txtFallbackUserAgent.SetText(Config.DefaultFallbackUserAgent);
             uaRow.Append(lblUa);
             uaRow.Append(txtFallbackUserAgent);
             uaRow.Append(btnResetUa);
             networkBox.Append(uaRow);
 
-            var proxyHeader = Label.New("Proxy Configuration:");
+            var proxyHeader = Label.New(TextResource.GetText("SETTINGS_PROXY_CONF") ?? "Proxy Configuration:");
             proxyHeader.AddCssClass("heading");
             proxyHeader.Halign = Align.Start;
             networkBox.Append(proxyHeader);
 
             var proxyTypeRow = Box.New(Orientation.Horizontal, 8);
-            var lblProxyType = Label.New("Proxy Mode:");
+            var lblProxyType = Label.New(TextResource.GetText("SETTINGS_PROXY_MODE") ?? "Proxy Mode:");
             lblProxyType.WidthRequest = 180;
             lblProxyType.Halign = Align.Start;
             var proxyOptions = new[] { "No Proxy (Direct Connection)", "Use System Proxy", "Manual Proxy Configuration" };
@@ -488,7 +488,7 @@ namespace XDM.Gtk4UI.Dialogs
             proxyManualBox.MarginStart = 16;
 
             var hostRow = Box.New(Orientation.Horizontal, 8);
-            var lblHost = Label.New("Proxy Host:");
+            var lblHost = Label.New(TextResource.GetText("SETTINGS_PROXY_HOST") ?? "Proxy Host:");
             lblHost.WidthRequest = 120;
             lblHost.Halign = Align.Start;
             txtProxyHost = Entry.New();
@@ -499,7 +499,7 @@ namespace XDM.Gtk4UI.Dialogs
             proxyManualBox.Append(hostRow);
 
             var portRow = Box.New(Orientation.Horizontal, 8);
-            var lblPort = Label.New("Proxy Port:");
+            var lblPort = Label.New(TextResource.GetText("SETTINGS_PROXY_PORT") ?? "Proxy Port:");
             lblPort.WidthRequest = 120;
             lblPort.Halign = Align.Start;
             txtProxyPort = Entry.New();
@@ -510,7 +510,7 @@ namespace XDM.Gtk4UI.Dialogs
             proxyManualBox.Append(portRow);
 
             var userRow = Box.New(Orientation.Horizontal, 8);
-            var lblUser = Label.New("Username:");
+            var lblUser = Label.New(TextResource.GetText("LBL_USERNAME") ?? "Username:");
             lblUser.WidthRequest = 120;
             lblUser.Halign = Align.Start;
             txtProxyUser = Entry.New();
@@ -521,7 +521,7 @@ namespace XDM.Gtk4UI.Dialogs
             proxyManualBox.Append(userRow);
 
             var passRow = Box.New(Orientation.Horizontal, 8);
-            var lblPass = Label.New("Password:");
+            var lblPass = Label.New(TextResource.GetText("LBL_PASSWORD") ?? "Password:");
             lblPass.WidthRequest = 120;
             lblPass.Halign = Align.Start;
             txtProxyPassword = Entry.New();
@@ -555,12 +555,12 @@ namespace XDM.Gtk4UI.Dialogs
             speedBox.MarginStart = 8;
             speedBox.MarginEnd = 8;
 
-            chkEnableSpeedLimit = CheckButton.NewWithLabel("Enable maximum download speed limit");
+            chkEnableSpeedLimit = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_ENABLE_LIMIT") ?? "Enable maximum download speed limit");
             chkEnableSpeedLimit.Active = Config.Instance.EnableSpeedLimit;
             speedBox.Append(chkEnableSpeedLimit);
 
             var speedRow = Box.New(Orientation.Horizontal, 8);
-            var lblSpeed = Label.New("Speed Limit (KB/s):");
+            var lblSpeed = Label.New(TextResource.GetText("LBL_SPEED_KB") ?? "Speed Limit (KB/s):");
             lblSpeed.WidthRequest = 160;
             lblSpeed.Halign = Align.Start;
             txtSpeedLimit = Entry.New();
@@ -571,7 +571,7 @@ namespace XDM.Gtk4UI.Dialogs
             speedBox.Append(speedRow);
 
             var presetBox = Box.New(Orientation.Horizontal, 8);
-            var lblPresets = Label.New("Quick Presets:");
+            var lblPresets = Label.New(TextResource.GetText("LBL_PRESETS") ?? "Quick Presets:");
             lblPresets.WidthRequest = 160;
             lblPresets.Halign = Align.Start;
             presetBox.Append(lblPresets);
@@ -605,15 +605,15 @@ namespace XDM.Gtk4UI.Dialogs
             chkMonitorClipboard.Active = Config.Instance.MonitorClipboard;
             monitoringBox.Append(chkMonitorClipboard);
 
-            var lblBrowserInfo = Label.New("Browser Integration:\nFetchFlow intercepts downloads automatically via its browser extension.\nExtensions are available for Google Chrome, Mozilla Firefox, Brave, and Edge.");
+            var lblBrowserInfo = Label.New(TextResource.GetText("MSG_BROWSER_INTEGRATION") ?? "Browser Integration: FetchFlow intercepts downloads automatically via its browser extension. Extensions are available for Google Chrome, Mozilla Firefox, Brave, and Edge.");
             lblBrowserInfo.Halign = Align.Start;
             lblBrowserInfo.Wrap = true;
             monitoringBox.Append(lblBrowserInfo);
 
             var storeButtonsRow = Box.New(Orientation.Horizontal, 10);
-            var btnCws = Button.NewWithLabel("Chrome Web Store Extension");
+            var btnCws = Button.NewWithLabel(TextResource.GetText("LBL_CWS_EXT") ?? "Chrome Web Store Extension");
             btnCws.OnClicked += (_, _) => PlatformHelper.OpenBrowser("https://chromewebstore.google.com");
-            var btnAmo = Button.NewWithLabel("Firefox Add-ons (AMO)");
+            var btnAmo = Button.NewWithLabel(TextResource.GetText("LBL_AMO_EXT") ?? "Firefox Add-ons (AMO)");
             btnAmo.OnClicked += (_, _) => PlatformHelper.OpenBrowser("https://addons.mozilla.org");
 
             storeButtonsRow.Append(btnCws);
@@ -626,7 +626,7 @@ namespace XDM.Gtk4UI.Dialogs
             lblIpcStatus.Hexpand = true;
             lblIpcStatus.AddCssClass("dim-label");
 
-            btnRestartIpc = Button.NewWithLabel("Restart IPC Relay");
+            btnRestartIpc = Button.NewWithLabel(TextResource.GetText("BTN_RESTART_IPC") ?? "Restart IPC Relay");
             btnRestartIpc.OnClicked += (_, _) =>
             {
                 try
@@ -659,7 +659,7 @@ namespace XDM.Gtk4UI.Dialogs
             advancedBox.MarginStart = 8;
             advancedBox.MarginEnd = 8;
 
-            var automationHeader = Label.New("Post-Download Automation:");
+            var automationHeader = Label.New(TextResource.GetText("SETTINGS_AUTOMATION") ?? "Post-Download Automation:");
             automationHeader.AddCssClass("heading");
             automationHeader.Halign = Align.Start;
             advancedBox.Append(automationHeader);
@@ -674,7 +674,7 @@ namespace XDM.Gtk4UI.Dialogs
 
             var cmdRow = Box.New(Orientation.Horizontal, 8);
             cmdRow.MarginStart = 24;
-            var lblCmd = Label.New("Command:");
+            var lblCmd = Label.New(TextResource.GetText("LBL_COMMAND") ?? "Command:");
             lblCmd.WidthRequest = 90;
             lblCmd.Halign = Align.Start;
             txtCustomCmd = Entry.New();
@@ -689,12 +689,12 @@ namespace XDM.Gtk4UI.Dialogs
             sepAdv.MarginBottom = 6;
             advancedBox.Append(sepAdv);
 
-            var avHeader = Label.New("Antivirus Scanning:");
+            var avHeader = Label.New(TextResource.GetText("SETTINGS_ANTIVIRUS") ?? "Antivirus Scanning:");
             avHeader.AddCssClass("heading");
             avHeader.Halign = Align.Start;
             advancedBox.Append(avHeader);
 
-            chkRunAntivirus = CheckButton.NewWithLabel("Scan downloaded files with antivirus scanner");
+            chkRunAntivirus = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SCAN_FILES") ?? "Scan downloaded files with antivirus scanner");
             chkRunAntivirus.Active = Config.Instance.ScanWithAntiVirus;
             advancedBox.Append(chkRunAntivirus);
 
@@ -706,7 +706,7 @@ namespace XDM.Gtk4UI.Dialogs
             txtAntiVirusCmd = Entry.New();
             txtAntiVirusCmd.Hexpand = true;
             txtAntiVirusCmd.SetText(Config.Instance.AntiVirusExecutable ?? "");
-            var btnBrowseAv = Button.NewWithLabel("Browse...");
+            var btnBrowseAv = Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse...");
             btnBrowseAv.OnClicked += (_, _) => BrowseFile(txtAntiVirusCmd);
             avRow.Append(lblAv);
             avRow.Append(txtAntiVirusCmd);
@@ -725,7 +725,7 @@ namespace XDM.Gtk4UI.Dialogs
             argsRow.Append(txtAntiVirusArgs);
             advancedBox.Append(argsRow);
 
-            var avHint = Label.New("Use [file] placeholder for the downloaded file path (e.g. clamscan [file])");
+            var avHint = Label.New(TextResource.GetText("MSG_AV_HINT") ?? "Use [file] placeholder for the downloaded file path (e.g. clamscan [file])");
             avHint.AddCssClass("dim-label");
             avHint.MarginStart = 24;
             avHint.Halign = Align.Start;
