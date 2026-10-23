@@ -271,7 +271,7 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 
 - **Shell:** `AdwApplication` + `AdwApplicationWindow` with an `AdwToolbarView` (top bar `AdwHeaderBar`, content below) and `AdwWindowTitle` carrying the app name with a static `Downloads` subtitle (the active view is named in the content headline, so it is not repeated twice). `AdwApplicationWindow` forbids `SetTitlebar()`, so the toolbar view is mandatory. Window controls come from libadwaita, not hand-built buttons. Requires libadwaita >= 1.4.
 - **Color scheme:** `AdwStyleManager` owns light/dark. An explicit Light/Dark choice forces `ForceLight`/`ForceDark`; Follow System leaves `ColorScheme.Default` and the app re-applies its CSS when the manager's `dark` property changes.
-- **Empty state and About:** `AdwStatusPage` for the empty list and `AdwAboutWindow` for About, both fed from `AppInfo`/`TextResource`. The Legal page receives the repository `LICENSE` as an embedded resource (`SetLicense`) because libadwaita treats the license type and a license body as exclusive and rendered an empty Legal page with the type alone; the type is only used as a fallback when the text is unavailable. Developer names carry no bracketed URL (the Website row already links it), so no stray bracket renders on the Credits page.
+- **Empty state and About:** `AdwStatusPage` for the empty list and `AdwAboutWindow` for About, both fed from `AppInfo`/`TextResource`. The Legal page receives the repository `LICENSE` as an embedded resource (`SetLicense`) because libadwaita treats the license type and a license body as exclusive and rendered an empty Legal page with the type alone; the type is only used as a fallback when the text is unavailable. Developer names carry no bracketed URL (the Website row already links it), so no stray bracket renders on the Credits page. The same embedded text opens in `LicenseDialog` (Help → License): a monospace, word-wrapped `Gtk.TextView` with Copy and Close in the header.
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
@@ -303,7 +303,8 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   calm column. Selected rows carry the scheme accent.
 - **Header actions:** the header carries the app mark (28px) beside an `AdwWindowTitle`
   whose subtitle is live while transfers run (`4 active · 5.1 MB/s`, otherwise `Downloads`)
-  with a small accent pulse dot that only appears then and exactly one labelled primary action
+  with a small accent pulse dot while at least one transfer is actually running
+  (queued-only work leaves it still) and exactly one labelled primary action
   (`.suggested-action`, "Add download"). The contextual transfer actions (Pause, Resume,
   Open File, Open Folder, Delete) form one icon group that is reconciled on an idle tick after
   each selection change, so it appears only when a selected row can actually run one of them —

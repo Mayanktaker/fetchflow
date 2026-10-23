@@ -279,6 +279,13 @@ progressbar.download-progress progress {
   border-radius: 99px;
 }
 
+/* License viewer: monospace body, readable at any window width */
+.license-view,
+.license-view text {
+  font-family: monospace;
+  font-size: 11px;
+}
+
 /* Section headings inside dialogs */
 .heading {
   font-weight: 600;

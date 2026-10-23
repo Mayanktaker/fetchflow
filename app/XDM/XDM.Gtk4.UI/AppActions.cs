@@ -54,6 +54,7 @@ namespace XDM.Gtk4UI
         public const string RemoveFinished = "remove-finished";
         public const string MediaGrabber = "media-grabber";
         public const string Language = "language";
+        public const string License = "license";
 
         // Registers every action and its accelerator on the application
         public static void Register(
@@ -95,7 +96,8 @@ namespace XDM.Gtk4UI
             SysAction? reportProblem = null,
             SysAction? removeFinished = null,
             SysAction? mediaGrabber = null,
-            SysAction? language = null)
+            SysAction? language = null,
+            SysAction? license = null)
         {
             Add(app, NewDownload, "<Control>n", newDownload);
             Add(app, Search, "<Control>f", search);
@@ -138,6 +140,7 @@ namespace XDM.Gtk4UI
             if (removeFinished != null) Add(app, RemoveFinished, null, removeFinished);
             if (mediaGrabber != null) Add(app, MediaGrabber, null, mediaGrabber);
             if (language != null) Add(app, Language, null, language);
+            if (license != null) Add(app, License, null, license);
         }
 
         // Adds one parameterless action with its accelerator

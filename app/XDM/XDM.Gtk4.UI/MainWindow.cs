@@ -128,7 +128,8 @@ namespace XDM.Gtk4UI
                 reportProblem: () => main.BugReportClicked?.Invoke(main, EventArgs.Empty),
                 removeFinished: () => main.ConfirmRemoveFinished(),
                 mediaGrabber: () => ApplicationContext.PlatformUIService?.CreateAndShowMediaGrabber(),
-                language: () => LanguageDialog.Show(main.Window));
+                language: () => LanguageDialog.Show(main.Window),
+                license: () => LicenseDialog.Show(main.Window));
             if (demo)
             {
                 main.SetRows(DemoRows(), InProgressKey);
@@ -578,7 +579,7 @@ namespace XDM.Gtk4UI
             // alone leaves libadwaita's Legal page empty on newer versions.
             // libadwaita treats the license type and a license body as exclusive: a
             // type-only window renders an empty Legal page here, so the full text wins
-            var licenseText = LoadLicenseText();
+            var licenseText = LicenseText.Load();
             if (!string.IsNullOrEmpty(licenseText))
             {
                 about.SetLicense(licenseText);
@@ -596,26 +597,6 @@ namespace XDM.Gtk4UI
             });
             about.SetTranslatorCredits(TextResource.GetText("APP_TRANSLATOR_CREDITS") ?? "See the Lang contributors.");
             return about;
-        }
-
-        // Reads the embedded LICENSE so the Legal page shows the real text
-        private static string? LoadLicenseText()
-        {
-            try
-            {
-                using var stream = typeof(MainWindow).Assembly.GetManifestResourceStream("FetchFlow.LICENSE");
-                if (stream == null)
-                {
-                    return null;
-                }
-                using var reader = new StreamReader(stream);
-                return reader.ReadToEnd();
-            }
-            catch (Exception ex)
-            {
-                TraceLog.Log.Debug(ex, "License text load failed: " + ex.Message);
-                return null;
-            }
         }
 
         // Ctrl+T swaps light/dark and remembers the choice

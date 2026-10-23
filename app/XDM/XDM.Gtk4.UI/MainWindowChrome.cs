@@ -78,7 +78,8 @@ namespace XDM.Gtk4UI
             rowActionsBox.Append(DeleteButton);
             header.PackStart(rowActionsBox);
 
-            searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH") ?? "Search";
+            searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH_HINT")
+                ?? "Search files — try site: or folder:";
             searchEntry.TooltipText = "Search downloads (Ctrl+F)";
             // Search filters the list in place; it never rebuilds the view from scratch
             searchEntry.OnSearchChanged += (_, _) => ApplySearchDebounced();
@@ -163,6 +164,7 @@ namespace XDM.Gtk4UI
             help.Append(TextResource.GetText("MENU_CHECK_UPDATE") ?? "Check for Update", "app." + AppActions.CheckForUpdate);
             help.Append(TextResource.GetText("LBL_SUPPORT_PAGE") ?? "Help and Support", "app." + AppActions.HelpSupport);
             help.Append(TextResource.GetText("LBL_REPORT_PROBLEM") ?? "Report a Problem", "app." + AppActions.ReportProblem);
+            help.Append(TextResource.GetText("LBL_LICENSE") ?? "License", "app." + AppActions.License);
             root.AppendSubmenu(TextResource.GetText("MENU_GROUP_HELP") ?? "Help", help);
 
             var appSection = Gio.Menu.New();
@@ -253,6 +255,7 @@ namespace XDM.Gtk4UI
                 var speed = active.Sum(row => row.SpeedBytesPerSecond);
                 var queued = active.Count(row => (row.Status ?? "")
                     .Contains("Wait", StringComparison.OrdinalIgnoreCase));
+                var running = active.Count - queued;
                 var speedText = speed > 0 ? " · " + FormattingHelper.FormatSize(speed) + "/s" : "";
                 var activeText = $"{active.Count} {TextResource.GetText("LBL_ACTIVE_COUNT") ?? "active"}";
                 var queuedText = queued > 0
@@ -263,8 +266,9 @@ namespace XDM.Gtk4UI
                 btnActivity.TooltipText = lblActivity.GetText() + " · " +
                     (TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress");
 
-                // The title doubles as a compact live indicator while transfers run
-                titlePulse.Visible = true;
+                // The title pulses only while a transfer is actually running, not
+                // when everything left is merely queued
+                titlePulse.Visible = running > 0;
                 windowTitle?.SetSubtitle(activeText + speedText);
             }
             catch (Exception ex)

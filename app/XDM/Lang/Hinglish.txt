@@ -442,3 +442,7 @@ STAT_PAUSED=Ruka hua
 LBL_IDLE=Idle
 LBL_ACTIVE_COUNT=active
 LBL_QUEUED_COUNT=queue mein
+LBL_LICENSE=License
+LBL_COPY=Copy karein
+LBL_COPIED=Copy ho gaya
+LBL_SEARCH_HINT=Files search karein — site: ya folder: try karein

@@ -442,3 +442,7 @@ STAT_PAUSED=रुका हुआ
 LBL_IDLE=निष्क्रिय
 LBL_ACTIVE_COUNT=सक्रिय
 LBL_QUEUED_COUNT=कतार में
+LBL_LICENSE=लाइसेंस
+LBL_COPY=कॉपी करें
+LBL_COPIED=कॉपी हो गया
+LBL_SEARCH_HINT=फ़ाइलें खोजें — site: या folder: आज़माएँ
