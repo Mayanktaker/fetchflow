@@ -80,12 +80,12 @@ namespace XDM.Gtk4UI.Dialogs
             actions.Append(spacer);
 
             var clearBtn = Button.NewWithLabel(TextResource.GetText("MSG_CLEAR") ?? "Clear");
-            clearBtn.OnClicked += (_, _) => Clear();
+            clearBtn.OnClicked += (_, _) => UiGuard.Run(window, "Clear captured media", Clear);
             actions.Append(clearBtn);
 
             var downloadBtn = Button.NewWithLabel(TextResource.GetText("MSG_DOWNLOAD") ?? "Download");
             downloadBtn.AddCssClass("suggested-action");
-            downloadBtn.OnClicked += (_, _) => DownloadSelected();
+            downloadBtn.OnClicked += (_, _) => UiGuard.Run(window, "Download captured media", DownloadSelected);
             actions.Append(downloadBtn);
 
             box.Append(actions);

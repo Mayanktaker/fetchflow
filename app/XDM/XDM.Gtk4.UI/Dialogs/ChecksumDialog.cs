@@ -11,6 +11,8 @@ using Translations;
 using XDM.Core;
 using XDM.Core.Util;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     // Native GTK 4 modal checksum computation and verification window
@@ -110,9 +112,9 @@ namespace XDM.Gtk4UI.Dialogs
             buttonBox.MarginTop = 12;
 
             btnRecalculate = Button.NewWithLabel(TextResource.GetText("BTN_RECALCULATE") ?? "Recalculate");
-            btnRecalculate.OnClicked += (_, _) => StartCalculation();
+            btnRecalculate.OnClicked += (_, _) => UiGuard.Run(window, "Recalculate hashes", StartCalculation);
             btnCopyAll = Button.NewWithLabel(TextResource.GetText("BTN_COPY_ALL") ?? "Copy All");
-            btnCopyAll.OnClicked += (_, _) => CopyAllHashes();
+            btnCopyAll.OnClicked += (_, _) => UiGuard.Run(window, "Copy all hashes", CopyAllHashes);
             btnClose = Button.NewWithLabel(TextResource.GetText("BTN_CLOSE") ?? "Close");
             btnClose.OnClicked += (_, _) => Close();
 

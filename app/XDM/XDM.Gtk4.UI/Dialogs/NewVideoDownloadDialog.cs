@@ -10,6 +10,8 @@ using Translations;
 using XDM.Core;
 using XDM.Core.UI;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     // Modal dialog for confirming video download destination and format options
@@ -176,8 +178,8 @@ namespace XDM.Gtk4UI.Dialogs
         // Connects user event handlers
         private void WireEvents()
         {
-            downloadNowButton.OnClicked += (_, _) => DownloadClicked?.Invoke(this, EventArgs.Empty);
-            downloadLaterButton.OnClicked += (_, _) => DownloadLaterClicked?.Invoke(this, new DownloadLaterEventArgs(string.Empty));
+            downloadNowButton.OnClicked += (_, _) => UiGuard.Run(window, "Start video download", () => DownloadClicked?.Invoke(this, EventArgs.Empty));
+            downloadLaterButton.OnClicked += (_, _) => UiGuard.Run(window, "Queue video download", () => DownloadLaterClicked?.Invoke(this, new DownloadLaterEventArgs(string.Empty)));
             cancelButton.OnClicked += (_, _) => DisposeWindow();
             browseButton.OnClicked += async (_, _) => await OpenFolderPickerAsync();
             chkMp3.OnToggled += (_, _) => Mp3CheckChanged?.Invoke(this, EventArgs.Empty);

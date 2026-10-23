@@ -6,6 +6,8 @@ using Gtk;
 using Translations;
 using XDM.Core;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     // Native GTK 4 modal backup and restore action dialog
@@ -51,11 +53,11 @@ namespace XDM.Gtk4UI.Dialogs
                 TextResource.GetText("BTN_EXPORT_TITLE") ?? "Export Download List",
                 TextResource.GetText("BTN_EXPORT_DESC") ?? "Save download items, queues, and settings to a .zip archive.",
                 "suggested-action");
-            btnExport.OnClicked += (_, _) =>
+            btnExport.OnClicked += (_, _) => UiGuard.Run(window, "Export backup", () =>
             {
                 window.Close();
                 (ApplicationContext.MainWindow as Gtk4ApplicationWindow)?.TriggerExport();
-            };
+            });
             rootBox.Append(btnExport);
 
             // Import action card
@@ -63,11 +65,11 @@ namespace XDM.Gtk4UI.Dialogs
                 TextResource.GetText("BTN_IMPORT_TITLE") ?? "Import Download List",
                 TextResource.GetText("BTN_IMPORT_DESC") ?? "Restore download items, queues, and settings from a .zip backup archive.",
                 "accent");
-            btnImport.OnClicked += (_, _) =>
+            btnImport.OnClicked += (_, _) => UiGuard.Run(window, "Import backup", () =>
             {
                 window.Close();
                 (ApplicationContext.MainWindow as Gtk4ApplicationWindow)?.TriggerImport();
-            };
+            });
             rootBox.Append(btnImport);
 
             // Bottom action area

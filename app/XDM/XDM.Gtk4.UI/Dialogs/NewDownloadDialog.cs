@@ -184,8 +184,8 @@ namespace XDM.Gtk4UI.Dialogs
         private void WireEvents()
         {
             urlEntry.OnChanged += (_, _) => UrlChangedEvent?.Invoke(this, EventArgs.Empty);
-            downloadNowButton.OnClicked += (_, _) => DownloadClicked?.Invoke(this, EventArgs.Empty);
-            downloadLaterButton.OnClicked += (_, _) => DownloadLaterClicked?.Invoke(this, new DownloadLaterEventArgs(string.Empty));
+            downloadNowButton.OnClicked += (_, _) => UiGuard.Run(window, "Start download", () => DownloadClicked?.Invoke(this, EventArgs.Empty));
+            downloadLaterButton.OnClicked += (_, _) => UiGuard.Run(window, "Queue download", () => DownloadLaterClicked?.Invoke(this, new DownloadLaterEventArgs(string.Empty)));
             cancelButton.OnClicked += (_, _) => DisposeWindow();
             browseButton.OnClicked += async (_, _) => await OpenFolderPickerAsync();
 

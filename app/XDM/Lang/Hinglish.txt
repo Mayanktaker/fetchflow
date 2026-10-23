@@ -408,3 +408,4 @@ MSG_MEDIA_DOWNLOAD_STARTED=Download shuru hua. Yeh download list mein dikhega.
 MSG_MEDIA_FETCHING=Formats aa rahe hain...
 MSG_LANG_RESTART=Nayi bhasha agle baar FetchFlow shuru hone par lagegi.
 MSG_SETTINGS_SAVE_FAILED=Settings save nahi ho sakin.
+MSG_ACTION_FAILED=Yeh kaam poora nahi ho saka.

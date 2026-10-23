@@ -13,6 +13,8 @@ using XDM.Core;
 using XDM.Core.Downloader;
 using XDM.Core.UI;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     internal sealed class DownloadSelectionWindow : IDownloadSelectionView
@@ -68,7 +70,7 @@ namespace XDM.Gtk4UI.Dialogs
             header.TitleWidget = Label.New(window.Title);
             var downloadBtn = Button.NewWithLabel(TextResource.GetText("LBL_DOWNLOAD") ?? "Download");
             downloadBtn.AddCssClass("suggested-action");
-            downloadBtn.OnClicked += (_, _) => DownloadClicked?.Invoke(this, EventArgs.Empty);
+            downloadBtn.OnClicked += (_, _) => UiGuard.Run(window, "Download selected links", () => DownloadClicked?.Invoke(this, EventArgs.Empty));
             header.PackEnd(downloadBtn);
             window.SetTitlebar(header);
 
@@ -125,7 +127,7 @@ namespace XDM.Gtk4UI.Dialogs
             schedulerBtn.OnClicked += (_, _) => QueueSchedulerClicked?.Invoke(this, EventArgs.Empty);
             var laterBtn = Button.NewWithLabel(TextResource.GetText("LBL_DOWNLOAD_LATER") ?? "Download Later");
             laterBtn.OnClicked += (_, _) =>
-                DownloadLaterClicked?.Invoke(this, new DownloadLaterEventArgs(null));
+                UiGuard.Run(window, "Queue selected links", () => DownloadLaterClicked?.Invoke(this, new DownloadLaterEventArgs(null)));
             var cancelBtn = Button.NewWithLabel(TextResource.GetText("ND_CANCEL") ?? "Cancel");
             cancelBtn.OnClicked += (_, _) => window.Close();
             actions.Append(schedulerBtn);

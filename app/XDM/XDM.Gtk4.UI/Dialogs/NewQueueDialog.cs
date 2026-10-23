@@ -9,6 +9,8 @@ using XDM.Core;
 using XDM.Core.Downloader;
 using XDM.Core.Util;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     // Modal dialog for naming a queue and choosing downloads to assign
@@ -88,7 +90,7 @@ namespace XDM.Gtk4UI.Dialogs
 
             var btnOk = Button.NewWithLabel(TextResource.GetText("MSG_OK") ?? "OK");
             btnOk.AddCssClass("suggested-action");
-            btnOk.OnClicked += (_, _) => OnOkClicked();
+            btnOk.OnClicked += (_, _) => UiGuard.Run(window, "Save queue", OnOkClicked);
 
             buttonBox.Append(btnCancel);
             buttonBox.Append(btnOk);

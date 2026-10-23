@@ -10,6 +10,8 @@ using XDM.Core;
 using XDM.Core.Downloader;
 using XDM.Core.Util;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     // Displays metadata, save path, download status, and HTTP request headers
@@ -87,7 +89,7 @@ namespace XDM.Gtk4UI.Dialogs
             buttonBox.MarginTop = 8;
 
             var copyUrlBtn = Button.NewWithLabel(TextResource.GetText("CTX_COPY_URL") ?? "Copy URL");
-            copyUrlBtn.OnClicked += (_, _) => window.GetClipboard().SetText(entry.PrimaryUrl);
+            copyUrlBtn.OnClicked += (_, _) => UiGuard.Run(window, "Copy URL", () => window.GetClipboard().SetText(entry.PrimaryUrl));
 
             var closeBtn = Button.NewWithLabel(TextResource.GetText("BTN_CLOSE") ?? "Close");
             closeBtn.AddCssClass("suggested-action");

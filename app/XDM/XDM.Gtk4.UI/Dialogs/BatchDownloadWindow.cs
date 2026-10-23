@@ -9,6 +9,8 @@ using Translations;
 using XDM.Core.UI;
 using XDM.Core.Util;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     // Batch download URL pattern generator and multi-URL entry window
@@ -190,7 +192,7 @@ namespace XDM.Gtk4UI.Dialogs
 
             btnOk = Button.NewWithLabel(TextResource.GetText("MSG_OK") ?? "OK");
             btnOk.AddCssClass("suggested-action");
-            btnOk.OnClicked += (_, _) => OkClicked?.Invoke(this, EventArgs.Empty);
+            btnOk.OnClicked += (_, _) => UiGuard.Run(window, "Add batch downloads", () => OkClicked?.Invoke(this, EventArgs.Empty));
 
             footer.Append(btnCancel);
             footer.Append(btnOk);

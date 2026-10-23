@@ -13,6 +13,8 @@ using XDM.Core;
 using XDM.Core.UI;
 using XDM.Core.Util;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     internal sealed class VideoDownloaderWindow : IVideoDownloadView
@@ -331,11 +333,11 @@ namespace XDM.Gtk4UI.Dialogs
             schedulerBtn.OnClicked += (_, _) => QueueSchedulerClicked?.Invoke(this, EventArgs.Empty);
 
             var laterBtn = Button.NewWithLabel(TextResource.GetText("LBL_DOWNLOAD_LATER") ?? "Download Later");
-            laterBtn.OnClicked += (_, _) => DownloadLaterClicked?.Invoke(this, new DownloadLaterEventArgs(null));
+            laterBtn.OnClicked += (_, _) => UiGuard.Run(window, "Queue video", () => DownloadLaterClicked?.Invoke(this, new DownloadLaterEventArgs(null)));
 
             var downloadBtn = Button.NewWithLabel(TextResource.GetText("LBL_DOWNLOAD") ?? "Download");
             downloadBtn.AddCssClass("suggested-action");
-            downloadBtn.OnClicked += (_, _) => DownloadClicked?.Invoke(this, EventArgs.Empty);
+            downloadBtn.OnClicked += (_, _) => UiGuard.Run(window, "Download video", () => DownloadClicked?.Invoke(this, EventArgs.Empty));
 
             actions.Append(schedulerBtn);
             actions.Append(laterBtn);

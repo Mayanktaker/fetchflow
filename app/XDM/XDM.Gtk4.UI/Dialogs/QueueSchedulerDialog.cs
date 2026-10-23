@@ -11,6 +11,8 @@ using XDM.Core.Downloader;
 using XDM.Core.UI;
 using XDM.Core.Util;
 
+using XDM.Gtk4UI.Utils;
+
 namespace XDM.Gtk4UI.Dialogs
 {
     // Native GTK 4 window for managing download queues and schedules
@@ -274,7 +276,7 @@ namespace XDM.Gtk4UI.Dialogs
 
             var btnSave = Button.NewWithLabel(TextResource.GetText("MSG_OK") ?? "Save");
             btnSave.AddCssClass("suggested-action");
-            btnSave.OnClicked += (_, _) => OnSaveClicked();
+            btnSave.OnClicked += (_, _) => UiGuard.Run(window, "Save schedule", OnSaveClicked);
 
             footer.Append(btnClose);
             footer.Append(btnSave);

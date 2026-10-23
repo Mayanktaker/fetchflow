@@ -297,6 +297,10 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   finished rows) and is middle-ellipsized; without that the column's natural width pushes
   Size/Progress out of a 900 px window. Falls back to the transfer status when no meta exists.
 - **Sidebar counts:** Active, Complete and every category append `(n)` while they contain rows.
+- **UI error containment:** commit paths that touch configuration, the database or files run
+  through `UiGuard.Run`. An exception escaping a GObject signal handler terminates the whole
+  process (that is how the proxy-save bug killed the app), so the guard logs it and shows the
+  reason instead, leaving the dialog open.
 - **Header clicks:** GTK groups the column headers in one container child of the view, and
   `GtkColumnViewColumn` exposes no header-click signal, so each header widget is located by
   the caption (or select-all glyph) it renders and given a capture-phase click gesture.
