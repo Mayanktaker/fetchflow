@@ -4,6 +4,7 @@
 // Kept apart from MainWindow.cs so window behaviour and window chrome stay readable.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gtk;
 using Translations;
 using XDM.Core;
@@ -24,6 +25,9 @@ namespace XDM.Gtk4UI
         private bool syncingSidebar;
         // Header title/subtitle, updated as the sidebar view changes
         private Adw.WindowTitle? windowTitle;
+        // Sidebar row labels and their base captions, for live counts
+        private readonly Dictionary<string, Label> sidebarLabels = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, string> sidebarBaseText = new(StringComparer.Ordinal);
 
         // Packs the app title, core actions, search, theme toggle and application menu
         private Widget BuildHeaderBar()
@@ -156,6 +160,30 @@ namespace XDM.Gtk4UI
             return sidebar;
         }
 
+        // Appends live row counts to the Active/Complete and category rows
+        private void UpdateSidebarCounts()
+        {
+            SetSidebarCount(InProgressKey, allRows.Count(row => !row.IsComplete));
+            SetSidebarCount(FinishedKey, allRows.Count(row => row.IsComplete));
+
+            foreach (var pair in categories)
+            {
+                var category = pair.Value;
+                SetSidebarCount(pair.Key,
+                    allRows.Count(row => Helpers.IsOfCategoryOrMatchesKeyword(row.Name, null, category)));
+            }
+        }
+
+        // Shows "Label (n)" when a view has rows, otherwise the plain caption
+        private void SetSidebarCount(string key, int count)
+        {
+            if (!sidebarLabels.TryGetValue(key, out var label) || !sidebarBaseText.TryGetValue(key, out var text))
+            {
+                return;
+            }
+            label.SetText(count > 0 ? $"{text}  ({count})" : text);
+        }
+
         // Small section heading above the category list
         private static Widget BuildSidebarHeading()
         {
@@ -203,8 +231,62 @@ namespace XDM.Gtk4UI
             ViewChanged?.Invoke(currentView);
         }
 
+        // Moves the sidebar highlight when the core switches the view programmatically
+        private void SelectSidebarRow(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return;
+            }
+
+            var inStatus = FindRow(statusList, key);
+            var row = inStatus ?? FindRow(categoryList, key);
+            if (row == null)
+            {
+                return;
+            }
+
+            syncingSidebar = true;
+            try
+            {
+                if (inStatus != null)
+                {
+                    categoryList?.UnselectAll();
+                }
+                else
+                {
+                    statusList?.UnselectAll();
+                }
+                (inStatus != null ? statusList : categoryList)?.SelectRow(row);
+            }
+            finally
+            {
+                syncingSidebar = false;
+            }
+
+            windowTitle?.SetSubtitle(row.TooltipText ?? AppInfo.APP_NAME);
+        }
+
+        // Finds a sidebar row by its view key
+        private static ListBoxRow? FindRow(ListBox? list, string key)
+        {
+            if (list == null)
+            {
+                return null;
+            }
+
+            for (var child = list.GetFirstChild(); child != null; child = child.GetNextSibling())
+            {
+                if (child is ListBoxRow row && row.Name == key)
+                {
+                    return row;
+                }
+            }
+            return null;
+        }
+
         // Creates one accessible sidebar row with tinted category icon and text
-        private static ListBoxRow BuildSidebarRow(string text, string key, string iconName, byte r, byte g, byte b)
+        private ListBoxRow BuildSidebarRow(string text, string key, string iconName, byte r, byte g, byte b)
         {
             var rowBox = Box.New(Orientation.Horizontal, 10);
             rowBox.MarginTop = 6;
@@ -219,6 +301,8 @@ namespace XDM.Gtk4UI
             label.Halign = Align.Start;
             label.Valign = Align.Center;
             label.Hexpand = true;
+            sidebarLabels[key] = label;
+            sidebarBaseText[key] = text;
 
             rowBox.Append(icon);
             rowBox.Append(label);

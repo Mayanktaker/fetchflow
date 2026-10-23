@@ -33,6 +33,7 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly DropDown dropMaxSegments;
         private readonly DropDown dropDoubleClick;
         private readonly DropDown dropTheme;
+        private readonly DropDown dropScheme;
         private readonly CheckButton chkAutoStart;
         private readonly CheckButton chkNotification;
         private readonly CheckButton chkShowComplete;
@@ -193,6 +194,35 @@ namespace XDM.Gtk4UI.Dialogs
             themeRow.Append(lblTheme);
             themeRow.Append(dropTheme);
             generalBox.Append(themeRow);
+
+            // Color scheme: one of the 7 curated palettes for the active mode
+            var schemeRow = Box.New(Orientation.Horizontal, 8);
+            var lblScheme = Label.New(TextResource.GetText("SETTINGS_COLOR_SCHEME") ?? "Color Scheme:");
+            lblScheme.WidthRequest = 180;
+            lblScheme.Halign = Align.Start;
+            dropScheme = DropDown.NewFromStrings(ColorSchemeNames(Gtk4Theme.IsDarkActive));
+            dropScheme.Selected = (uint)ColorSchemeTable.ClampSchemeIndex(
+                Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
+            schemeRow.Append(lblScheme);
+            schemeRow.Append(dropScheme);
+            generalBox.Append(schemeRow);
+
+            // Keep the scheme list in step with the mode, and preview both live
+            dropTheme.OnNotify += (_, args) =>
+            {
+                if (args.Pspec.GetName() == "selected")
+                {
+                    RepopulateSchemes();
+                    ApplySchemePreview();
+                }
+            };
+            dropScheme.OnNotify += (_, args) =>
+            {
+                if (args.Pspec.GetName() == "selected")
+                {
+                    ApplySchemePreview();
+                }
+            };
 
             // General options checkboxes
             chkAutoStart = CheckButton.NewWithLabel(TextResource.GetText("AUTO_START") ?? "Launch FetchFlow when system starts");
@@ -732,6 +762,39 @@ namespace XDM.Gtk4UI.Dialogs
             window.SetChild(mainBox);
         }
 
+        // One scheme name per curated palette for the given mode
+        private static string[] ColorSchemeNames(bool dark) =>
+            (dark ? ColorSchemeTable.DarkSchemes : ColorSchemeTable.LightSchemes)
+                .Select(scheme => scheme.DisplayName)
+                .ToArray();
+
+        // Repopulates the scheme list after a theme-mode change, keeping the index valid
+        private void RepopulateSchemes()
+        {
+            var mode = dropTheme.Selected == uint.MaxValue ? Gtk4Theme.ModeFollowSystem : (int)dropTheme.Selected;
+            var dark = mode switch
+            {
+                Gtk4Theme.ModeDark => true,
+                Gtk4Theme.ModeLight => false,
+                _ => Gtk4Theme.IsDarkActive
+            };
+
+            var previous = dropScheme.Selected == uint.MaxValue ? 0 : (int)dropScheme.Selected;
+            dropScheme.SetModel(StringList.New(ColorSchemeNames(dark)));
+            dropScheme.Selected = (uint)ColorSchemeTable.ClampSchemeIndex(dark, previous);
+        }
+
+        // Applies the selected mode and scheme to the running window immediately
+        private void ApplySchemePreview()
+        {
+            if (dropScheme.Selected != uint.MaxValue)
+            {
+                Config.Instance.ColorScheme = (int)dropScheme.Selected;
+            }
+            var mode = dropTheme.Selected == uint.MaxValue ? Gtk4Theme.ModeFollowSystem : (int)dropTheme.Selected;
+            Gtk4Theme.ApplyMode(window, mode, persist: false);
+        }
+
         private void LoadCategoryFields(int index)
         {
             if (index < 0 || index >= workingCategories.Count) return;
@@ -848,8 +911,12 @@ namespace XDM.Gtk4UI.Dialogs
             // Double click action
             Config.Instance.DoubleClickOpenFile = dropDoubleClick.Selected == 0u;
 
-            // Theme mode
+            // Theme mode and colour scheme
             Config.Instance.ThemeMode = (int)dropTheme.Selected;
+            if (dropScheme.Selected != uint.MaxValue)
+            {
+                Config.Instance.ColorScheme = (int)dropScheme.Selected;
+            }
 
             // Categories
             Config.Instance.Categories = new List<Category>(workingCategories);

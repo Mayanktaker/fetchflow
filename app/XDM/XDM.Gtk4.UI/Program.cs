@@ -118,7 +118,7 @@ namespace XDM.Gtk4UI
 
                     if (smoke)
                     {
-                        RunSmokeVerification(gtkApp, windowAdapter, uiService);
+                        RunSmokeVerification(gtkApp, windowAdapter, uiService, activeMainWindow);
                         return;
                     }
 
@@ -141,7 +141,8 @@ namespace XDM.Gtk4UI
         private static void RunSmokeVerification(
             GtkApplication gtkApp,
             Gtk4ApplicationWindow windowAdapter,
-            Gtk4PlatformUIService uiService)
+            Gtk4PlatformUIService uiService,
+            MainWindow mainWindow)
         {
             Console.WriteLine("[GTK4 SMOKE] Starting GTK 4 vertical slice verification...");
 
@@ -243,6 +244,9 @@ namespace XDM.Gtk4UI
             vidDlg.ShowMp3Checkbox = true;
             vidDlg.IsMp3CheckboxChecked = false;
             vidDlg.DisposeWindow();
+
+            // List/theme regression checks for the P0 fixes (search, selection, ThemeMode)
+            mainWindow.RunSelfTest();
 
             Console.WriteLine("[GTK4 SMOKE PASS] Vertical slice & secondary dialog components verified successfully.");
             gtkApp.Quit();

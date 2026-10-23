@@ -219,10 +219,12 @@ namespace XDM.Gtk4UI
             Window.Title = AppInfo.APP_NAME;
             Window.SetDefaultSize(DefaultWidth, DefaultHeight);
 
-            // libadwaita shell: AdwHeaderBar as the CSD titlebar, content below.
-            // SetTitlebar (not AdwToolbarView) keeps the floor at libadwaita 1.2.
-            Window.SetTitlebar(BuildHeaderBar());
-            Window.SetContent(BuildBody());
+            // libadwaita shell: AdwApplicationWindow forbids SetTitlebar(), so the
+            // header bar lives in an AdwToolbarView above the content (libadwaita 1.4+).
+            var shell = Adw.ToolbarView.New();
+            shell.AddTopBar(BuildHeaderBar());
+            shell.SetContent(BuildBody());
+            Window.SetContent(shell);
 
             DeleteButton.Visible = true;
             DeleteButton.Sensitive = false;
@@ -347,6 +349,7 @@ namespace XDM.Gtk4UI
         public void SelectView(string key)
         {
             currentView = key;
+            SelectSidebarRow(key);
             ApplyView(key);
             ViewChanged?.Invoke(key);
         }
@@ -368,6 +371,7 @@ namespace XDM.Gtk4UI
             };
             downloadList.SetViewKind(key == FinishedKey);
             downloadList.Reload(rows);
+            UpdateSidebarCounts();
         }
 
         // Filters category rows using the same predicate as the GTK 3 UI
@@ -387,6 +391,7 @@ namespace XDM.Gtk4UI
             {
                 Id = row.DownloadEntry.Id,
                 Name = row.Name,
+                Meta = BuildMetaText(row.DownloadEntry, includeExtension: false),
                 SizeText = FormattingHelper.FormatSize(row.Size),
                 RawSize = row.Size,
                 DateAdded = row.DateAdded,
@@ -401,6 +406,7 @@ namespace XDM.Gtk4UI
         {
             Id = row.DownloadEntry.Id,
             Name = row.Name,
+            Meta = BuildMetaText(row.DownloadEntry, includeExtension: true),
             Status = TextResource.GetText("STAT_FINISHED") ?? "Complete",
             SizeText = FormattingHelper.FormatSize(row.Size),
             RawSize = row.Size,
@@ -410,6 +416,77 @@ namespace XDM.Gtk4UI
             IsComplete = true,
             FinishedRow = row
         };
+
+        // Builds the row's secondary line: source domain, target folder, and the
+        // file extension for finished downloads (matches the GTK 3 row meta line)
+        private static string BuildMetaText(DownloadItemBase entry, bool includeExtension)
+        {
+            var parts = new List<string>();
+
+            var domain = ExtractDomain(entry.PrimaryUrl);
+            if (!string.IsNullOrEmpty(domain))
+            {
+                parts.Add("◉ " + domain);
+            }
+
+            var folder = FriendlyPath(entry.TargetDir);
+            if (!string.IsNullOrEmpty(folder))
+            {
+                parts.Add("◫ " + folder);
+            }
+
+            if (includeExtension)
+            {
+                var extension = System.IO.Path.GetExtension(entry.Name)?.TrimStart('.').ToUpperInvariant();
+                if (!string.IsNullOrEmpty(extension))
+                {
+                    parts.Add(extension);
+                }
+            }
+
+            return string.Join("   ·   ", parts);
+        }
+
+        // Shortens an absolute folder to a ~/ path for the row meta line
+        private static string FriendlyPath(string? folder)
+        {
+            if (string.IsNullOrEmpty(folder))
+            {
+                return string.Empty;
+            }
+
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            return !string.IsNullOrEmpty(home) && folder.StartsWith(home, StringComparison.Ordinal)
+                ? "~" + folder.Substring(home.Length)
+                : folder;
+        }
+
+        // Extracts a display domain from the download's primary URL
+        private static string ExtractDomain(string? url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                if (url.StartsWith("blob:", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "blob";
+                }
+                if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                {
+                    var host = uri.Host;
+                    return host.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? host.Substring(4) : host;
+                }
+            }
+            catch (Exception ex)
+            {
+                TraceLog.Log.Debug(ex, "Domain parse failed: " + ex.Message);
+            }
+            return string.Empty;
+        }
 
         // Ctrl+F focuses the search entry
         private void FocusSearch() => searchEntry.GrabFocus();

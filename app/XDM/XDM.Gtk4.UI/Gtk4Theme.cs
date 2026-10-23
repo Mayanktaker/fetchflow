@@ -11,6 +11,7 @@ using System;
 using System.IO;
 using Gtk;
 using XDM.Core;
+using XDM.Core.UI;
 
 namespace XDM.Gtk4UI
 {
@@ -114,6 +115,51 @@ namespace XDM.Gtk4UI
             });
         }
 
+        // Rewrites the accent tokens from the shared ColorSchemeTable entry, so the
+        // GTK 4 frontend honours the same 14 curated schemes as GTK 3 and WPF.
+        private static string ApplyColorScheme(string css, bool dark)
+        {
+            try
+            {
+                var index = ColorSchemeTable.ClampSchemeIndex(dark, Config.Instance.ColorScheme);
+                var scheme = ColorSchemeTable.GetScheme(dark, index);
+                if (string.IsNullOrWhiteSpace(scheme.AccentHex))
+                {
+                    return css;
+                }
+
+                var hover = Lighten(scheme.AccentHex, 0.25);
+                css = System.Text.RegularExpressions.Regex.Replace(
+                    css, @"@define-color accent #[0-9a-fA-F]{3,8};", $"@define-color accent {scheme.AccentHex};");
+                css = System.Text.RegularExpressions.Regex.Replace(
+                    css, @"@define-color accent_hover #[0-9a-fA-F]{3,8};", $"@define-color accent_hover {hover};");
+                return css;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("GTK 4 color scheme failed: " + ex.Message);
+                return css;
+            }
+        }
+
+        // Mixes a #rrggbb color toward white by the given amount (0..1)
+        private static string Lighten(string hex, double amount)
+        {
+            var value = hex.TrimStart('#');
+            if (value.Length != 6)
+            {
+                return hex;
+            }
+
+            var r = Convert.ToInt32(value.Substring(0, 2), 16);
+            var g = Convert.ToInt32(value.Substring(2, 2), 16);
+            var b = Convert.ToInt32(value.Substring(4, 2), 16);
+            r = (int)Math.Round(r + (255 - r) * amount);
+            g = (int)Math.Round(g + (255 - g) * amount);
+            b = (int)Math.Round(b + (255 - b) * amount);
+            return $"#{r:x2}{g:x2}{b:x2}";
+        }
+
         // Loads the mode's stylesheet and swaps the display provider
         private static void Apply(Gdk.Display? display, bool dark)
         {
@@ -135,7 +181,7 @@ namespace XDM.Gtk4UI
             {
                 // Load first, then swap: a failed load keeps the previous theme
                 var provider = CssProvider.New();
-                var css = File.ReadAllText(path);
+                var css = ApplyColorScheme(File.ReadAllText(path), dark);
                 // Length is a BYTE count: non-ASCII (—, ·) in comments would truncate
                 provider.LoadFromData(css, System.Text.Encoding.UTF8.GetByteCount(css));
 

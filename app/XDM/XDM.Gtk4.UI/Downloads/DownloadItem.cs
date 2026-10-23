@@ -16,6 +16,8 @@ namespace XDM.Gtk4UI.Downloads
         public string Name { get; init; } = "";
         // Status line ("Downloading · 4.2 MB/s", "Paused", "Complete")
         public string Status { get; set; } = "";
+        // Secondary line: source domain · target folder (· extension for finished)
+        public string Meta { get; init; } = "";
         // Human-readable size ("128.4 MB")
         public string SizeText { get; init; } = "";
         // Raw byte size for sorting

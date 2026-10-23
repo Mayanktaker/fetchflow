@@ -8,6 +8,13 @@
 #   scripts/run-gtk4-smoke.sh --help
 set -euo pipefail
 
+# GApplication needs a working session bus to activate; the caller's bus is often
+# unreachable from a build shell. Re-exec inside a private bus when possible.
+if [ -z "${FETCHFLOW_SMOKE_BUS:-}" ] && command -v dbus-run-session >/dev/null 2>&1; then
+  export FETCHFLOW_SMOKE_BUS=1
+  exec dbus-run-session -- "$0" "$@"
+fi
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 

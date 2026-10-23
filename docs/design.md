@@ -269,7 +269,7 @@ WPF base neutral skins live in `Themes/DarkTheme.xaml` + `Themes/LightTheme.xaml
 
 Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` and `gtk4-light.css`) and are deployed side-by-side with GTK 3 stylesheets in the `/opt/fetchflow/theme/` directory.
 
-- **Shell:** `AdwApplication` + `AdwApplicationWindow` with an `AdwHeaderBar` titlebar and `AdwWindowTitle` carrying the active view as its subtitle. Window controls come from libadwaita, not hand-built buttons. Requires libadwaita >= 1.2 (the `AdwAboutWindow` floor); `AdwToolbarView` is avoided because it needs 1.4.
+- **Shell:** `AdwApplication` + `AdwApplicationWindow` with an `AdwToolbarView` (top bar `AdwHeaderBar`, content below) and `AdwWindowTitle` carrying the active view as its subtitle. `AdwApplicationWindow` forbids `SetTitlebar()`, so the toolbar view is mandatory. Window controls come from libadwaita, not hand-built buttons. Requires libadwaita >= 1.4.
 - **Color scheme:** `AdwStyleManager` owns light/dark. An explicit Light/Dark choice forces `ForceLight`/`ForceDark`; Follow System leaves `ColorScheme.Default` and the app re-applies its CSS when the manager's `dark` property changes.
 - **Empty state and About:** `AdwStatusPage` for the empty list and `AdwAboutWindow` for About, both fed from `AppInfo`/`TextResource`.
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
@@ -293,4 +293,13 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **List updates:** progress ticks refresh the bound cells of that row only. The row model and
   the `MultiSelection` are created once, so a running download cannot clear the selection,
   and switching view or search keeps the selection by transfer id.
+- **Row meta line:** the second line shows `◉ domain · ◫ ~/folder` (plus the extension for
+  finished rows) and is middle-ellipsized; without that the column's natural width pushes
+  Size/Progress out of a 900 px window. Falls back to the transfer status when no meta exists.
+- **Sidebar counts:** Active, Complete and every category append `(n)` while they contain rows.
+- **Select-all header:** the gutter header renders ☐/▣/☑ and carries a capture-phase click
+  gesture (located by its glyph, since `GtkColumnViewColumn` exposes no header-click signal).
+- **Colour schemes:** on load the stylesheet's `@accent`/`@accent_hover` tokens are rewritten
+  from the active `ColorSchemeTable` entry, so the 7 dark and 7 light palettes drive GTK 4
+  exactly as they drive GTK 3 and WPF.
 

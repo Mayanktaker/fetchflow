@@ -89,6 +89,7 @@ namespace XDM.Gtk4UI.Downloads
 
             WireColumnSorting();
             UpdateSortHeaderTitles();
+            UpdateGutterGlyph();
 
             // Double click / Enter key activation: executes standard double-click action
             view.OnActivate += (_, args) =>
@@ -100,6 +101,8 @@ namespace XDM.Gtk4UI.Downloads
                     UIActions.OnDblClick();
                 }
             };
+
+            view.OnMap += (_, _) => TryWireSelectAllHeader();
 
             var scrolled = ScrolledWindow.New();
             scrolled.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
@@ -139,7 +142,7 @@ namespace XDM.Gtk4UI.Downloads
             if (nameCells.TryGetValue(id, out var name))
             {
                 name.Name.SetText(item.Name);
-                name.Status.SetText(item.Status);
+                name.Status.SetText(RowSubLine(item));
             }
 
             if (sizeCells.TryGetValue(id, out var size))
@@ -295,13 +298,18 @@ namespace XDM.Gtk4UI.Downloads
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        // Applies an explicit selection set to the visible rows
+        // Applies an explicit selection set to the visible rows, leaving other
+        // views' saved selections untouched
         private void ApplySelection(HashSet<string> ids)
         {
             isUpdatingSelection = true;
             try
             {
                 selection.UnselectAll();
+                foreach (var item in store.Items)
+                {
+                    selectedIds.Remove(item.Id);
+                }
                 for (uint i = 0; i < (uint)store.Count; i++)
                 {
                     if (ids.Contains(store.Items[(int)i].Id))
@@ -332,10 +340,14 @@ namespace XDM.Gtk4UI.Downloads
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        // Copies the model selection into the id set
+        // Copies the model selection into the id set. Only ids this view owns are
+        // rewritten, so switching to another view keeps the first view's selection.
         private void CaptureSelection()
         {
-            selectedIds.Clear();
+            foreach (var item in store.Items)
+            {
+                selectedIds.Remove(item.Id);
+            }
             for (uint i = 0; i < (uint)store.Count; i++)
             {
                 if (selection.IsSelected(i))
@@ -358,6 +370,61 @@ namespace XDM.Gtk4UI.Downloads
         // Resolves the transfer id behind a list item
         private static string? IdOf(ListItem item) =>
             (item.Item as StringObject)?.GetString();
+
+        // True once the gutter header carries the select-all click gesture
+        internal bool SelectAllHeaderWired => selectAllHeaderWired;
+        private bool selectAllHeaderWired;
+
+        // Gives the gutter header a click gesture. GtkColumnViewColumn exposes no
+        // header-click signal and GtkColumnHeader is not bound, so the header widget
+        // is located by the select-all glyph it renders.
+        private void TryWireSelectAllHeader()
+        {
+            if (selectAllHeaderWired)
+            {
+                return;
+            }
+
+            for (var child = view.GetFirstChild(); child != null; child = child.GetNextSibling())
+            {
+                if (child is ListView || !ContainsGutterGlyph(child))
+                {
+                    continue;
+                }
+
+                var gesture = GestureClick.New();
+                gesture.SetButton(1);
+                // Capture phase: run before the header's own click handling
+                gesture.SetPropagationPhase(PropagationPhase.Capture);
+                gesture.OnPressed += (_, _) => ToggleSelectAll();
+                child.AddController(gesture);
+                selectAllHeaderWired = true;
+                TraceLog.Log.Debug("Select-all gutter header wired for click");
+                return;
+            }
+        }
+
+        // True when a widget subtree renders one of the tri-state select-all glyphs
+        private static bool ContainsGutterGlyph(Widget widget)
+        {
+            if (widget is Label label)
+            {
+                var text = label.GetText();
+                if (text == GutterGlyphNone || text == GutterGlyphSome || text == GutterGlyphAll)
+                {
+                    return true;
+                }
+            }
+
+            for (var child = widget.GetFirstChild(); child != null; child = child.GetNextSibling())
+            {
+                if (ContainsGutterGlyph(child))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         // Multi-select gutter checkbox column matching GTK 3
         private ColumnViewColumn BuildCheckboxColumn()
@@ -441,6 +508,10 @@ namespace XDM.Gtk4UI.Downloads
 
                 var status = Label.New("");
                 status.Halign = Align.Start;
+                // Meta lines carry long paths: ellipsizing keeps the column's minimum
+                // width small so Size/Progress are never pushed out of the window
+                status.Ellipsize = Pango.EllipsizeMode.Middle;
+                status.Hexpand = true;
                 status.AddCssClass("dim-label");
                 status.AddCssClass("download-status");
 
@@ -476,7 +547,7 @@ namespace XDM.Gtk4UI.Downloads
                     }
                     if (textBox.GetLastChild() is Label status)
                     {
-                        status.SetText(row.Status);
+                        status.SetText(RowSubLine(row));
                     }
                 }
 
@@ -661,6 +732,10 @@ namespace XDM.Gtk4UI.Downloads
                 ? $"{row.DownloadSpeed} · {row.ETA}"
                 : row.Status);
         }
+
+        // Secondary line: the source/folder meta when known, else the transfer status
+        private static string RowSubLine(DownloadItem row) =>
+            string.IsNullOrEmpty(row.Meta) ? row.Status : row.Meta;
 
         // Resolves vibrant category colors matching GTK 3 CategoryIconPalette
         private static (byte R, byte G, byte B) GetCategoryColorForFileType(string filename)
