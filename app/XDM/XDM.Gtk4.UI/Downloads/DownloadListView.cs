@@ -37,6 +37,12 @@ namespace XDM.Gtk4UI.Downloads
         private MultiSelection selection;
         // Swaps between the empty-state page and the list page
         private readonly Stack stack;
+        // Empty page and its two possible actions (add download / clear search)
+        private Adw.StatusPage? emptyPage;
+        private Button? addAction;
+        private Button? clearAction;
+        // Active search keyword, so the empty page can explain a zero-result filter
+        private string keyword = "";
 
         // Authoritative selection, kept as transfer ids so it survives reloads
         private readonly HashSet<string> selectedIds = new(StringComparer.Ordinal);
@@ -57,6 +63,8 @@ namespace XDM.Gtk4UI.Downloads
         public event EventHandler? SortChanged;
         // Fires when the empty state's primary action is pressed
         public event EventHandler? AddDownloadRequested;
+        // Fires when the empty state's "clear search" action is pressed
+        public event EventHandler? ClearSearchRequested;
 
         // Short caption for the bottom-bar sort button
         public string SortCaption
@@ -113,6 +121,7 @@ namespace XDM.Gtk4UI.Downloads
             stack.AddNamed(scrolled, "list");
             stack.AddNamed(BuildEmptyState(), "empty");
             stack.VisibleChildName = "empty";
+            UpdateEmptyState();
         }
 
         // Replaces the data set and re-binds the model
@@ -125,7 +134,8 @@ namespace XDM.Gtk4UI.Downloads
         // Applies the toolbar search keyword without leaving the current view
         public void Filter(string keyword)
         {
-            store.Filter(keyword);
+            this.keyword = keyword ?? "";
+            store.Filter(this.keyword);
             SyncModel();
         }
 
@@ -259,6 +269,7 @@ namespace XDM.Gtk4UI.Downloads
 
             CaptureSelection();
             stack.VisibleChildName = store.Count == 0 ? "empty" : "list";
+            UpdateEmptyState();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -345,6 +356,14 @@ namespace XDM.Gtk4UI.Downloads
             textBox.Append(meta);
             rowBox.Append(textBox);
 
+            // State pill: Downloading / Stopped / Waiting (hidden once complete)
+            var statusPill = Label.New("");
+            statusPill.AddCssClass("status-pill");
+            statusPill.Valign = Align.Center;
+            statusPill.Halign = Align.Center;
+            statusPill.Visible = false;
+            rowBox.Append(statusPill);
+
             // Size
             var size = Label.New("");
             size.WidthRequest = SizeWidth;
@@ -409,9 +428,10 @@ namespace XDM.Gtk4UI.Downloads
 
             var icon = rowBox.GetFirstChild() as Image;
             var textBox = GetChildAt(rowBox, 1) as Box;
-            var size = GetChildAt(rowBox, 2) as Label;
-            var progressHost = GetChildAt(rowBox, 3) as Box;
-            if (icon == null || textBox == null || size == null || progressHost == null)
+            var statusPill = GetChildAt(rowBox, 2) as Label;
+            var size = GetChildAt(rowBox, 3) as Label;
+            var progressHost = GetChildAt(rowBox, 4) as Box;
+            if (icon == null || textBox == null || statusPill == null || size == null || progressHost == null)
             {
                 return;
             }
@@ -433,7 +453,7 @@ namespace XDM.Gtk4UI.Downloads
 
                 size.SetText(row.SizeText);
 
-                var cells = new RowCells(name, meta, size,
+                var cells = new RowCells(name, meta, statusPill, size,
                     progressHost.GetFirstChild() as Box ?? Box.New(Orientation.Vertical, 0),
                     progressHost.GetLastChild() as Box ?? Box.New(Orientation.Vertical, 0));
                 if (cells.FinishedBox.GetLastChild() is Label finishedLabel &&
@@ -461,11 +481,12 @@ namespace XDM.Gtk4UI.Downloads
             }
         }
 
-        // Renders the progress area for finished or active rows
+        // Renders the state pill and the progress area for finished or active rows
         private static void BindProgress(RowCells cells, DownloadItem row)
         {
             cells.FinishedBox.Visible = row.IsComplete;
             cells.InProgressBox.Visible = !row.IsComplete;
+            BindStatusPill(cells.Status, row);
 
             if (row.IsComplete)
             {
@@ -483,9 +504,56 @@ namespace XDM.Gtk4UI.Downloads
                 cells.Bar.Fraction = Math.Clamp(row.Progress, 0.0, 1.0);
             }
             cells.Percent?.SetText($"{row.RawProgress}%");
+            // The pill already names the state, so this line carries live numbers only
             cells.SpeedEta?.SetText(!string.IsNullOrWhiteSpace(row.DownloadSpeed)
                 ? $"{row.DownloadSpeed} · {row.ETA}"
-                : row.Status);
+                : row.ETA);
+        }
+
+        // Maps the transfer state to one pill caption and tone
+        private static void BindStatusPill(Label pill, DownloadItem row)
+        {
+            foreach (var cssTone in new[] { "downloading", "stopped", "waiting", "failed" })
+            {
+                pill.RemoveCssClass(cssTone);
+            }
+
+            if (row.IsComplete)
+            {
+                pill.Visible = false;
+                return;
+            }
+
+            var status = row.Status ?? "";
+            string text;
+            string tone;
+            if (status.Contains("Fail", StringComparison.OrdinalIgnoreCase) ||
+                status.Contains("Error", StringComparison.OrdinalIgnoreCase))
+            {
+                text = TextResource.GetText("STAT_FAILED") ?? "Failed";
+                tone = "failed";
+            }
+            else if (status.Contains("Stop", StringComparison.OrdinalIgnoreCase) ||
+                     status.Contains("Paus", StringComparison.OrdinalIgnoreCase))
+            {
+                text = TextResource.GetText("STAT_PAUSED") ?? "Paused";
+                tone = "stopped";
+            }
+            else if (!string.IsNullOrWhiteSpace(row.DownloadSpeed) ||
+                     status.Contains("Download", StringComparison.OrdinalIgnoreCase))
+            {
+                text = TextResource.GetText("STAT_DOWNLOADING") ?? "Downloading";
+                tone = "downloading";
+            }
+            else
+            {
+                text = TextResource.GetText("STAT_QUEUED") ?? "Queued";
+                tone = "waiting";
+            }
+
+            pill.SetText(text);
+            pill.AddCssClass(tone);
+            pill.Visible = true;
         }
 
         // Resolves vibrant category colors matching GTK 3 CategoryIconPalette
@@ -505,23 +573,51 @@ namespace XDM.Gtk4UI.Downloads
             };
         }
 
-        // Empty state shown when there are no rows (or the search matched nothing)
+        // Empty state: a starting point when the view is empty, an explanation when
+        // a search simply matched nothing
         private Widget BuildEmptyState()
         {
-            var page = Adw.StatusPage.New();
-            page.SetIconName("folder-download-symbolic");
-            page.SetTitle(TextResource.GetText("LBL_NO_DOWNLOADS") ?? "No downloads to show");
-            page.SetDescription(TextResource.GetText("DESC_NO_DOWNLOADS") ?? "Downloads you start will appear here.");
-            page.Vexpand = true;
+            emptyPage = Adw.StatusPage.New();
+            emptyPage.SetIconName("folder-download-symbolic");
+            emptyPage.Vexpand = true;
 
             // Primary call to action so the empty view is a starting point, not a dead end
-            var add = Button.NewWithLabel(TextResource.GetText("LBL_ADD_DOWNLOAD") ?? "Add download");
-            add.AddCssClass("suggested-action");
-            add.AddCssClass("pill");
-            add.Halign = Align.Center;
-            add.OnClicked += (_, _) => AddDownloadRequested?.Invoke(this, EventArgs.Empty);
-            page.SetChild(add);
-            return page;
+            addAction = Button.NewWithLabel(TextResource.GetText("LBL_ADD_DOWNLOAD") ?? "Add download");
+            addAction.AddCssClass("suggested-action");
+            addAction.AddCssClass("pill");
+            addAction.Halign = Align.Center;
+            addAction.OnClicked += (_, _) => AddDownloadRequested?.Invoke(this, EventArgs.Empty);
+
+            clearAction = Button.NewWithLabel(TextResource.GetText("LBL_CLEAR_SEARCH") ?? "Clear search");
+            clearAction.AddCssClass("pill");
+            clearAction.Halign = Align.Center;
+            clearAction.OnClicked += (_, _) =>
+            {
+                Filter("");
+                ClearSearchRequested?.Invoke(this, EventArgs.Empty);
+            };
+
+            emptyPage.SetChild(addAction);
+            return emptyPage;
+        }
+
+        // Explains a zero-result search instead of claiming the list is empty
+        private void UpdateEmptyState()
+        {
+            if (emptyPage == null)
+            {
+                return;
+            }
+
+            var searching = !string.IsNullOrWhiteSpace(keyword);
+            emptyPage.SetIconName(searching ? "system-search-symbolic" : "folder-download-symbolic");
+            emptyPage.SetTitle(searching
+                ? string.Format(TextResource.GetText("LBL_NO_RESULTS") ?? "No results for \u201c{0}\u201d", keyword)
+                : TextResource.GetText("LBL_NO_DOWNLOADS") ?? "No downloads to show");
+            emptyPage.SetDescription(searching
+                ? TextResource.GetText("LBL_NO_RESULTS_DESC") ?? "Try a different search term."
+                : TextResource.GetText("DESC_NO_DOWNLOADS") ?? "Downloads you start will appear here.");
+            emptyPage.SetChild(searching ? clearAction! : addAction!);
         }
 
         private PopoverMenu? activeContextMenu;
@@ -621,6 +717,7 @@ namespace XDM.Gtk4UI.Downloads
         {
             public Label Name { get; }
             public Label Meta { get; }
+            public Label Status { get; }
             public Label Size { get; }
             public Box FinishedBox { get; }
             public Box InProgressBox { get; }
@@ -628,11 +725,12 @@ namespace XDM.Gtk4UI.Downloads
             public Label? Percent { get; set; }
             public Label? SpeedEta { get; set; }
 
-            public RowCells(Label name, Label meta, Label size,
+            public RowCells(Label name, Label meta, Label status, Label size,
                 Box finishedBox, Box inProgressBox)
             {
                 Name = name;
                 Meta = meta;
+                Status = status;
                 Size = size;
                 FinishedBox = finishedBox;
                 InProgressBox = inProgressBox;

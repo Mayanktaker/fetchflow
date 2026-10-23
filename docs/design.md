@@ -283,7 +283,10 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Row hierarchy:** two lines per row — the file name (14px, 600) and one middle-ellipsized
   meta line joining source site, file type and destination folder (`◉ domain · RAR · ~/path`,
   11px `@meta_text`). Size is a 12px `@meta_text` column and progress bars are a 4px
-  accent-filled track, so the eye lands on the name first and rows stay compact.
+  accent-filled track, so the eye lands on the name first and rows stay compact. A
+  `.status-pill` between the text column and Size names the live state — Downloading
+  (accent), Paused (amber), Queued (neutral), Failed (red) — and hides itself once the
+  row is complete, where the check plus finish date already say it.
 - **Native-first styling:** the GTK 4 stylesheets deliberately stay minimal. Buttons, entries, header bars, sidebar rows, progress bars, hover/active/selection states and focus rings are drawn by libadwaita/Adwaita, so the app looks and behaves like the user's desktop and follows its accessibility settings. The stylesheets only carry what native theming cannot express: the Active vs Complete list surfaces, a thin column divider, the accent token rewritten from `ColorSchemeTable`, the bandwidth/extension state colours and the dialog section-heading weight. Sidebar lists use libadwaita's `navigation-sidebar` class and the Active/Complete block uses `boxed-list`, instead of hand-written row styling.
 - **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
   System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved
@@ -333,6 +336,9 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   is pinned under the category list and separated by a hairline.
 - **Empty state:** `AdwStatusPage` with a pill-shaped `.suggested-action` "Add download"
   button, wired to the same primary action as the header so an empty view is actionable.
+  When a search filters everything out the page switches to a search icon, "No results for
+  “term”" and a "Clear search" action, so a zero-result filter never looks like an empty
+  library. Settings lives only in the sidebar (header menu keeps the remaining entries).
 - **Row checkboxes:** a press on the gutter checkbox is claimed in the capture phase, because
   the view's own click handler runs afterwards and would replace the accumulated
   multi-selection with that single row. `ToggleRowAt` owns the selection change and the

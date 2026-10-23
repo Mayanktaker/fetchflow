@@ -160,7 +160,7 @@ namespace XDM.Gtk4UI
             var appSection = Gio.Menu.New();
             appSection.Append(TextResource.GetText("MENU_TOGGLE_THEME") ?? "Switch Theme", "app." + AppActions.ToggleTheme);
             appSection.Append(TextResource.GetText("MENU_LANG") ?? "Language", "app." + AppActions.Language);
-            appSection.Append(TextResource.GetText("TITLE_SETTINGS") ?? "Settings...", "app." + AppActions.Settings);
+            // Settings lives in the sidebar now, so the menu does not repeat it
             appSection.Append(TextResource.GetText("MENU_ABOUT") ?? "About FetchFlow", "app." + AppActions.About);
             appSection.Append(TextResource.GetText("MENU_EXIT") ?? "Exit", "app." + AppActions.Quit);
             root.AppendSection(null, appSection);

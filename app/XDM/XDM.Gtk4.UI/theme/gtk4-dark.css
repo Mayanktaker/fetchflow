@@ -192,6 +192,31 @@ list.navigation-sidebar > row:selected:hover,
   color: @meta_text;
 }
 
+/* Per-row transfer state pill */
+.status-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background-color: alpha(@meta_text, 0.14);
+  color: @meta_text;
+}
+
+.status-pill.downloading {
+  background-color: alpha(@accent, 0.16);
+  color: @accent;
+}
+
+.status-pill.stopped {
+  background-color: alpha(#f59e0b, 0.18);
+  color: #fbbf24;
+}
+
+.status-pill.failed {
+  background-color: alpha(#dc2626, 0.16);
+  color: #f87171;
+}
+
 /* Settings entry pinned under the category list */
 .sidebar-action {
   margin: 0 8px;

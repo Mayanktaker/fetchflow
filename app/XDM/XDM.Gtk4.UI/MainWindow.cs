@@ -287,8 +287,15 @@ namespace XDM.Gtk4UI
                 return false;
             };
 
-            // The empty state offers the same primary action as the header
+            // The empty state offers the same primary action as the header, and can
+            // clear a search that matched nothing
             downloadList.AddDownloadRequested += (_, _) => NewButton.Activate();
+            downloadList.ClearSearchRequested += (_, _) =>
+            {
+                searchEntry.SetText("");
+                searchToggle.Active = false;
+                searchBar.SearchModeEnabled = false;
+            };
 
             // Browser-extension connectivity drives the live status badge
             ApplicationContext.ApplicationEvent += OnApplicationEvent;
