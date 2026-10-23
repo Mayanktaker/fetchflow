@@ -78,6 +78,86 @@ listview.download-list > row:selected {
   color: #94a3b8;
 }
 
+
+/* ---------------------------------------------------------------------------
+   Colour scheme application.
+   libadwaita's widgets resolve their own accent internally, so the shared
+   scheme accent has to be re-applied to the native controls explicitly.
+   --------------------------------------------------------------------------- */
+switch:checked,
+switch:checked:hover,
+switch:checked:active {
+  background-color: @accent;
+}
+
+switch:checked > slider {
+  background-color: #ffffff;
+}
+
+button.suggested-action {
+  background-color: @accent;
+  border-color: @accent;
+  color: #ffffff;
+}
+
+button.suggested-action:hover {
+  background-color: @accent_hover;
+  border-color: @accent_hover;
+}
+
+checkbutton check:checked,
+checkbutton check:indeterminate,
+checkbutton check:checked:hover {
+  background-color: @accent;
+  border-color: @accent;
+  color: #ffffff;
+}
+
+progressbar > trough > progress,
+progressbar > progress {
+  background-color: @accent;
+}
+
+entry:focus-within,
+spinbutton:focus-within {
+  border-color: @accent;
+}
+
+/* Linked view switcher (settings tabs): active tab carries the accent */
+.linked > button:checked,
+.linked > togglebutton:checked {
+  color: @accent;
+  background-color: alpha(@accent, 0.14);
+}
+
+/* Selected rows anywhere in the app, including dropdown popovers */
+listview > row:selected,
+liststore > row:selected,
+dropdown listview > row:selected {
+  background-color: alpha(@accent, 0.30);
+}
+
+/* Links and accent-coloured labels */
+link,
+.accent {
+  color: @accent;
+}
+
+
+/* Sidebar selection (ListBox navigation rows) uses the scheme accent too */
+list.navigation-sidebar > row:selected,
+.navigation-sidebar > row:selected,
+.sidebar > row:selected {
+  background-color: @accent;
+  color: #ffffff;
+}
+
+list.navigation-sidebar > row:selected:hover,
+.navigation-sidebar > row:selected:hover {
+  background-color: @accent_hover;
+  color: #ffffff;
+}
+
 /* Section headings inside dialogs */
 .heading {
   font-weight: 600;
