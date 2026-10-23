@@ -55,6 +55,8 @@ Status values: `open` · `fixed` · `accepted` (documented limitation) · `needs
 
 | FF-UI-039 | P3 | GNOME, KDE | GTK 4 removed keep-above window hints, so the media grabber has no "Always on top" control (GTK 3 had one). | GTK 4 `Gtk.Window` API | accepted: no GTK 4 API exists; the grabber stays a normal window |
 
+| FF-UI-040 | P0 | GNOME, KDE, Windows | Saving settings while the proxy was Direct or System threw `ArgumentNullException` from `BinaryWriter.Write(string)` (null `Host`/`UserName`) and terminated the app. Changing the theme in Settings was the visible trigger. | crash trace: `ConfigIO.SerializeProxyInfo` → `Config.SaveConfig` → `SettingsDialog.SaveSettings` | fixed (null-guarded proxy and string-array writes in shared Core; settings Save now catches and reports instead of crashing; smoke asserts the Direct-proxy serialization) |
+
 ## What is still unverified
 
 These need a live session and are **not** claimed as findings yet:

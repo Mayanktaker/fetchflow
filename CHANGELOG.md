@@ -22,6 +22,7 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ### Bug fixes
 
+- **Saving settings no longer closes the app:** with the proxy set to Direct or System, pressing Save (including when changing the theme in Settings) could quit FetchFlow unexpectedly
 - The search box used to do nothing at all
 - Selecting several downloads cleared itself as soon as progress updated
 - The theme choice was saved but ignored, and the light theme never appeared

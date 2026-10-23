@@ -868,8 +868,25 @@ namespace XDM.Gtk4UI.Dialogs
             });
         }
 
-        // Commits modified settings to Config instance and filesystem
+        // Commits the dialog without letting a config/IO failure kill the app:
+        // an exception escaping a GObject signal handler terminates the process.
         private void SaveSettings()
+        {
+            try
+            {
+                SaveSettingsCore();
+            }
+            catch (Exception ex)
+            {
+                TraceLog.Log.Debug(ex, "Saving settings failed: " + ex.Message);
+                Gtk4DialogHelper.ShowAlert(window,
+                    (TextResource.GetText("MSG_SETTINGS_SAVE_FAILED") ?? "Settings could not be saved.")
+                    + "\n\n" + ex.Message);
+            }
+        }
+
+        // Writes every control into Config and persists it
+        private void SaveSettingsCore()
         {
             SaveCurrentCategoryFields();
 

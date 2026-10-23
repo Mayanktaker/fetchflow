@@ -313,7 +313,7 @@ namespace XDM.Core.IO
             }
         }
 
-        private static void WriteString(BinaryWriter w, string value, string name)
+        private static void WriteString(BinaryWriter w, string? value, string name)
         {
             w.Write(name);
             w.Write(STRING);
@@ -341,14 +341,15 @@ namespace XDM.Core.IO
             w.Write(value);
         }
 
-        private static void WriteStringArray(BinaryWriter w, IEnumerable<string> array, string name, int count)
+        private static void WriteStringArray(BinaryWriter w, IEnumerable<string?> array, string name, int count)
         {
             w.Write(name);
             w.Write(STRING_ARRAY);
             w.Write((short)count);
             foreach (var item in array)
             {
-                w.Write(item);
+                // Entries can be null in a hand-edited or migrated config
+                w.Write(item ?? string.Empty);
             }
         }
 

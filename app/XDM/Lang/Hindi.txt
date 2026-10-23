@@ -407,3 +407,4 @@ LBL_HEADERS_COOKIES=HTTP हेडर और कुकीज़:
 MSG_MEDIA_DOWNLOAD_STARTED=डाउनलोड शुरू हुआ। यह डाउनलोड सूची में दिखेगा।
 MSG_MEDIA_FETCHING=फ़ॉर्मेट प्राप्त हो रहे हैं...
 MSG_LANG_RESTART=नई भाषा अगली बार FetchFlow शुरू होने पर लागू होगी।
+MSG_SETTINGS_SAVE_FAILED=सेटिंग्स सहेजी नहीं जा सकीं।
