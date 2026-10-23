@@ -275,8 +275,10 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
-- **List chrome:** the download list uses native row and column separators
-  (`ColumnView.ShowRowSeparators`/`ShowColumnSeparators`) instead of CSS dividers.
+- **List chrome:** download rows are cards (6px gaps, 10px radius, subtle border) so the
+  two-line rows read as discrete items; list separators are off and the header keeps a
+  one-pixel divider to mark the draggable column edge. Card surface, hover and accent-tinted
+  selection are the only row styling the stylesheet owns.
 - **Native-first styling:** the GTK 4 stylesheets deliberately stay minimal. Buttons, entries, header bars, sidebar rows, progress bars, hover/active/selection states and focus rings are drawn by libadwaita/Adwaita, so the app looks and behaves like the user's desktop and follows its accessibility settings. The stylesheets only carry what native theming cannot express: the Active vs Complete list surfaces, a thin column divider, the accent token rewritten from `ColorSchemeTable`, the bandwidth/extension state colours and the dialog section-heading weight. Sidebar lists use libadwaita's `navigation-sidebar` class and the Active/Complete block uses `boxed-list`, instead of hand-written row styling.
 - **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
   System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved
@@ -291,7 +293,9 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   (app name + active view), exactly one labelled primary action (New), and the contextual
   transfer actions (Pause, Resume, Delete) as icon buttons with tooltips. Open File and Open
   Folder live in the main menu, along with Switch Theme, so the header stays native and
-  uncluttered. Search is a GNOME search toggle that opens a `Gtk.SearchBar` under the header
+  uncluttered. When the user's `gtk-decoration-layout` puts an `icon` element on the start
+  side (e.g. `icon:minimize,maximize,close`), start-side title buttons are hidden so the app
+  mark is not drawn twice. Search is a GNOME search toggle that opens a `Gtk.SearchBar` under the header
   (Ctrl+F opens and focuses it). Sorting is not duplicated in the header bar.
 - **Column header:** header buttons carry a right-hand divider so the drag-resize edge is
   visible; the gutter column shows the tri-state select-all glyph (☐/▣/☑).

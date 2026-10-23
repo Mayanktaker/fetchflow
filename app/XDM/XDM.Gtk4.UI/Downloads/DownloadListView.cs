@@ -74,9 +74,9 @@ namespace XDM.Gtk4UI.Downloads
             selection.OnSelectionChanged += (_, _) => OnSelectionChanged();
             view = ColumnView.New(selection);
             view.AddCssClass("download-list");
-            // Native row/column separators instead of hand-drawn dividers
-            view.ShowRowSeparators = true;
-            view.ShowColumnSeparators = true;
+            // Card rows provide their own separation; no list separators needed
+            view.ShowRowSeparators = false;
+            view.ShowColumnSeparators = false;
             view.Hexpand = true;
             view.Vexpand = true;
 

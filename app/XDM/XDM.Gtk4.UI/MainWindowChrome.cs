@@ -34,6 +34,10 @@ namespace XDM.Gtk4UI
         {
             // AdwHeaderBar draws GNOME's window controls; the title keeps the app mark
             var header = Adw.HeaderBar.New();
+            // GNOME layouts with an "icon" element (e.g. icon:minimize,maximize,close)
+            // draw the app mark at the start of the header, duplicating our title logo.
+            // Hide the start buttons only when that side carries no real window control.
+            header.ShowStartTitleButtons = StartSideHasWindowControls();
             windowTitle = Adw.WindowTitle.New(AppInfo.APP_NAME,
                 TextResource.GetText("ALL_UNFINISHED") ?? "Active");
             var titleBox = Box.New(Orientation.Horizontal, 10);
@@ -66,6 +70,28 @@ namespace XDM.Gtk4UI
             header.PackEnd(searchToggle);
 
             return header;
+        }
+
+        // True when the user's decoration layout puts a real control on the start side
+        private static bool StartSideHasWindowControls()
+        {
+            try
+            {
+                var layout = Settings.GetDefault()?.GtkDecorationLayout;
+                if (string.IsNullOrEmpty(layout))
+                {
+                    return true;
+                }
+                var start = layout.Split(':')[0];
+                return start.Contains("close", StringComparison.Ordinal)
+                    || start.Contains("minimize", StringComparison.Ordinal)
+                    || start.Contains("maximize", StringComparison.Ordinal);
+            }
+            catch (Exception ex)
+            {
+                TraceLog.Log.Debug(ex, "Decoration layout read failed");
+                return true;
+            }
         }
 
         // Builds the primary menu, grouped the way GNOME header menus are

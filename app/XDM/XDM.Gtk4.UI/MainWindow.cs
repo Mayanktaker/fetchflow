@@ -138,14 +138,15 @@ namespace XDM.Gtk4UI
         private MainWindow(GtkApplication app)
         {
             this.app = app;
+            // Labelled primary action; the icon is tinted white to sit on the accent fill
             NewButton = Button.New();
-            Gtk4IconHelper.ConfigureButton(
-                NewButton,
-                "links-line",
-                TextResource.GetText("DESC_NEW") ?? "New",
-                TextResource.GetText("DESC_NEW") ?? "New Download (Ctrl+N)",
-                "suggested-action",
-                16);
+            var newBox = Box.New(Orientation.Horizontal, 6);
+            newBox.Valign = Align.Center;
+            newBox.Append(Gtk4IconHelper.CreateTintedIcon("links-line", 255, 255, 255, 16));
+            newBox.Append(Label.New(TextResource.GetText("DESC_NEW") ?? "New"));
+            NewButton.SetChild(newBox);
+            NewButton.TooltipText = TextResource.GetText("DESC_NEW") ?? "New Download (Ctrl+N)";
+            NewButton.AddCssClass("suggested-action");
 
             // Secondary actions are icon-only so the header stays inside the window width
             DeleteButton = CreateHeaderIconButton("delete-bin-7-line", "destructive-action",

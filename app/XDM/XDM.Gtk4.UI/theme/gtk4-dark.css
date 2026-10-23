@@ -24,6 +24,30 @@ columnview.download-list.finished listview {
   background-color: @view_finished_bg;
 }
 
+
+/* Download rows read as cards: separated, rounded, with native accent selection */
+columnview.download-list listview > row {
+  margin: 3px 6px;
+  padding: 2px 4px;
+  border-radius: 10px;
+  background-color: #262626;
+  border: 1px solid alpha(#ffffff, 0.06);
+}
+
+columnview.download-list listview > row:hover {
+  background-color: #303030;
+}
+
+columnview.download-list listview > row:selected {
+  background-color: alpha(@accent, 0.30);
+  border-color: alpha(@accent, 0.55);
+}
+
+/* Header divider marks the draggable column edge (list separators are off) */
+columnview.download-list header button {
+  box-shadow: inset -1px 0 alpha(@border_color, 0.45);
+}
+
 /* State colour for a queued update; the button itself stays native */
 .update-dot-button {
   color: @accent;
