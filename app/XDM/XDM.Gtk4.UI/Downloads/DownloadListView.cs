@@ -1,15 +1,17 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
-// GTK 4 download list: ColumnView with multi-select gutter checkbox, category-tinted
-// file type icon + name, size, and dynamic progress (date badge for finished rows,
-// live speed/ETA and progress bar for active rows).
+// GTK 4 download list. A header-less Gtk.ListView: each row is one card carrying the
+// select checkbox, file-type icon, name + source + destination, size and progress.
+// There is no column header and no column resizing (the bottom bar owns Select All
+// and Sort), so the list stays calm and native.
 //
-// Selection and model stability: the Gio.ListStore and the MultiSelection are created
-// once and only their *contents* change on a view/search/sort switch. Progress updates
-// never touch the model; they refresh the already-bound cell widgets for that row, so a
-// running download cannot clear the user's selection.
+// Selection: the Gio.ListStore and the MultiSelection are created once; only their
+// contents change on a view/search/sort switch. Progress updates never touch the
+// model, they refresh the already-bound row widgets, so a running download cannot
+// clear the selection.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gtk;
 using Translations;
 using XDM.Core;
@@ -20,27 +22,21 @@ namespace XDM.Gtk4UI.Downloads
 {
     internal sealed class DownloadListView
     {
-        // Fixed geometry from docs/design.md
-        private const int CheckboxColumnWidth = 36;
-        private const int SizeColumnWidth = 110;
-        private const int ProgressColumnWidth = 180;
+        // Fixed geometry tokens
+        private const int CheckboxWidth = 34;
+        private const int SizeWidth = 90;
+        private const int ProgressWidth = 160;
 
         // Row data behind the model
         private readonly DownloadStore store = new();
         // Row identity model: one Gtk.StringObject per row holding the transfer id
         private readonly Gio.ListStore rowStore = Gio.ListStore.New(StringObject.GetGType());
-        // The column view itself
-        private readonly ColumnView view;
+        // The list itself
+        private readonly ListView view;
         // Selection model is created once and reused for every view/search/sort change
         private MultiSelection selection;
         // Swaps between the empty-state page and the list page
         private readonly Stack stack;
-
-        // Individual columns
-        private readonly ColumnViewColumn colCheckbox;
-        private readonly ColumnViewColumn colName;
-        private readonly ColumnViewColumn colSize;
-        private readonly ColumnViewColumn colProgress;
 
         // Authoritative selection, kept as transfer ids so it survives reloads
         private readonly HashSet<string> selectedIds = new(StringComparer.Ordinal);
@@ -48,9 +44,7 @@ namespace XDM.Gtk4UI.Downloads
         private bool isUpdatingSelection;
 
         // Currently bound cell widgets, so a progress tick can refresh them in place
-        private readonly Dictionary<string, NameCells> nameCells = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, Label> sizeCells = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, ProgressCells> progressCells = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, RowCells> boundCells = new(StringComparer.Ordinal);
 
         // Root widget to pack into the window
         public Widget Root => stack;
@@ -61,36 +55,44 @@ namespace XDM.Gtk4UI.Downloads
         public IReadOnlyList<DownloadItem> Items => store.Items;
         // Fires after the GTK selection changes
         public event EventHandler? SelectionChanged;
+        // Fires when the sort column or direction changes
+        public event EventHandler? SortChanged;
+
+        // Short caption for the bottom-bar sort button
+        public string SortCaption
+        {
+            get
+            {
+                var arrow = store.SortAscending ? "↑" : "↓";
+                return store.CurrentSortColumn switch
+                {
+                    DownloadSortColumn.Name => (TextResource.GetText("SORT_NAME") ?? "Name") + " " + arrow,
+                    DownloadSortColumn.Size => (TextResource.GetText("SORT_SIZE") ?? "Size") + " " + arrow,
+                    _ => (TextResource.GetText("SORT_DATE") ?? "Date") + " " + arrow
+                };
+            }
+        }
 
         // Builds the list widget and its empty state
         public DownloadListView()
         {
             selection = MultiSelection.New(rowStore);
             selection.OnSelectionChanged += (_, _) => OnSelectionChanged();
-            view = ColumnView.New(selection);
+
+            var factory = SignalListItemFactory.New();
+            factory.OnSetup += (_, args) => SetupRow((ListItem)args.Object);
+            factory.OnBind += (_, args) => BindRow((ListItem)args.Object);
+            factory.OnUnbind += (_, args) => UnbindRow((ListItem)args.Object);
+
+            view = ListView.New(selection, factory);
             view.AddCssClass("download-list");
-            // Card rows provide their own separation; no list separators needed
-            view.ShowRowSeparators = false;
-            view.ShowColumnSeparators = false;
-            view.Hexpand = true;
-            view.Vexpand = true;
+            view.ShowSeparators = false;
             // Leave a strip so the overlay scrollbar never sits on a card
             view.MarginEnd = 8;
+            view.Hexpand = true;
+            view.Vexpand = true;
 
-            colCheckbox = BuildCheckboxColumn();
-            colName = BuildNameColumn();
-            colSize = BuildSizeColumn();
-            colProgress = BuildProgressColumn();
-
-            view.AppendColumn(colCheckbox);
-            view.AppendColumn(colName);
-            view.AppendColumn(colSize);
-            view.AppendColumn(colProgress);
-
-            WireColumnSorting();
-            UpdateSortHeaderTitles();
-
-            // Double click / Enter key activation: executes standard double-click action
+            // Double click / Enter activates the standard action (open file/folder/progress)
             view.OnActivate += (_, args) =>
             {
                 var pos = args.Position;
@@ -100,8 +102,6 @@ namespace XDM.Gtk4UI.Downloads
                     UIActions.OnDblClick();
                 }
             };
-
-            view.OnMap += (_, _) => TryWireHeaders();
 
             var scrolled = ScrolledWindow.New();
             scrolled.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
@@ -133,32 +133,18 @@ namespace XDM.Gtk4UI.Downloads
         public void UpdateRow(string id)
         {
             var item = store.Lookup(id);
-            if (item == null)
+            if (!boundCells.TryGetValue(id, out var cells) || item == null)
             {
                 return;
             }
 
-            if (nameCells.TryGetValue(id, out var name))
-            {
-                name.Name.SetText(item.Name);
-                if (name.Source != null)
-                {
-                    name.Source.SetText(item.Source);
-                    name.Source.SetVisible(!string.IsNullOrEmpty(item.Source));
-                }
-                name.Location.SetText(item.Location);
-                name.Location.SetVisible(!string.IsNullOrEmpty(item.Location));
-            }
-
-            if (sizeCells.TryGetValue(id, out var size))
-            {
-                size.SetText(item.SizeText);
-            }
-
-            if (progressCells.TryGetValue(id, out var progress))
-            {
-                BindProgressCells(progress, item);
-            }
+            cells.Name.SetText(item.Name);
+            cells.Source.SetText(item.Source);
+            cells.Source.SetVisible(!string.IsNullOrEmpty(item.Source));
+            cells.Location.SetText(item.Location);
+            cells.Location.SetVisible(!string.IsNullOrEmpty(item.Location));
+            cells.Size.SetText(item.SizeText);
+            BindProgress(cells, item);
         }
 
         // Marks which surface the list is showing (Active vs Complete)
@@ -233,8 +219,7 @@ namespace XDM.Gtk4UI.Downloads
                 return;
             }
 
-            var allSelected = selectedIds.Count >= store.Count;
-            if (allSelected)
+            if (selectedIds.Count >= store.Count)
             {
                 ApplySelection(new HashSet<string>(StringComparer.Ordinal));
                 return;
@@ -256,7 +241,7 @@ namespace XDM.Gtk4UI.Downloads
                 return;
             }
             store.SortBy(col, ascending);
-            UpdateSortHeaderTitles();
+            SortChanged?.Invoke(this, EventArgs.Empty);
             SyncModel();
         }
 
@@ -264,39 +249,8 @@ namespace XDM.Gtk4UI.Downloads
         public void ToggleSort(DownloadSortColumn col)
         {
             store.ToggleSort(col);
-            UpdateSortHeaderTitles();
+            SortChanged?.Invoke(this, EventArgs.Empty);
             SyncModel();
-        }
-
-        // Updates sort arrows on column titles
-        private void UpdateSortHeaderTitles()
-        {
-            var arrow = store.SortAscending ? " ▴" : " ▾";
-            var nameCaption = TextResource.GetText("SORT_NAME") ?? "File name";
-            var sizeCaption = TextResource.GetText("SORT_SIZE") ?? "Size";
-            var progressCaption = TextResource.GetText("LBL_PROGRESS") ?? "Progress";
-            colName.Title = store.CurrentSortColumn == DownloadSortColumn.Name ? nameCaption + arrow : nameCaption;
-            colSize.Title = store.CurrentSortColumn == DownloadSortColumn.Size ? sizeCaption + arrow : sizeCaption;
-            colProgress.Title = store.CurrentSortColumn == DownloadSortColumn.ProgressOrDate ? progressCaption + arrow : progressCaption;
-        }
-
-        // Sets up header menus with sort options
-        private void WireColumnSorting()
-        {
-            var nameMenu = Gio.Menu.New();
-            nameMenu.Append(TextResource.GetText("SORT_NAME_ASC") ?? "Sort Ascending (A-Z)", "app." + AppActions.SortNameAsc);
-            nameMenu.Append(TextResource.GetText("SORT_NAME_DESC") ?? "Sort Descending (Z-A)", "app." + AppActions.SortNameDesc);
-            colName.SetHeaderMenu(nameMenu);
-
-            var sizeMenu = Gio.Menu.New();
-            sizeMenu.Append(TextResource.GetText("SORT_SIZE_ASC") ?? "Sort Smallest First", "app." + AppActions.SortSizeAsc);
-            sizeMenu.Append(TextResource.GetText("SORT_SIZE_DESC") ?? "Sort Largest First", "app." + AppActions.SortSizeDesc);
-            colSize.SetHeaderMenu(sizeMenu);
-
-            var progressMenu = Gio.Menu.New();
-            progressMenu.Append(TextResource.GetText("SORT_DATE_DESC") ?? "Sort Newest First", "app." + AppActions.SortDateDesc);
-            progressMenu.Append(TextResource.GetText("SORT_DATE_ASC") ?? "Sort Oldest First", "app." + AppActions.SortDateAsc);
-            colProgress.SetHeaderMenu(progressMenu);
         }
 
         // Mirrors store.Items into the row model while keeping the selection by id
@@ -391,414 +345,212 @@ namespace XDM.Gtk4UI.Downloads
         private static string? IdOf(ListItem item) =>
             (item.Item as StringObject)?.GetString();
 
-        // True once the column headers carry their click gestures
-        internal bool HeadersWired => headersWired;
-        private bool headersWired;
-
-        // Gives every column header its click behaviour: the first (gutter) column
-        // toggles select-all, Name/Size/Progress cycle the sort. The gutter header has
-        // no caption, so it is identified by position rather than by its text.
-        private void TryWireHeaders()
+        // Builds the widget tree for one row
+        private void SetupRow(ListItem item)
         {
-            if (headersWired)
+            var rowBox = Box.New(Orientation.Horizontal, 10);
+            rowBox.MarginTop = 4;
+            rowBox.MarginBottom = 4;
+            rowBox.MarginStart = 8;
+            rowBox.MarginEnd = 6;
+
+            // Selection checkbox: claims the press so the view cannot collapse the selection
+            var check = CheckButton.New();
+            check.Valign = Align.Center;
+            check.WidthRequest = CheckboxWidth;
+            check.Halign = Align.Center;
+            check.CanFocus = false;
+            var click = GestureClick.New();
+            click.SetButton(1);
+            click.SetPropagationPhase(PropagationPhase.Capture);
+            click.OnPressed += (_, _) =>
+            {
+                var selected = ToggleRowAt(item.Position);
+                if (item.Child is Box box && box.GetFirstChild() is CheckButton toggle)
+                {
+                    isUpdatingSelection = true;
+                    toggle.Active = selected;
+                    isUpdatingSelection = false;
+                }
+                click.SetState(EventSequenceState.Claimed);
+            };
+            check.AddController(click);
+            rowBox.Append(check);
+
+            // File-type icon
+            var icon = Gtk4IconHelper.CreateIcon("file-download-line", 24);
+            icon.Valign = Align.Center;
+            rowBox.Append(icon);
+
+            // Name + source + destination
+            var textBox = Box.New(Orientation.Vertical, 1);
+            textBox.Hexpand = true;
+            textBox.Valign = Align.Center;
+
+            var name = Label.New("");
+            name.Halign = Align.Start;
+            name.Ellipsize = Pango.EllipsizeMode.End;
+            name.AddCssClass("download-name");
+
+            var source = Label.New("");
+            source.Halign = Align.Start;
+            source.Ellipsize = Pango.EllipsizeMode.End;
+            source.AddCssClass("download-meta");
+
+            var location = Label.New("");
+            location.Halign = Align.Start;
+            location.Ellipsize = Pango.EllipsizeMode.Middle;
+            location.AddCssClass("download-meta");
+
+            textBox.Append(name);
+            textBox.Append(source);
+            textBox.Append(location);
+            rowBox.Append(textBox);
+
+            // Size
+            var size = Label.New("");
+            size.WidthRequest = SizeWidth;
+            size.Halign = Align.End;
+            size.Valign = Align.Center;
+            rowBox.Append(size);
+
+            // Progress: finished badge or live bar
+            var finishedBox = Box.New(Orientation.Horizontal, 6);
+            finishedBox.WidthRequest = ProgressWidth;
+            finishedBox.Valign = Align.Center;
+            finishedBox.Append(Gtk4IconHelper.CreateTintedIcon("check-line", 46, 194, 126, 16));
+            var finishedLabel = Label.New(TextResource.GetText("STAT_FINISHED") ?? "Complete");
+            finishedLabel.AddCssClass("download-meta");
+            finishedBox.Append(finishedLabel);
+
+            var bar = ProgressBar.New();
+            bar.Valign = Align.Center;
+
+            var percent = Label.New("");
+            percent.WidthRequest = 42;
+            percent.Halign = Align.End;
+            percent.AddCssClass("download-meta");
+
+            var speedEta = Label.New("");
+            speedEta.Halign = Align.Start;
+            speedEta.Ellipsize = Pango.EllipsizeMode.End;
+            speedEta.AddCssClass("download-meta");
+
+            var inProgressBox = Box.New(Orientation.Vertical, 1);
+            inProgressBox.WidthRequest = ProgressWidth;
+            inProgressBox.Valign = Align.Center;
+
+            var barRow = Box.New(Orientation.Horizontal, 6);
+            bar.Hexpand = true;
+            barRow.Append(bar);
+            barRow.Append(percent);
+            inProgressBox.Append(barRow);
+            inProgressBox.Append(speedEta);
+
+            var progressHost = Box.New(Orientation.Vertical, 0);
+            progressHost.WidthRequest = ProgressWidth;
+            progressHost.Valign = Align.Center;
+            progressHost.Append(finishedBox);
+            progressHost.Append(inProgressBox);
+            rowBox.Append(progressHost);
+
+            item.SetChild(rowBox);
+            AttachContextMenu(item, rowBox);
+        }
+
+        // Fills a row's widgets from the store and registers them for in-place updates
+        private void BindRow(ListItem item)
+        {
+            var id = IdOf(item);
+            if (item.Child is not Box rowBox || string.IsNullOrEmpty(id) || store.Lookup(id) is not { } row)
             {
                 return;
             }
 
-            var wired = 0;
-            // GTK groups the column headers in one container child of the view
-            for (var child = view.GetFirstChild(); child != null; child = child.GetNextSibling())
+            if (rowBox.GetFirstChild() is not CheckButton check)
             {
-                if (child is ListView)
-                {
-                    continue;
-                }
-
-                var index = 0;
-                for (var header = child.GetFirstChild(); header != null; header = header.GetNextSibling())
-                {
-                    if (index == 0)
-                    {
-                        AttachClick(header, ToggleSelectAll);
-                        wired++;
-                    }
-                    else
-                    {
-                        wired += WireSortHeader(header) ? 1 : 0;
-                    }
-                    index++;
-                }
+                return;
             }
 
-            headersWired = wired > 0;
-            if (headersWired)
+            isUpdatingSelection = true;
+            check.Active = selection.IsSelected(item.Position);
+            isUpdatingSelection = false;
+
+            var icon = GetChildAt(rowBox, 1) as Image;
+            var textBox = GetChildAt(rowBox, 2) as Box;
+            var size = GetChildAt(rowBox, 3) as Label;
+            var progressHost = GetChildAt(rowBox, 4) as Box;
+            if (icon == null || textBox == null || size == null || progressHost == null)
             {
-                TraceLog.Log.Debug($"GTK 4 list headers wired: {wired} (select-all + sorting)");
+                return;
+            }
+
+            var (r, g, b) = GetCategoryColorForFileType(row.Name);
+            Gtk4IconHelper.UpdateTintedIcon(icon, IconResource.GetSVGNameForFileType(row.Name), r, g, b, 24);
+
+            if (textBox.GetFirstChild() is Label name &&
+                GetChildAt(textBox, 1) is Label source &&
+                GetChildAt(textBox, 2) is Label location)
+            {
+                name.SetText(row.Name);
+                source.SetText(row.Source);
+                source.SetVisible(!string.IsNullOrEmpty(row.Source));
+                location.SetText(row.Location);
+                location.SetVisible(!string.IsNullOrEmpty(row.Location));
+
+                size.SetText(row.SizeText);
+
+                var cells = new RowCells(name, source, location, size,
+                    progressHost.GetFirstChild() as Box ?? Box.New(Orientation.Vertical, 0),
+                    progressHost.GetLastChild() as Box ?? Box.New(Orientation.Vertical, 0));
+                if (cells.FinishedBox.GetLastChild() is Label finishedLabel &&
+                    cells.InProgressBox.GetFirstChild() is Box barRow &&
+                    barRow.GetFirstChild() is ProgressBar bar &&
+                    barRow.GetLastChild() is Label percent &&
+                    cells.InProgressBox.GetLastChild() is Label speedEta)
+                {
+                    cells.Bar = bar;
+                    cells.Percent = percent;
+                    cells.SpeedEta = speedEta;
+                    boundCells[id] = cells;
+                    BindProgress(cells, row);
+                }
             }
         }
 
-        // Wires one sortable header by the caption it renders
-        private bool WireSortHeader(Widget header)
+        // Drops the row binding when the row scrolls out of view
+        private void UnbindRow(ListItem item)
         {
-            var caption = FirstLabelText(header);
-            if (caption == null)
+            var id = IdOf(item);
+            if (!string.IsNullOrEmpty(id))
             {
-                return false;
+                boundCells.Remove(id);
             }
-
-            if (caption.StartsWith(TextResource.GetText("SORT_NAME") ?? "File name", StringComparison.Ordinal))
-            {
-                AttachClick(header, () => ToggleSort(DownloadSortColumn.Name));
-                return true;
-            }
-            if (caption.StartsWith(TextResource.GetText("SORT_SIZE") ?? "Size", StringComparison.Ordinal))
-            {
-                AttachClick(header, () => ToggleSort(DownloadSortColumn.Size));
-                return true;
-            }
-            if (caption.StartsWith(TextResource.GetText("LBL_PROGRESS") ?? "Progress", StringComparison.Ordinal))
-            {
-                AttachClick(header, () => ToggleSort(DownloadSortColumn.ProgressOrDate));
-                return true;
-            }
-            return false;
         }
 
-        // Attaches a capture-phase left click so the header reacts before GTK's own handler
-        private static void AttachClick(Widget header, Action action)
-        {
-            var gesture = GestureClick.New();
-            gesture.SetButton(1);
-            gesture.SetPropagationPhase(PropagationPhase.Capture);
-            gesture.OnPressed += (_, _) => action();
-            header.AddController(gesture);
-        }
-
-        // First label text found in a header subtree
-        private static string? FirstLabelText(Widget widget)
-        {
-            if (widget is Label label)
-            {
-                return label.GetText();
-            }
-
-            for (var child = widget.GetFirstChild(); child != null; child = child.GetNextSibling())
-            {
-                var text = FirstLabelText(child);
-                if (text != null)
-                {
-                    return text;
-                }
-            }
-            return null;
-        }
-
-        // Multi-select gutter checkbox column matching GTK 3
-        private ColumnViewColumn BuildCheckboxColumn()
-        {
-            var factory = SignalListItemFactory.New();
-            factory.OnSetup += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var check = CheckButton.New();
-                check.Halign = Align.Center;
-                check.Valign = Align.Center;
-                check.MarginStart = 6;
-                check.MarginEnd = 6;
-
-                check.CanFocus = false;
-
-                // Claim the press in the capture phase: otherwise the view's own click
-                // handler runs afterwards and replaces the multi-selection with this one
-                // row, which is why ticking several boxes appeared to do nothing.
-                var click = GestureClick.New();
-                click.SetButton(1);
-                click.SetPropagationPhase(PropagationPhase.Capture);
-                click.OnPressed += (_, _) =>
-                {
-                    var selected = ToggleRowAt(item.Position);
-                    if (item.Child is CheckButton box)
-                    {
-                        isUpdatingSelection = true;
-                        box.Active = selected;
-                        isUpdatingSelection = false;
-                    }
-                    click.SetState(EventSequenceState.Claimed);
-                };
-                check.AddController(click);
-
-                item.SetChild(check);
-            };
-            factory.OnBind += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                if (item.Child is CheckButton check)
-                {
-                    isUpdatingSelection = true;
-                    check.Active = selection.IsSelected(item.Position);
-                    isUpdatingSelection = false;
-                }
-            };
-
-            var column = ColumnViewColumn.New("", factory);
-            column.FixedWidth = CheckboxColumnWidth;
-            column.Resizable = false;
-            return column;
-        }
-
-        // File type icon + Name + dim status, with category color tinting
-        private ColumnViewColumn BuildNameColumn()
-        {
-            var factory = SignalListItemFactory.New();
-            factory.OnSetup += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var rowBox = Box.New(Orientation.Horizontal, 10);
-                rowBox.MarginTop = 4;
-                rowBox.MarginBottom = 4;
-                rowBox.MarginStart = 8;
-                rowBox.MarginEnd = 10;
-
-                var icon = Gtk4IconHelper.CreateIcon("file-download-line", 24);
-                icon.Valign = Align.Center;
-
-                var textBox = Box.New(Orientation.Vertical, 1);
-                textBox.Hexpand = true;
-                textBox.Valign = Align.Center;
-
-                var name = Label.New("");
-                name.Halign = Align.Start;
-                name.Ellipsize = Pango.EllipsizeMode.End;
-                name.AddCssClass("download-name");
-
-                // Source and destination sit on their own, very dim lines so the
-                // file name stays the first thing the eye lands on
-                var source = Label.New("");
-                source.Halign = Align.Start;
-                source.Ellipsize = Pango.EllipsizeMode.End;
-                source.AddCssClass("download-meta");
-
-                var location = Label.New("");
-                location.Halign = Align.Start;
-                location.Ellipsize = Pango.EllipsizeMode.Middle;
-                location.AddCssClass("download-meta");
-
-                textBox.Append(name);
-                textBox.Append(source);
-                textBox.Append(location);
-
-                rowBox.Append(icon);
-                rowBox.Append(textBox);
-                item.SetChild(rowBox);
-                AttachContextMenu(item, rowBox);
-            };
-            factory.OnBind += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var id = IdOf(item);
-                if (item.Child is not Box rowBox || string.IsNullOrEmpty(id) || store.Lookup(id) is not { } row)
-                {
-                    return;
-                }
-
-                if (rowBox.GetFirstChild() is Image icon)
-                {
-                    var (r, g, b) = GetCategoryColorForFileType(row.Name);
-                    var svgName = IconResource.GetSVGNameForFileType(row.Name);
-                    Gtk4IconHelper.UpdateTintedIcon(icon, svgName, r, g, b, 24);
-                }
-
-                if (rowBox.GetLastChild() is Box textBox &&
-                    textBox.GetFirstChild() is Label name &&
-                    textBox.GetLastChild() is Label location)
-                {
-                    name.SetText(row.Name);
-                    location.SetText(row.Location);
-                    location.SetVisible(!string.IsNullOrEmpty(row.Location));
-
-                    if (GetChildAt(textBox, 1) is Label source)
-                    {
-                        source.SetText(row.Source);
-                        source.SetVisible(!string.IsNullOrEmpty(row.Source));
-                    }
-                }
-
-                // Register the widgets so a progress tick can refresh them without a rebind
-                if (rowBox.GetFirstChild() is Image boundIcon &&
-                    rowBox.GetLastChild() is Box boundBox &&
-                    boundBox.GetFirstChild() is Label boundName &&
-                    boundBox.GetLastChild() is Label boundLocation)
-                {
-                    nameCells[id] = new NameCells(boundIcon, boundName,
-                        GetChildAt(boundBox, 1) as Label, boundLocation);
-                }
-            };
-            factory.OnUnbind += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var id = IdOf(item);
-                if (!string.IsNullOrEmpty(id))
-                {
-                    nameCells.Remove(id);
-                }
-            };
-
-            var column = ColumnViewColumn.New(TextResource.GetText("SORT_NAME") ?? "File name", factory);
-            column.Expand = true;
-            column.Resizable = true;
-            return column;
-        }
-
-        // Right-aligned size text, resizable
-        private ColumnViewColumn BuildSizeColumn()
-        {
-            var factory = SignalListItemFactory.New();
-            factory.OnSetup += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var label = Label.New("");
-                label.Halign = Align.End;
-                label.Valign = Align.Center;
-                label.MarginStart = 8;
-                label.MarginEnd = 12;
-                item.SetChild(label);
-                AttachContextMenu(item, label);
-            };
-            factory.OnBind += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var id = IdOf(item);
-                if (item.Child is Label label && !string.IsNullOrEmpty(id) && store.Lookup(id) is { } row)
-                {
-                    label.SetText(row.SizeText);
-                    sizeCells[id] = label;
-                }
-            };
-            factory.OnUnbind += (_, args) =>
-            {
-                var id = IdOf((ListItem)args.Object);
-                if (!string.IsNullOrEmpty(id))
-                {
-                    sizeCells.Remove(id);
-                }
-            };
-
-            var column = ColumnViewColumn.New(TextResource.GetText("SORT_SIZE") ?? "Size", factory);
-            column.FixedWidth = SizeColumnWidth;
-            column.Resizable = true;
-            return column;
-        }
-
-        // Progress column: clean completion date badge for finished; bar + speed/ETA for in-progress
-        private ColumnViewColumn BuildProgressColumn()
-        {
-            var factory = SignalListItemFactory.New();
-            factory.OnSetup += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var rootBox = Box.New(Orientation.Vertical, 2);
-                rootBox.Valign = Align.Center;
-                rootBox.MarginStart = 8;
-                rootBox.MarginEnd = 12;
-
-                // Completed state container: green check icon + date/completion label
-                var finishedBox = Box.New(Orientation.Horizontal, 6);
-                finishedBox.Valign = Align.Center;
-                var checkIcon = Gtk4IconHelper.CreateTintedIcon("check-line", 46, 194, 126, 16);
-                var finishedLabel = Label.New(TextResource.GetText("STAT_FINISHED") ?? "Complete");
-                finishedLabel.AddCssClass("dim-label");
-                finishedBox.Append(checkIcon);
-                finishedBox.Append(finishedLabel);
-
-                // In-progress state container: progress bar with percentage, speed/ETA
-                var inprogressBox = Box.New(Orientation.Vertical, 2);
-                inprogressBox.Valign = Align.Center;
-
-                var barRow = Box.New(Orientation.Horizontal, 6);
-                var bar = ProgressBar.New();
-                bar.Hexpand = true;
-                bar.Valign = Align.Center;
-
-                var percentLabel = Label.New("0%");
-                percentLabel.WidthRequest = 44;
-                percentLabel.Halign = Align.End;
-
-                barRow.Append(bar);
-                barRow.Append(percentLabel);
-
-                var speedEtaLabel = Label.New("");
-                speedEtaLabel.Halign = Align.Start;
-                speedEtaLabel.AddCssClass("dim-label");
-
-                inprogressBox.Append(barRow);
-                inprogressBox.Append(speedEtaLabel);
-
-                rootBox.Append(finishedBox);
-                rootBox.Append(inprogressBox);
-                item.SetChild(rootBox);
-                AttachContextMenu(item, rootBox);
-            };
-            factory.OnBind += (_, args) =>
-            {
-                var item = (ListItem)args.Object;
-                var id = IdOf(item);
-                if (item.Child is not Box rootBox || string.IsNullOrEmpty(id) || store.Lookup(id) is not { } row)
-                {
-                    return;
-                }
-
-                if (rootBox.GetFirstChild() is not Box finishedBox || rootBox.GetLastChild() is not Box inprogressBox)
-                {
-                    return;
-                }
-
-                if (inprogressBox.GetFirstChild() is not Box barRow ||
-                    barRow.GetFirstChild() is not ProgressBar bar ||
-                    barRow.GetLastChild() is not Label percent ||
-                    inprogressBox.GetLastChild() is not Label speedEta)
-                {
-                    return;
-                }
-
-                var cells = new ProgressCells(finishedBox, inprogressBox, bar, percent, speedEta);
-                progressCells[id] = cells;
-                BindProgressCells(cells, row);
-            };
-            factory.OnUnbind += (_, args) =>
-            {
-                var id = IdOf((ListItem)args.Object);
-                if (!string.IsNullOrEmpty(id))
-                {
-                    progressCells.Remove(id);
-                }
-            };
-
-            var column = ColumnViewColumn.New(TextResource.GetText("LBL_PROGRESS") ?? "Progress", factory);
-            column.FixedWidth = ProgressColumnWidth;
-            column.Resizable = true;
-            return column;
-        }
-
-        // Renders one row's progress column state (finished badge or live bar)
-        private static void BindProgressCells(ProgressCells cells, DownloadItem row)
+        // Renders the progress area for finished or active rows
+        private static void BindProgress(RowCells cells, DownloadItem row)
         {
             cells.FinishedBox.Visible = row.IsComplete;
             cells.InProgressBox.Visible = !row.IsComplete;
 
             if (row.IsComplete)
             {
-                if (cells.FinishedBox.GetLastChild() is Label finishedLabel)
+                if (cells.FinishedBox.GetLastChild() is Label label)
                 {
-                    finishedLabel.SetText(row.DateAdded != default
+                    label.SetText(row.DateAdded != default
                         ? row.DateAdded.ToString("yyyy-MM-dd")
                         : TextResource.GetText("STAT_FINISHED") ?? "Complete");
                 }
                 return;
             }
 
-            cells.Bar.Fraction = Math.Clamp(row.Progress, 0.0, 1.0);
-            cells.Percent.SetText($"{row.RawProgress}%");
-            cells.SpeedEta.SetText(!string.IsNullOrWhiteSpace(row.DownloadSpeed)
+            if (cells.Bar != null)
+            {
+                cells.Bar.Fraction = Math.Clamp(row.Progress, 0.0, 1.0);
+            }
+            cells.Percent?.SetText($"{row.RawProgress}%");
+            cells.SpeedEta?.SetText(!string.IsNullOrWhiteSpace(row.DownloadSpeed)
                 ? $"{row.DownloadSpeed} · {row.ETA}"
                 : row.Status);
         }
@@ -823,7 +575,6 @@ namespace XDM.Gtk4UI.Downloads
         // Empty state shown when there are no rows (or the search matched nothing)
         private static Widget BuildEmptyState()
         {
-            // AdwStatusPage is the GNOME empty-state pattern (icon + title + hint)
             var page = Adw.StatusPage.New();
             page.SetIconName("folder-download-symbolic");
             page.SetTitle(TextResource.GetText("LBL_NO_DOWNLOADS") ?? "No downloads to show");
@@ -834,7 +585,7 @@ namespace XDM.Gtk4UI.Downloads
 
         private PopoverMenu? activeContextMenu;
 
-        // Attaches right-click context gesture to a cell's widget
+        // Attaches right-click context gesture to a row
         private void AttachContextMenu(ListItem item, Widget child)
         {
             var gesture = GestureClick.New();
@@ -913,7 +664,7 @@ namespace XDM.Gtk4UI.Downloads
             popover.Popup();
         }
 
-        // Nth child of a box, used for the middle source line
+        // Nth child of a box
         private static Widget? GetChildAt(Box box, int index)
         {
             var child = box.GetFirstChild();
@@ -924,39 +675,28 @@ namespace XDM.Gtk4UI.Downloads
             return child;
         }
 
-        // Widgets behind one bound name cell, refreshed on a progress tick
-        private sealed class NameCells
+        // Widgets behind one bound row, refreshed on a progress tick
+        private sealed class RowCells
         {
-            public Image Icon { get; }
             public Label Name { get; }
-            public Label? Source { get; }
+            public Label Source { get; }
             public Label Location { get; }
+            public Label Size { get; }
+            public Box FinishedBox { get; }
+            public Box InProgressBox { get; }
+            public ProgressBar? Bar { get; set; }
+            public Label? Percent { get; set; }
+            public Label? SpeedEta { get; set; }
 
-            public NameCells(Image icon, Label name, Label? source, Label location)
+            public RowCells(Label name, Label source, Label location, Label size,
+                Box finishedBox, Box inProgressBox)
             {
-                Icon = icon;
                 Name = name;
                 Source = source;
                 Location = location;
-            }
-        }
-
-        // Widgets behind one bound progress cell, refreshed on a progress tick
-        private sealed class ProgressCells
-        {
-            public Box FinishedBox { get; }
-            public Box InProgressBox { get; }
-            public ProgressBar Bar { get; }
-            public Label Percent { get; }
-            public Label SpeedEta { get; }
-
-            public ProgressCells(Box finishedBox, Box inProgressBox, ProgressBar bar, Label percent, Label speedEta)
-            {
+                Size = size;
                 FinishedBox = finishedBox;
                 InProgressBox = inProgressBox;
-                Bar = bar;
-                Percent = percent;
-                SpeedEta = speedEta;
             }
         }
     }

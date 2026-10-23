@@ -275,10 +275,11 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
-- **List chrome:** download rows are cards (6px gaps, 10px radius, subtle border) so each
-  row reads as a discrete item; list separators are off and the header keeps a one-pixel
-  divider to mark the draggable column edge. The list view carries an 8px end margin so the
-  overlay scrollbar never sits on a card.
+- **List chrome:** the list is a header-less `Gtk.ListView` — one card per row (6px gaps,
+  10px radius, subtle border) with no column header and no column resizing. Each row lays out
+  checkbox | icon | name+source+destination | size | progress itself, so the columns never
+  need dragging. The view carries an 8px end margin so the overlay scrollbar never sits on a
+  card, and the row body keeps native Ctrl/Shift multi-selection.
 - **Row hierarchy:** three lines per row — the file name (14px, 600), the source site plus
   file type, and the destination folder. The two meta lines use an 11px `@meta_text` tone
   (~55% of body text) so the eye lands on the name first. The header row is 13px semibold on
@@ -314,11 +315,13 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   through `UiGuard.Run`. An exception escaping a GObject signal handler terminates the whole
   process (that is how the proxy-save bug killed the app), so the guard logs it and shows the
   reason instead, leaving the dialog open.
-- **Header clicks:** GTK groups the column headers in one container child of the view, and
-  `GtkColumnViewColumn` exposes no header-click signal. The gutter header has no caption, so
-  it is identified by position (first header) and toggles select-all; Name, Size and Progress
-  are matched by caption and cycle the sort like GTK 3. Every header carries a capture-phase
-  click gesture.
+- **Select and sort live in the bottom bar:** the left side owns selection (Select All toggles
+  the whole view, plus the "N selected" count), the right side owns the view controls: a Sort
+  menu button showing the current column and direction (Name/Size/Date), then the bandwidth
+  limiter and the queue window. The list header was removed rather than restyled.
+- **Sidebar rows:** plain `navigation-sidebar` rows (no card/shadow on the Active/Complete
+  block). Icons keep their category colour at rest and turn white on the accent selection, so
+  they never disappear into it.
 - **Row checkboxes:** a press on the gutter checkbox is claimed in the capture phase, because
   the view's own click handler runs afterwards and would replace the accumulated
   multi-selection with that single row. `ToggleRowAt` owns the selection change and the

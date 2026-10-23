@@ -56,6 +56,7 @@ namespace XDM.Gtk4UI
         private readonly Button btnSpeedLimit;
         private readonly Button btnScheduler;
         private readonly Button btnSelectAll;
+        private readonly MenuButton btnSort;
         private readonly Label lblSelectionCount = Label.New("");
         // Guards programmatic monitoring-checkbox updates from re-raising the toggle
         private bool syncingMonitoring;
@@ -209,6 +210,15 @@ namespace XDM.Gtk4UI
                 "flat",
                 14);
             btnSelectAll.OnClicked += (_, _) => downloadList.ToggleSelectAll();
+
+            // Bottom bar owns the list controls: select-all on the left, sort on the right
+            btnSort = MenuButton.New();
+            btnSort.SetIconName("view-sort-descending-symbolic");
+            btnSort.SetLabel(downloadList.SortCaption);
+            btnSort.SetMenuModel(BuildSortMenu());
+            btnSort.AddCssClass("flat");
+            btnSort.TooltipText = "Sort downloads";
+            downloadList.SortChanged += (_, _) => btnSort.SetLabel(downloadList.SortCaption);
 
             lblSelectionCount.AddCssClass("dim-label");
 

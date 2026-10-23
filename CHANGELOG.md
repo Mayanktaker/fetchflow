@@ -14,6 +14,8 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - **Media Grabber:** a new window lists the streams FetchFlow captures from your browser — pick one and download it
 - **Video downloader:** paste a video page address, optionally reuse your browser cookies, choose a quality and download
 - **A calmer Settings window:** pages are listed down the side and Cancel/Save sit in the window header, the way other GNOME apps work
+- **Simpler list, smarter bottom bar:** the column header is gone (no more dragging columns); Select All sits on the left of the bottom bar and a new Sort menu on the right shows what you are sorting by
+- **Sidebar tidied:** Active and Complete no longer look raised, and their icons turn white while selected
 - **Multi-select works again:** ticking several checkboxes now keeps every ticked row selected instead of collapsing to one
 - **Clearer rows:** the source site and the save folder now sit on separate, very quiet lines under the file name, so the name is the first thing you see; the list header is easier to read and the scrollbar no longer covers the cards
 - **Download rows are cards:** each download sits on its own rounded card, so Active and Complete are easier to scan; the Net button icon and the title bar no longer repeat the app mark

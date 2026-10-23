@@ -25,6 +25,8 @@ namespace XDM.Gtk4UI
         private bool syncingSidebar;
         // Header title/subtitle, updated as the sidebar view changes
         private Adw.WindowTitle? windowTitle;
+        // Sidebar rows, kept so icons can turn white while their row is selected
+        private readonly List<SidebarEntry> sidebarEntries = new();
         // Sidebar row labels and their base captions, for live counts
         private readonly Dictionary<string, Label> sidebarLabels = new(StringComparer.Ordinal);
         private readonly Dictionary<string, string> sidebarBaseText = new(StringComparer.Ordinal);
@@ -94,6 +96,19 @@ namespace XDM.Gtk4UI
             }
         }
 
+        // Sort options for the bottom-bar menu
+        private static Gio.MenuModel BuildSortMenu()
+        {
+            var menu = Gio.Menu.New();
+            menu.Append(TextResource.GetText("SORT_NAME_ASC") ?? "Name (A-Z)", "app." + AppActions.SortNameAsc);
+            menu.Append(TextResource.GetText("SORT_NAME_DESC") ?? "Name (Z-A)", "app." + AppActions.SortNameDesc);
+            menu.Append(TextResource.GetText("SORT_SIZE_ASC") ?? "Size (smallest first)", "app." + AppActions.SortSizeAsc);
+            menu.Append(TextResource.GetText("SORT_SIZE_DESC") ?? "Size (largest first)", "app." + AppActions.SortSizeDesc);
+            menu.Append(TextResource.GetText("SORT_DATE_DESC") ?? "Date (newest first)", "app." + AppActions.SortDateDesc);
+            menu.Append(TextResource.GetText("SORT_DATE_ASC") ?? "Date (oldest first)", "app." + AppActions.SortDateAsc);
+            return menu;
+        }
+
         // Builds the primary menu, grouped the way GNOME header menus are
         private Gio.MenuModel BuildMainMenu()
         {
@@ -153,7 +168,6 @@ namespace XDM.Gtk4UI
             statusList = ListBox.New();
             // Native GNOME sidebar rows + a grouped card for the Active/Complete block
             statusList.AddCssClass("navigation-sidebar");
-            statusList.AddCssClass("boxed-list");
             statusList.SelectionMode = SelectionMode.Browse;
             statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_UNFINISHED") ?? "Active", InProgressKey, "download-2-line", 59, 130, 246));
             statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_FINISHED") ?? "Complete", FinishedKey, "check-line", 46, 194, 126));
@@ -193,6 +207,19 @@ namespace XDM.Gtk4UI
             sidebar.Append(scrolled);
             sidebar.WidthRequest = SidebarWidth;
             return sidebar;
+        }
+
+        // Keeps sidebar icons legible: white on the accent row, own colour otherwise
+        private void UpdateSidebarIcons()
+        {
+            foreach (var entry in sidebarEntries)
+            {
+                var selected = entry.Row.IsSelected();
+                Gtk4IconHelper.UpdateTintedIcon(entry.Icon, entry.IconName,
+                    selected ? (byte)255 : entry.R,
+                    selected ? (byte)255 : entry.G,
+                    selected ? (byte)255 : entry.B, 18);
+            }
         }
 
         // Appends live row counts to the Active/Complete and category rows
@@ -261,6 +288,7 @@ namespace XDM.Gtk4UI
 
             currentView = row.Name;
             windowTitle?.SetSubtitle(row.TooltipText ?? AppInfo.APP_NAME);
+            UpdateSidebarIcons();
             ApplyView(currentView);
             ViewChanged?.Invoke(currentView);
         }
@@ -299,6 +327,7 @@ namespace XDM.Gtk4UI
             }
 
             windowTitle?.SetSubtitle(row.TooltipText ?? AppInfo.APP_NAME);
+            UpdateSidebarIcons();
         }
 
         // Finds a sidebar row by its view key
@@ -317,6 +346,27 @@ namespace XDM.Gtk4UI
                 }
             }
             return null;
+        }
+
+        // One sidebar row plus the icon it owns, for selection-driven tinting
+        private sealed class SidebarEntry
+        {
+            public ListBoxRow Row { get; }
+            public Image Icon { get; }
+            public string IconName { get; }
+            public byte R { get; }
+            public byte G { get; }
+            public byte B { get; }
+
+            public SidebarEntry(ListBoxRow row, Image icon, string iconName, byte r, byte g, byte b)
+            {
+                Row = row;
+                Icon = icon;
+                IconName = iconName;
+                R = r;
+                G = g;
+                B = b;
+            }
         }
 
         // Creates one accessible sidebar row with tinted category icon and text
@@ -345,6 +395,7 @@ namespace XDM.Gtk4UI
             row.SetChild(rowBox);
             row.Name = key;
             row.TooltipText = text;
+            sidebarEntries.Add(new SidebarEntry(row, icon, iconName, r, g, b));
             return row;
         }
 
@@ -364,6 +415,7 @@ namespace XDM.Gtk4UI
             spacer.Hexpand = true;
             bar.Append(spacer);
 
+            bar.Append(btnSort);
             bar.Append(btnSpeedLimit);
             bar.Append(btnScheduler);
 
