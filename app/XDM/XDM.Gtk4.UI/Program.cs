@@ -11,6 +11,7 @@ using Translations;
 using XDM.Core;
 using XDM.Core.BrowserMonitoring;
 using XDM.Core.Downloader;
+using XDM.Core.IO;
 using XDM.Core.Util;
 using XDM.Gtk4UI.Dialogs;
 using GtkApplication = Gtk.Application;
@@ -252,6 +253,14 @@ namespace XDM.Gtk4UI
             if (ydlView.SelectedFormat != 0) throw new InvalidOperationException("Default quality not selected");
             ydlView.SwitchToFinalPage();
             ydlView.CloseWindow();
+
+            // Regression: a Direct/System proxy has null host and credentials, and
+            // saving the config used to throw from BinaryWriter.Write(string).
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer))
+            {
+                ConfigIO.SerializeProxyInfo(new ProxyInfo { ProxyType = ProxyType.Direct }, writer);
+            }
 
             // Media grabber window builds against the registered VideoTracker
             var grabber = new MediaGrabberWindow(mainWindow.Window);

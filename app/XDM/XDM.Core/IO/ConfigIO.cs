@@ -501,7 +501,9 @@ namespace XDM.Core.IO
             w.Write((short)5);
             w.Write(nameof(proxy.Host));
             w.Write(STRING);
-            w.Write(proxy.Host);
+            // Direct/System proxies carry no host or credentials; BinaryWriter.Write
+            // throws on null, which crashed the save as soon as a theme was applied.
+            w.Write(proxy.Host ?? string.Empty);
             w.Write(nameof(proxy.Port));
             w.Write(INT);
             w.Write(proxy.Port);
@@ -510,7 +512,7 @@ namespace XDM.Core.IO
             w.Write((int)proxy.ProxyType);
             w.Write(nameof(proxy.UserName));
             w.Write(STRING);
-            w.Write(proxy.UserName);
+            w.Write(proxy.UserName ?? string.Empty);
             w.Write(nameof(proxy.Password));
             w.Write(STRING);
             w.Write(proxy.Password ?? string.Empty);
