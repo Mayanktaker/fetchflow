@@ -534,18 +534,33 @@ namespace XDM.Gtk4UI
             (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(0);
 
         // F1 displays the GNOME About window using the shared application metadata
-        private void OnAbout()
+        private void OnAbout() => BuildAboutWindow(Window).Present();
+
+        // Builds the About window; static so the smoke self-test can assert the
+        // Legal and Credits pages are populated without presenting anything
+        internal static Adw.AboutWindow BuildAboutWindow(Window parent)
         {
             var about = Adw.AboutWindow.New();
-            about.SetTransientFor(Window);
+            about.SetTransientFor(parent);
             about.SetApplicationName(AppInfo.APP_FULL_NAME);
             about.SetApplicationIcon(AppInfo.APP_ID);
             about.SetVersion(AppInfo.APP_VERSION);
+            about.SetComments(TextResource.GetText("APP_TAGLINE") ?? "A download manager that just works.");
             about.SetDeveloperName("Mayanktaker Computers & Web Development");
             about.SetWebsite(AppInfo.APP_HOMEPAGE_TEXT);
+            about.SetSupportUrl(Links.SupportUrl);
+            about.SetIssueUrl(Links.IssueUrl);
             about.SetCopyright(AppInfo.APP_COPYRIGHT_TEXT);
-            about.SetDevelopers(new[] { AppInfo.APP_ORIGINAL_AUTHOR_CREDIT });
-            about.Present();
+            // Legal page: project license (LICENSE = GPL-2.0-or-later)
+            about.SetLicenseType(Gtk.License.Gpl20);
+            // Credits page: project first, then the upstream core it builds on
+            about.SetDevelopers(new[]
+            {
+                "Mayanktaker Computers & Web Development (" + AppInfo.APP_DEVELOPER_URL + ")",
+                AppInfo.APP_ORIGINAL_AUTHOR_CREDIT
+            });
+            about.SetTranslatorCredits(TextResource.GetText("APP_TRANSLATOR_CREDITS") ?? "See the Lang contributors.");
+            return about;
         }
 
         // Ctrl+T swaps light/dark and remembers the choice

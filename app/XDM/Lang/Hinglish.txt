@@ -412,3 +412,5 @@ MSG_ACTION_FAILED=Yeh kaam poora nahi ho saka.
 MENU_TOGGLE_THEME=Theme badlein
 MENU_GROUP_MANAGE=Manage
 MENU_GROUP_HELP=Help
+APP_TAGLINE=A download manager that just works.
+APP_TRANSLATOR_CREDITS=See the Lang contributors.

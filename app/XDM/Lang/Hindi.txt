@@ -412,3 +412,5 @@ MSG_ACTION_FAILED=यह क्रिया पूरी नहीं हो स
 MENU_TOGGLE_THEME=थीम बदलें
 MENU_GROUP_MANAGE=प्रबंधन
 MENU_GROUP_HELP=सहायता
+APP_TAGLINE=एक डाउनलोड मैनेजर जो बस काम करता है।
+APP_TRANSLATOR_CREDITS=Lang योगदानकर्ता देखें।

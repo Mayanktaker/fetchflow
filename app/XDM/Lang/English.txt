@@ -416,3 +416,5 @@ MSG_ACTION_FAILED=This action could not be completed.
 MENU_TOGGLE_THEME=Switch Theme
 MENU_GROUP_MANAGE=Manage
 MENU_GROUP_HELP=Help
+APP_TAGLINE=A download manager that just works.
+APP_TRANSLATOR_CREDITS=See the Lang contributors.

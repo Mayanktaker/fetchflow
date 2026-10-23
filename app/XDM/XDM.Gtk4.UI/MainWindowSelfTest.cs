@@ -66,6 +66,13 @@ namespace XDM.Gtk4UI
             Expect(Gtk4Theme.IsDarkActive, "dark mode applied");
             Gtk4Theme.ApplyFromConfig(Window);
 
+            // About window: Legal and Credits pages must carry content
+            var about = BuildAboutWindow(Window);
+            Expect(about.GetLicenseType() == Gtk.License.Gpl20, "about license set");
+            Expect(about.GetDevelopers().Length >= 2, "about credits list project + upstream");
+            Expect(!string.IsNullOrEmpty(about.GetIssueUrl()), "about issue url set");
+            Expect(!string.IsNullOrEmpty(about.GetSupportUrl()), "about support url set");
+
             Console.WriteLine("[GTK4 SMOKE] list/theme self-test passed");
         }
 
