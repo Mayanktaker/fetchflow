@@ -6,13 +6,24 @@
 
 Audit FetchFlow's Linux UI as a GNOME and KDE user, identify usability, accessibility, visual, platform-integration, and stability gaps, then make GTK 4 the primary Linux frontend while retaining GTK 3 compatibility for older desktops that only support GTK 3.
 
-## Status snapshot (2026-10-22)
+## Status snapshot (2026-10-23)
 
 Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwaita 1.10.0, .NET SDK 8.0.424. KDE Plasma verification is **deferred** (no Plasma session available) and is not claimed as done.
 
 ### Done and verified (Vertical Slice 6.1, Phase 6.2 & Phase 6.3 Complete)
 
-- Full GTK 3 visual & feature parity in GTK 4:
+- **Correctness and chrome pass (2026-10-23).** See FF-UI-011…FF-UI-025 in
+  `docs/audit/ui-ux-findings.md`. Fixed: search never filtered; progress events rebuilt the
+  list and cleared multi-selection; the saved theme mode was never applied (and the settings
+  dropdown used reversed indices); the browser-monitoring checkbox double-toggled to a no-op;
+  the credentials prompt returned null; Batch Download, the updater, refresh-links and the
+  speed-limiter window were placeholder dialogs; "Remove finished" had no entry point; the
+  Browser Monitoring link opened the wrong page; the footer printed developer text; About
+  hardcoded the version; the extension badge was static; Active and Complete shared one
+  surface; and the header overflowed with labelled buttons. Still open: FF-UI-026…035
+  (localization gaps, header select-all click, settings sidebar, colour schemes, yt-dlp UI,
+  media grabber, rubber-band selection, sidebar counts, libadwaita shell, row meta lines).
+- Feature areas already at GTK 3 parity in GTK 4 (not "full parity": see the open findings above):
   * Dynamic SVG color tinting via `Gtk4IconHelper` with memory/temp disk caching: generates vivid vector icons for sidebar categories and download row file types matching `CategoryIconPalette` (Documents=amber `#f59e0b`, Music=purple `#a855f7`, Videos=coral red `#ef4444`, Compressed=teal `#14b8a6`, Programs=indigo `#6366f1`, Images=pink `#f43f5e`, Incomplete=blue, Finished=green).
   * Multi-select gutter checkbox column added to `DownloadListView` with interactive row selection, select-all bottom bar button, `Ctrl+A` accelerator, and selection count indicator.
   * Interactive column sorting for Name, Size, and Date/Progress with ascending/descending toggle, sort indicators (`▲`/`▼`), and dedicated header dropdown menus.
