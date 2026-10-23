@@ -434,3 +434,6 @@ SETTINGS_MAX_SEGMENTS_DESC=Parallel connections used for one file
 SETTINGS_NET_TIMEOUT_DESC=Seconds before a stalled connection is dropped
 SETTINGS_GROUP_SITELIST=Automatic capture exceptions
 SETTINGS_IPC_STATE=Listening on 127.0.0.1:{port}
+LBL_ADD_DOWNLOAD=Add download
+LBL_ITEMS=items
+LBL_CATEGORIES=Categories

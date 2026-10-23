@@ -430,3 +430,6 @@ SETTINGS_MAX_SEGMENTS_DESC=एक फ़ाइल के लिए समान�
 SETTINGS_NET_TIMEOUT_DESC=रुका हुआ कनेक्शन छोड़ने से पहले सेकंड
 SETTINGS_GROUP_SITELIST=स्वतः कैप्चर अपवाद
 SETTINGS_IPC_STATE=127.0.0.1:{port} पर सुन रहा है
+LBL_ADD_DOWNLOAD=डाउनलोड जोड़ें
+LBL_ITEMS=आइटम
+LBL_CATEGORIES=श्रेणियाँ

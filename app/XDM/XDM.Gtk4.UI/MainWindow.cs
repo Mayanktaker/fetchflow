@@ -23,10 +23,10 @@ namespace XDM.Gtk4UI
     internal sealed partial class MainWindow
     {
         // Sidebar width token from docs/design.md spacing scale
-        private const int SidebarWidth = 200;
+        private const int SidebarWidth = 210;
         // Default desktop window size
-        private const int DefaultWidth = 900;
-        private const int DefaultHeight = 560;
+        private const int DefaultWidth = 980;
+        private const int DefaultHeight = 660;
         // Fixed sidebar view keys
         internal const string InProgressKey = "inprogress";
         internal const string FinishedKey = "finished";
@@ -52,7 +52,7 @@ namespace XDM.Gtk4UI
         private readonly Button updateDot = Button.New();
         // Status bar elements
         private readonly Label lblExtensionStatus = Label.New("");
-        private readonly CheckButton btnMonitoring;
+        private readonly Switch btnMonitoring;
         private readonly Button btnSpeedLimit;
         private readonly Button btnScheduler;
         private readonly Button btnSelectAll;
@@ -131,6 +131,7 @@ namespace XDM.Gtk4UI
             if (demo)
             {
                 main.SetRows(DemoRows(), InProgressKey);
+                main.downloadList.ToggleSelectAll(); // TEMP demo selection screenshot
             }
             return main;
         }
@@ -143,8 +144,8 @@ namespace XDM.Gtk4UI
             NewButton = Button.New();
             var newBox = Box.New(Orientation.Horizontal, 6);
             newBox.Valign = Align.Center;
-            newBox.Append(Gtk4IconHelper.CreateTintedIcon("links-line", 255, 255, 255, 16));
-            newBox.Append(Label.New(TextResource.GetText("DESC_NEW") ?? "New"));
+            newBox.Append(Gtk4IconHelper.CreateTintedIcon("download-2-line", 255, 255, 255, 16));
+            newBox.Append(Label.New(TextResource.GetText("LBL_ADD_DOWNLOAD") ?? "Add download"));
             NewButton.SetChild(newBox);
             NewButton.TooltipText = TextResource.GetText("DESC_NEW") ?? "New Download (Ctrl+N)";
             NewButton.AddCssClass("suggested-action");
@@ -169,13 +170,14 @@ namespace XDM.Gtk4UI
             updateDot.OnClicked += (_, _) => UpdateClicked?.Invoke(this, EventArgs.Empty);
 
             // Bottom bar controls
-            btnMonitoring = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_MONITORING") ?? "Browser Monitoring");
+            btnMonitoring = Switch.New();
+            btnMonitoring.Valign = Align.Center;
             btnMonitoring.Active = Config.Instance.IsBrowserMonitoringEnabled;
             // Core owns the config flip (Application's handler); raising the event only once
-            // avoids the double-toggle that made this checkbox a no-op.
-            btnMonitoring.OnToggled += (_, _) =>
+            // avoids the double-toggle that made this control a no-op.
+            btnMonitoring.OnNotify += (_, args) =>
             {
-                if (syncingMonitoring)
+                if (args.Pspec.GetName() != "active" || syncingMonitoring)
                 {
                     return;
                 }
@@ -247,7 +249,7 @@ namespace XDM.Gtk4UI
             shell.SetContent(BuildBody());
             Window.SetContent(shell);
 
-            DeleteButton.Visible = true;
+            DeleteButton.Visible = false;
             DeleteButton.Sensitive = false;
             PauseButton.Visible = false;
             ResumeButton.Visible = false;
@@ -256,9 +258,15 @@ namespace XDM.Gtk4UI
             downloadList.SelectionChanged += (_, _) =>
             {
                 var selCount = downloadList.GetSelectedItems().Count;
-                lblSelectionCount.SetText(selCount > 0
-                    ? $"{selCount} {TextResource.GetText("LBL_SELECTED") ?? "selected"}"
-                    : "");
+                // Core enables/disables the row actions after this handler, so the
+                // group is reconciled once its state has settled
+                DeleteButton.Visible = true;
+                GLib.Functions.IdleAdd(0, () =>
+                {
+                    UpdateRowActionsVisibility(selCount);
+                    return false;
+                });
+                UpdateViewHeading();
                 btnSelectAll.TooltipText = selCount == downloadList.Count && selCount > 0
                     ? "Deselect All (Ctrl+A)"
                     : "Select All (Ctrl+A)";
@@ -392,6 +400,7 @@ namespace XDM.Gtk4UI
             downloadList.SetViewKind(key == FinishedKey);
             downloadList.Reload(rows);
             UpdateSidebarCounts();
+            UpdateViewHeading();
         }
 
         // Filters category rows using the same predicate as the GTK 3 UI

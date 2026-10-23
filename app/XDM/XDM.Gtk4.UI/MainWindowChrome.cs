@@ -25,11 +25,14 @@ namespace XDM.Gtk4UI
         private bool syncingSidebar;
         // Header title/subtitle, updated as the sidebar view changes
         private Adw.WindowTitle? windowTitle;
+        // Content headline: current view name, beside its row/selection count
+        private Label? viewTitleLabel;
+        // Contextual header actions, shown only while rows are selected
+        private Box? rowActionsBox;
         // Sidebar rows, kept so icons can turn white while their row is selected
         private readonly List<SidebarEntry> sidebarEntries = new();
-        // Sidebar row labels and their base captions, for live counts
-        private readonly Dictionary<string, Label> sidebarLabels = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, string> sidebarBaseText = new(StringComparer.Ordinal);
+        // Right-aligned live count labels, one per sidebar row
+        private readonly Dictionary<string, Label> sidebarCounts = new(StringComparer.Ordinal);
 
         // Packs the app title, core actions, search, theme toggle and application menu
         private Widget BuildHeaderBar()
@@ -41,7 +44,7 @@ namespace XDM.Gtk4UI
             // Hide the start buttons only when that side carries no real window control.
             header.ShowStartTitleButtons = StartSideHasWindowControls();
             windowTitle = Adw.WindowTitle.New(AppInfo.APP_NAME,
-                TextResource.GetText("ALL_UNFINISHED") ?? "Active");
+                TextResource.GetText("LBL_DOWNLOADS") ?? "Downloads");
             var titleBox = Box.New(Orientation.Horizontal, 10);
             titleBox.Valign = Align.Center;
             titleBox.Append(Gtk4IconHelper.CreateIcon("fetchflow-logo", 28));
@@ -50,14 +53,27 @@ namespace XDM.Gtk4UI
 
             // Transfer actions stay in the header; Open/Open Folder live in the menu
             header.PackStart(NewButton);
-            header.PackStart(PauseButton);
-            header.PackStart(ResumeButton);
-            header.PackStart(DeleteButton);
+
+            // Row actions read as one quiet group after the primary action; the
+            // group only appears while rows are actually selected
+            rowActionsBox = Box.New(Orientation.Horizontal, 2);
+            rowActionsBox.Valign = Align.Center;
+            rowActionsBox.Visible = false;
+            rowActionsBox.Append(PauseButton);
+            rowActionsBox.Append(ResumeButton);
+            rowActionsBox.Append(OpenFileButton);
+            rowActionsBox.Append(OpenFolderButton);
+            rowActionsBox.Append(DeleteButton);
+            header.PackStart(rowActionsBox);
 
             searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH") ?? "Search";
             searchEntry.TooltipText = "Search downloads (Ctrl+F)";
             // Search filters the list in place; it never rebuilds the view from scratch
-            searchEntry.OnSearchChanged += (_, _) => downloadList.Filter(searchEntry.GetText() ?? "");
+            searchEntry.OnSearchChanged += (_, _) =>
+            {
+                downloadList.Filter(searchEntry.GetText() ?? "");
+                UpdateViewHeading();
+            };
 
             updateDot.TooltipText = TextResource.GetText("MSG_UPDATE_AVAILABLE") ?? "Update available";
 
@@ -152,30 +168,78 @@ namespace XDM.Gtk4UI
             return root;
         }
 
-        // Builds the resizable category pane and status bar
+        // Shows the header action group only when one action can actually run
+        private void UpdateRowActionsVisibility(int selectedCount)
+        {
+            if (rowActionsBox == null)
+            {
+                return;
+            }
+
+            rowActionsBox.Visible = selectedCount > 0 &&
+                (PauseButton.Sensitive || ResumeButton.Sensitive ||
+                 OpenFileButton.Sensitive || OpenFolderButton.Sensitive || DeleteButton.Sensitive);
+        }
+
+        // Builds the resizable category pane, the content headline and the status footer
         private Widget BuildBody()
         {
+            var content = Box.New(Orientation.Vertical, 0);
+            content.Append(BuildContentToolbar());
+            content.Append(searchBar);
+            content.Append(downloadList.Root);
+
             var paned = Paned.New(Orientation.Horizontal);
             paned.StartChild = BuildSidebar();
-            paned.EndChild = downloadList.Root;
+            paned.EndChild = content;
             paned.Position = SidebarWidth;
             paned.ResizeStartChild = false;
             paned.ShrinkStartChild = false;
 
             var root = Box.New(Orientation.Vertical, 0);
-            root.Append(searchBar);
             root.Append(paned);
             root.Append(BuildStatusBar());
             return root;
         }
 
+        // Headline above the list: view name, count, select-all and sort
+        private Widget BuildContentToolbar()
+        {
+            var bar = Box.New(Orientation.Horizontal, 8);
+            bar.AddCssClass("content-toolbar");
+
+            viewTitleLabel = Label.New("");
+            viewTitleLabel.AddCssClass("view-title");
+            viewTitleLabel.Halign = Align.Start;
+            viewTitleLabel.Xalign = 0;
+            viewTitleLabel.Valign = Align.Center;
+            bar.Append(viewTitleLabel);
+
+            lblSelectionCount.AddCssClass("view-count");
+            lblSelectionCount.Valign = Align.Center;
+            bar.Append(lblSelectionCount);
+
+            var spacer = Box.New(Orientation.Horizontal, 0);
+            spacer.Hexpand = true;
+            bar.Append(spacer);
+
+            btnSelectAll.Valign = Align.Center;
+            btnSelectAll.AddCssClass("caption");
+            btnSort.Valign = Align.Center;
+            btnSort.AddCssClass("caption");
+            bar.Append(btnSelectAll);
+            bar.Append(btnSort);
+            return bar;
+        }
+
         // Creates the status card plus the user's configured download categories
         private Widget BuildSidebar()
         {
-            // Active / Complete sit in their own card, matching the GTK 3 sidebar
+            // Active / Complete lead the sidebar, matching the GTK 3 sections
             statusList = ListBox.New();
-            // Native GNOME sidebar rows + a grouped card for the Active/Complete block
             statusList.AddCssClass("navigation-sidebar");
+            statusList.MarginStart = 8;
+            statusList.MarginEnd = 8;
             statusList.SelectionMode = SelectionMode.Browse;
             statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_UNFINISHED") ?? "Active", InProgressKey, "arrow-down-line", 53, 132, 228));
             statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_FINISHED") ?? "Complete", FinishedKey, "check-line", 53, 132, 228));
@@ -185,10 +249,6 @@ namespace XDM.Gtk4UI
             {
                 statusList.SelectRow(activeRow);
             }
-
-            var statusCard = Box.New(Orientation.Vertical, 0);
-            statusCard.AddCssClass("sidebar-status-card");
-            statusCard.Append(statusList);
 
             categoryList = ListBox.New();
             categoryList.AddCssClass("navigation-sidebar");
@@ -203,12 +263,16 @@ namespace XDM.Gtk4UI
 
             var scrolled = ScrolledWindow.New();
             scrolled.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            scrolled.MarginStart = 8;
+            scrolled.MarginEnd = 8;
             scrolled.SetChild(categoryList);
             scrolled.Vexpand = true;
 
             var sidebar = Box.New(Orientation.Vertical, 0);
-            sidebar.Append(statusCard);
-            sidebar.Append(BuildSidebarHeading());
+            sidebar.AddCssClass("app-sidebar");
+            sidebar.Append(BuildSidebarHeading("LBL_DOWNLOADS", "Downloads"));
+            sidebar.Append(statusList);
+            sidebar.Append(BuildSidebarHeading("LBL_CATEGORIES", "Categories"));
             sidebar.Append(scrolled);
             sidebar.WidthRequest = SidebarWidth;
             UpdateSidebarIcons();
@@ -266,24 +330,43 @@ namespace XDM.Gtk4UI
             }
         }
 
-        // Shows "Label (n)" when a view has rows, otherwise the plain caption
+        // Shows the count beside a view caption, or nothing when the view is empty
         private void SetSidebarCount(string key, int count)
         {
-            if (!sidebarLabels.TryGetValue(key, out var label) || !sidebarBaseText.TryGetValue(key, out var text))
+            if (sidebarCounts.TryGetValue(key, out var label))
+            {
+                label.SetText(count > 0 ? count.ToString() : "");
+            }
+        }
+
+        // Refreshes the headline title and its count (rows, or the selection)
+        private void UpdateViewHeading()
+        {
+            if (viewTitleLabel == null)
             {
                 return;
             }
-            label.SetText(count > 0 ? $"{text}  ({count})" : text);
+
+            viewTitleLabel.SetText(currentView switch
+            {
+                InProgressKey => TextResource.GetText("ALL_UNFINISHED") ?? "Active",
+                FinishedKey => TextResource.GetText("ALL_FINISHED") ?? "Complete",
+                _ => categories.TryGetValue(currentView, out var category) ? category.DisplayName : AppInfo.APP_NAME
+            });
+
+            var selected = downloadList.GetSelectedItems().Count;
+            lblSelectionCount.SetText(selected > 0
+                ? $"{selected} {TextResource.GetText("LBL_SELECTED") ?? "selected"}"
+                : $"{downloadList.Count} {TextResource.GetText("LBL_ITEMS") ?? "items"}");
         }
 
-        // Small section heading above the category list
-        private static Widget BuildSidebarHeading()
+        // Small section heading above a sidebar group
+        private static Widget BuildSidebarHeading(string key, string fallback)
         {
-            var label = Label.New(TextResource.GetText("SETTINGS_CAT") ?? "Categories");
+            var label = Label.New(TextResource.GetText(key) ?? fallback);
+            label.AddCssClass("sidebar-heading");
             label.Halign = Align.Start;
-            label.MarginStart = 16;
-            label.MarginTop = 8;
-            label.MarginBottom = 4;
+            label.Xalign = 0;
             return label;
         }
 
@@ -317,7 +400,6 @@ namespace XDM.Gtk4UI
             }
 
             currentView = row.Name;
-            windowTitle?.SetSubtitle(row.TooltipText ?? AppInfo.APP_NAME);
             UpdateSidebarIcons();
             ApplyView(currentView);
             ViewChanged?.Invoke(currentView);
@@ -356,7 +438,6 @@ namespace XDM.Gtk4UI
                 syncingSidebar = false;
             }
 
-            windowTitle?.SetSubtitle(row.TooltipText ?? AppInfo.APP_NAME);
             UpdateSidebarIcons();
         }
 
@@ -427,14 +508,14 @@ namespace XDM.Gtk4UI
             }
         }
 
-        // Creates one accessible sidebar row with tinted category icon and text
+        // Creates one accessible sidebar row with tinted icon, caption and count
         private ListBoxRow BuildSidebarRow(string text, string key, string iconName, byte r, byte g, byte b)
         {
             var rowBox = Box.New(Orientation.Horizontal, 10);
             rowBox.MarginTop = 6;
             rowBox.MarginBottom = 6;
-            rowBox.MarginStart = 8;
-            rowBox.MarginEnd = 8;
+            rowBox.MarginStart = 10;
+            rowBox.MarginEnd = 10;
 
             var icon = Gtk4IconHelper.CreateTintedIcon(iconName, r, g, b, 18);
             icon.Valign = Align.Center;
@@ -443,11 +524,16 @@ namespace XDM.Gtk4UI
             label.Halign = Align.Start;
             label.Valign = Align.Center;
             label.Hexpand = true;
-            sidebarLabels[key] = label;
-            sidebarBaseText[key] = text;
+            label.Ellipsize = Pango.EllipsizeMode.End;
+
+            var count = Label.New("");
+            count.AddCssClass("sidebar-count");
+            count.Valign = Align.Center;
+            sidebarCounts[key] = count;
 
             rowBox.Append(icon);
             rowBox.Append(label);
+            rowBox.Append(count);
 
             var row = ListBoxRow.New();
             row.SetChild(rowBox);
@@ -457,31 +543,35 @@ namespace XDM.Gtk4UI
             return row;
         }
 
-        // Builds the status and action bar at the bottom of the window
+        // Slim status footer: connectivity on the left, quiet controls on the right
         private Widget BuildStatusBar()
         {
             var bar = Box.New(Orientation.Horizontal, 10);
             bar.AddCssClass("bottom-bar");
 
-            bar.Append(btnSelectAll);
-            bar.Append(lblSelectionCount);
-            bar.Append(btnMonitoring);
             bar.Append(lblExtensionStatus);
 
-            // Flexible spacer keeps the trailing buttons pinned to the right edge
+            // Flexible spacer keeps the trailing controls pinned to the right edge
             var spacer = Box.New(Orientation.Horizontal, 0);
             spacer.Hexpand = true;
             bar.Append(spacer);
 
-            UpdateBottomBarIcons();
-            TintButtonIcon(btnSelectAll, "checkbox-line", 53, 132, 228, 14);
-            TintButtonIcon(btnScheduler, "list-settings-line", 53, 132, 228, 14);
-            TintButtonIcon(btnSpeedLimit, "time-line", 53, 132, 228, 14);
+            // Monitoring reads as a caption beside its switch, not a checkbox label
+            var monitoring = Box.New(Orientation.Horizontal, 6);
+            monitoring.Valign = Align.Center;
+            btnMonitoring.Valign = Align.Center;
+            var monitoringLabel = Label.New(TextResource.GetText("SETTINGS_MONITORING") ?? "Browser Monitoring");
+            monitoringLabel.AddCssClass("caption");
+            monitoringLabel.AddCssClass("dim-label");
+            monitoringLabel.Valign = Align.Center;
+            monitoring.Append(monitoringLabel);
+            monitoring.Append(btnMonitoring);
+            bar.Append(monitoring);
 
-            bar.Append(btnSort);
             bar.Append(btnSpeedLimit);
             bar.Append(btnScheduler);
 
+            UpdateBottomBarIcons();
             return bar;
         }
 

@@ -430,3 +430,6 @@ SETTINGS_MAX_SEGMENTS_DESC=Ek file ke liye parallel connections
 SETTINGS_NET_TIMEOUT_DESC=Ruka hua connection chhodne se pehle seconds
 SETTINGS_GROUP_SITELIST=Auto capture exceptions
 SETTINGS_IPC_STATE=127.0.0.1:{port} par sun raha hai
+LBL_ADD_DOWNLOAD=Download jodein
+LBL_ITEMS=items
+LBL_CATEGORIES=Categories

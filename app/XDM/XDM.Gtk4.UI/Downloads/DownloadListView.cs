@@ -298,20 +298,20 @@ namespace XDM.Gtk4UI.Downloads
         // Builds the widget tree for one row
         private void SetupRow(ListItem item)
         {
-            var rowBox = Box.New(Orientation.Horizontal, 10);
-            rowBox.MarginTop = 4;
-            rowBox.MarginBottom = 4;
+            var rowBox = Box.New(Orientation.Horizontal, 12);
+            rowBox.AddCssClass("download-row");
+            rowBox.MarginTop = 6;
+            rowBox.MarginBottom = 6;
             rowBox.MarginStart = 8;
-            rowBox.MarginEnd = 6;
+            rowBox.MarginEnd = 8;
 
             // File-type icon
-            // File-type icon
-            var icon = Gtk4IconHelper.CreateIcon("file-download-line", 24);
+            var icon = Gtk4IconHelper.CreateIcon("file-download-line", 28);
             icon.Valign = Align.Center;
             rowBox.Append(icon);
 
             // Name + source + destination
-            var textBox = Box.New(Orientation.Vertical, 1);
+            var textBox = Box.New(Orientation.Vertical, 2);
             textBox.Hexpand = true;
             textBox.Valign = Align.Center;
 
@@ -328,7 +328,7 @@ namespace XDM.Gtk4UI.Downloads
             var location = Label.New("");
             location.Halign = Align.Start;
             location.Ellipsize = Pango.EllipsizeMode.Middle;
-            location.AddCssClass("download-meta");
+            location.AddCssClass("download-path");
 
             textBox.Append(name);
             textBox.Append(source);
@@ -340,6 +340,7 @@ namespace XDM.Gtk4UI.Downloads
             size.WidthRequest = SizeWidth;
             size.Halign = Align.End;
             size.Valign = Align.Center;
+            size.AddCssClass("download-size");
             rowBox.Append(size);
 
             // Progress: finished badge or live bar
@@ -353,6 +354,7 @@ namespace XDM.Gtk4UI.Downloads
 
             var bar = ProgressBar.New();
             bar.Valign = Align.Center;
+            bar.AddCssClass("download-progress");
 
             var percent = Label.New("");
             percent.WidthRequest = 42;

@@ -269,21 +269,21 @@ WPF base neutral skins live in `Themes/DarkTheme.xaml` + `Themes/LightTheme.xaml
 
 Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` and `gtk4-light.css`) and are deployed side-by-side with GTK 3 stylesheets in the `/opt/fetchflow/theme/` directory.
 
-- **Shell:** `AdwApplication` + `AdwApplicationWindow` with an `AdwToolbarView` (top bar `AdwHeaderBar`, content below) and `AdwWindowTitle` carrying the active view as its subtitle. `AdwApplicationWindow` forbids `SetTitlebar()`, so the toolbar view is mandatory. Window controls come from libadwaita, not hand-built buttons. Requires libadwaita >= 1.4.
+- **Shell:** `AdwApplication` + `AdwApplicationWindow` with an `AdwToolbarView` (top bar `AdwHeaderBar`, content below) and `AdwWindowTitle` carrying the app name with a static `Downloads` subtitle (the active view is named in the content headline, so it is not repeated twice). `AdwApplicationWindow` forbids `SetTitlebar()`, so the toolbar view is mandatory. Window controls come from libadwaita, not hand-built buttons. Requires libadwaita >= 1.4.
 - **Color scheme:** `AdwStyleManager` owns light/dark. An explicit Light/Dark choice forces `ForceLight`/`ForceDark`; Follow System leaves `ColorScheme.Default` and the app re-applies its CSS when the manager's `dark` property changes.
 - **Empty state and About:** `AdwStatusPage` for the empty list and `AdwAboutWindow` for About, both fed from `AppInfo`/`TextResource`.
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
-- **List chrome:** the list is a header-less `Gtk.ListView` — one card per row (6px gaps,
-  10px radius, subtle border) with no column header and no column resizing. Each row lays out
-  checkbox | icon | name+source+destination | size | progress itself, so the columns never
-  need dragging. The view carries an 8px end margin so the overlay scrollbar never sits on a
-  card, and the row body keeps native Ctrl/Shift multi-selection.
+- **List chrome:** the list is a header-less `Gtk.ListView` — one card per row (4x10px gaps,
+  12px radius, subtle border, 6x8px inner padding) with no column header and no column
+  resizing. Each row lays out icon | name+source+destination | size | progress itself, so the
+  columns never need dragging. The view keeps a small end inset so the overlay scrollbar never
+  sits on a card, and the row body keeps native Ctrl/Shift multi-selection.
 - **Row hierarchy:** three lines per row — the file name (14px, 600), the source site plus
-  file type, and the destination folder. The two meta lines use an 11px `@meta_text` tone
-  (~55% of body text) so the eye lands on the name first. The header row is 13px semibold on
-  `@header_text` with a 36px minimum height, matching a native table header.
+  file type (11px `@meta_text`), and the destination folder (10.5px, ~80% of `@meta_text`).
+  Size is a 12px `@meta_text` column and progress bars are a 4px accent-filled track, so the
+  eye lands on the name first and the row reads as a card rather than a table.
 - **Native-first styling:** the GTK 4 stylesheets deliberately stay minimal. Buttons, entries, header bars, sidebar rows, progress bars, hover/active/selection states and focus rings are drawn by libadwaita/Adwaita, so the app looks and behaves like the user's desktop and follows its accessibility settings. The stylesheets only carry what native theming cannot express: the Active vs Complete list surfaces, a thin column divider, the accent token rewritten from `ColorSchemeTable`, the bandwidth/extension state colours and the dialog section-heading weight. Sidebar lists use libadwaita's `navigation-sidebar` class and the Active/Complete block uses `boxed-list`, instead of hand-written row styling.
 - **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
   System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved
@@ -292,46 +292,44 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Per-view surfaces:** the Active list uses `view` and the Complete list uses
   `view-finished` (`#2a2a2a` dark / `#f8f8f8` light). The list widget carries an
   `unfinished`/`finished` style class so the two views read apart, matching GTK 3.
-- **Sidebar status card:** Active and Complete sit on a raised `.sidebar-status-card` surface
-  (view surface, 1px border, 8px radius) rather than directly on the sidebar rail.
+- **Sidebar sections:** small `.sidebar-heading` captions ("Downloads", "Categories") group
+  plain `navigation-sidebar` rows; there is no raised status card, so the sidebar reads as one
+  calm column. Selected rows carry the scheme accent.
 - **Header actions:** the header carries the app mark (28px) beside an `AdwWindowTitle`
-  (app name + active view), exactly one labelled primary action (New), and the contextual
-  transfer actions (Pause, Resume, Delete) as icon buttons with tooltips. Open File and Open
-  Folder live in the main menu, along with Switch Theme, so the header stays native and
-  uncluttered. When the user's `gtk-decoration-layout` puts an `icon` element on the start
-  side (e.g. `icon:minimize,maximize,close`), start-side title buttons are hidden so the app
-  mark is not drawn twice. Search is a GNOME search toggle that opens a `Gtk.SearchBar` under the header
-  (Ctrl+F opens and focuses it). Sorting is not duplicated in the header bar.
-- **Column header:** header buttons carry a right-hand divider so the drag-resize edge is
-  visible; the gutter column shows the tri-state select-all glyph (☐/▣/☑).
+  (app name + `Downloads` subtitle) and exactly one labelled primary action
+  (`.suggested-action`, "Add download"). The contextual transfer actions (Pause, Resume,
+  Open File, Open Folder, Delete) form one icon group that is reconciled on an idle tick after
+  each selection change, so it appears only when a selected row can actually run one of them —
+  a view with nothing selected shows no ghosted buttons. When the user's
+  `gtk-decoration-layout` puts an `icon` element on the start side (e.g.
+  `icon:minimize,maximize,close`), start-side title buttons are hidden so the app mark is not
+  drawn twice. Search is a GNOME search toggle that opens a `Gtk.SearchBar` scoped to the
+  content column (Ctrl+F opens and focuses it).
+- **Content headline:** the active view name (16px, 700) plus a live count — `N items`, or
+  `N selected` while rows are selected — with Select All and the Sort menu button on the
+  trailing edge. It replaces the old column header row.
 - **List updates:** progress ticks refresh the bound cells of that row only. The row model and
   the `MultiSelection` are created once, so a running download cannot clear the selection,
   and switching view or search keeps the selection by transfer id.
 - **Row meta line:** the second line shows `◉ domain · ◫ ~/folder` (plus the extension for
   finished rows) and is middle-ellipsized; without that the column's natural width pushes
   Size/Progress out of a 900 px window. Falls back to the transfer status when no meta exists.
-- **Sidebar counts:** Active, Complete and every category append `(n)` while they contain rows.
+- **Sidebar counts:** Active, Complete and every category show a right-aligned, muted count
+  (`.sidebar-count`), blank when the view is empty, so captions stay aligned.
 - **UI error containment:** commit paths that touch configuration, the database or files run
   through `UiGuard.Run`. An exception escaping a GObject signal handler terminates the whole
   process (that is how the proxy-save bug killed the app), so the guard logs it and shows the
   reason instead, leaving the dialog open.
-- **Rows own their selection natively:** with the checkbox column gone the rows use the
-  `MultiSelection` plus GTK's native Ctrl/Shift click semantics. The bottom bar's Select All
-  plus the "N selected" count are the explicit controls.
-- **Select and sort live in the bottom bar:** the left side owns selection (Select All +
-  count), the extension badge tracks in the middle, and the right side owns the view
-  controls. Bottom-bar buttons draw their icons from the active scheme accent (re-tinted
-  whenever the theme changes), so every control shares one tone regardless of scheme. A
-  one-pixel `border-top` separates the bar from the list.
-- **Active / Complete is a card again:** the status block is a raised `.sidebar-status-card`
-  on the view surface with a 10px radius. Both entries share one icon tone (accent when
-  unselected, white on the accent row) so Active and Complete read as a pair in both states. the left side owns selection (Select All toggles
-  the whole view, plus the "N selected" count), the right side owns the view controls: a Sort
-  menu button showing the current column and direction (Name/Size/Date), then the bandwidth
-  limiter and the queue window. The list header was removed rather than restyled.
-- **Sidebar rows:** plain `navigation-sidebar` rows (no card/shadow on the Active/Complete
-  block). Icons keep their category colour at rest and turn white on the accent selection, so
-  they never disappear into it.
+- **Rows own their selection natively:** the rows use the `MultiSelection` plus GTK's native
+  Ctrl/Shift click semantics; Select All and the "N selected" count live in the content
+  headline.
+- **Status footer:** one slim bar below a hairline. Connectivity (extension badge) sits on the
+  left; Browser Monitoring is a `Gtk.Switch` with a caption, followed by the bandwidth limiter
+  and the queue window on the right. Its buttons draw their icons from the active scheme
+  accent and are re-tinted whenever the theme changes.
+- **Sidebar rows:** plain `navigation-sidebar` rows with an 8px inset. Icons keep their
+  category colour at rest and turn white on the accent selection (counts fade to 85% white),
+  so nothing disappears into the accent fill.
 - **Row checkboxes:** a press on the gutter checkbox is claimed in the capture phase, because
   the view's own click handler runs afterwards and would replace the accumulated
   multi-selection with that single row. `ToggleRowAt` owns the selection change and the

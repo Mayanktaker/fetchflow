@@ -17,8 +17,8 @@
 /* Active and Complete keep distinct surfaces so the two views read apart */
 listview.download-list {
   background-color: @view_bg;
-  /* Small breathing room above the first card now that the list has no header */
-  padding-top: 6px;
+  /* Breathing room around the card stack; the list has no column header */
+  padding: 4px 2px 10px;
 }
 
 listview.download-list.finished {
@@ -28,9 +28,9 @@ listview.download-list.finished {
 
 /* Download rows read as cards: separated, rounded, with native accent selection */
 listview.download-list > row {
-  margin: 3px 6px;
-  padding: 2px 4px;
-  border-radius: 10px;
+  margin: 4px 10px;
+  padding: 6px 8px;
+  border-radius: 12px;
   background-color: #262626;
   border: 1px solid alpha(#ffffff, 0.06);
 }
@@ -40,8 +40,8 @@ listview.download-list > row:hover {
 }
 
 listview.download-list > row:selected {
-  background-color: alpha(@accent, 0.30);
-  border-color: alpha(@accent, 0.55);
+  background-color: alpha(@accent, 0.20);
+  border-color: alpha(@accent, 0.45);
 }
 
 /* File name leads; source and destination are deliberately quiet */
@@ -158,18 +158,70 @@ list.navigation-sidebar > row:selected:hover,
   color: #ffffff;
 }
 
+/* ---------------------------------------------------------------------------
+   Main window polish: content headline, sidebar counts, quieter row meta and a
+   slim status footer. Structure only — colour comes from the scheme tokens.
+   --------------------------------------------------------------------------- */
+.content-toolbar {
+  padding: 14px 18px 8px;
+}
+
+.view-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.view-count {
+  font-size: 12px;
+  color: @meta_text;
+}
+
+.app-sidebar {
+  padding: 6px 0 0;
+}
+
+.sidebar-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: @meta_text;
+  margin: 14px 20px 4px;
+}
+
+.sidebar-count {
+  font-size: 11px;
+  color: @meta_text;
+}
+
+/* Counts stay legible on the accent-filled selected row */
+list.navigation-sidebar > row:selected .sidebar-count {
+  color: alpha(#ffffff, 0.85);
+}
+
+/* Row typography: size column and destination path are deliberately quiet */
+.download-size {
+  font-size: 12px;
+  color: @meta_text;
+}
+
+.download-path {
+  font-size: 10.5px;
+  color: alpha(@meta_text, 0.8);
+}
+
+/* Thin, soft progress bar so the row reads as a card, not a table */
+progressbar.download-progress trough {
+  min-height: 4px;
+  border-radius: 99px;
+}
+
+progressbar.download-progress progress {
+  min-height: 4px;
+  border-radius: 99px;
+}
+
 /* Section headings inside dialogs */
 .heading {
   font-weight: 600;
-}
-
-/* Active / Complete sit on their own card again */
-.sidebar-status-card {
-  background-color: @view_bg;
-  border: 1px solid @border_color;
-  border-radius: 10px;
-  margin: 8px;
-  padding: 4px;
 }
 
 /* Bottom bar sits below a hairline so it never melts into the list */
