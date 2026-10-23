@@ -93,6 +93,7 @@ namespace XDM.Gtk4UI
             root.AppendSection(null, help);
 
             var appSection = Gio.Menu.New();
+            appSection.Append(TextResource.GetText("MENU_LANG") ?? "Language", "app." + AppActions.Language);
             appSection.Append(TextResource.GetText("TITLE_SETTINGS") ?? "Settings...", "app." + AppActions.Settings);
             appSection.Append(TextResource.GetText("MENU_ABOUT") ?? "About FetchFlow", "app." + AppActions.About);
             appSection.Append(TextResource.GetText("MENU_EXIT") ?? "Exit", "app." + AppActions.Quit);

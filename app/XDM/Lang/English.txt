@@ -410,3 +410,4 @@ LBL_VERIFY_HASH=Verify against expected hash:
 LBL_HEADERS_COOKIES=HTTP Headers & Cookies:
 MSG_MEDIA_DOWNLOAD_STARTED=Download started. It appears in the download list.
 MSG_MEDIA_FETCHING=Fetching formats...
+MSG_LANG_RESTART=The new language is applied the next time FetchFlow starts.

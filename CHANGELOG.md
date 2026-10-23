@@ -18,6 +18,7 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - **Counts where you need them:** Active, Complete and every category show how many downloads they hold
 - **More at a glance in each row:** the source site and destination folder now appear under the file name
 - **Check for updates, remove finished downloads and Exit** are back in the main menu
+- **Language picker is back:** choose FetchFlow's interface language from the main menu; it applies the next time FetchFlow starts
 
 ### Bug fixes
 

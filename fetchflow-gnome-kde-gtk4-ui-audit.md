@@ -24,7 +24,8 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
   (none in the GTK 4 parity scope; rubber-band selection and keep-above are accepted platform
   limitations, FF-UI-032/039). The yt-dlp
   media downloader, sidebar counts, row meta lines, header select-all click, colour schemes,
-  settings sidebar, libadwaita shell and the localization pass all landed in the parity work.
+  settings sidebar, libadwaita shell, the localization pass and the language picker all landed
+  in the parity work.
 - Feature areas already at GTK 3 parity in GTK 4 (not "full parity": see the open findings above):
   * Dynamic SVG color tinting via `Gtk4IconHelper` with memory/temp disk caching: generates vivid vector icons for sidebar categories and download row file types matching `CategoryIconPalette` (Documents=amber `#f59e0b`, Music=purple `#a855f7`, Videos=coral red `#ef4444`, Compressed=teal `#14b8a6`, Programs=indigo `#6366f1`, Images=pink `#f43f5e`, Incomplete=blue, Finished=green).
   * Multi-select gutter checkbox column added to `DownloadListView` with interactive row selection, select-all bottom bar button, `Ctrl+A` accelerator, and selection count indicator.

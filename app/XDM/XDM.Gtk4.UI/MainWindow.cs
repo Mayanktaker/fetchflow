@@ -125,7 +125,8 @@ namespace XDM.Gtk4UI
                 helpSupport: () => main.HelpClicked?.Invoke(main, EventArgs.Empty),
                 reportProblem: () => main.BugReportClicked?.Invoke(main, EventArgs.Empty),
                 removeFinished: () => main.ConfirmRemoveFinished(),
-                mediaGrabber: () => ApplicationContext.PlatformUIService?.CreateAndShowMediaGrabber());
+                mediaGrabber: () => ApplicationContext.PlatformUIService?.CreateAndShowMediaGrabber(),
+                language: () => LanguageDialog.Show(main.Window));
             if (demo)
             {
                 main.SetRows(DemoRows(), InProgressKey);
