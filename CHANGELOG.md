@@ -4,6 +4,36 @@ All notable user-facing changes to FetchFlow are documented here.
 For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
+## Unreleased
+
+### What's new
+
+- **Search works again:** typing in the search box now filters the download list as you type, without leaving the view you are in
+- **Selections stay put:** your selection is no longer cleared while downloads are running, and it survives switching between Active and Complete
+- **Your look, remembered:** light, dark or follow-system is applied at startup and stays applied; the seven dark and seven light colour schemes now reach the modern Linux windows too
+- **Media Grabber:** a new window lists the streams FetchFlow captures from your browser — pick one and download it
+- **Video downloader:** paste a video page address, optionally reuse your browser cookies, choose a quality and download
+- **A calmer Settings window:** pages are listed down the side and Cancel/Save sit in the window header, the way other GNOME apps work
+- **Sort by clicking a header:** click File name, Size or Progress to sort, and use the header checkbox to select everything
+- **Counts where you need them:** Active, Complete and every category show how many downloads they hold
+- **More at a glance in each row:** the source site and destination folder now appear under the file name
+- **Check for updates, remove finished downloads and Exit** are back in the main menu
+
+### Bug fixes
+
+- The search box used to do nothing at all
+- Selecting several downloads cleared itself as soon as progress updated
+- The theme choice was saved but ignored, and the light theme never appeared
+- The Browser Monitoring switch in the bottom bar had no effect
+- Downloads that need a user name and password failed silently instead of asking for them
+- Batch downloads stopped at a "coming soon" message instead of opening the selection window
+- The Browser Monitoring link opened the Network settings page instead of monitoring
+- The footer showed internal wording, and the About window displayed a fixed old version
+- The extension indicator always said "Ready" even when nothing was connected
+- Some Settings and dialog labels appeared as raw codes such as `SETTINGS_TEMP_FLD`
+- A long folder path could push the Size and Progress columns out of the window
+
+---
 ## v9.1.16.0 (2026-10-05)
 
 ### What's new
