@@ -1,12 +1,12 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
-// List model for the GTK 4 download list. Gtk.StringList is the Gio.ListModel
-// GTK 4 consumes; the parallel Items list keeps the rich row data in the same
-// order, so a row's ListItem.Position resolves back to its DownloadItem.
+// Data store for the GTK 4 download list. Holds the rows for the active view,
+// the search keyword and the persisted sort state. The list widget keeps its own
+// Gio.ListStore of row ids and asks this store for the row behind an id, so a row
+// never has to be rebuilt just because its progress changed.
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gtk;
 using XDM.Core;
 
 namespace XDM.Gtk4UI.Downloads
@@ -22,10 +22,12 @@ namespace XDM.Gtk4UI.Downloads
 
     internal sealed class DownloadStore
     {
-        // Backing data, always in the same order as the exposed model
-        private readonly List<DownloadItem> items = new();
-        // Full (unfiltered) set, so search can restore rows
+        // Rows for the active view, in insertion order (stable sort input)
         private readonly List<DownloadItem> allItems = new();
+        // Id -> row, so a list row can resolve its data in O(1)
+        private readonly Dictionary<string, DownloadItem> byId = new(StringComparer.Ordinal);
+        // Rows after the keyword filter and the active sort
+        private readonly List<DownloadItem> visible = new();
         // Current keyword from the toolbar search (empty = no filter)
         private string keyword = "";
 
@@ -33,14 +35,11 @@ namespace XDM.Gtk4UI.Downloads
         public DownloadSortColumn CurrentSortColumn { get; private set; } = DownloadSortColumn.None;
         public bool SortAscending { get; private set; } = true;
 
-        // Model handed to the list widget; replaced on every change
-        public StringList Model { get; private set; } = StringList.New(Array.Empty<string>());
-
-        // Rows currently displayed (filtered view)
-        public IReadOnlyList<DownloadItem> Items => items;
+        // Rows currently displayed (filtered and sorted)
+        public IReadOnlyList<DownloadItem> Items => visible;
 
         // Row count of the filtered view
-        public int Count => items.Count;
+        public int Count => visible.Count;
 
         // Initializes sort preferences from persistent application configuration
         public DownloadStore()
@@ -55,20 +54,29 @@ namespace XDM.Gtk4UI.Downloads
             SortAscending = !Config.Instance.DownloadSortDescending;
         }
 
-        // Replaces the whole data set (used while core wiring is pending)
+        // Replaces the whole data set for the active view
         public void SetAll(IEnumerable<DownloadItem> source)
         {
             allItems.Clear();
-            allItems.AddRange(source);
+            byId.Clear();
+            foreach (var item in source)
+            {
+                allItems.Add(item);
+                byId[item.Id] = item;
+            }
             Rebuild();
         }
 
-        // Applies the search keyword and rebuilds the model
+        // Applies the search keyword and rebuilds the visible set
         public void Filter(string? searchKeyword)
         {
             keyword = searchKeyword ?? "";
             Rebuild();
         }
+
+        // Returns the row behind an id, or null when it is no longer in this view
+        public DownloadItem? Lookup(string id) =>
+            byId.TryGetValue(id, out var item) ? item : null;
 
         // Sorts by the specified column and direction and saves preference
         public void SortBy(DownloadSortColumn col, bool ascending)
@@ -99,28 +107,29 @@ namespace XDM.Gtk4UI.Downloads
             }
         }
 
-        // Rebuilds items + StringList from allItems, keyword, and active sort
+        // Rebuilds the visible list from the keyword and the active sort
         private void Rebuild()
         {
-            items.Clear();
             IEnumerable<DownloadItem> filtered = allItems.Where(i => i.Matches(keyword));
 
-            if (CurrentSortColumn != DownloadSortColumn.None)
+            filtered = (CurrentSortColumn, SortAscending) switch
             {
-                filtered = (CurrentSortColumn, SortAscending) switch
-                {
-                    (DownloadSortColumn.Name, true) => filtered.OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase),
-                    (DownloadSortColumn.Name, false) => filtered.OrderByDescending(i => i.Name, StringComparer.OrdinalIgnoreCase),
-                    (DownloadSortColumn.Size, true) => filtered.OrderBy(i => i.RawSize),
-                    (DownloadSortColumn.Size, false) => filtered.OrderByDescending(i => i.RawSize),
-                    (DownloadSortColumn.ProgressOrDate, true) => filtered.OrderBy(i => i.IsComplete ? i.DateAdded.Ticks : (long)(i.Progress * 10000)),
-                    (DownloadSortColumn.ProgressOrDate, false) => filtered.OrderByDescending(i => i.IsComplete ? i.DateAdded.Ticks : (long)(i.Progress * 10000)),
-                    _ => filtered
-                };
-            }
+                (DownloadSortColumn.Name, true) => filtered.OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase),
+                (DownloadSortColumn.Name, false) => filtered.OrderByDescending(i => i.Name, StringComparer.OrdinalIgnoreCase),
+                (DownloadSortColumn.Size, true) => filtered.OrderBy(i => i.RawSize),
+                (DownloadSortColumn.Size, false) => filtered.OrderByDescending(i => i.RawSize),
+                (DownloadSortColumn.ProgressOrDate, true) => filtered.OrderBy(SortKey),
+                (DownloadSortColumn.ProgressOrDate, false) => filtered.OrderByDescending(SortKey),
+                _ => filtered
+            };
 
-            items.AddRange(filtered);
-            Model = StringList.New(items.Select(i => i.Name).ToArray());
+            visible.Clear();
+            visible.AddRange(filtered);
         }
+
+        // Sort key for the date/progress column: finish date for complete rows,
+        // live progress for active rows (matches the GTK 3 frontend)
+        private static long SortKey(DownloadItem item) =>
+            item.IsComplete ? item.DateAdded.Ticks : (long)(item.Progress * 10000);
     }
 }

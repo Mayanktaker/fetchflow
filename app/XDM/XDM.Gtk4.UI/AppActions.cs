@@ -47,6 +47,11 @@ namespace XDM.Gtk4UI
         public const string ShowProgress = "show-progress";
         public const string SpeedLimiter = "speed-limiter";
         public const string VideoDownload = "video-download";
+        // Menu-only commands (no accelerator)
+        public const string CheckForUpdate = "check-for-update";
+        public const string HelpSupport = "help-support";
+        public const string ReportProblem = "report-problem";
+        public const string RemoveFinished = "remove-finished";
 
         // Registers every action and its accelerator on the application
         public static void Register(
@@ -82,7 +87,11 @@ namespace XDM.Gtk4UI
             SysAction? moveToQueue = null,
             SysAction? showProgress = null,
             SysAction? speedLimiter = null,
-            SysAction? videoDownload = null)
+            SysAction? videoDownload = null,
+            SysAction? checkForUpdate = null,
+            SysAction? helpSupport = null,
+            SysAction? reportProblem = null,
+            SysAction? removeFinished = null)
         {
             Add(app, NewDownload, "<Control>n", newDownload);
             Add(app, Search, "<Control>f", search);
@@ -119,6 +128,10 @@ namespace XDM.Gtk4UI
             if (showProgress != null) Add(app, ShowProgress, null, showProgress);
             if (speedLimiter != null) Add(app, SpeedLimiter, null, speedLimiter);
             if (videoDownload != null) Add(app, VideoDownload, "<Control><Shift>v", videoDownload);
+            if (checkForUpdate != null) Add(app, CheckForUpdate, null, checkForUpdate);
+            if (helpSupport != null) Add(app, HelpSupport, null, helpSupport);
+            if (reportProblem != null) Add(app, ReportProblem, null, reportProblem);
+            if (removeFinished != null) Add(app, RemoveFinished, null, removeFinished);
         }
 
         // Adds one parameterless action with its accelerator

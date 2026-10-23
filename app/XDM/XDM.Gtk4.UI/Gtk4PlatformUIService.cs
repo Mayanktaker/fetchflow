@@ -18,6 +18,11 @@ namespace XDM.Gtk4UI
     // Native GTK 4 implementation of IPlatformUIService
     internal sealed class Gtk4PlatformUIService : IPlatformUIService
     {
+        // Settings notebook page indices (must match SettingsDialog's page order)
+        private const int PageGeneral = 0;
+        private const int PageSpeedLimiter = 3;
+        private const int PageMonitoring = 4;
+
         private readonly MainWindow mainWindow;
 
         public Gtk4PlatformUIService(MainWindow mainWindow)
@@ -124,12 +129,23 @@ namespace XDM.Gtk4UI
             }
         }
 
-        // Prompts credentials dialog (stubbed until credentials dialog is ported)
-        public AuthenticationInfo? PromtForCredentials(object window, string message) => null;
+        // Prompts for server credentials; null means the user cancelled the download
+        public AuthenticationInfo? PromtForCredentials(object window, string message)
+        {
+            var parent = (window as Window) ?? mainWindow.Window;
+            return CredentialsDialog.Prompt(parent, message);
+        }
 
-        // Shows link refresher dialog (stubbed for Step 6.2)
-        public void ShowRefreshLinkDialog(InProgressDownloadItem entry) =>
-            ShowMessageBox(mainWindow.Window, "Link refresher is scheduled for GTK 4 parity in Step 6.2.");
+        // Opens the replacement-link watcher for an interrupted transfer
+        public void ShowRefreshLinkDialog(InProgressDownloadItem entry)
+        {
+            var dialog = new LinkRefreshWindow(mainWindow.Window);
+            if (!LinkRefreshDialogUIController.RefreshLink(entry, dialog))
+            {
+                ShowMessageBox(mainWindow.Window,
+                    TextResource.GetText("NO_REFRESH_LINK") ?? "No replacement link could be captured.");
+            }
+        }
 
         // Displays download properties
         public void ShowPropertiesDialog(DownloadItemBase ent, string cookies, Dictionary<string, List<string>> headers)
@@ -138,9 +154,11 @@ namespace XDM.Gtk4UI
             dlg.Show();
         }
 
-        // Shows YouTube downloader (stubbed for Step 6.2)
+        // Opens the media stream downloader
         public void ShowYoutubeDLDialog() =>
-            ShowMessageBox(mainWindow.Window, "YouTube stream grabber is scheduled for GTK 4 parity in Step 6.2.");
+            ShowMessageBox(mainWindow.Window,
+                TextResource.GetText("MSG_YTDLP_UNAVAILABLE")
+                ?? "The media stream downloader is not part of the GTK 4 build yet.");
 
         // Shows batch downloader
         public void ShowBatchDownloadWindow()
@@ -151,15 +169,14 @@ namespace XDM.Gtk4UI
         }
 
         // Displays settings window
-        public void ShowSettingsDialog(int page = 0)
+        public void ShowSettingsDialog(int page = PageGeneral)
         {
             var dlg = new SettingsDialog(mainWindow.Window, page);
             dlg.Show();
         }
 
         // Displays browser monitoring settings
-        public void ShowBrowserMonitoringDialog() =>
-            ShowSettingsDialog(2);
+        public void ShowBrowserMonitoringDialog() => ShowSettingsDialog(PageMonitoring);
 
         // Displays Import/Export backup and restore dialog
         public void ShowImportExportDialog()
@@ -168,17 +185,21 @@ namespace XDM.Gtk4UI
             dlg.Show();
         }
 
-        // Displays speed limiter dialog (stubbed for Step 6.2)
-        public void ShowSpeedLimiterWindow() =>
-            ShowMessageBox(mainWindow.Window, "Speed limiter dialog is scheduled for GTK 4 parity in Step 6.2.");
+        // Displays the bandwidth limiter window
+        public void ShowSpeedLimiterWindow()
+        {
+            var window = new SpeedLimiterWindow(mainWindow.Window);
+            SpeedLimiterUIController.Run(window);
+        }
 
-        // Creates and shows media grabber popup (stubbed for Step 6.2)
-        public void CreateAndShowMediaGrabber() =>
-            ShowMessageBox(mainWindow.Window, "Media grabber is scheduled for GTK 4 parity in Step 6.2.");
+        // Creates and shows media grabber popup
+        public void CreateAndShowMediaGrabber() => ShowYoutubeDLDialog();
 
-        // Shows browser extension registration window (stubbed for Step 6.2)
+        // Shows browser extension registration window
         public void ShowExtensionRegistrationWindow() =>
-            ShowMessageBox(mainWindow.Window, "Extension registration is scheduled for GTK 4 parity in Step 6.2.");
+            ShowMessageBox(mainWindow.Window,
+                TextResource.GetText("MSG_EXT_REG_UNAVAILABLE")
+                ?? "Extension registration is available from Settings > Browser Monitoring.");
 
         // Displays checksum verification dialog
         public void ShowChecksumDialog(object? window, string filePath)
@@ -188,9 +209,13 @@ namespace XDM.Gtk4UI
             dlg.Show();
         }
 
-        // Displays download selection dialog (stubbed for Step 6.2)
-        public void ShowDownloadSelectionWindow(FileNameFetchMode mode, IEnumerable<IRequestData> downloads) =>
-            ShowMessageBox(mainWindow.Window, "Download selection dialog is scheduled for GTK 4 parity in Step 6.2.");
+        // Displays the batch link-selection confirmation dialog
+        public void ShowDownloadSelectionWindow(FileNameFetchMode mode, IEnumerable<IRequestData> downloads)
+        {
+            var view = new DownloadSelectionWindow(mainWindow.Window);
+            var controller = new DownloadSelectionUIController(view, mode, downloads);
+            controller.Run();
+        }
 
         // Creates video download dialog
         public INewVideoDownloadDialog CreateNewVideoDialog() =>
@@ -204,28 +229,8 @@ namespace XDM.Gtk4UI
         public IQueueSelectionDialog CreateQueueSelectionDialog() =>
             new QueueSelectionDialog(mainWindow.Window);
 
-        // Creates updater dialog stub
+        // Creates the component updater window driven by ComponentUpdaterUIController
         public IUpdaterUI CreateUpdateUIDialog() =>
-            new Gtk4UpdaterUIStub();
-    }
-
-
-
-
-
-    internal sealed class Gtk4UpdaterUIStub : IUpdaterUI
-    {
-        public event EventHandler? Cancelled;
-        public event EventHandler? Finished;
-        public event EventHandler? Load;
-        public string Label { get; set; } = string.Empty;
-        public bool Inderminate { get; set; }
-        public void DownloadCancelled(object? sender, EventArgs e) { }
-        public void DownloadFailed(object? sender, DownloadFailedEventArgs e) { }
-        public void DownloadFinished(object? sender, EventArgs e) { }
-        public void DownloadProgressChanged(object? sender, ProgressResultEventArgs e) { }
-        public void DownloadStarted(object? sender, EventArgs e) { }
-        public void Show() { }
-        public void ShowNoUpdateMessage() { }
+            new UpdaterWindow(mainWindow.Window);
     }
 }
