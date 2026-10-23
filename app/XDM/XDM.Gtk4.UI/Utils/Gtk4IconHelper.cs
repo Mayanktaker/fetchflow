@@ -28,7 +28,9 @@ namespace XDM.Gtk4UI.Utils
                 ? name.Substring(0, name.Length - 4)
                 : name;
 
-            var cacheKey = $"{cleanName}_{r:X2}{g:X2}{b:X2}";
+            // v2: the tint pass now also handles fill-less icons, so keys from the
+            // previous pass (which cached some icons untinted) must not be reused
+            var cacheKey = $"{cleanName}_{r:X2}{g:X2}{b:X2}_v2";
             if (TintedPaths.TryGetValue(cacheKey, out var existing) && File.Exists(existing))
             {
                 return existing;
@@ -66,6 +68,18 @@ namespace XDM.Gtk4UI.Utils
                         text,
                         @"fill=""#[0-9a-fA-F]{3,6}""",
                         $"fill=\"rgb({r},{g},{b})\"");
+                }
+
+                if (tintedText == text)
+                {
+                    // Some icons carry no fill attribute and inherit black: tint the
+                    // first unfilled path so every icon follows the active accent
+                    tintedText = System.Text.RegularExpressions.Regex.Replace(
+                        text,
+                        @"<path(?![^>]*fill=)",
+                        $"<path fill=\"rgb({r},{g},{b})\"",
+                        System.Text.RegularExpressions.RegexOptions.None,
+                        TimeSpan.FromSeconds(1));
                 }
 
                 File.WriteAllText(targetPath, tintedText);

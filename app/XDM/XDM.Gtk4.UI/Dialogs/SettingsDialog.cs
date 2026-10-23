@@ -20,11 +20,28 @@ namespace XDM.Gtk4UI.Dialogs
     internal sealed class SettingsDialog
     {
         // Sidebar width for the page list (design token)
-        private const int SidebarWidth = 200;
+        private const int SidebarWidth = 220;
+        // Form label column width shared by every row on every page
+        private const int LabelWidth = 190;
         private readonly Window window;
+
+        // Icon sidebar navigation
+        private readonly ListBox settingsNav = ListBox.New();
+        private readonly List<(ListBoxRow Row, Image Icon, string IconName)> navEntries = new();
+        private bool syncingNav;
 
         // Stable page names, in sidebar order
         private static readonly string[] PageNames = { "general", "categories", "network", "speed", "monitoring", "advanced" };
+        // Sidebar page titles, icons and accent tint
+        private static readonly (string Title, string Icon)[] PageMeta =
+        {
+            ("General settings", "settings-3-line"),
+            ("Download categories", "folder-shared-line"),
+            ("Network settings", "global-line"),
+            ("Speed limiter", "time-line"),
+            ("Browser Monitoring", "links-line"),
+            ("Advanced settings", "function-line"),
+        };
 
         // General tab controls
         private readonly Entry txtDownloadFolder;
@@ -86,7 +103,7 @@ namespace XDM.Gtk4UI.Dialogs
             window = Window.New();
             window.Title = TextResource.GetText("TITLE_SETTINGS") ?? "Settings";
             window.Modal = true;
-            window.SetDefaultSize(740, 580);
+            window.SetDefaultSize(860, 620);
             if (parent != null) window.SetTransientFor(parent);
 
             var header = HeaderBar.New();
@@ -102,9 +119,7 @@ namespace XDM.Gtk4UI.Dialogs
             var stack = Stack.New();
             stack.Vexpand = true;
             stack.Hexpand = true;
-            var sidebar = StackSidebar.New();
-            sidebar.Stack = stack;
-            sidebar.WidthRequest = SidebarWidth;
+            BuildNav(stack);
 
             // -----------------------------------------------------------------
             // --- Page 1: General ---
@@ -114,97 +129,84 @@ namespace XDM.Gtk4UI.Dialogs
             generalBox.MarginStart = 8;
             generalBox.MarginEnd = 8;
 
-            var downloadFolderRow = Box.New(Orientation.Horizontal, 8);
-            var lblDownload = Label.New(TextResource.GetText("SETTINGS_DEF_DWN_FLD") ?? "Download Folder:");
-            lblDownload.WidthRequest = 180;
-            lblDownload.Halign = Align.Start;
-            txtDownloadFolder = Entry.New();
+            generalBox.Append(Section(TextResource.GetText("SETTINGS_LOCATIONS") ?? "Locations"));
+
+            var downloadFolderRow = FormRow(
+                TextResource.GetText("SETTINGS_DEF_DWN_FLD") ?? "Download Folder:",
+                txtDownloadFolder = Entry.New(),
+                Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse..."));
             txtDownloadFolder.Hexpand = true;
             txtDownloadFolder.SetText(Config.Instance.DefaultDownloadFolder ?? string.Empty);
-            var btnBrowseDownload = Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse...");
+            var btnBrowseDownload = (Button)GetChildAt(downloadFolderRow, 2)!;
             btnBrowseDownload.OnClicked += (_, _) => BrowseFolder(txtDownloadFolder);
-            downloadFolderRow.Append(lblDownload);
-            downloadFolderRow.Append(txtDownloadFolder);
-            downloadFolderRow.Append(btnBrowseDownload);
             generalBox.Append(downloadFolderRow);
 
-            var tempFolderRow = Box.New(Orientation.Horizontal, 8);
-            var lblTemp = Label.New(TextResource.GetText("SETTINGS_TEMP_FLD") ?? "Temporary Folder:");
-            lblTemp.WidthRequest = 180;
-            lblTemp.Halign = Align.Start;
-            txtTempFolder = Entry.New();
+            var tempFolderRow = FormRow(
+                TextResource.GetText("SETTINGS_TEMP_FLD") ?? "Temporary Folder:",
+                txtTempFolder = Entry.New(),
+                Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse..."));
             txtTempFolder.Hexpand = true;
             txtTempFolder.SetText(Config.Instance.TempDir ?? string.Empty);
-            var btnBrowseTemp = Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse...");
+            var btnBrowseTemp = (Button)GetChildAt(tempFolderRow, 2)!;
             btnBrowseTemp.OnClicked += (_, _) => BrowseFolder(txtTempFolder);
-            tempFolderRow.Append(lblTemp);
-            tempFolderRow.Append(txtTempFolder);
-            tempFolderRow.Append(btnBrowseTemp);
             generalBox.Append(tempFolderRow);
 
+            generalBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_DOWNLOADS") ?? "Downloads"));
+
             // Simultaneous downloads
-            var simRow = Box.New(Orientation.Horizontal, 8);
-            var lblSim = Label.New(TextResource.GetText("MSG_MAX_DOWNLOAD") ?? "Max Simultaneous Downloads:");
-            lblSim.WidthRequest = 180;
-            lblSim.Halign = Align.Start;
             var simOptions = new[] { "1", "2", "3", "4", "5", "8", "10" };
             dropMaxDownloads = DropDown.NewFromStrings(simOptions);
             var currentSim = Config.Instance.MaxParallelDownloads.ToString();
             var simIdx = Array.IndexOf(simOptions, currentSim);
             dropMaxDownloads.Selected = (uint)(simIdx >= 0 ? simIdx : 1);
-            simRow.Append(lblSim);
-            simRow.Append(dropMaxDownloads);
-            generalBox.Append(simRow);
+            generalBox.Append(FormRow(
+                TextResource.GetText("MSG_MAX_DOWNLOAD") ?? "Max Simultaneous Downloads:",
+                dropMaxDownloads));
 
             // Segments per download
-            var segRow = Box.New(Orientation.Horizontal, 8);
-            var lblSeg = Label.New(TextResource.GetText("SETTINGS_MAX_SEGMENTS") ?? "Max Segments per Download:");
-            lblSeg.WidthRequest = 180;
-            lblSeg.Halign = Align.Start;
             var segOptions = new[] { "1", "2", "4", "8", "16", "32" };
             dropMaxSegments = DropDown.NewFromStrings(segOptions);
             var currentSeg = Config.Instance.MaxSegments.ToString();
             var segIdx = Array.IndexOf(segOptions, currentSeg);
             dropMaxSegments.Selected = (uint)(segIdx >= 0 ? segIdx : 3);
-            segRow.Append(lblSeg);
-            segRow.Append(dropMaxSegments);
-            generalBox.Append(segRow);
+            generalBox.Append(FormRow(
+                TextResource.GetText("SETTINGS_MAX_SEGMENTS") ?? "Max Segments per Download:",
+                dropMaxSegments));
 
             // Double click action
-            var dblRow = Box.New(Orientation.Horizontal, 8);
-            var lblDbl = Label.New(TextResource.GetText("MSG_DOUBLE_CLICK_ACTION") ?? "Double-Click Action:");
-            lblDbl.WidthRequest = 180;
-            lblDbl.Halign = Align.Start;
             var dblOptions = new[] { "Open downloaded file", "Open destination folder" };
             dropDoubleClick = DropDown.NewFromStrings(dblOptions);
             dropDoubleClick.Selected = Config.Instance.DoubleClickOpenFile ? 0u : 1u;
-            dblRow.Append(lblDbl);
-            dblRow.Append(dropDoubleClick);
-            generalBox.Append(dblRow);
+            generalBox.Append(FormRow(
+                TextResource.GetText("MSG_DOUBLE_CLICK_ACTION") ?? "Double-Click Action:",
+                dropDoubleClick));
+
+            generalBox.Append(CheckRow(chkStartAuto = CheckButton.NewWithLabel(TextResource.GetText("LBL_START_AUTO") ?? "Start download automatically without prompt")));
+            chkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
+
+            generalBox.Append(CheckRow(chkTimestamp = CheckButton.NewWithLabel(TextResource.GetText("LBL_GET_TIMESTAMP") ?? "Get file creation timestamp from server")));
+            chkTimestamp.Active = Config.Instance.FetchServerTimeStamp;
+
+            generalBox.Append(CheckRow(chkKeepAwake = CheckButton.NewWithLabel(TextResource.GetText("MSG_AWAKE") ?? "Prevent hibernate or sleep during downloads")));
+            chkKeepAwake.Active = Config.Instance.KeepPCAwake;
+
+            generalBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_APPEARANCE") ?? "Appearance"));
 
             // Theme selection: indices follow Config.ThemeMode (0 light, 1 dark, 2 follow system)
-            var themeRow = Box.New(Orientation.Horizontal, 8);
-            var lblTheme = Label.New(TextResource.GetText("SETTINGS_THEME") ?? "Appearance Theme:");
-            lblTheme.WidthRequest = 180;
-            lblTheme.Halign = Align.Start;
             var themeOptions = new[] { "Light Theme", "Dark Theme", "Follow System" };
             dropTheme = DropDown.NewFromStrings(themeOptions);
             dropTheme.Selected = (uint)Math.Clamp(Config.Instance.ThemeMode, 0, 2);
-            themeRow.Append(lblTheme);
-            themeRow.Append(dropTheme);
-            generalBox.Append(themeRow);
+            generalBox.Append(FormRow(
+                TextResource.GetText("SETTINGS_THEME") ?? "Appearance Theme:",
+                dropTheme));
 
             // Color scheme: one of the 7 curated palettes for the active mode
-            var schemeRow = Box.New(Orientation.Horizontal, 8);
-            var lblScheme = Label.New(TextResource.GetText("SETTINGS_COLOR_SCHEME") ?? "Color Scheme:");
-            lblScheme.WidthRequest = 180;
-            lblScheme.Halign = Align.Start;
             dropScheme = DropDown.NewFromStrings(ColorSchemeNames(Gtk4Theme.IsDarkActive));
             dropScheme.Selected = (uint)ColorSchemeTable.ClampSchemeIndex(
                 Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
-            schemeRow.Append(lblScheme);
-            schemeRow.Append(dropScheme);
-            generalBox.Append(schemeRow);
+            generalBox.Append(FormRow(
+                TextResource.GetText("SETTINGS_COLOR_SCHEME") ?? "Color Scheme:",
+                dropScheme));
 
             // Keep the scheme list in step with the mode, and preview both live
             dropTheme.OnNotify += (_, args) =>
@@ -223,38 +225,24 @@ namespace XDM.Gtk4UI.Dialogs
                 }
             };
 
-            // General options checkboxes
-            chkAutoStart = CheckButton.NewWithLabel(TextResource.GetText("AUTO_START") ?? "Launch FetchFlow when system starts");
-            chkAutoStart.Active = PlatformHelper.IsAutoStartEnabled();
-            generalBox.Append(chkAutoStart);
+            generalBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_NOTIFICATIONS") ?? "Notifications"));
 
-            chkNotification = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SHOW_NOTIFICATION") ?? "Show desktop notifications on completion");
+            generalBox.Append(CheckRow(chkNotification = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SHOW_NOTIFICATION") ?? "Show desktop notifications on completion")));
             chkNotification.Active = Config.Instance.ShowNotification;
-            generalBox.Append(chkNotification);
 
-            chkShowComplete = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SHOW_COMPLETE") ?? "Show download complete popup dialog");
+            generalBox.Append(CheckRow(chkShowComplete = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SHOW_COMPLETE") ?? "Show download complete popup dialog")));
             chkShowComplete.Active = Config.Instance.ShowDownloadCompleteWindow;
-            generalBox.Append(chkShowComplete);
 
-            chkShowProgress = CheckButton.NewWithLabel(TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show download progress window");
+            generalBox.Append(CheckRow(chkShowProgress = CheckButton.NewWithLabel(TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show download progress window")));
             chkShowProgress.Active = Config.Instance.ShowProgressWindow;
-            generalBox.Append(chkShowProgress);
 
-            chkPlaySound = CheckButton.NewWithLabel(TextResource.GetText("MSG_PLAY_SOUND") ?? "Play sound when download finishes");
+            generalBox.Append(CheckRow(chkPlaySound = CheckButton.NewWithLabel(TextResource.GetText("MSG_PLAY_SOUND") ?? "Play sound when download finishes")));
             chkPlaySound.Active = Config.Instance.PlayCompletionSound;
-            generalBox.Append(chkPlaySound);
 
-            chkStartAuto = CheckButton.NewWithLabel(TextResource.GetText("LBL_START_AUTO") ?? "Start download automatically without prompt");
-            chkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
-            generalBox.Append(chkStartAuto);
+            generalBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_SYSTEM") ?? "System"));
 
-            chkTimestamp = CheckButton.NewWithLabel(TextResource.GetText("LBL_GET_TIMESTAMP") ?? "Get file creation timestamp from server");
-            chkTimestamp.Active = Config.Instance.FetchServerTimeStamp;
-            generalBox.Append(chkTimestamp);
-
-            chkKeepAwake = CheckButton.NewWithLabel(TextResource.GetText("MSG_AWAKE") ?? "Prevent hibernate or sleep during downloads");
-            chkKeepAwake.Active = Config.Instance.KeepPCAwake;
-            generalBox.Append(chkKeepAwake);
+            generalBox.Append(CheckRow(chkAutoStart = CheckButton.NewWithLabel(TextResource.GetText("AUTO_START") ?? "Launch FetchFlow when system starts")));
+            chkAutoStart.Active = PlatformHelper.IsAutoStartEnabled();
 
             var generalScroll = ScrolledWindow.New();
             generalScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
@@ -318,28 +306,20 @@ namespace XDM.Gtk4UI.Dialogs
             lblSelectedCat.Halign = Align.Start;
             catDetailBox.Append(lblSelectedCat);
 
-            var catFolderRow = Box.New(Orientation.Horizontal, 8);
-            var lblCatFolder = Label.New(TextResource.GetText("SETTINGS_TARGET_FOLDER") ?? "Target Folder:");
-            lblCatFolder.WidthRequest = 110;
-            lblCatFolder.Halign = Align.Start;
-            txtCatFolder = Entry.New();
+            var catFolderRow = FormRow(
+                TextResource.GetText("SETTINGS_TARGET_FOLDER") ?? "Target Folder:",
+                txtCatFolder = Entry.New(),
+                Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse..."));
             txtCatFolder.Hexpand = true;
-            var btnBrowseCatFolder = Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse...");
+            var btnBrowseCatFolder = (Button)GetChildAt(catFolderRow, 2)!;
             btnBrowseCatFolder.OnClicked += (_, _) => BrowseFolder(txtCatFolder);
-            catFolderRow.Append(lblCatFolder);
-            catFolderRow.Append(txtCatFolder);
-            catFolderRow.Append(btnBrowseCatFolder);
             catDetailBox.Append(catFolderRow);
 
-            var catExtsRow = Box.New(Orientation.Horizontal, 8);
-            var lblCatExts = Label.New(TextResource.GetText("SETTINGS_FILE_EXT") ?? "File Extensions:");
-            lblCatExts.WidthRequest = 110;
-            lblCatExts.Halign = Align.Start;
             txtCatExts = Entry.New();
             txtCatExts.Hexpand = true;
-            catExtsRow.Append(lblCatExts);
-            catExtsRow.Append(txtCatExts);
-            catDetailBox.Append(catExtsRow);
+            catDetailBox.Append(FormRow(
+                TextResource.GetText("SETTINGS_FILE_EXT") ?? "File Extensions:",
+                txtCatExts));
 
             var catHint = Label.New(TextResource.GetText("MSG_EXT_HINT") ?? "Separate extensions with spaces or commas (e.g. mp4, mkv, webm)");
             catHint.AddCssClass("dim-label");
@@ -424,54 +404,39 @@ namespace XDM.Gtk4UI.Dialogs
             networkBox.MarginStart = 8;
             networkBox.MarginEnd = 8;
 
-            var timeoutRow = Box.New(Orientation.Horizontal, 8);
-            var lblTimeout = Label.New(TextResource.GetText("SETTINGS_NET_TIMEOUT") ?? "Network Timeout (sec):");
-            lblTimeout.WidthRequest = 180;
-            lblTimeout.Halign = Align.Start;
+            networkBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_CONNECTION") ?? "Connection"));
+
             txtNetworkTimeout = Entry.New();
             txtNetworkTimeout.WidthRequest = 80;
             txtNetworkTimeout.SetText(Config.Instance.NetworkTimeout.ToString());
-            timeoutRow.Append(lblTimeout);
-            timeoutRow.Append(txtNetworkTimeout);
-            networkBox.Append(timeoutRow);
+            networkBox.Append(FormRow(
+                TextResource.GetText("SETTINGS_NET_TIMEOUT") ?? "Network Timeout (sec):",
+                txtNetworkTimeout));
 
-            var retriesRow = Box.New(Orientation.Horizontal, 8);
-            var lblRetries = Label.New(TextResource.GetText("SETTINGS_RETRY") ?? "Max Retry Attempts:");
-            lblRetries.WidthRequest = 180;
-            lblRetries.Halign = Align.Start;
             txtMaxRetries = Entry.New();
             txtMaxRetries.WidthRequest = 80;
             txtMaxRetries.SetText(Config.Instance.MaxRetry.ToString());
-            retriesRow.Append(lblRetries);
-            retriesRow.Append(txtMaxRetries);
-            networkBox.Append(retriesRow);
+            networkBox.Append(FormRow(
+                TextResource.GetText("SETTINGS_RETRY") ?? "Max Retry Attempts:",
+                txtMaxRetries));
 
-            var uaRow = Box.New(Orientation.Horizontal, 8);
-            var lblUa = Label.New(TextResource.GetText("SETTINGS_FALLBACK_UA") ?? "Fallback User-Agent:");
-            lblUa.WidthRequest = 180;
-            lblUa.Halign = Align.Start;
-            txtFallbackUserAgent = Entry.New();
+            var uaRow = FormRow(
+                TextResource.GetText("SETTINGS_FALLBACK_UA") ?? "Fallback User-Agent:",
+                txtFallbackUserAgent = Entry.New(),
+                Button.NewWithLabel(TextResource.GetText("BTN_RESET") ?? "Reset"));
             txtFallbackUserAgent.Hexpand = true;
             txtFallbackUserAgent.SetText(Config.Instance.FallbackUserAgent ?? Config.DefaultFallbackUserAgent);
-            var btnResetUa = Button.NewWithLabel(TextResource.GetText("BTN_RESET") ?? "Reset");
+            var btnResetUa = (Button)GetChildAt(uaRow, 2)!;
             btnResetUa.OnClicked += (_, _) => txtFallbackUserAgent.SetText(Config.DefaultFallbackUserAgent);
-            uaRow.Append(lblUa);
-            uaRow.Append(txtFallbackUserAgent);
-            uaRow.Append(btnResetUa);
             networkBox.Append(uaRow);
 
-            var proxyHeader = Label.New(TextResource.GetText("SETTINGS_PROXY_CONF") ?? "Proxy Configuration:");
-            proxyHeader.AddCssClass("heading");
-            proxyHeader.Halign = Align.Start;
-            networkBox.Append(proxyHeader);
+            networkBox.Append(Section(TextResource.GetText("SETTINGS_PROXY_CONF") ?? "Proxy"));
 
-            var proxyTypeRow = Box.New(Orientation.Horizontal, 8);
-            var lblProxyType = Label.New(TextResource.GetText("SETTINGS_PROXY_MODE") ?? "Proxy Mode:");
-            lblProxyType.WidthRequest = 180;
-            lblProxyType.Halign = Align.Start;
             var proxyOptions = new[] { "No Proxy (Direct Connection)", "Use System Proxy", "Manual Proxy Configuration" };
-            dropProxyType = DropDown.NewFromStrings(proxyOptions);
             var initialProxyType = Config.Instance.Proxy.HasValue ? Config.Instance.Proxy.Value.ProxyType : ProxyType.Direct;
+            var proxyTypeRow = FormRow(
+                TextResource.GetText("SETTINGS_PROXY_MODE") ?? "Proxy Mode:",
+                dropProxyType = DropDown.NewFromStrings(proxyOptions));
             dropProxyType.Selected = initialProxyType switch
             {
                 ProxyType.Direct => 0u,
@@ -479,56 +444,38 @@ namespace XDM.Gtk4UI.Dialogs
                 ProxyType.Custom => 2u,
                 _ => 0u
             };
-            proxyTypeRow.Append(lblProxyType);
-            proxyTypeRow.Append(dropProxyType);
             networkBox.Append(proxyTypeRow);
 
             proxyManualBox = Box.New(Orientation.Vertical, 8);
             proxyManualBox.MarginStart = 16;
 
-            var hostRow = Box.New(Orientation.Horizontal, 8);
-            var lblHost = Label.New(TextResource.GetText("SETTINGS_PROXY_HOST") ?? "Proxy Host:");
-            lblHost.WidthRequest = 120;
-            lblHost.Halign = Align.Start;
-            txtProxyHost = Entry.New();
+            var hostRow = FormRow(
+                TextResource.GetText("SETTINGS_PROXY_HOST") ?? "Proxy Host:",
+                txtProxyHost = Entry.New());
             txtProxyHost.Hexpand = true;
             txtProxyHost.SetText(Config.Instance.Proxy?.Host ?? "");
-            hostRow.Append(lblHost);
-            hostRow.Append(txtProxyHost);
             proxyManualBox.Append(hostRow);
 
-            var portRow = Box.New(Orientation.Horizontal, 8);
-            var lblPort = Label.New(TextResource.GetText("SETTINGS_PROXY_PORT") ?? "Proxy Port:");
-            lblPort.WidthRequest = 120;
-            lblPort.Halign = Align.Start;
-            txtProxyPort = Entry.New();
+            var portRow = FormRow(
+                TextResource.GetText("SETTINGS_PROXY_PORT") ?? "Proxy Port:",
+                txtProxyPort = Entry.New());
             txtProxyPort.WidthRequest = 100;
             txtProxyPort.SetText((Config.Instance.Proxy?.Port ?? 8080).ToString());
-            portRow.Append(lblPort);
-            portRow.Append(txtProxyPort);
             proxyManualBox.Append(portRow);
 
-            var userRow = Box.New(Orientation.Horizontal, 8);
-            var lblUser = Label.New(TextResource.GetText("LBL_USERNAME") ?? "Username:");
-            lblUser.WidthRequest = 120;
-            lblUser.Halign = Align.Start;
-            txtProxyUser = Entry.New();
+            var userRow = FormRow(
+                TextResource.GetText("LBL_USERNAME") ?? "Username:",
+                txtProxyUser = Entry.New());
             txtProxyUser.Hexpand = true;
             txtProxyUser.SetText(Config.Instance.Proxy?.UserName ?? "");
-            userRow.Append(lblUser);
-            userRow.Append(txtProxyUser);
             proxyManualBox.Append(userRow);
 
-            var passRow = Box.New(Orientation.Horizontal, 8);
-            var lblPass = Label.New(TextResource.GetText("LBL_PASSWORD") ?? "Password:");
-            lblPass.WidthRequest = 120;
-            lblPass.Halign = Align.Start;
-            txtProxyPassword = Entry.New();
+            var passRow = FormRow(
+                TextResource.GetText("LBL_PASSWORD") ?? "Password:",
+                txtProxyPassword = Entry.New());
             txtProxyPassword.Hexpand = true;
             txtProxyPassword.Visibility = false;
             txtProxyPassword.SetText(Config.Instance.Proxy?.Password ?? "");
-            passRow.Append(lblPass);
-            passRow.Append(txtProxyPassword);
             proxyManualBox.Append(passRow);
 
             proxyManualBox.Visible = dropProxyType.Selected == 2u;
@@ -556,23 +503,21 @@ namespace XDM.Gtk4UI.Dialogs
 
             chkEnableSpeedLimit = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_ENABLE_LIMIT") ?? "Enable maximum download speed limit");
             chkEnableSpeedLimit.Active = Config.Instance.EnableSpeedLimit;
+            speedBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_LIMIT") ?? "Limit"));
             speedBox.Append(chkEnableSpeedLimit);
 
-            var speedRow = Box.New(Orientation.Horizontal, 8);
-            var lblSpeed = Label.New(TextResource.GetText("LBL_SPEED_KB") ?? "Speed Limit (KB/s):");
-            lblSpeed.WidthRequest = 160;
-            lblSpeed.Halign = Align.Start;
             txtSpeedLimit = Entry.New();
             txtSpeedLimit.WidthRequest = 120;
             txtSpeedLimit.SetText(Config.Instance.DefaltDownloadSpeed.ToString());
-            speedRow.Append(lblSpeed);
-            speedRow.Append(txtSpeedLimit);
-            speedBox.Append(speedRow);
+            speedBox.Append(FormRow(
+                TextResource.GetText("LBL_SPEED_KB") ?? "Speed Limit (KB/s):",
+                txtSpeedLimit));
 
             var presetBox = Box.New(Orientation.Horizontal, 8);
             var lblPresets = Label.New(TextResource.GetText("LBL_PRESETS") ?? "Quick Presets:");
-            lblPresets.WidthRequest = 160;
+            lblPresets.WidthRequest = LabelWidth;
             lblPresets.Halign = Align.Start;
+            lblPresets.Valign = Align.Center;
             presetBox.Append(lblPresets);
 
             var p512 = Button.NewWithLabel("512 KB/s");
@@ -602,7 +547,10 @@ namespace XDM.Gtk4UI.Dialogs
 
             chkMonitorClipboard = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_MONITOR_CLIPBOARD") ?? "Monitor clipboard for downloadable URLs");
             chkMonitorClipboard.Active = Config.Instance.MonitorClipboard;
+            monitoringBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_CLIPBOARD") ?? "Clipboard"));
             monitoringBox.Append(chkMonitorClipboard);
+
+            monitoringBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_BROWSER") ?? "Browser Integration"));
 
             var lblBrowserInfo = Label.New(TextResource.GetText("MSG_BROWSER_INTEGRATION") ?? "Browser Integration: FetchFlow intercepts downloads automatically via its browser extension. Extensions are available for Google Chrome, Mozilla Firefox, Brave, and Edge.");
             lblBrowserInfo.Halign = Align.Start;
@@ -618,6 +566,8 @@ namespace XDM.Gtk4UI.Dialogs
             storeButtonsRow.Append(btnCws);
             storeButtonsRow.Append(btnAmo);
             monitoringBox.Append(storeButtonsRow);
+
+            monitoringBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_IPC") ?? "IPC Relay"));
 
             var ipcBox = Box.New(Orientation.Horizontal, 10);
             lblIpcStatus = Label.New($"● IPC Relay: 127.0.0.1:{IpcHttpMessageProcessor.EffectivePort}");
@@ -658,9 +608,7 @@ namespace XDM.Gtk4UI.Dialogs
             advancedBox.MarginStart = 8;
             advancedBox.MarginEnd = 8;
 
-            var automationHeader = Label.New(TextResource.GetText("SETTINGS_AUTOMATION") ?? "Post-Download Automation:");
-            automationHeader.AddCssClass("heading");
-            automationHeader.Halign = Align.Start;
+            var automationHeader = Section(TextResource.GetText("SETTINGS_AUTOMATION") ?? "Post-Download Automation");
             advancedBox.Append(automationHeader);
 
             chkShutdownAll = CheckButton.NewWithLabel(TextResource.GetText("MSG_HALT") ?? "Shutdown computer after all downloads complete");
@@ -671,16 +619,12 @@ namespace XDM.Gtk4UI.Dialogs
             chkRunCmd.Active = Config.Instance.RunCommandAfterCompletion;
             advancedBox.Append(chkRunCmd);
 
-            var cmdRow = Box.New(Orientation.Horizontal, 8);
-            cmdRow.MarginStart = 24;
-            var lblCmd = Label.New(TextResource.GetText("LBL_COMMAND") ?? "Command:");
-            lblCmd.WidthRequest = 90;
-            lblCmd.Halign = Align.Start;
-            txtCustomCmd = Entry.New();
+            var cmdRow = FormRow(
+                TextResource.GetText("LBL_COMMAND") ?? "Command:",
+                txtCustomCmd = Entry.New());
             txtCustomCmd.Hexpand = true;
             txtCustomCmd.SetText(Config.Instance.AfterCompletionCommand ?? "");
-            cmdRow.Append(lblCmd);
-            cmdRow.Append(txtCustomCmd);
+            cmdRow.MarginStart = 24;
             advancedBox.Append(cmdRow);
 
             var sepAdv = Separator.New(Orientation.Horizontal);
@@ -688,40 +632,29 @@ namespace XDM.Gtk4UI.Dialogs
             sepAdv.MarginBottom = 6;
             advancedBox.Append(sepAdv);
 
-            var avHeader = Label.New(TextResource.GetText("SETTINGS_ANTIVIRUS") ?? "Antivirus Scanning:");
-            avHeader.AddCssClass("heading");
-            avHeader.Halign = Align.Start;
-            advancedBox.Append(avHeader);
+            advancedBox.Append(Section(TextResource.GetText("SETTINGS_ANTIVIRUS") ?? "Antivirus Scanning"));
 
             chkRunAntivirus = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SCAN_FILES") ?? "Scan downloaded files with antivirus scanner");
             chkRunAntivirus.Active = Config.Instance.ScanWithAntiVirus;
             advancedBox.Append(chkRunAntivirus);
 
-            var avRow = Box.New(Orientation.Horizontal, 8);
-            avRow.MarginStart = 24;
-            var lblAv = Label.New(TextResource.GetText("ANTIVIR_CMD") ?? "Antivirus Executable:");
-            lblAv.WidthRequest = 160;
-            lblAv.Halign = Align.Start;
-            txtAntiVirusCmd = Entry.New();
+            var avRow = FormRow(
+                TextResource.GetText("ANTIVIR_CMD") ?? "Antivirus Executable:",
+                txtAntiVirusCmd = Entry.New(),
+                Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse..."));
             txtAntiVirusCmd.Hexpand = true;
             txtAntiVirusCmd.SetText(Config.Instance.AntiVirusExecutable ?? "");
-            var btnBrowseAv = Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse...");
+            var btnBrowseAv = (Button)GetChildAt(avRow, 2)!;
             btnBrowseAv.OnClicked += (_, _) => BrowseFile(txtAntiVirusCmd);
-            avRow.Append(lblAv);
-            avRow.Append(txtAntiVirusCmd);
-            avRow.Append(btnBrowseAv);
+            avRow.MarginStart = 24;
             advancedBox.Append(avRow);
 
-            var argsRow = Box.New(Orientation.Horizontal, 8);
-            argsRow.MarginStart = 24;
-            var lblArgs = Label.New(TextResource.GetText("ANTIVIR_ARGS") ?? "Command line parameters:");
-            lblArgs.WidthRequest = 160;
-            lblArgs.Halign = Align.Start;
-            txtAntiVirusArgs = Entry.New();
+            var argsRow = FormRow(
+                TextResource.GetText("ANTIVIR_ARGS") ?? "Command line parameters:",
+                txtAntiVirusArgs = Entry.New());
             txtAntiVirusArgs.Hexpand = true;
             txtAntiVirusArgs.SetText(Config.Instance.AntiVirusArgs ?? "[file]");
-            argsRow.Append(lblArgs);
-            argsRow.Append(txtAntiVirusArgs);
+            argsRow.MarginStart = 24;
             advancedBox.Append(argsRow);
 
             var avHint = Label.New(TextResource.GetText("MSG_AV_HINT") ?? "Use [file] placeholder for the downloaded file path (e.g. clamscan [file])");
@@ -739,10 +672,15 @@ namespace XDM.Gtk4UI.Dialogs
             {
                 stack.SetVisibleChildName(PageNames[initialPage]);
             }
+            SelectNavRow(PageNames[Math.Clamp(initialPage, 0, PageNames.Length - 1)]);
 
-            // Sidebar | page content, like GNOME Settings
+            // Icon sidebar + page content, like the main window
             var contentRow = Box.New(Orientation.Horizontal, 0);
-            contentRow.Append(sidebar);
+            var navScroll = ScrolledWindow.New();
+            navScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            navScroll.SetChild(settingsNav);
+            navScroll.WidthRequest = SidebarWidth;
+            contentRow.Append(navScroll);
             contentRow.Append(stack);
             contentRow.Vexpand = true;
             mainBox.Append(contentRow);
@@ -1018,5 +956,152 @@ namespace XDM.Gtk4UI.Dialogs
 
         // Displays the settings window
         public void Show() => window.Present();
+
+        // Icon sidebar row for one settings page
+        private void BuildNav(Stack stack)
+        {
+            settingsNav.AddCssClass("navigation-sidebar");
+            settingsNav.SelectionMode = SelectionMode.Browse;
+            for (var i = 0; i < PageNames.Length; i++)
+            {
+                var (title, iconName) = PageMeta[i];
+                var rowBox = Box.New(Orientation.Horizontal, 10);
+                rowBox.MarginTop = 6;
+                rowBox.MarginBottom = 6;
+                rowBox.MarginStart = 8;
+                rowBox.MarginEnd = 8;
+
+                var (ar, ag, ab) = AccentRgb();
+                var icon = Gtk4IconHelper.CreateTintedIcon(iconName, ar, ag, ab, 18);
+                icon.Valign = Align.Center;
+
+                var label = Label.New(title);
+                label.Halign = Align.Start;
+                label.Valign = Align.Center;
+                label.Hexpand = true;
+
+                rowBox.Append(icon);
+                rowBox.Append(label);
+
+                var row = ListBoxRow.New();
+                row.SetChild(rowBox);
+                row.Name = PageNames[i];
+                row.TooltipText = title;
+                navEntries.Add((row, icon, iconName));
+                settingsNav.Append(row);
+            }
+
+            settingsNav.OnRowSelected += (_, args) =>
+            {
+                if (syncingNav)
+                {
+                    return;
+                }
+                if (args.Row is ListBoxRow row && !string.IsNullOrEmpty(row.Name))
+                {
+                    stack.SetVisibleChildName(row.Name);
+                    UpdateNavIcons();
+                }
+            };
+        }
+
+        // Selects a sidebar row without re-triggering the page switch
+        private void SelectNavRow(string key)
+        {
+            syncingNav = true;
+            try
+            {
+                for (var child = settingsNav.GetFirstChild(); child != null; child = child.GetNextSibling())
+                {
+                    if (child is ListBoxRow row && row.Name == key)
+                    {
+                        settingsNav.SelectRow(row);
+                        break;
+                    }
+                }
+            }
+            finally
+            {
+                syncingNav = false;
+            }
+            UpdateNavIcons();
+        }
+
+        // Keeps nav icons legible: white on the accent row, accent otherwise
+        private void UpdateNavIcons()
+        {
+            var (ar, ag, ab) = AccentRgb();
+            foreach (var (row, icon, iconName) in navEntries)
+            {
+                var selected = row.IsSelected();
+                Gtk4IconHelper.UpdateTintedIcon(icon, iconName,
+                    selected ? (byte)255 : ar,
+                    selected ? (byte)255 : ag,
+                    selected ? (byte)255 : ab, 18);
+            }
+        }
+
+        // Accent for the active colour scheme, matching Gtk4Theme.ApplyColorScheme
+        private static (byte R, byte G, byte B) AccentRgb()
+        {
+            try
+            {
+                var index = ColorSchemeTable.ClampSchemeIndex(Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
+                return Gtk4IconHelper.ParseHex(ColorSchemeTable.GetScheme(Gtk4Theme.IsDarkActive, index).AccentHex);
+            }
+            catch
+            {
+                return (53, 132, 228);
+            }
+        }
+
+        // Section heading inside a settings page
+        private static Label Section(string text)
+        {
+            var label = Label.New(text);
+            label.AddCssClass("heading");
+            label.Halign = Align.Start;
+            label.MarginTop = 8;
+            return label;
+        }
+
+        // Uniform two-column form row: fixed label column, expanding control, optional action
+        private static Box FormRow(string labelText, Widget control, Widget? action = null)
+        {
+            var row = Box.New(Orientation.Horizontal, 12);
+            var label = Label.New(labelText);
+            label.WidthRequest = LabelWidth;
+            label.Halign = Align.Start;
+            label.Valign = Align.Center;
+            row.Append(label);
+            row.Append(control);
+            if (action != null)
+            {
+                row.Append(action);
+            }
+            return row;
+        }
+
+        // Checkbox aligned with the control column so it lines up with the rows above
+        private static Box CheckRow(CheckButton check)
+        {
+            var row = Box.New(Orientation.Horizontal, 12);
+            var spacer = Label.New("");
+            spacer.WidthRequest = LabelWidth;
+            row.Append(spacer);
+            row.Append(check);
+            return row;
+        }
+
+        // Nth child of a widget, used to reach a button placed by FormRow
+        private static Widget? GetChildAt(Widget widget, int index)
+        {
+            var child = widget is Box box ? box.GetFirstChild() : widget.GetFirstChild();
+            for (var i = 0; i < index && child != null; i++)
+            {
+                child = child.GetNextSibling();
+            }
+            return child;
+        }
     }
 }
