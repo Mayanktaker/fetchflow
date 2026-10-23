@@ -172,12 +172,12 @@ namespace XDM.Gtk4UI.Dialogs
             dblRow.Append(dropDoubleClick);
             generalBox.Append(dblRow);
 
-            // Theme selection
+            // Theme selection: indices follow Config.ThemeMode (0 light, 1 dark, 2 follow system)
             var themeRow = Box.New(Orientation.Horizontal, 8);
             var lblTheme = Label.New(TextResource.GetText("SETTINGS_THEME") ?? "Appearance Theme:");
             lblTheme.WidthRequest = 180;
             lblTheme.Halign = Align.Start;
-            var themeOptions = new[] { "Follow System", "Dark Theme", "Light Theme" };
+            var themeOptions = new[] { "Light Theme", "Dark Theme", "Follow System" };
             dropTheme = DropDown.NewFromStrings(themeOptions);
             dropTheme.Selected = (uint)Math.Clamp(Config.Instance.ThemeMode, 0, 2);
             themeRow.Append(lblTheme);
@@ -694,7 +694,7 @@ namespace XDM.Gtk4UI.Dialogs
             var advScroll = ScrolledWindow.New();
             advScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
             advScroll.SetChild(advancedBox);
-            notebook.AppendPage(advScroll, Label.New("Advanced"));
+            notebook.AppendPage(advScroll, Label.New(TextResource.GetText("SETTINGS_ADV") ?? "Advanced settings"));
 
             if (initialPage >= 0 && initialPage < 6)
             {
@@ -917,6 +917,9 @@ namespace XDM.Gtk4UI.Dialogs
             }
 
             Config.SaveConfig();
+            // Apply the chosen theme immediately, then let the window re-read config
+            Gtk4Theme.ApplyMode(window, Config.Instance.ThemeMode, persist: false);
+            ApplicationContext.BroadcastConfigChange();
             window.Close();
         }
 

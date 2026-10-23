@@ -2,12 +2,14 @@
 
 // GTK 4 main window: headerbar actions, category sidebar, ColumnView download
 // list, search, and status. Core rows enter through Gtk4ApplicationWindow.
+// Presentation (header, sidebar, status bar) lives in MainWindowChrome.cs.
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gtk;
 using Translations;
 using XDM.Core;
+using XDM.Core.BrowserMonitoring;
 using XDM.Core.Downloader;
 using XDM.Core.UI;
 using XDM.Core.Util;
@@ -18,7 +20,7 @@ using GtkApplication = Gtk.Application;
 
 namespace XDM.Gtk4UI
 {
-    internal sealed class MainWindow
+    internal sealed partial class MainWindow
     {
         // Sidebar width token from docs/design.md spacing scale
         private const int SidebarWidth = 200;
@@ -28,6 +30,8 @@ namespace XDM.Gtk4UI
         // Fixed sidebar view keys
         internal const string InProgressKey = "inprogress";
         internal const string FinishedKey = "finished";
+        // Progress ticks closer together than this are data-only (no repaint)
+        private const int ProgressRepaintIntervalMs = 250;
 
         // Native GTK window presented by the host
         public ApplicationWindow Window { get; }
@@ -42,23 +46,27 @@ namespace XDM.Gtk4UI
         public Button ResumeButton { get; }
         public Button OpenFileButton { get; }
         public Button OpenFolderButton { get; }
-        // Header theme toggle
+        // Header controls
         private readonly Button themeButton = Button.New();
         private readonly Image themeIcon;
+        private readonly Button updateDot = Button.New();
         // Status bar elements
-        private readonly Label statusLabel = Label.New("");
         private readonly Label lblExtensionStatus = Label.New("");
         private readonly CheckButton btnMonitoring;
         private readonly Button btnSpeedLimit;
         private readonly Button btnScheduler;
         private readonly Button btnSelectAll;
         private readonly Label lblSelectionCount = Label.New("");
+        // Guards programmatic monitoring-checkbox updates from re-raising the toggle
+        private bool syncingMonitoring;
         // Every row in the active sidebar view
         private List<DownloadItem> allRows = new();
         // Current sidebar view key
         private string currentView = InProgressKey;
         // Sidebar category values keyed by their persisted category name
         private readonly Dictionary<string, Category> categories = new();
+        // Last repaint time per transfer, used to throttle progress refreshes
+        private readonly Dictionary<string, long> lastRepaintTicks = new(StringComparer.Ordinal);
         // GTK application host and system tray manager
         private readonly GtkApplication app;
         private readonly Gtk4TrayIconManager trayManager;
@@ -69,6 +77,11 @@ namespace XDM.Gtk4UI
         public event Action? RefreshRequested;
         public event EventHandler? BrowserMonitoringButtonClicked;
         public event EventHandler? SchedulerClicked;
+        public event EventHandler? ClearAllFinishedClicked;
+        public event EventHandler? UpdateClicked;
+        public event EventHandler? CheckForUpdateClicked;
+        public event EventHandler? HelpClicked;
+        public event EventHandler? BugReportClicked;
 
         // Builds the main window and registers its application actions
         public static MainWindow Create(GtkApplication app, bool demo)
@@ -107,7 +120,11 @@ namespace XDM.Gtk4UI
                 moveToQueue: () => UIActions.MoveToQueue(),
                 showProgress: () => UIActions.ShowProgressWindow(),
                 speedLimiter: () => (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(3),
-                videoDownload: () => ApplicationContext.PlatformUIService?.ShowYoutubeDLDialog());
+                videoDownload: () => ApplicationContext.PlatformUIService?.ShowYoutubeDLDialog(),
+                checkForUpdate: () => main.CheckForUpdateClicked?.Invoke(main, EventArgs.Empty),
+                helpSupport: () => main.HelpClicked?.Invoke(main, EventArgs.Empty),
+                reportProblem: () => main.BugReportClicked?.Invoke(main, EventArgs.Empty),
+                removeFinished: () => main.ConfirmRemoveFinished());
             if (demo)
             {
                 main.SetRows(DemoRows(), InProgressKey);
@@ -128,50 +145,17 @@ namespace XDM.Gtk4UI
                 "suggested-action",
                 16);
 
-            DeleteButton = Button.New();
-            Gtk4IconHelper.ConfigureButton(
-                DeleteButton,
-                "delete-bin-7-line",
-                TextResource.GetText("DESC_DEL") ?? "Delete",
-                TextResource.GetText("DESC_DEL") ?? "Delete selected downloads",
-                "destructive-action",
-                16);
-
-            PauseButton = Button.New();
-            Gtk4IconHelper.ConfigureButton(
-                PauseButton,
-                "pause-line",
-                TextResource.GetText("MENU_PAUSE") ?? "Pause",
-                TextResource.GetText("MENU_PAUSE") ?? "Pause selected downloads",
-                null,
-                16);
-
-            ResumeButton = Button.New();
-            Gtk4IconHelper.ConfigureButton(
-                ResumeButton,
-                "play-line",
-                TextResource.GetText("MENU_RESUME") ?? "Resume",
-                TextResource.GetText("MENU_RESUME") ?? "Resume selected downloads",
-                null,
-                16);
-
-            OpenFileButton = Button.New();
-            Gtk4IconHelper.ConfigureButton(
-                OpenFileButton,
-                "external-link-line",
-                TextResource.GetText("CTX_OPEN_FILE") ?? "Open",
-                TextResource.GetText("CTX_OPEN_FILE") ?? "Open downloaded file",
-                null,
-                16);
-
-            OpenFolderButton = Button.New();
-            Gtk4IconHelper.ConfigureButton(
-                OpenFolderButton,
-                "folder-shared-line",
-                TextResource.GetText("CTX_OPEN_FOLDER") ?? "Folder",
-                TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open destination folder",
-                null,
-                16);
+            // Secondary actions are icon-only so the header stays inside the window width
+            DeleteButton = CreateHeaderIconButton("delete-bin-7-line", "destructive-action",
+                TextResource.GetText("DESC_DEL") ?? "Delete");
+            PauseButton = CreateHeaderIconButton("pause-line", null,
+                TextResource.GetText("MENU_PAUSE") ?? "Pause");
+            ResumeButton = CreateHeaderIconButton("play-line", null,
+                TextResource.GetText("MENU_RESUME") ?? "Resume");
+            OpenFileButton = CreateHeaderIconButton("external-link-line", null,
+                TextResource.GetText("CTX_OPEN_FILE") ?? "Open");
+            OpenFolderButton = CreateHeaderIconButton("folder-shared-line", null,
+                TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder");
 
             // Theme toggle with sun/moon icon
             themeIcon = Gtk4IconHelper.CreateIcon(Gtk4Theme.IsDarkActive ? "sun-line" : "moon-line", 16);
@@ -179,22 +163,32 @@ namespace XDM.Gtk4UI
             themeButton.AddCssClass("flat");
             themeButton.TooltipText = "Switch theme (Ctrl+T)";
 
+            // Update-available indicator: hidden until an update lands
+            updateDot.SetChild(Label.New("●"));
+            updateDot.AddCssClass("flat");
+            updateDot.AddCssClass("update-dot-button");
+            updateDot.Visible = false;
+            updateDot.OnClicked += (_, _) => UpdateClicked?.Invoke(this, EventArgs.Empty);
+
             // Bottom bar controls
             btnMonitoring = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_MONITORING") ?? "Browser Monitoring");
             btnMonitoring.Active = Config.Instance.IsBrowserMonitoringEnabled;
+            // Core owns the config flip (Application's handler); raising the event only once
+            // avoids the double-toggle that made this checkbox a no-op.
             btnMonitoring.OnToggled += (_, _) =>
             {
-                Config.Instance.IsBrowserMonitoringEnabled = btnMonitoring.Active;
-                Config.SaveConfig();
+                if (syncingMonitoring)
+                {
+                    return;
+                }
                 BrowserMonitoringButtonClicked?.Invoke(this, EventArgs.Empty);
             };
 
-            lblExtensionStatus.SetText("Extension: Ready");
             lblExtensionStatus.AddCssClass("extension-status-label");
 
             btnSpeedLimit = Gtk4IconHelper.CreateActionButton(
                 "time-line",
-                "Speed Limiter",
+                TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter",
                 "Speed Limiter (Click for settings)",
                 "flat",
                 14);
@@ -213,7 +207,7 @@ namespace XDM.Gtk4UI
 
             btnSelectAll = Gtk4IconHelper.CreateActionButton(
                 "checkbox-line",
-                "Select All",
+                TextResource.GetText("LBL_SELECT_ALL") ?? "Select All",
                 "Select all downloads (Ctrl+A)",
                 "flat",
                 14);
@@ -222,7 +216,7 @@ namespace XDM.Gtk4UI
             lblSelectionCount.AddCssClass("dim-label");
 
             Window = ApplicationWindow.New(app);
-            Window.Title = "FetchFlow";
+            Window.Title = AppInfo.APP_NAME;
             Window.SetDefaultSize(DefaultWidth, DefaultHeight);
             Window.SetTitlebar(BuildHeaderBar());
             Window.SetChild(BuildBody());
@@ -236,7 +230,9 @@ namespace XDM.Gtk4UI
             downloadList.SelectionChanged += (_, _) =>
             {
                 var selCount = downloadList.GetSelectedItems().Count;
-                lblSelectionCount.SetText(selCount > 0 ? $"{selCount} selected" : "");
+                lblSelectionCount.SetText(selCount > 0
+                    ? $"{selCount} {TextResource.GetText("LBL_SELECTED") ?? "selected"}"
+                    : "");
                 btnSelectAll.TooltipText = selCount == downloadList.Count && selCount > 0
                     ? "Deselect All (Ctrl+A)"
                     : "Select All (Ctrl+A)";
@@ -257,171 +253,25 @@ namespace XDM.Gtk4UI
                 return false;
             };
 
-            Gtk4Theme.Apply(Window, Gtk4Theme.IsDarkActive);
+            // Browser-extension connectivity drives the live status badge
+            ApplicationContext.ApplicationEvent += OnApplicationEvent;
+
+            // Honour the saved theme mode (0 light, 1 dark, 2 follow system)
+            Gtk4Theme.ApplyFromConfig(Window);
+            SyncThemeButton();
+            UpdateExtensionStatus();
+            UpdateSpeedLimitButtonState();
         }
 
-        // Packs the app title, core actions, search, theme toggle and application menu
-        private Widget BuildHeaderBar()
+        // Creates an icon-only header button with a tooltip and optional style class
+        private static Button CreateHeaderIconButton(string iconName, string? cssClass, string tooltip)
         {
-            var header = HeaderBar.New();
-
-            var titleBox = Box.New(Orientation.Horizontal, 6);
-            titleBox.Halign = Align.Center;
-            titleBox.Valign = Align.Center;
-            var logoIcon = Gtk4IconHelper.CreateIcon("fetchflow-logo", 20);
-            var titleLabel = Label.New("FetchFlow");
-            titleLabel.AddCssClass("heading");
-            titleBox.Append(logoIcon);
-            titleBox.Append(titleLabel);
-            header.TitleWidget = titleBox;
-
-            header.PackStart(NewButton);
-            header.PackStart(PauseButton);
-            header.PackStart(ResumeButton);
-            header.PackStart(DeleteButton);
-            header.PackStart(OpenFileButton);
-            header.PackStart(OpenFolderButton);
-
-            searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH") ?? "Search";
-            searchEntry.TooltipText = "Search downloads (Ctrl+F)";
-            searchEntry.WidthRequest = 210;
-            searchEntry.AddCssClass("search-entry");
-            searchEntry.OnSearchChanged += (_, _) => ApplyView(currentView);
-            header.PackEnd(searchEntry);
-
-            themeButton.TooltipText = "Switch theme (Ctrl+T)";
-            themeButton.OnClicked += (_, _) => ToggleTheme();
-            header.PackEnd(themeButton);
-
-            var sortMenuButton = MenuButton.New();
-            sortMenuButton.IconName = "view-sort-ascending-symbolic";
-            sortMenuButton.TooltipText = "Sort Downloads";
-            var sortMenu = Gio.Menu.New();
-            sortMenu.Append("File Name (A to Z)", "app." + AppActions.SortNameAsc);
-            sortMenu.Append("File Name (Z to A)", "app." + AppActions.SortNameDesc);
-            sortMenu.Append("Size (Smallest First)", "app." + AppActions.SortSizeAsc);
-            sortMenu.Append("Size (Largest First)", "app." + AppActions.SortSizeDesc);
-            sortMenu.Append("Date / Progress (Newest)", "app." + AppActions.SortDateDesc);
-            sortMenu.Append("Date / Progress (Oldest)", "app." + AppActions.SortDateAsc);
-            sortMenuButton.SetMenuModel(sortMenu);
-            header.PackEnd(sortMenuButton);
-
-            var menuButton = MenuButton.New();
-            menuButton.IconName = "open-menu-symbolic";
-            menuButton.TooltipText = "Main Menu";
-
-            var menu = Gio.Menu.New();
-            menu.Append(TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch Download...", "app." + AppActions.BatchDownload);
-            menu.Append(TextResource.GetText("LBL_VIDEO_DOWNLOAD") ?? "Video Downloader...", "app." + AppActions.VideoDownload);
-            menu.Append(TextResource.GetText("DESC_Q_TITLE") ?? "Queue & Scheduler...", "app." + AppActions.Scheduler);
-            menu.Append(TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter...", "app." + AppActions.SpeedLimiter);
-            menu.Append(TextResource.GetText("CTX_CHECKSUM") ?? "Calculate Checksum...", "app." + AppActions.VerifyChecksum);
-            menu.Append(TextResource.GetText("MENU_IMPORT_EXPORT") ?? "Import / Export...", "app." + AppActions.ImportExport);
-            menu.Append(TextResource.GetText("TITLE_SETTINGS") ?? "Settings...", "app." + AppActions.Settings);
-            menu.Append("About FetchFlow", "app." + AppActions.About);
-            menuButton.SetMenuModel(menu);
-            header.PackEnd(menuButton);
-
-            return header;
-        }
-
-        // Builds the resizable category pane and status bar
-        private Widget BuildBody()
-        {
-            var paned = Paned.New(Orientation.Horizontal);
-            paned.StartChild = BuildSidebar();
-            paned.EndChild = downloadList.Root;
-            paned.Position = SidebarWidth;
-            paned.ResizeStartChild = false;
-            paned.ShrinkStartChild = false;
-
-            var root = Box.New(Orientation.Vertical, 0);
-            root.Append(paned);
-            root.Append(BuildStatusBar());
-            return root;
-        }
-
-        // Creates fixed views plus the user's configured download categories
-        private Widget BuildSidebar()
-        {
-            var list = ListBox.New();
-            list.AddCssClass("sidebar");
-            list.SelectionMode = SelectionMode.Browse;
-            // Tinted status views: blue for incomplete, green for complete
-            list.Append(BuildSidebarRow(TextResource.GetText("ALL_UNFINISHED") ?? "All Incomplete", InProgressKey, "download-2-line", 59, 130, 246));
-            list.Append(BuildSidebarRow(TextResource.GetText("ALL_FINISHED") ?? "All Finished", FinishedKey, "check-line", 46, 194, 126));
-
-            foreach (var category in Config.Instance.Categories)
+            var button = Gtk4IconHelper.CreateActionButton(iconName, null, tooltip, "flat", 16);
+            if (!string.IsNullOrEmpty(cssClass))
             {
-                categories[category.Name] = category;
-                var (iconName, r, g, b) = CategoryIconPalette.Resolve(category);
-                list.Append(BuildSidebarRow(category.DisplayName, category.Name, iconName, r, g, b));
+                button.AddCssClass(cssClass);
             }
-
-            list.OnRowSelected += (_, args) =>
-            {
-                if (args.Row is ListBoxRow row && !string.IsNullOrEmpty(row.Name))
-                {
-                    currentView = row.Name;
-                    ApplyView(currentView);
-                    ViewChanged?.Invoke(currentView);
-                }
-            };
-
-            var scrolled = ScrolledWindow.New();
-            scrolled.SetPolicy(PolicyType.Never, PolicyType.Automatic);
-            scrolled.SetChild(list);
-            scrolled.WidthRequest = SidebarWidth;
-            return scrolled;
-        }
-
-        // Creates one accessible sidebar row with tinted category icon and text
-        private static ListBoxRow BuildSidebarRow(string text, string key, string iconName, byte r, byte g, byte b)
-        {
-            var rowBox = Box.New(Orientation.Horizontal, 10);
-            rowBox.MarginTop = 6;
-            rowBox.MarginBottom = 6;
-            rowBox.MarginStart = 8;
-            rowBox.MarginEnd = 8;
-
-            var icon = Gtk4IconHelper.CreateTintedIcon(iconName, r, g, b, 18);
-            icon.Valign = Align.Center;
-
-            var label = Label.New(text);
-            label.Halign = Align.Start;
-            label.Valign = Align.Center;
-            label.Hexpand = true;
-
-            rowBox.Append(icon);
-            rowBox.Append(label);
-
-            var row = ListBoxRow.New();
-            row.SetChild(rowBox);
-            row.Name = key;
-            row.TooltipText = text;
-            return row;
-        }
-
-        // Builds the rich status and action bar matching the GTK 3 bottom bar
-        private Widget BuildStatusBar()
-        {
-            var bar = Box.New(Orientation.Horizontal, 10);
-            bar.AddCssClass("bottom-bar");
-
-            bar.Append(btnSelectAll);
-            bar.Append(lblSelectionCount);
-            bar.Append(btnMonitoring);
-            bar.Append(lblExtensionStatus);
-
-            statusLabel.Halign = Align.Start;
-            statusLabel.Hexpand = true;
-            statusLabel.AddCssClass("status-bar-text");
-            bar.Append(statusLabel);
-
-            bar.Append(btnSpeedLimit);
-            bar.Append(btnScheduler);
-
-            return bar;
+            return button;
         }
 
         // Sets all rows from the core model and selects the requested view
@@ -452,7 +302,39 @@ namespace XDM.Gtk4UI
         public void Remove(string id)
         {
             allRows.RemoveAll(row => row.ProgressRow?.DownloadEntry.Id == id || row.FinishedRow?.DownloadEntry.Id == id);
+            lastRepaintTicks.Remove(id);
             ApplyView(currentView);
+        }
+
+        // Refreshes one row's live transfer state without rebuilding the list
+        public void UpdateProgressRow(string id)
+        {
+            var item = allRows.FirstOrDefault(row => row.Id == id);
+            if (item?.ProgressRow == null)
+            {
+                return;
+            }
+
+            item.CopyLiveStateFrom(item.ProgressRow);
+            downloadList.UpdateRow(id);
+        }
+
+        // Decides whether a progress tick should repaint, throttling per transfer
+        public bool ShouldRepaintProgress(string id, int progress)
+        {
+            if (progress >= 100)
+            {
+                return true;
+            }
+
+            var now = Environment.TickCount64;
+            if (lastRepaintTicks.TryGetValue(id, out var last) &&
+                now - last < ProgressRepaintIntervalMs)
+            {
+                return false;
+            }
+            lastRepaintTicks[id] = now;
+            return true;
         }
 
         // Resolves visible list selection to the core row adapters
@@ -472,7 +354,7 @@ namespace XDM.Gtk4UI
         // Clears current row selection
         public void ClearSelection() => downloadList.ClearSelection();
 
-        // Applies the current category and search filters
+        // Applies the current category filter; search is owned by the list itself
         private void ApplyView(string key)
         {
             IEnumerable<DownloadItem> rows = key switch
@@ -481,8 +363,8 @@ namespace XDM.Gtk4UI
                 FinishedKey => allRows.Where(row => row.IsComplete),
                 _ => FilterByCategory(key)
             };
+            downloadList.SetViewKind(key == FinishedKey);
             downloadList.Reload(rows);
-            UpdateStatus();
         }
 
         // Filters category rows using the same predicate as the GTK 3 UI
@@ -496,23 +378,25 @@ namespace XDM.Gtk4UI
         }
 
         // Converts a mutable core row into the GTK 4 projection
-        internal static DownloadItem ToItem(Gtk4InProgressRow row) => new()
+        internal static DownloadItem ToItem(Gtk4InProgressRow row)
         {
-            Name = row.Name,
-            Status = FormatStatus(row),
-            SizeText = FormattingHelper.FormatSize(row.Size),
-            RawSize = row.Size,
-            Progress = Math.Clamp(row.Progress / 100.0, 0.0, 1.0),
-            RawProgress = row.Progress,
-            DateAdded = row.DateAdded,
-            DownloadSpeed = row.DownloadSpeed,
-            ETA = row.ETA,
-            ProgressRow = row
-        };
+            var item = new DownloadItem
+            {
+                Id = row.DownloadEntry.Id,
+                Name = row.Name,
+                SizeText = FormattingHelper.FormatSize(row.Size),
+                RawSize = row.Size,
+                DateAdded = row.DateAdded,
+                ProgressRow = row
+            };
+            item.CopyLiveStateFrom(row);
+            return item;
+        }
 
         // Converts a finished core row into the GTK 4 projection
         internal static DownloadItem ToItem(Gtk4FinishedRow row) => new()
         {
+            Id = row.DownloadEntry.Id,
             Name = row.Name,
             Status = TextResource.GetText("STAT_FINISHED") ?? "Complete",
             SizeText = FormattingHelper.FormatSize(row.Size),
@@ -523,21 +407,6 @@ namespace XDM.Gtk4UI
             IsComplete = true,
             FinishedRow = row
         };
-
-        // Builds a compact status line from core transfer state
-        private static string FormatStatus(Gtk4InProgressRow row)
-        {
-            var status = row.Status.ToString();
-            if (!string.IsNullOrWhiteSpace(row.DownloadSpeed))
-            {
-                status += " · " + row.DownloadSpeed;
-            }
-            else if (!string.IsNullOrWhiteSpace(row.ETA))
-            {
-                status += " · " + row.ETA;
-            }
-            return status;
-        }
 
         // Ctrl+F focuses the search entry
         private void FocusSearch() => searchEntry.GrabFocus();
@@ -564,31 +433,74 @@ namespace XDM.Gtk4UI
         private void OnSettings() =>
             (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(0);
 
-        // F1 displays About FetchFlow information
+        // F1 displays About FetchFlow using the shared application metadata
         private void OnAbout() =>
             Gtk4DialogHelper.ShowAlert(
                 Window,
-                "FetchFlow Download Manager (Wayland & GTK 4 Edition)\nVersion 9.1.16.0\n\n© Mayanktaker Computers & Web Development\nhttps://mayanktaker.com",
-                "About FetchFlow");
+                $"{AppInfo.APP_FULL_NAME}\n{AppInfo.APP_VERSION_ONLY}\n\n{AppInfo.APP_COPYRIGHT_TEXT}\n{AppInfo.APP_HOMEPAGE_TEXT}",
+                TextResource.GetText("MENU_ABOUT") ?? "About FetchFlow");
 
-        // Ctrl+T swaps the GTK 4 stylesheet
+        // Ctrl+T swaps light/dark and remembers the choice
         private void ToggleTheme()
         {
-            Gtk4Theme.Toggle();
+            Gtk4Theme.Toggle(Window);
+            SyncThemeButton();
+        }
+
+        // Mirrors the active theme into the toggle icon and tooltip
+        private void SyncThemeButton()
+        {
             Gtk4IconHelper.UpdateIcon(themeIcon, Gtk4Theme.IsDarkActive ? "sun-line" : "moon-line", 16);
             themeButton.TooltipText = Gtk4Theme.IsDarkActive
                 ? "Switch to Light Theme (Ctrl+T)"
                 : "Switch to Dark Theme (Ctrl+T)";
         }
 
-        // Updates the footer summary for the active view
-        private void UpdateStatus()
+        // Asks before clearing the finished list, then raises the core handler
+        private void ConfirmRemoveFinished()
         {
-            SetStatus($"GTK 4 · {currentView} · {downloadList.Count} downloads · {Config.Instance.Categories.Count()} categories");
+            var title = TextResource.GetText("MENU_DELETE_COMPLETED") ?? "Remove Finished Downloads";
+            var message = TextResource.GetText("MSG_CONFIRM_CLEAR_FINISHED")
+                ?? "Remove all finished downloads from the list?";
+            if (Gtk4DialogHelper.Confirm(Window, message, title))
+            {
+                ClearAllFinishedClicked?.Invoke(this, EventArgs.Empty);
+            }
         }
 
-        // Sets the footer message
-        public void SetStatus(string text) => statusLabel.SetText(text);
+        // Reveals the update-available dot in the header
+        public void ShowUpdateDot(bool visible) => updateDot.Visible = visible;
+
+        // Re-reads the browser-monitoring preference into the checkbox
+        public void RefreshBrowserMonitorButton()
+        {
+            syncingMonitoring = true;
+            try
+            {
+                btnMonitoring.Active = Config.Instance.IsBrowserMonitoringEnabled;
+            }
+            finally
+            {
+                syncingMonitoring = false;
+            }
+        }
+
+        // Refreshes the live extension badge and the speed-limiter visual state
+        private void OnApplicationEvent(object? sender, ApplicationEvent e)
+        {
+            if (e.EventType != "ExtensionConnectionChanged" && e.EventType != "ConfigChanged")
+            {
+                return;
+            }
+            GLib.Functions.IdleAdd(0, () =>
+            {
+                UpdateExtensionStatus();
+                UpdateSpeedLimitButtonState();
+                RefreshBrowserMonitorButton();
+                SyncThemeButton();
+                return false;
+            });
+        }
 
         // Presents and activates the main window, ensuring it is visible
         public void ShowAndActivate()
@@ -646,10 +558,10 @@ namespace XDM.Gtk4UI
         // Formats an in-progress row for display
         private static IEnumerable<DownloadItem> DemoRows() => new List<DownloadItem>
         {
-            new() { Name = "ubuntu-24.04-desktop-amd64.iso", Status = "Downloading · 4.2 MB/s", SizeText = "1.8 GB", Progress = 0.42 },
-            new() { Name = "annual-report-2026.pdf", Status = "Paused", SizeText = "12.4 MB", Progress = 0.68 },
-            new() { Name = "conference-talk.mp4", Status = "Complete", SizeText = "740 MB", Progress = 1.0, IsComplete = true },
-            new() { Name = "dataset-2026-10.zip", Status = "Downloading · 900 KB/s", SizeText = "3.1 GB", Progress = 0.11 }
+            new() { Id = "demo-1", Name = "ubuntu-24.04-desktop-amd64.iso", Status = "Downloading · 4.2 MB/s", SizeText = "1.8 GB", Progress = 0.42 },
+            new() { Id = "demo-2", Name = "annual-report-2026.pdf", Status = "Paused", SizeText = "12.4 MB", Progress = 0.68 },
+            new() { Id = "demo-3", Name = "conference-talk.mp4", Status = "Complete", SizeText = "740 MB", Progress = 1.0, IsComplete = true },
+            new() { Id = "demo-4", Name = "dataset-2026-10.zip", Status = "Downloading · 900 KB/s", SizeText = "3.1 GB", Progress = 0.11 }
         };
     }
 }

@@ -62,6 +62,12 @@ namespace XDM.Gtk4UI
             window.RefreshRequested += ReloadFromDatabase;
             window.BrowserMonitoringButtonClicked += (_, _) => BrowserMonitoringButtonClicked?.Invoke(this, EventArgs.Empty);
             window.SchedulerClicked += (_, _) => SchedulerClicked?.Invoke(this, EventArgs.Empty);
+            // Header-menu commands forwarded to the core handlers that already exist
+            window.ClearAllFinishedClicked += (_, _) => ClearAllFinishedClicked?.Invoke(this, EventArgs.Empty);
+            window.UpdateClicked += (_, _) => UpdateClicked?.Invoke(this, EventArgs.Empty);
+            window.CheckForUpdateClicked += (_, _) => CheckForUpdateClicked?.Invoke(this, EventArgs.Empty);
+            window.HelpClicked += (_, _) => HelpClicked?.Invoke(this, EventArgs.Empty);
+            window.BugReportClicked += (_, _) => BugReportClicked?.Invoke(this, EventArgs.Empty);
         }
 
         public IEnumerable<FinishedDownloadItem> FinishedDownloads
@@ -171,11 +177,17 @@ namespace XDM.Gtk4UI
 
         public void RunOnUIThread(Action action) => Post(action);
 
+        // Progress ticks mutate the core row and refresh that row's cells in place.
+        // Repaints are throttled per transfer so a fast download cannot rebuild the
+        // list (or clear the selection) on every event.
         public void RunOnUIThread(Action<string, int, double, long> action, string id, int progress, double speed, long eta) =>
             Post(() =>
             {
                 action(id, progress, speed, eta);
-                RenderRows();
+                if (window.ShouldRepaintProgress(id, progress))
+                {
+                    window.UpdateProgressRow(id);
+                }
             });
 
         public void Delete(IInProgressDownloadRow row)
@@ -211,12 +223,13 @@ namespace XDM.Gtk4UI
         }
 
         public string? GetUrlFromClipboard() => clipboardMonitor.GetClipboardText();
-        public void ShowUpdateAvailableNotification() => window.SetStatus("FetchFlow update available");
+        // Update-available state drives the header dot, not a status-bar string
+        public void ShowUpdateAvailableNotification() => window.ShowUpdateDot(true);
         public void OpenNewDownloadMenu() => NewDownloadClicked?.Invoke(this, EventArgs.Empty);
         public void SetClipboardText(string text) => clipboardMonitor.SetClipboardText(text);
         public void SetClipboardFile(string file) => clipboardMonitor.SetClipboardText(file);
-        public void UpdateBrowserMonitorButton() { }
-        public void ClearUpdateInformation() { }
+        public void UpdateBrowserMonitorButton() => window.RefreshBrowserMonitorButton();
+        public void ClearUpdateInformation() => window.ShowUpdateDot(false);
         public IPlatformClipboardMonitor GetClipboardMonitor() => clipboardMonitor;
         public void ShowAndActivate() => window.ShowAndActivate();
 

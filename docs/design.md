@@ -273,3 +273,21 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
 - **Control Sizing & Layout:** GTK 4 uses native modern flat surfaces, rounded cards (10px - 12px), pill-shaped search entries and progress bars, and high-contrast focus rings that meet WCAG 2.1 AA accessibility standards.
+- **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
+  System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved
+  mode at startup, follows the session preference live while in Follow System, and persists
+  the Ctrl+T toggle. It never forces `gtk-theme-name`.
+- **Per-view surfaces:** the Active list uses `view` and the Complete list uses
+  `view-finished` (`#2a2a2a` dark / `#f8f8f8` light). The list widget carries an
+  `unfinished`/`finished` style class so the two views read apart, matching GTK 3.
+- **Sidebar status card:** Active and Complete sit on a raised `.sidebar-status-card` surface
+  (view surface, 1px border, 8px radius) rather than directly on the sidebar rail.
+- **Header actions:** exactly one labelled primary action (New). Pause, Resume, Delete, Open
+  and Open Folder are icon-only buttons with tooltips, so the header stays inside the window's
+  minimum width. Sorting is not duplicated in the header bar.
+- **Column header:** header buttons carry a right-hand divider so the drag-resize edge is
+  visible; the gutter column shows the tri-state select-all glyph (☐/▣/☑).
+- **List updates:** progress ticks refresh the bound cells of that row only. The row model and
+  the `MultiSelection` are created once, so a running download cannot clear the selection,
+  and switching view or search keeps the selection by transfer id.
+

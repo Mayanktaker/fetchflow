@@ -8,6 +8,7 @@
 @define-color window_bg #fcfcfc;
 @define-color sidebar_bg #ececec;
 @define-color view_bg #ffffff;
+@define-color view_finished_bg #f8f8f8;
 @define-color headerbar_bg #f0f0f0;
 @define-color border_color #cacaca;
 @define-color text_color #222222;
@@ -88,21 +89,53 @@ headerbar button.destructive-action:hover {
   border-right: 1px solid @border_color;
 }
 
-.sidebar row {
+.sidebar list {
+  background-color: transparent;
+}
+
+.sidebar list > row {
   border-radius: 6px;
-  margin: 3px 6px;
-  padding: 2px 4px;
+  margin: 2px 6px;
+  padding: 2px 6px;
   color: @text_color;
   font-weight: 500;
 }
 
-.sidebar row:hover {
-  background-color: alpha(@text_color, 0.06);
+.sidebar list > row:hover {
+  background-color: alpha(@text_color, 0.08);
 }
 
-.sidebar row:selected {
+.sidebar list > row:selected {
   background-color: @accent;
   color: #ffffff;
+}
+
+/* Active / Complete sit on their own raised surface, like the GTK 3 card */
+.sidebar-status-card {
+  background-color: @view_bg;
+  border: 1px solid @border_color;
+  border-radius: 8px;
+  margin: 8px;
+  padding: 4px;
+}
+
+.sidebar-heading {
+  font-size: 11px;
+  font-weight: 600;
+  color: @dim_text;
+}
+
+
+/* The Complete view sits on its own surface so the two lists read apart */
+columnview.download-list.finished,
+columnview.download-list.finished listview,
+columnview.download-list.finished listview > row {
+  background-color: @view_finished_bg;
+}
+
+/* Visible dividers advertise the draggable column edge */
+columnview.download-list header button {
+  border-right: 1px solid alpha(@border_color, 0.7);
 }
 
 /* Download list: ColumnView + internal listview share one surface */
@@ -179,6 +212,16 @@ entry:focus, .search-entry:focus {
 }
 
 /* Bottom status bar */
+.bottom-bar button.speed-limit-enabled {
+  color: @accent;
+}
+
+.update-dot-button {
+  color: @accent;
+  min-width: 22px;
+  padding: 0 4px;
+}
+
 .bottom-bar {
   background-color: @headerbar_bg;
   border-top: 1px solid @border_color;
@@ -202,6 +245,18 @@ entry:focus, .search-entry:focus {
 .status-bar-text {
   font-size: 12px;
   color: @dim_text;
+}
+
+.extension-status-label.ext-active {
+  color: #16a34a;
+}
+
+.extension-status-label.ext-ready {
+  color: #0284c7;
+}
+
+.extension-status-label.ext-idle {
+  color: #64748b;
 }
 
 .extension-status-label {
