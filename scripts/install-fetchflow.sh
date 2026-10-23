@@ -11,7 +11,7 @@ REPO="Mayanktaker/fetchflow"
 APP_ID="com.mayanktaker.fetchflow"
 INSTALL_DIR="/opt/fetchflow"
 BIN_LINK="/usr/bin/fetchflow"
-VERSION_DEFAULT="9.1.15.15"
+VERSION_DEFAULT="9.1.17.0"
 VERSION="${FETCHFLOW_VERSION:-$VERSION_DEFAULT}"
 FETCHFLOW_GTK="${FETCHFLOW_GTK:-}"
 
@@ -19,6 +19,9 @@ FETCHFLOW_GTK="${FETCHFLOW_GTK:-}"
 ASSUME_YES=0
 DO_UNINSTALL=0
 DO_CHECK=0
+# Set when the user pins a version explicitly (--version / bare 9.x arg)
+VERSION_GIVEN=0
+[ -n "${FETCHFLOW_VERSION:-}" ] && VERSION_GIVEN=1
 
 # Print usage
 usage() {
@@ -29,15 +32,15 @@ usage() {
 # Parse args
 while [ $# -gt 0 ]; do
     case "$1" in
-        --version=*) VERSION="${1#*=}"; shift ;;
-        --version) VERSION="${2:-$VERSION_DEFAULT}"; shift 2 || shift ;;
+        --version=*) VERSION="${1#*=}"; VERSION_GIVEN=1; shift ;;
+        --version) VERSION="${2:-$VERSION_DEFAULT}"; VERSION_GIVEN=1; shift 2 || shift ;;
         --gtk4) FETCHFLOW_GTK=4; shift ;;
         --gtk3) FETCHFLOW_GTK=3; shift ;;
         -y|--yes|--noconfirm) ASSUME_YES=1; shift ;;
         --uninstall|--remove) DO_UNINSTALL=1; shift ;;
         --check|--verify) DO_CHECK=1; shift ;;
         -h|--help) usage; exit 0 ;;
-        [0-9]*.[0-9]*) VERSION="$1"; shift ;;
+        [0-9]*.[0-9]*) VERSION="$1"; VERSION_GIVEN=1; shift ;;
         *) echo "Unknown option: $1" >&2; usage; exit 2 ;;
     esac
 done
@@ -45,6 +48,19 @@ done
 # Logging helpers
 log() { echo "[fetchflow] $*"; }
 die() { echo "[fetchflow] ERROR: $*" >&2; exit 1; }
+
+# Resolve the newest published release tag, so a bare install always gets
+# latest instead of the baked-in fallback. Empty when offline or rate-limited.
+resolve_latest_version() {
+    local api="https://api.github.com/repos/$REPO/releases/latest" tag="";
+    if command -v curl >/dev/null 2>&1; then
+        tag="$(curl -fsSL "$api" 2>/dev/null | grep -oE '"tag_name"[[:space:]]*:[[:space:]]*"v?[^"]+"' | head -n1 | grep -oE 'v?[0-9][0-9.]*' || true)";
+    elif command -v wget >/dev/null 2>&1; then
+        tag="$(wget -qO- "$api" 2>/dev/null | grep -oE '"tag_name"[[:space:]]*:[[:space:]]*"v?[^"]+"' | head -n1 | grep -oE 'v?[0-9][0-9.]*' || true)";
+    fi
+    tag="${tag#v}";
+    [ -n "$tag" ] && echo "$tag"
+}
 
 # Detect distro family via /etc/os-release
 detect_family() {
@@ -324,6 +340,16 @@ install_suse() {
 # Main
 [ $DO_UNINSTALL = 1 ] && do_uninstall;
 [ $DO_CHECK = 1 ] && do_check;
+# No pinned version: prefer the newest published release, fall back to the
+# baked-in default when the API is unreachable (offline, rate-limited)
+if [ $VERSION_GIVEN = 0 ]; then
+    if latest="$(resolve_latest_version)" && [ -n "$latest" ]; then
+        VERSION="$latest";
+        log "Using latest release: v$VERSION.";
+    else
+        log "Release feed unreachable; falling back to v$VERSION.";
+    fi
+fi
 need_root;
 FAMILY="$(detect_family)";
 log "Detected family: $FAMILY (version $VERSION).";
