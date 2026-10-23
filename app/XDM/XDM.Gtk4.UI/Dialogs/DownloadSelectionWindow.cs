@@ -112,7 +112,6 @@ namespace XDM.Gtk4UI.Dialogs
 
             // Entry list
             list = ListBox.New();
-            list.AddCssClass("selection-list");
             list.SelectionMode = SelectionMode.None;
             var scrolled = ScrolledWindow.New();
             scrolled.SetPolicy(PolicyType.Never, PolicyType.Automatic);

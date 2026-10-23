@@ -105,7 +105,6 @@ namespace XDM.Gtk4UI.Dialogs
             var sidebar = StackSidebar.New();
             sidebar.Stack = stack;
             sidebar.WidthRequest = SidebarWidth;
-            sidebar.AddCssClass("settings-sidebar");
 
             // -----------------------------------------------------------------
             // --- Page 1: General ---

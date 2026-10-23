@@ -413,3 +413,4 @@ MSG_MEDIA_FETCHING=Fetching formats...
 MSG_LANG_RESTART=The new language is applied the next time FetchFlow starts.
 MSG_SETTINGS_SAVE_FAILED=Settings could not be saved.
 MSG_ACTION_FAILED=This action could not be completed.
+MENU_TOGGLE_THEME=Switch Theme

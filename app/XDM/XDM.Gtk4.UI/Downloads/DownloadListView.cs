@@ -74,6 +74,9 @@ namespace XDM.Gtk4UI.Downloads
             selection.OnSelectionChanged += (_, _) => OnSelectionChanged();
             view = ColumnView.New(selection);
             view.AddCssClass("download-list");
+            // Native row/column separators instead of hand-drawn dividers
+            view.ShowRowSeparators = true;
+            view.ShowColumnSeparators = true;
             view.Hexpand = true;
             view.Vexpand = true;
 
@@ -512,7 +515,6 @@ namespace XDM.Gtk4UI.Downloads
                 check.Valign = Align.Center;
                 check.MarginStart = 6;
                 check.MarginEnd = 6;
-                check.AddCssClass("selection-checkbox");
 
                 check.OnToggled += (_, _) =>
                 {
@@ -578,7 +580,6 @@ namespace XDM.Gtk4UI.Downloads
                 var name = Label.New("");
                 name.Halign = Align.Start;
                 name.Ellipsize = Pango.EllipsizeMode.End;
-                name.AddCssClass("download-name");
 
                 var status = Label.New("");
                 status.Halign = Align.Start;
@@ -587,7 +588,6 @@ namespace XDM.Gtk4UI.Downloads
                 status.Ellipsize = Pango.EllipsizeMode.Middle;
                 status.Hexpand = true;
                 status.AddCssClass("dim-label");
-                status.AddCssClass("download-status");
 
                 textBox.Append(name);
                 textBox.Append(status);
@@ -662,7 +662,6 @@ namespace XDM.Gtk4UI.Downloads
                 label.Valign = Align.Center;
                 label.MarginStart = 8;
                 label.MarginEnd = 12;
-                label.AddCssClass("download-size");
                 item.SetChild(label);
                 AttachContextMenu(item, label);
             };
@@ -720,12 +719,10 @@ namespace XDM.Gtk4UI.Downloads
                 var bar = ProgressBar.New();
                 bar.Hexpand = true;
                 bar.Valign = Align.Center;
-                bar.AddCssClass("download-progress");
 
                 var percentLabel = Label.New("0%");
                 percentLabel.WidthRequest = 44;
                 percentLabel.Halign = Align.End;
-                percentLabel.AddCssClass("download-percent");
 
                 barRow.Append(bar);
                 barRow.Append(percentLabel);

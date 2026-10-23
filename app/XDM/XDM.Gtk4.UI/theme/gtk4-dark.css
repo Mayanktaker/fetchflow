@@ -24,11 +24,6 @@ columnview.download-list.finished listview {
   background-color: @view_finished_bg;
 }
 
-/* Thin divider so the draggable column edge stays discoverable */
-columnview.download-list header button {
-  border-right: 1px solid alpha(@border_color, 0.6);
-}
-
 /* State colour for a queued update; the button itself stays native */
 .update-dot-button {
   color: @accent;

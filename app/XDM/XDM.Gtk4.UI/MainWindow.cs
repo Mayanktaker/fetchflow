@@ -37,8 +37,10 @@ namespace XDM.Gtk4UI
         public Adw.ApplicationWindow Window { get; }
         // Download list (ColumnView) widget
         private readonly DownloadListView downloadList = new();
-        // Search action target
+        // Search action target and its native toggleable bar below the header
         private readonly SearchEntry searchEntry = SearchEntry.New();
+        private readonly SearchBar searchBar = SearchBar.New();
+        private readonly ToggleButton searchToggle = ToggleButton.New();
         // Toolbar buttons exposed through GTK-neutral core adapters
         public Button NewButton { get; }
         public Button DeleteButton { get; }
@@ -47,8 +49,6 @@ namespace XDM.Gtk4UI
         public Button OpenFileButton { get; }
         public Button OpenFolderButton { get; }
         // Header controls
-        private readonly Button themeButton = Button.New();
-        private readonly Image themeIcon;
         private readonly Button updateDot = Button.New();
         // Status bar elements
         private readonly Label lblExtensionStatus = Label.New("");
@@ -159,12 +159,6 @@ namespace XDM.Gtk4UI
             OpenFolderButton = CreateHeaderIconButton("folder-shared-line", null,
                 TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder");
 
-            // Theme toggle with sun/moon icon
-            themeIcon = Gtk4IconHelper.CreateIcon(Gtk4Theme.IsDarkActive ? "sun-line" : "moon-line", 16);
-            themeButton.SetChild(themeIcon);
-            themeButton.AddCssClass("flat");
-            themeButton.TooltipText = "Switch theme (Ctrl+T)";
-
             // Update-available indicator: hidden until an update lands
             updateDot.SetChild(Label.New("●"));
             updateDot.AddCssClass("flat");
@@ -217,6 +211,20 @@ namespace XDM.Gtk4UI
 
             lblSelectionCount.AddCssClass("dim-label");
 
+            // GNOME pattern: search opens in a bar under the header
+            searchEntry.Hexpand = true;
+            searchBar.SetChild(searchEntry);
+            searchBar.ConnectEntry(searchEntry);
+            searchToggle.SetIconName("system-search-symbolic");
+            searchToggle.AddCssClass("flat");
+            searchToggle.TooltipText = "Search downloads (Ctrl+F)";
+            searchToggle.OnToggled += (_, _) => searchBar.SearchModeEnabled = searchToggle.Active;
+            searchEntry.OnStopSearch += (_, _) =>
+            {
+                searchBar.SearchModeEnabled = false;
+                searchToggle.Active = false;
+            };
+
             Window = Adw.ApplicationWindow.New(app);
             Window.Title = AppInfo.APP_NAME;
             Window.SetDefaultSize(DefaultWidth, DefaultHeight);
@@ -265,7 +273,6 @@ namespace XDM.Gtk4UI
 
             // Honour the saved theme mode (0 light, 1 dark, 2 follow system)
             Gtk4Theme.ApplyFromConfig(Window);
-            SyncThemeButton();
             UpdateExtensionStatus();
             UpdateSpeedLimitButtonState();
         }
@@ -490,8 +497,13 @@ namespace XDM.Gtk4UI
             return string.Empty;
         }
 
-        // Ctrl+F focuses the search entry
-        private void FocusSearch() => searchEntry.GrabFocus();
+        // Ctrl+F opens the search bar and focuses the field
+        private void FocusSearch()
+        {
+            searchToggle.Active = true;
+            searchBar.SearchModeEnabled = true;
+            searchEntry.GrabFocus();
+        }
 
         // Ctrl+N activates the core New button path
         private void OnNewDownload() => NewButton.Activate();
@@ -531,20 +543,7 @@ namespace XDM.Gtk4UI
         }
 
         // Ctrl+T swaps light/dark and remembers the choice
-        private void ToggleTheme()
-        {
-            Gtk4Theme.Toggle(Window);
-            SyncThemeButton();
-        }
-
-        // Mirrors the active theme into the toggle icon and tooltip
-        private void SyncThemeButton()
-        {
-            Gtk4IconHelper.UpdateIcon(themeIcon, Gtk4Theme.IsDarkActive ? "sun-line" : "moon-line", 16);
-            themeButton.TooltipText = Gtk4Theme.IsDarkActive
-                ? "Switch to Light Theme (Ctrl+T)"
-                : "Switch to Dark Theme (Ctrl+T)";
-        }
+        private void ToggleTheme() => Gtk4Theme.Toggle(Window);
 
         // Asks before clearing the finished list, then raises the core handler
         private void ConfirmRemoveFinished()
@@ -587,7 +586,6 @@ namespace XDM.Gtk4UI
                 UpdateExtensionStatus();
                 UpdateSpeedLimitButtonState();
                 RefreshBrowserMonitorButton();
-                SyncThemeButton();
                 return false;
             });
         }

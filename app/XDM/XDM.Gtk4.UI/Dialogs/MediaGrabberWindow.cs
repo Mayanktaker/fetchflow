@@ -51,7 +51,6 @@ namespace XDM.Gtk4UI.Dialogs
             // Captured media list (single selection drives Download)
             list = ListBox.New();
             list.SelectionMode = SelectionMode.Single;
-            list.AddCssClass("media-list");
             var scrolled = ScrolledWindow.New();
             scrolled.SetPolicy(PolicyType.Never, PolicyType.Automatic);
             scrolled.SetChild(list);

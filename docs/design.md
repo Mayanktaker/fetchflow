@@ -275,6 +275,8 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
+- **List chrome:** the download list uses native row and column separators
+  (`ColumnView.ShowRowSeparators`/`ShowColumnSeparators`) instead of CSS dividers.
 - **Native-first styling:** the GTK 4 stylesheets deliberately stay minimal. Buttons, entries, header bars, sidebar rows, progress bars, hover/active/selection states and focus rings are drawn by libadwaita/Adwaita, so the app looks and behaves like the user's desktop and follows its accessibility settings. The stylesheets only carry what native theming cannot express: the Active vs Complete list surfaces, a thin column divider, the accent token rewritten from `ColorSchemeTable`, the bandwidth/extension state colours and the dialog section-heading weight. Sidebar lists use libadwaita's `navigation-sidebar` class and the Active/Complete block uses `boxed-list`, instead of hand-written row styling.
 - **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
   System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved
@@ -285,9 +287,12 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   `unfinished`/`finished` style class so the two views read apart, matching GTK 3.
 - **Sidebar status card:** Active and Complete sit on a raised `.sidebar-status-card` surface
   (view surface, 1px border, 8px radius) rather than directly on the sidebar rail.
-- **Header actions:** exactly one labelled primary action (New). Pause, Resume, Delete, Open
-  and Open Folder are icon-only buttons with tooltips, so the header stays inside the window's
-  minimum width. Sorting is not duplicated in the header bar.
+- **Header actions:** the header carries the app mark (28px) beside an `AdwWindowTitle`
+  (app name + active view), exactly one labelled primary action (New), and the contextual
+  transfer actions (Pause, Resume, Delete) as icon buttons with tooltips. Open File and Open
+  Folder live in the main menu, along with Switch Theme, so the header stays native and
+  uncluttered. Search is a GNOME search toggle that opens a `Gtk.SearchBar` under the header
+  (Ctrl+F opens and focuses it). Sorting is not duplicated in the header bar.
 - **Column header:** header buttons carry a right-hand divider so the drag-resize edge is
   visible; the gutter column shows the tri-state select-all glyph (☐/▣/☑).
 - **List updates:** progress ticks refresh the bound cells of that row only. The row model and

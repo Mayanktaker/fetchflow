@@ -32,28 +32,27 @@ namespace XDM.Gtk4UI
         // Packs the app title, core actions, search, theme toggle and application menu
         private Widget BuildHeaderBar()
         {
-            // AdwHeaderBar draws GNOME's window controls and title/subtitle layout
+            // AdwHeaderBar draws GNOME's window controls; the title keeps the app mark
             var header = Adw.HeaderBar.New();
             windowTitle = Adw.WindowTitle.New(AppInfo.APP_NAME,
                 TextResource.GetText("ALL_UNFINISHED") ?? "Active");
-            header.SetTitleWidget(windowTitle);
+            var titleBox = Box.New(Orientation.Horizontal, 10);
+            titleBox.Valign = Align.Center;
+            titleBox.Append(Gtk4IconHelper.CreateIcon("fetchflow-logo", 28));
+            titleBox.Append(windowTitle);
+            header.SetTitleWidget(titleBox);
 
+            // Transfer actions stay in the header; Open/Open Folder live in the menu
             header.PackStart(NewButton);
             header.PackStart(PauseButton);
             header.PackStart(ResumeButton);
             header.PackStart(DeleteButton);
-            header.PackStart(OpenFileButton);
-            header.PackStart(OpenFolderButton);
 
             searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH") ?? "Search";
             searchEntry.TooltipText = "Search downloads (Ctrl+F)";
-            searchEntry.WidthRequest = 210;
-            searchEntry.AddCssClass("search-entry");
             // Search filters the list in place; it never rebuilds the view from scratch
             searchEntry.OnSearchChanged += (_, _) => downloadList.Filter(searchEntry.GetText() ?? "");
 
-            themeButton.TooltipText = "Switch theme (Ctrl+T)";
-            themeButton.OnClicked += (_, _) => ToggleTheme();
             updateDot.TooltipText = TextResource.GetText("MSG_UPDATE_AVAILABLE") ?? "Update available";
 
             var menuButton = MenuButton.New();
@@ -64,8 +63,7 @@ namespace XDM.Gtk4UI
             // pack_end fills right-to-left: add the rightmost control first
             header.PackEnd(updateDot);
             header.PackEnd(menuButton);
-            header.PackEnd(themeButton);
-            header.PackEnd(searchEntry);
+            header.PackEnd(searchToggle);
 
             return header;
         }
@@ -93,6 +91,9 @@ namespace XDM.Gtk4UI
             root.AppendSection(null, help);
 
             var appSection = Gio.Menu.New();
+            appSection.Append(TextResource.GetText("CTX_OPEN_FILE") ?? "Open File", "app." + AppActions.OpenFile);
+            appSection.Append(TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder", "app." + AppActions.OpenFolder);
+            appSection.Append(TextResource.GetText("MENU_TOGGLE_THEME") ?? "Switch Theme", "app." + AppActions.ToggleTheme);
             appSection.Append(TextResource.GetText("MENU_LANG") ?? "Language", "app." + AppActions.Language);
             appSection.Append(TextResource.GetText("TITLE_SETTINGS") ?? "Settings...", "app." + AppActions.Settings);
             appSection.Append(TextResource.GetText("MENU_ABOUT") ?? "About FetchFlow", "app." + AppActions.About);
@@ -113,6 +114,7 @@ namespace XDM.Gtk4UI
             paned.ShrinkStartChild = false;
 
             var root = Box.New(Orientation.Vertical, 0);
+            root.Append(searchBar);
             root.Append(paned);
             root.Append(BuildStatusBar());
             return root;
@@ -199,7 +201,6 @@ namespace XDM.Gtk4UI
             label.MarginStart = 16;
             label.MarginTop = 8;
             label.MarginBottom = 4;
-            label.AddCssClass("sidebar-heading");
             return label;
         }
 
