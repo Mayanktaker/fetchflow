@@ -63,7 +63,7 @@ EOF
 if [ "$TARGET_GTK" = "3" ]; then
     PKGBUILD_DEPS="('ffmpeg' 'gtk3>=3.24')"
 else
-    PKGBUILD_DEPS="('ffmpeg' 'gtk4')"
+    PKGBUILD_DEPS="('ffmpeg' 'gtk4' 'libadwaita')"
     # Clean up GTK 3 binary and desktop integration if present in binary-source
     rm -f "${SOURCE_NAME}/opt/fetchflow/fetchflow-gtk3" 2>/dev/null || true
     rm -f "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop" 2>/dev/null || true

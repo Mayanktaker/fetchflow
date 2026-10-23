@@ -5,8 +5,8 @@
 // same tokens documented in docs/design.md.
 //
 // ThemeMode is the shared, cross-frontend value (Config.cs): 0 = Light, 1 = Dark,
-// 2 = Follow System. Follow System reads the session preference and keeps tracking
-// it, so the app matches GNOME/KDE instead of forcing a mode on the user.
+// 2 = Follow System. libadwaita's AdwStyleManager owns the session preference, so
+// Follow System tracks GNOME/KDE live and only an explicit user choice forces a mode.
 using System;
 using System.IO;
 using Gtk;
@@ -32,8 +32,10 @@ namespace XDM.Gtk4UI
         // Provider currently attached to the display (removed on swap)
         private static CssProvider? currentProvider;
 
-        // GtkSettings watched while following the system preference
-        private static Settings? followedSettings;
+        // libadwaita style manager driving dark/light and the session preference
+        private static Adw.StyleManager? styleManager;
+        // Guards against subscribing to the manager more than once
+        private static bool listening;
 
         // Tracks the active mode so the toggle label and CSS agree
         public static bool IsDarkActive { get; private set; } = true;
@@ -57,92 +59,62 @@ namespace XDM.Gtk4UI
                 try { Config.SaveConfig(); } catch { }
             }
 
-            WatchSystemPreference(anchor);
-            var dark = ActiveMode switch
+            var manager = EnsureStyleManager();
+            // Only an explicit choice forces a scheme; Follow System leaves it to the session
+            manager.ColorScheme = ActiveMode switch
             {
-                ModeDark => true,
-                ModeLight => false,
-                _ => IsSystemDark()
+                ModeDark => Adw.ColorScheme.ForceDark,
+                ModeLight => Adw.ColorScheme.ForceLight,
+                _ => Adw.ColorScheme.Default
             };
-            Apply(anchor.GetDisplay() ?? Gdk.Display.GetDefault(), dark);
+
+            Apply(anchor.GetDisplay() ?? Gdk.Display.GetDefault(), manager.Dark);
         }
 
         // Flips dark/light and persists the choice, which ends Follow System
         public static void Toggle(Widget anchor)
         {
-            var next = IsDarkActive ? ModeLight : ModeDark;
-            ApplyMode(anchor, next, persist: true);
+            ApplyMode(anchor, IsDarkActive ? ModeLight : ModeDark, persist: true);
         }
 
-        // Reads the session's dark preference (GTK 4.20+ property, older fallback)
-        private static bool IsSystemDark()
+        // Returns the style manager, subscribing to its notifications once
+        private static Adw.StyleManager EnsureStyleManager()
         {
-            var settings = Settings.GetDefault();
-            if (settings == null)
+            if (styleManager == null)
             {
-                return true;
+                styleManager = Adw.StyleManager.GetDefault();
             }
-
-            try
+            if (!listening)
             {
-                // Default means "no session preference": fall back to the legacy flag
-                return settings.GtkInterfaceColorScheme switch
-                {
-                    InterfaceColorScheme.Dark => true,
-                    InterfaceColorScheme.Light => false,
-                    _ => settings.GtkApplicationPreferDarkTheme
-                };
+                styleManager.OnNotify += OnStyleManagerNotify;
+                listening = true;
             }
-            catch
-            {
-                return settings.GtkApplicationPreferDarkTheme;
-            }
+            return styleManager;
         }
 
-        // Re-applies the stylesheet whenever the session preference changes while following it
-        private static void WatchSystemPreference(Widget anchor)
+        // Session preference changed: re-apply the stylesheet while following the system
+        private static void OnStyleManagerNotify(GObject.Object sender, GObject.Object.NotifySignalArgs args)
         {
-            var settings = Settings.GetDefault();
-            if (settings == null)
+            if (ActiveMode != ModeFollowSystem)
             {
                 return;
             }
 
-            if (followedSettings != settings)
-            {
-                if (followedSettings != null)
-                {
-                    followedSettings.OnNotify -= OnSettingsNotify;
-                }
-                followedSettings = settings;
-                followedSettings.OnNotify += OnSettingsNotify;
-            }
-            anchorOnSystemFollow = ActiveMode == ModeFollowSystem;
-        }
-
-        // Set by WatchSystemPreference: only Follow System needs live re-application
-        private static bool anchorOnSystemFollow;
-
-        // Session preference changed: re-apply only while following the system
-        private static void OnSettingsNotify(GObject.Object sender, GObject.Object.NotifySignalArgs args)
-        {
-            if (!anchorOnSystemFollow)
+            var property = args.Pspec.GetName();
+            if (property != "dark" && property != "system-supports-color-schemes")
             {
                 return;
             }
-            if (args.Pspec.GetName() != "gtk-interface-color-scheme" &&
-                args.Pspec.GetName() != "gtk-application-prefer-dark-theme")
-            {
-                return;
-            }
+
+            var dark = ((Adw.StyleManager)sender).Dark;
             GLib.Functions.IdleAdd(0, () =>
             {
-                Apply(Gdk.Display.GetDefault(), IsSystemDark());
+                Apply(Gdk.Display.GetDefault(), dark);
                 return false;
             });
         }
 
-        // Loads the mode's stylesheet, swaps the display provider, syncs the base theme flag
+        // Loads the mode's stylesheet and swaps the display provider
         private static void Apply(Gdk.Display? display, bool dark)
         {
             IsDarkActive = dark;
@@ -174,39 +146,13 @@ namespace XDM.Gtk4UI
                 StyleContext.AddProviderForDisplay(display, provider, ProviderPriority);
                 currentProvider = provider;
 
-                // Keep the base theme's dark flag in step with the stylesheet, or unstyled
-                // widgets keep the light Adwaita palette inside a dark window. The GTK theme
-                // NAME is deliberately left alone so a Plasma (Breeze) or Cinnamon (Mint-Y)
-                // user keeps their system theme — see FF-UI-001 in docs/audit/ui-ux-findings.md.
-                // In Follow System mode the session property is left untouched on purpose.
-                if (ActiveMode != ModeFollowSystem)
-                {
-                    ApplySessionPreference(dark);
-                }
+                // The GTK theme NAME is still never touched: AdwStyleManager only switches
+                // the color scheme, so a Plasma (Breeze) or Cinnamon (Mint-Y) user keeps
+                // their system theme — see FF-UI-001 in docs/audit/ui-ux-findings.md.
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine("GTK 4 theme swap failed: " + ex.Message);
-            }
-        }
-
-        // Forces the base theme's color scheme without changing the theme name
-        private static void ApplySessionPreference(bool dark)
-        {
-            var settings = Settings.GetDefault();
-            if (settings == null)
-            {
-                return;
-            }
-
-            try
-            {
-                // GTK 4.20+ replaces the deprecated GtkApplicationPreferDarkTheme (FF-UI-010)
-                settings.GtkInterfaceColorScheme = dark ? InterfaceColorScheme.Dark : InterfaceColorScheme.Light;
-            }
-            catch
-            {
-                settings.GtkApplicationPreferDarkTheme = dark;
             }
         }
     }

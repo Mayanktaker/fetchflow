@@ -19,7 +19,12 @@ namespace XDM.Gtk4UI.Dialogs
     // Preferences and application settings window
     internal sealed class SettingsDialog
     {
+        // Sidebar width for the page list (design token)
+        private const int SidebarWidth = 200;
         private readonly Window window;
+
+        // Stable page names, in sidebar order
+        private static readonly string[] PageNames = { "general", "categories", "network", "speed", "monitoring", "advanced" };
 
         // General tab controls
         private readonly Entry txtDownloadFolder;
@@ -93,8 +98,13 @@ namespace XDM.Gtk4UI.Dialogs
             mainBox.MarginStart = 20;
             mainBox.MarginEnd = 20;
 
-            var notebook = Notebook.New();
-            notebook.Vexpand = true;
+            var stack = Stack.New();
+            stack.Vexpand = true;
+            stack.Hexpand = true;
+            var sidebar = StackSidebar.New();
+            sidebar.Stack = stack;
+            sidebar.WidthRequest = SidebarWidth;
+            sidebar.AddCssClass("settings-sidebar");
 
             // -----------------------------------------------------------------
             // --- Page 1: General ---
@@ -220,7 +230,7 @@ namespace XDM.Gtk4UI.Dialogs
             var generalScroll = ScrolledWindow.New();
             generalScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
             generalScroll.SetChild(generalBox);
-            notebook.AppendPage(generalScroll, Label.New(TextResource.GetText("SETTINGS_GENERAL") ?? "General"));
+            stack.AddTitled(generalScroll, "general", TextResource.GetText("SETTINGS_GENERAL") ?? "General");
 
             // -----------------------------------------------------------------
             // --- Page 2: File Types & Categories ---
@@ -375,7 +385,7 @@ namespace XDM.Gtk4UI.Dialogs
             var catScroll = ScrolledWindow.New();
             catScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
             catScroll.SetChild(categoriesBox);
-            notebook.AppendPage(catScroll, Label.New(TextResource.GetText("SETTINGS_CAT") ?? "Categories"));
+            stack.AddTitled(catScroll, "categories", TextResource.GetText("SETTINGS_CAT") ?? "Categories");
 
             // -----------------------------------------------------------------
             // --- Page 3: Network & Proxy ---
@@ -505,7 +515,7 @@ namespace XDM.Gtk4UI.Dialogs
             var netScroll = ScrolledWindow.New();
             netScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
             netScroll.SetChild(networkBox);
-            notebook.AppendPage(netScroll, Label.New(TextResource.GetText("SETTINGS_NETWORK") ?? "Network"));
+            stack.AddTitled(netScroll, "network", TextResource.GetText("SETTINGS_NETWORK") ?? "Network");
 
             // -----------------------------------------------------------------
             // --- Page 4: Speed Limiter ---
@@ -551,7 +561,7 @@ namespace XDM.Gtk4UI.Dialogs
             presetBox.Append(p5120);
             speedBox.Append(presetBox);
 
-            notebook.AppendPage(speedBox, Label.New(TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter"));
+            stack.AddTitled(speedBox, "speed", TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter");
 
             // -----------------------------------------------------------------
             // --- Page 5: Monitoring ---
@@ -609,7 +619,7 @@ namespace XDM.Gtk4UI.Dialogs
             ipcBox.Append(btnRestartIpc);
             monitoringBox.Append(ipcBox);
 
-            notebook.AppendPage(monitoringBox, Label.New(TextResource.GetText("SETTINGS_MONITORING") ?? "Monitoring"));
+            stack.AddTitled(monitoringBox, "monitoring", TextResource.GetText("SETTINGS_MONITORING") ?? "Monitoring");
 
             // -----------------------------------------------------------------
             // --- Page 6: Advanced & Automation ---
@@ -694,20 +704,21 @@ namespace XDM.Gtk4UI.Dialogs
             var advScroll = ScrolledWindow.New();
             advScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
             advScroll.SetChild(advancedBox);
-            notebook.AppendPage(advScroll, Label.New(TextResource.GetText("SETTINGS_ADV") ?? "Advanced settings"));
+            stack.AddTitled(advScroll, "advanced", TextResource.GetText("SETTINGS_ADV") ?? "Advanced settings");
 
-            if (initialPage >= 0 && initialPage < 6)
+            if (initialPage >= 0 && initialPage < PageNames.Length)
             {
-                notebook.SetCurrentPage(initialPage);
+                stack.SetVisibleChildName(PageNames[initialPage]);
             }
 
-            mainBox.Append(notebook);
+            // Sidebar | page content, like GNOME Settings
+            var contentRow = Box.New(Orientation.Horizontal, 0);
+            contentRow.Append(sidebar);
+            contentRow.Append(stack);
+            contentRow.Vexpand = true;
+            mainBox.Append(contentRow);
 
-            // --- Action Buttons ---
-            var buttonBox = Box.New(Orientation.Horizontal, 8);
-            buttonBox.Halign = Align.End;
-            buttonBox.MarginTop = 8;
-
+            // --- Action Buttons: header bar, as GNOME dialogs do ---
             var cancelBtn = Button.NewWithLabel(TextResource.GetText("ND_CANCEL") ?? "Cancel");
             cancelBtn.OnClicked += (_, _) => window.Close();
 
@@ -715,9 +726,8 @@ namespace XDM.Gtk4UI.Dialogs
             saveBtn.AddCssClass("suggested-action");
             saveBtn.OnClicked += (_, _) => SaveSettings();
 
-            buttonBox.Append(cancelBtn);
-            buttonBox.Append(saveBtn);
-            mainBox.Append(buttonBox);
+            header.PackStart(cancelBtn);
+            header.PackEnd(saveBtn);
 
             window.SetChild(mainBox);
         }

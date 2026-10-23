@@ -269,6 +269,9 @@ WPF base neutral skins live in `Themes/DarkTheme.xaml` + `Themes/LightTheme.xaml
 
 Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` and `gtk4-light.css`) and are deployed side-by-side with GTK 3 stylesheets in the `/opt/fetchflow/theme/` directory.
 
+- **Shell:** `AdwApplicationWindow` with an `AdwToolbarView` (top bar `AdwHeaderBar`, content below) and `AdwWindowTitle` carrying the active view as its subtitle. Window controls come from libadwaita, not hand-built buttons.
+- **Color scheme:** `AdwStyleManager` owns light/dark. An explicit Light/Dark choice forces `ForceLight`/`ForceDark`; Follow System leaves `ColorScheme.Default` and the app re-applies its CSS when the manager's `dark` property changes.
+- **Empty state and About:** `AdwStatusPage` for the empty list and `AdwAboutWindow` for About, both fed from `AppInfo`/`TextResource`.
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).

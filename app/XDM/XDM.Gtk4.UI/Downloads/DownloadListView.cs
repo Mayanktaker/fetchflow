@@ -682,19 +682,13 @@ namespace XDM.Gtk4UI.Downloads
         // Empty state shown when there are no rows (or the search matched nothing)
         private static Widget BuildEmptyState()
         {
-            var title = Label.New(TextResource.GetText("LBL_NO_DOWNLOADS") ?? "No downloads to show");
-            title.AddCssClass("empty-title");
-
-            var hint = Label.New(TextResource.GetText("DESC_NO_DOWNLOADS") ?? "Downloads you start will appear here.");
-            hint.AddCssClass("dim-label");
-
-            var box = Box.New(Orientation.Vertical, 6);
-            box.Valign = Align.Center;
-            box.Halign = Align.Center;
-            box.Vexpand = true;
-            box.Append(title);
-            box.Append(hint);
-            return box;
+            // AdwStatusPage is the GNOME empty-state pattern (icon + title + hint)
+            var page = Adw.StatusPage.New();
+            page.SetIconName("folder-download-symbolic");
+            page.SetTitle(TextResource.GetText("LBL_NO_DOWNLOADS") ?? "No downloads to show");
+            page.SetDescription(TextResource.GetText("DESC_NO_DOWNLOADS") ?? "Downloads you start will appear here.");
+            page.Vexpand = true;
+            return page;
         }
 
         private PopoverMenu? activeContextMenu;

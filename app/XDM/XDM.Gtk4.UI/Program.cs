@@ -74,7 +74,7 @@ namespace XDM.Gtk4UI
 
             LoadLanguageTexts();
 
-            var app = GtkApplication.New(AppId, Gio.ApplicationFlags.FlagsNone);
+            var app = Adw.Application.New(AppId, Gio.ApplicationFlags.FlagsNone);
             var demo = Array.Exists(args, a => a == "--demo");
             var smoke = Array.Exists(args, a => a == "--smoke");
             var background = Array.Exists(args, a => a == "--background");

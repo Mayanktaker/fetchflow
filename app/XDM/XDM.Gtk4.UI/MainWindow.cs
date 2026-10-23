@@ -34,7 +34,7 @@ namespace XDM.Gtk4UI
         private const int ProgressRepaintIntervalMs = 250;
 
         // Native GTK window presented by the host
-        public ApplicationWindow Window { get; }
+        public Adw.ApplicationWindow Window { get; }
         // Download list (ColumnView) widget
         private readonly DownloadListView downloadList = new();
         // Search action target
@@ -215,11 +215,15 @@ namespace XDM.Gtk4UI
 
             lblSelectionCount.AddCssClass("dim-label");
 
-            Window = ApplicationWindow.New(app);
+            Window = Adw.ApplicationWindow.New(app);
             Window.Title = AppInfo.APP_NAME;
             Window.SetDefaultSize(DefaultWidth, DefaultHeight);
-            Window.SetTitlebar(BuildHeaderBar());
-            Window.SetChild(BuildBody());
+
+            // libadwaita shell: header bar above the window content, GNOME style
+            var shell = Adw.ToolbarView.New();
+            shell.AddTopBar(BuildHeaderBar());
+            shell.SetContent(BuildBody());
+            Window.SetContent(shell);
 
             DeleteButton.Visible = true;
             DeleteButton.Sensitive = false;
@@ -433,12 +437,20 @@ namespace XDM.Gtk4UI
         private void OnSettings() =>
             (ApplicationContext.PlatformUIService as Gtk4PlatformUIService)?.ShowSettingsDialog(0);
 
-        // F1 displays About FetchFlow using the shared application metadata
-        private void OnAbout() =>
-            Gtk4DialogHelper.ShowAlert(
-                Window,
-                $"{AppInfo.APP_FULL_NAME}\n{AppInfo.APP_VERSION_ONLY}\n\n{AppInfo.APP_COPYRIGHT_TEXT}\n{AppInfo.APP_HOMEPAGE_TEXT}",
-                TextResource.GetText("MENU_ABOUT") ?? "About FetchFlow");
+        // F1 displays the GNOME About window using the shared application metadata
+        private void OnAbout()
+        {
+            var about = Adw.AboutWindow.New();
+            about.SetTransientFor(Window);
+            about.SetApplicationName(AppInfo.APP_FULL_NAME);
+            about.SetApplicationIcon(AppInfo.APP_ID);
+            about.SetVersion(AppInfo.APP_VERSION);
+            about.SetDeveloperName("Mayanktaker Computers & Web Development");
+            about.SetWebsite(AppInfo.APP_HOMEPAGE_TEXT);
+            about.SetCopyright(AppInfo.APP_COPYRIGHT_TEXT);
+            about.SetDevelopers(new[] { AppInfo.APP_ORIGINAL_AUTHOR_CREDIT });
+            about.Present();
+        }
 
         // Ctrl+T swaps light/dark and remembers the choice
         private void ToggleTheme()

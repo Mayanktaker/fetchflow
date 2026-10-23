@@ -22,21 +22,17 @@ namespace XDM.Gtk4UI
         private ListBox? categoryList;
         // Guards cross-list selection syncing
         private bool syncingSidebar;
+        // Header title/subtitle, updated as the sidebar view changes
+        private Adw.WindowTitle? windowTitle;
 
         // Packs the app title, core actions, search, theme toggle and application menu
         private Widget BuildHeaderBar()
         {
-            var header = HeaderBar.New();
-
-            var titleBox = Box.New(Orientation.Horizontal, 6);
-            titleBox.Halign = Align.Center;
-            titleBox.Valign = Align.Center;
-            var logoIcon = Gtk4IconHelper.CreateIcon("fetchflow-logo", 20);
-            var titleLabel = Label.New(AppInfo.APP_NAME);
-            titleLabel.AddCssClass("heading");
-            titleBox.Append(logoIcon);
-            titleBox.Append(titleLabel);
-            header.TitleWidget = titleBox;
+            // AdwHeaderBar draws GNOME's window controls and title/subtitle layout
+            var header = Adw.HeaderBar.New();
+            windowTitle = Adw.WindowTitle.New(AppInfo.APP_NAME,
+                TextResource.GetText("ALL_UNFINISHED") ?? "Active");
+            header.SetTitleWidget(windowTitle);
 
             header.PackStart(NewButton);
             header.PackStart(PauseButton);
@@ -202,6 +198,7 @@ namespace XDM.Gtk4UI
             }
 
             currentView = row.Name;
+            windowTitle?.SetSubtitle(row.TooltipText ?? AppInfo.APP_NAME);
             ApplyView(currentView);
             ViewChanged?.Invoke(currentView);
         }

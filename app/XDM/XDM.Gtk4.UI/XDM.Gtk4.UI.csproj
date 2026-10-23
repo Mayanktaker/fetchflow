@@ -25,6 +25,8 @@
   <ItemGroup>
     <!-- GTK 4 .NET binding (GtkSharp targets GTK 3.22 only) -->
     <PackageReference Include="GirCore.Gtk-4.0" Version="0.8.1" />
+    <!-- GNOME-native shell widgets (AdwApplicationWindow/HeaderBar/ToolbarView/StyleManager) -->
+    <PackageReference Include="GirCore.Adw-1" Version="0.8.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116" />
     <PackageReference Include="Tmds.DBus" Version="0.94.2" />

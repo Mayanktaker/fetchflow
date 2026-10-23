@@ -70,17 +70,26 @@ detect_family() {
     esac
 }
 
+# libadwaita backs the GTK 4 shell (AdwApplicationWindow/HeaderBar/StyleManager)
+has_libadwaita() {
+    ldconfig -p 2>/dev/null | grep -q 'libadwaita-1\.so' || \
+    (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists libadwaita-1) || \
+    (command -v pacman >/dev/null 2>&1 && pacman -Q libadwaita >/dev/null 2>&1) || \
+    (command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W libadwaita-1-0 >/dev/null 2>&1) || \
+    (command -v rpm >/dev/null 2>&1 && rpm -q libadwaita >/dev/null 2>&1)
+}
+
 # Detect installed GTK version (GTK 4 preferred; fallback to GTK 3 if only GTK 3 is installed)
 detect_gtk_version() {
     if [ -n "${FETCHFLOW_GTK:-}" ]; then
         echo "$FETCHFLOW_GTK"
         return
     fi
-    if ldconfig -p 2>/dev/null | grep -q 'libgtk-4\.so' || \
+    if { ldconfig -p 2>/dev/null | grep -q 'libgtk-4\.so' || \
        (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists gtk4) || \
        (command -v pacman >/dev/null 2>&1 && pacman -Q gtk4 >/dev/null 2>&1) || \
        (command -v dpkg-query >/dev/null 2>&1 && (dpkg-query -W libgtk-4-1 2>/dev/null || dpkg-query -W libgtk-4-0 2>/dev/null)) || \
-       (command -v rpm >/dev/null 2>&1 && rpm -q gtk4 >/dev/null 2>&1); then
+       (command -v rpm >/dev/null 2>&1 && rpm -q gtk4 >/dev/null 2>&1); } && has_libadwaita; then
         echo "4"
     elif ldconfig -p 2>/dev/null | grep -q 'libgtk-3\.so' || \
          (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists gtk+-3.0) || \
@@ -253,12 +262,15 @@ install_arch() {
     local target_gtk;
     target_gtk="$(detect_gtk_version)";
     local gtk_pkg="gtk4";
-    [ "$target_gtk" = "3" ] && gtk_pkg="gtk3";
+    local extra_gtk_deps="libadwaita";
+    [ "$target_gtk" = "3" ] && { gtk_pkg="gtk3"; extra_gtk_deps=""; }
     tmp="$(mktemp -d)";
     # shellcheck disable=SC2064
     trap "rm -rf '$tmp'" EXIT;
-    log "Installing deps ($gtk_pkg ffmpeg xdg-desktop-portal libnotify)…";
-    pacman -Sy --needed --noconfirm "$gtk_pkg" ffmpeg xdg-desktop-portal libnotify desktop-file-utils yt-dlp || pacman -Sy --needed --noconfirm "$gtk_pkg" ffmpeg xdg-desktop-portal libnotify desktop-file-utils;
+    log "Installing deps ($gtk_pkg $extra_gtk_deps ffmpeg xdg-desktop-portal libnotify)…";
+    # shellcheck disable=SC2086
+    pacman -Sy --needed --noconfirm "$gtk_pkg" $extra_gtk_deps ffmpeg xdg-desktop-portal libnotify desktop-file-utils yt-dlp || \
+        pacman -Sy --needed --noconfirm "$gtk_pkg" $extra_gtk_deps ffmpeg xdg-desktop-portal libnotify desktop-file-utils;
     pkg="$tmp/fetchflow-$ver-1-x86_64.pkg.tar.zst";
     log "Downloading Arch package v$ver…";
     if ! fetch "https://github.com/$REPO/releases/download/v$ver/fetchflow-$ver-1-x86_64.pkg.tar.zst" "$pkg"; then

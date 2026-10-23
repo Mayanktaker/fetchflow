@@ -71,15 +71,26 @@ headerbar button.suggested-action:hover {
   color: #ffffff;
 }
 
+/* Destructive header action: red glyph on the header surface, not a filled block */
 headerbar button.destructive-action {
-  background-color: @destruct;
-  color: #ffffff;
+  background-color: transparent;
+  color: @destruct;
   border: 1px solid transparent;
 }
 
 headerbar button.destructive-action:hover {
-  background-color: @destruct_hover;
-  color: #ffffff;
+  background-color: alpha(@destruct, 0.16);
+  color: @destruct_hover;
+}
+
+headerbar button.destructive-action:disabled {
+  background-color: transparent;
+  color: alpha(@dim_text, 0.55);
+}
+
+/* Settings sidebar rail */
+stacksidebar list {
+  background-color: transparent;
 }
 
 /* Sidebar: rounded selection pill on a darker rail */
