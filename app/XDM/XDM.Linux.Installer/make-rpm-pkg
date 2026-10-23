@@ -60,7 +60,7 @@ EOF
 
 # Clean up GTK 3 binary and desktop if TARGET_GTK is 4
 if [ "$TARGET_GTK" = "4" ]; then
-    RPM_REQUIRES="gtk4 libadwaita"
+    RPM_REQUIRES="gtk4 libadwaita >= 1.2"
     rm -f "${SOURCE_NAME}/opt/fetchflow/fetchflow-gtk3" 2>/dev/null || true
     rm -f "${SOURCE_NAME}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop" 2>/dev/null || true
 else

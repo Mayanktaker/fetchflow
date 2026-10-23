@@ -47,7 +47,7 @@ if [ "$TARGET_GTK" = "3" ]; then
     DEB_DEPENDS="libgtk-3-0 (>= 3.24)"
     DEB_RECOMMENDS="ffmpeg, libnotify-bin, xdg-desktop-portal, yt-dlp"
 else
-    DEB_DEPENDS="libgtk-4-1, libadwaita-1-0"
+    DEB_DEPENDS="libgtk-4-1, libadwaita-1-0 (>= 1.2)"
     DEB_RECOMMENDS="ffmpeg, libnotify-bin, xdg-desktop-portal, yt-dlp"
     rm -f "${PKG}/opt/fetchflow/fetchflow-gtk3" 2>/dev/null || true
     rm -f "${PKG}/opt/fetchflow/com.mayanktaker.fetchflow.gtk3.desktop" 2>/dev/null || true

@@ -70,10 +70,10 @@ detect_family() {
     esac
 }
 
-# libadwaita backs the GTK 4 shell (AdwApplicationWindow/HeaderBar/StyleManager)
+# libadwaita >= 1.2 backs the GTK 4 shell (AdwApplicationWindow/HeaderBar/StyleManager/About)
 has_libadwaita() {
+    (command -v pkg-config >/dev/null 2>&1 && pkg-config --atleast-version=1.2 libadwaita-1) || \
     ldconfig -p 2>/dev/null | grep -q 'libadwaita-1\.so' || \
-    (command -v pkg-config >/dev/null 2>&1 && pkg-config --exists libadwaita-1) || \
     (command -v pacman >/dev/null 2>&1 && pacman -Q libadwaita >/dev/null 2>&1) || \
     (command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W libadwaita-1-0 >/dev/null 2>&1) || \
     (command -v rpm >/dev/null 2>&1 && rpm -q libadwaita >/dev/null 2>&1)

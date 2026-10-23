@@ -269,7 +269,7 @@ WPF base neutral skins live in `Themes/DarkTheme.xaml` + `Themes/LightTheme.xaml
 
 Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` and `gtk4-light.css`) and are deployed side-by-side with GTK 3 stylesheets in the `/opt/fetchflow/theme/` directory.
 
-- **Shell:** `AdwApplicationWindow` with an `AdwToolbarView` (top bar `AdwHeaderBar`, content below) and `AdwWindowTitle` carrying the active view as its subtitle. Window controls come from libadwaita, not hand-built buttons.
+- **Shell:** `AdwApplication` + `AdwApplicationWindow` with an `AdwHeaderBar` titlebar and `AdwWindowTitle` carrying the active view as its subtitle. Window controls come from libadwaita, not hand-built buttons. Requires libadwaita >= 1.2 (the `AdwAboutWindow` floor); `AdwToolbarView` is avoided because it needs 1.4.
 - **Color scheme:** `AdwStyleManager` owns light/dark. An explicit Light/Dark choice forces `ForceLight`/`ForceDark`; Follow System leaves `ColorScheme.Default` and the app re-applies its CSS when the manager's `dark` property changes.
 - **Empty state and About:** `AdwStatusPage` for the empty list and `AdwAboutWindow` for About, both fed from `AppInfo`/`TextResource`.
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).

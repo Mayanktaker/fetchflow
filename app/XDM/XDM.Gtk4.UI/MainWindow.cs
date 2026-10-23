@@ -219,11 +219,10 @@ namespace XDM.Gtk4UI
             Window.Title = AppInfo.APP_NAME;
             Window.SetDefaultSize(DefaultWidth, DefaultHeight);
 
-            // libadwaita shell: header bar above the window content, GNOME style
-            var shell = Adw.ToolbarView.New();
-            shell.AddTopBar(BuildHeaderBar());
-            shell.SetContent(BuildBody());
-            Window.SetContent(shell);
+            // libadwaita shell: AdwHeaderBar as the CSD titlebar, content below.
+            // SetTitlebar (not AdwToolbarView) keeps the floor at libadwaita 1.2.
+            Window.SetTitlebar(BuildHeaderBar());
+            Window.SetContent(BuildBody());
 
             DeleteButton.Visible = true;
             DeleteButton.Sensitive = false;
