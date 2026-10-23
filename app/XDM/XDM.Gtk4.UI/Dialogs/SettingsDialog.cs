@@ -1,7 +1,9 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 
-// Native GTK 4 Settings dialog providing comprehensive configuration for
-// General, File Types / Categories, Network & Proxy, Speed Limiter, Monitoring, and Advanced.
+// GTK 4 Settings dialog, GNOME-native layout: an icon tab strip under the header,
+// grouped boxed-card rows (title + subtitle + control) and immediate apply — there
+// is no Save button, matching GNOME preferences. Text fields commit on Enter, on
+// focus loss and when the window closes.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,23 +18,16 @@ using XDM.Gtk4UI.Utils;
 
 namespace XDM.Gtk4UI.Dialogs
 {
-    // Preferences and application settings window
     internal sealed class SettingsDialog
     {
-        // Sidebar width for the page list (design token)
-        private const int SidebarWidth = 220;
-        // Form label column width shared by every row on every page
-        private const int LabelWidth = 190;
+        private const int PageWidth = 720;
+
         private readonly Window window;
+        private readonly Stack stack;
+        private readonly Box tabs;
 
-        // Icon sidebar navigation
-        private readonly ListBox settingsNav = ListBox.New();
-        private readonly List<(ListBoxRow Row, Image Icon, string IconName)> navEntries = new();
-        private bool syncingNav;
-
-        // Stable page names, in sidebar order
+        // Page identifiers, in tab order
         private static readonly string[] PageNames = { "general", "categories", "network", "speed", "monitoring", "advanced" };
-        // Sidebar page titles, icons and accent tint
         private static readonly (string Title, string Icon)[] PageMeta =
         {
             ("General settings", "settings-3-line"),
@@ -43,33 +38,36 @@ namespace XDM.Gtk4UI.Dialogs
             ("Advanced settings", "function-line"),
         };
 
-        // General tab controls
-        private readonly Entry txtDownloadFolder;
-        private readonly Entry txtTempFolder;
+        // General: folder paths shown as row subtitles
+        private string downloadFolderPath = "";
+        private string tempFolderPath = "";
+        private readonly Label lblDownloadPath = Label.New("");
+        private readonly Label lblTempPath = Label.New("");
+
         private readonly DropDown dropMaxDownloads;
         private readonly DropDown dropMaxSegments;
         private readonly DropDown dropDoubleClick;
         private readonly DropDown dropTheme;
         private readonly DropDown dropScheme;
-        private readonly CheckButton chkAutoStart;
-        private readonly CheckButton chkNotification;
-        private readonly CheckButton chkShowComplete;
-        private readonly CheckButton chkShowProgress;
-        private readonly CheckButton chkPlaySound;
-        private readonly CheckButton chkStartAuto;
-        private readonly CheckButton chkTimestamp;
-        private readonly CheckButton chkKeepAwake;
+        private readonly Switch chkAutoStart;
+        private readonly Switch chkNotification;
+        private readonly Switch chkShowComplete;
+        private readonly Switch chkShowProgress;
+        private readonly Switch chkPlaySound;
+        private readonly Switch chkStartAuto;
+        private readonly Switch chkTimestamp;
+        private readonly Switch chkKeepAwake;
 
-        // Categories & File Types tab controls
+        // Categories
         private readonly ListBox categoryList;
         private readonly Entry txtCatFolder;
         private readonly Entry txtCatExts;
         private readonly Label lblSelectedCat;
         private readonly List<Category> workingCategories;
-        private int selectedCategoryIndex = 0;
+        private int selectedCategoryIndex;
         private readonly Entry txtBlockedHosts;
 
-        // Network & Proxy tab controls
+        // Network
         private readonly Entry txtNetworkTimeout;
         private readonly Entry txtMaxRetries;
         private readonly Entry txtFallbackUserAgent;
@@ -78,185 +76,56 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly Entry txtProxyPort;
         private readonly Entry txtProxyUser;
         private readonly Entry txtProxyPassword;
-        private readonly Box proxyManualBox;
+        private readonly ListBox proxyManualGroup;
 
-        // Speed Limiter tab controls
-        private readonly CheckButton chkEnableSpeedLimit;
+        // Speed limiter
+        private readonly Switch chkEnableSpeedLimit;
         private readonly Entry txtSpeedLimit;
 
-        // Monitoring tab controls
-        private readonly CheckButton chkMonitorClipboard;
+        // Monitoring
+        private readonly Switch chkMonitorClipboard;
         private readonly Label lblIpcStatus;
-        private readonly Button btnRestartIpc;
 
-        // Advanced & Automation tab controls
-        private readonly CheckButton chkShutdownAll;
-        private readonly CheckButton chkRunCmd;
+        // Advanced
+        private readonly Switch chkShutdownAll;
+        private readonly Switch chkRunCmd;
         private readonly Entry txtCustomCmd;
-        private readonly CheckButton chkRunAntivirus;
+        private readonly Switch chkRunAntivirus;
         private readonly Entry txtAntiVirusCmd;
         private readonly Entry txtAntiVirusArgs;
 
-        // Constructs the Settings dialog with current configuration values
+        // Guards config writes while widgets are being populated
+        private bool loading = true;
+
+        // Builds the dialog from current configuration
         public SettingsDialog(Window? parent, int initialPage = 0)
         {
             window = Window.New();
             window.Title = TextResource.GetText("TITLE_SETTINGS") ?? "Settings";
             window.Modal = true;
-            window.SetDefaultSize(860, 620);
+            window.SetDefaultSize(900, 700);
             if (parent != null) window.SetTransientFor(parent);
 
+            // Header: title + Close only; every control applies immediately
             var header = HeaderBar.New();
             header.TitleWidget = Label.New(window.Title);
+            var closeBtn = Button.NewWithLabel(TextResource.GetText("BTN_CLOSE") ?? "Close");
+            closeBtn.OnClicked += (_, _) =>
+            {
+                Persist();
+                window.Close();
+            };
+            header.PackEnd(closeBtn);
             window.SetTitlebar(header);
 
-            var mainBox = Box.New(Orientation.Vertical, 12);
-            mainBox.MarginTop = 16;
-            mainBox.MarginBottom = 16;
-            mainBox.MarginStart = 20;
-            mainBox.MarginEnd = 20;
+            // Tab strip (linked toggle buttons with icons), like GNOME view switchers
+            tabs = Box.New(Orientation.Horizontal, 0);
+            tabs.AddCssClass("linked");
+            tabs.Halign = Align.Center;
+            tabs.MarginTop = 8;
+            tabs.MarginBottom = 8;
 
-            var stack = Stack.New();
-            stack.Vexpand = true;
-            stack.Hexpand = true;
-            BuildNav(stack);
-
-            // -----------------------------------------------------------------
-            // --- Page 1: General ---
-            // -----------------------------------------------------------------
-            var generalBox = Box.New(Orientation.Vertical, 10);
-            generalBox.MarginTop = 12;
-            generalBox.MarginStart = 8;
-            generalBox.MarginEnd = 8;
-
-            generalBox.Append(Section(TextResource.GetText("SETTINGS_LOCATIONS") ?? "Locations"));
-
-            var downloadFolderRow = FormRow(
-                TextResource.GetText("SETTINGS_DEF_DWN_FLD") ?? "Download Folder:",
-                txtDownloadFolder = Entry.New(),
-                Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse..."));
-            txtDownloadFolder.Hexpand = true;
-            txtDownloadFolder.SetText(Config.Instance.DefaultDownloadFolder ?? string.Empty);
-            var btnBrowseDownload = (Button)GetChildAt(downloadFolderRow, 2)!;
-            btnBrowseDownload.OnClicked += (_, _) => BrowseFolder(txtDownloadFolder);
-            generalBox.Append(downloadFolderRow);
-
-            var tempFolderRow = FormRow(
-                TextResource.GetText("SETTINGS_TEMP_FLD") ?? "Temporary Folder:",
-                txtTempFolder = Entry.New(),
-                Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse..."));
-            txtTempFolder.Hexpand = true;
-            txtTempFolder.SetText(Config.Instance.TempDir ?? string.Empty);
-            var btnBrowseTemp = (Button)GetChildAt(tempFolderRow, 2)!;
-            btnBrowseTemp.OnClicked += (_, _) => BrowseFolder(txtTempFolder);
-            generalBox.Append(tempFolderRow);
-
-            generalBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_DOWNLOADS") ?? "Downloads"));
-
-            // Simultaneous downloads
-            var simOptions = new[] { "1", "2", "3", "4", "5", "8", "10" };
-            dropMaxDownloads = DropDown.NewFromStrings(simOptions);
-            var currentSim = Config.Instance.MaxParallelDownloads.ToString();
-            var simIdx = Array.IndexOf(simOptions, currentSim);
-            dropMaxDownloads.Selected = (uint)(simIdx >= 0 ? simIdx : 1);
-            generalBox.Append(FormRow(
-                TextResource.GetText("MSG_MAX_DOWNLOAD") ?? "Max Simultaneous Downloads:",
-                dropMaxDownloads));
-
-            // Segments per download
-            var segOptions = new[] { "1", "2", "4", "8", "16", "32" };
-            dropMaxSegments = DropDown.NewFromStrings(segOptions);
-            var currentSeg = Config.Instance.MaxSegments.ToString();
-            var segIdx = Array.IndexOf(segOptions, currentSeg);
-            dropMaxSegments.Selected = (uint)(segIdx >= 0 ? segIdx : 3);
-            generalBox.Append(FormRow(
-                TextResource.GetText("SETTINGS_MAX_SEGMENTS") ?? "Max Segments per Download:",
-                dropMaxSegments));
-
-            // Double click action
-            var dblOptions = new[] { "Open downloaded file", "Open destination folder" };
-            dropDoubleClick = DropDown.NewFromStrings(dblOptions);
-            dropDoubleClick.Selected = Config.Instance.DoubleClickOpenFile ? 0u : 1u;
-            generalBox.Append(FormRow(
-                TextResource.GetText("MSG_DOUBLE_CLICK_ACTION") ?? "Double-Click Action:",
-                dropDoubleClick));
-
-            generalBox.Append(CheckRow(chkStartAuto = CheckButton.NewWithLabel(TextResource.GetText("LBL_START_AUTO") ?? "Start download automatically without prompt")));
-            chkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
-
-            generalBox.Append(CheckRow(chkTimestamp = CheckButton.NewWithLabel(TextResource.GetText("LBL_GET_TIMESTAMP") ?? "Get file creation timestamp from server")));
-            chkTimestamp.Active = Config.Instance.FetchServerTimeStamp;
-
-            generalBox.Append(CheckRow(chkKeepAwake = CheckButton.NewWithLabel(TextResource.GetText("MSG_AWAKE") ?? "Prevent hibernate or sleep during downloads")));
-            chkKeepAwake.Active = Config.Instance.KeepPCAwake;
-
-            generalBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_APPEARANCE") ?? "Appearance"));
-
-            // Theme selection: indices follow Config.ThemeMode (0 light, 1 dark, 2 follow system)
-            var themeOptions = new[] { "Light Theme", "Dark Theme", "Follow System" };
-            dropTheme = DropDown.NewFromStrings(themeOptions);
-            dropTheme.Selected = (uint)Math.Clamp(Config.Instance.ThemeMode, 0, 2);
-            generalBox.Append(FormRow(
-                TextResource.GetText("SETTINGS_THEME") ?? "Appearance Theme:",
-                dropTheme));
-
-            // Color scheme: one of the 7 curated palettes for the active mode
-            dropScheme = DropDown.NewFromStrings(ColorSchemeNames(Gtk4Theme.IsDarkActive));
-            dropScheme.Selected = (uint)ColorSchemeTable.ClampSchemeIndex(
-                Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
-            generalBox.Append(FormRow(
-                TextResource.GetText("SETTINGS_COLOR_SCHEME") ?? "Color Scheme:",
-                dropScheme));
-
-            // Keep the scheme list in step with the mode, and preview both live
-            dropTheme.OnNotify += (_, args) =>
-            {
-                if (args.Pspec.GetName() == "selected")
-                {
-                    RepopulateSchemes();
-                    ApplySchemePreview();
-                }
-            };
-            dropScheme.OnNotify += (_, args) =>
-            {
-                if (args.Pspec.GetName() == "selected")
-                {
-                    ApplySchemePreview();
-                }
-            };
-
-            generalBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_NOTIFICATIONS") ?? "Notifications"));
-
-            generalBox.Append(CheckRow(chkNotification = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SHOW_NOTIFICATION") ?? "Show desktop notifications on completion")));
-            chkNotification.Active = Config.Instance.ShowNotification;
-
-            generalBox.Append(CheckRow(chkShowComplete = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SHOW_COMPLETE") ?? "Show download complete popup dialog")));
-            chkShowComplete.Active = Config.Instance.ShowDownloadCompleteWindow;
-
-            generalBox.Append(CheckRow(chkShowProgress = CheckButton.NewWithLabel(TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show download progress window")));
-            chkShowProgress.Active = Config.Instance.ShowProgressWindow;
-
-            generalBox.Append(CheckRow(chkPlaySound = CheckButton.NewWithLabel(TextResource.GetText("MSG_PLAY_SOUND") ?? "Play sound when download finishes")));
-            chkPlaySound.Active = Config.Instance.PlayCompletionSound;
-
-            generalBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_SYSTEM") ?? "System"));
-
-            generalBox.Append(CheckRow(chkAutoStart = CheckButton.NewWithLabel(TextResource.GetText("AUTO_START") ?? "Launch FetchFlow when system starts")));
-            chkAutoStart.Active = PlatformHelper.IsAutoStartEnabled();
-
-            var generalScroll = ScrolledWindow.New();
-            generalScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
-            generalScroll.SetChild(generalBox);
-            stack.AddTitled(generalScroll, "general", TextResource.GetText("SETTINGS_GENERAL") ?? "General");
-
-            // -----------------------------------------------------------------
-            // --- Page 2: File Types & Categories ---
-            // -----------------------------------------------------------------
-            var categoriesBox = Box.New(Orientation.Vertical, 12);
-            categoriesBox.MarginTop = 12;
-            categoriesBox.MarginStart = 8;
-            categoriesBox.MarginEnd = 8;
-
+            // Category/network/etc. controls are created by the page builders
             workingCategories = Config.Instance.Categories.Select(c => new Category
             {
                 Name = c.Name,
@@ -267,81 +136,261 @@ namespace XDM.Gtk4UI.Dialogs
                 CustomColor = c.CustomColor
             }).ToList();
 
-            var catPaned = Paned.New(Orientation.Horizontal);
-            catPaned.Position = 200;
+            downloadFolderPath = Config.Instance.DefaultDownloadFolder ?? "";
+            tempFolderPath = Config.Instance.TempDir ?? "";
+            lblDownloadPath.SetText(downloadFolderPath);
+            lblDownloadPath.AddCssClass("caption");
+            lblDownloadPath.AddCssClass("dim-label");
+            lblDownloadPath.Ellipsize = Pango.EllipsizeMode.Middle;
+            lblDownloadPath.Halign = Align.Start;
+            lblTempPath.SetText(tempFolderPath);
+            lblTempPath.AddCssClass("caption");
+            lblTempPath.AddCssClass("dim-label");
+            lblTempPath.Ellipsize = Pango.EllipsizeMode.Middle;
+            lblTempPath.Halign = Align.Start;
 
+            var simOptions = new[] { "1", "2", "3", "4", "5", "8", "10" };
+            dropMaxDownloads = DropDown.NewFromStrings(simOptions);
+            var simIdx = Array.IndexOf(simOptions, Config.Instance.MaxParallelDownloads.ToString());
+            dropMaxDownloads.Selected = (uint)(simIdx >= 0 ? simIdx : 1);
+
+            var segOptions = new[] { "1", "2", "4", "8", "16", "32" };
+            dropMaxSegments = DropDown.NewFromStrings(segOptions);
+            var segIdx = Array.IndexOf(segOptions, Config.Instance.MaxSegments.ToString());
+            dropMaxSegments.Selected = (uint)(segIdx >= 0 ? segIdx : 3);
+
+            dropDoubleClick = DropDown.NewFromStrings(new[] { "Open downloaded file", "Open destination folder" });
+            dropDoubleClick.Selected = Config.Instance.DoubleClickOpenFile ? 0u : 1u;
+
+            dropTheme = DropDown.NewFromStrings(new[] { "Light Theme", "Dark Theme", "Follow System" });
+            dropTheme.Selected = (uint)Math.Clamp(Config.Instance.ThemeMode, 0, 2);
+
+            dropScheme = DropDown.NewFromStrings(ColorSchemeNames(Gtk4Theme.IsDarkActive));
+            dropScheme.Selected = (uint)ColorSchemeTable.ClampSchemeIndex(Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
+
+            chkAutoStart = Toggle("AUTO_START", "Launch FetchFlow when system starts");
+            chkAutoStart.Active = PlatformHelper.IsAutoStartEnabled();
+            chkNotification = Toggle("SETTINGS_SHOW_NOTIFICATION", "Show desktop notifications on completion");
+            chkNotification.Active = Config.Instance.ShowNotification;
+            chkShowComplete = Toggle("SETTINGS_SHOW_COMPLETE", "Show download complete popup dialog");
+            chkShowComplete.Active = Config.Instance.ShowDownloadCompleteWindow;
+            chkShowProgress = Toggle("LBL_SHOW_PROGRESS", "Show download progress window");
+            chkShowProgress.Active = Config.Instance.ShowProgressWindow;
+            chkPlaySound = Toggle("MSG_PLAY_SOUND", "Play sound when download finishes");
+            chkPlaySound.Active = Config.Instance.PlayCompletionSound;
+            chkStartAuto = Toggle("LBL_START_AUTO", "Start download automatically without prompt");
+            chkStartAuto.Active = Config.Instance.StartDownloadAutomatically;
+            chkTimestamp = Toggle("LBL_GET_TIMESTAMP", "Get file creation timestamp from server");
+            chkTimestamp.Active = Config.Instance.FetchServerTimeStamp;
+            chkKeepAwake = Toggle("MSG_AWAKE", "Prevent hibernate or sleep during downloads");
+            chkKeepAwake.Active = Config.Instance.KeepPCAwake;
+
+            // Categories
             categoryList = ListBox.New();
-            categoryList.AddCssClass("sidebar");
-            categoryList.SelectionMode = SelectionMode.Single;
-
+            categoryList.AddCssClass("navigation-sidebar");
+            categoryList.SelectionMode = SelectionMode.Browse;
+            categoryList.WidthRequest = 190;
             foreach (var cat in workingCategories)
             {
                 var (iconName, r, g, b) = CategoryIconPalette.Resolve(cat);
                 var rowBox = Box.New(Orientation.Horizontal, 8);
-                rowBox.MarginStart = 6;
-                rowBox.MarginEnd = 6;
                 rowBox.MarginTop = 4;
                 rowBox.MarginBottom = 4;
-                var icon = Gtk4IconHelper.CreateTintedIcon(iconName, r, g, b, 16);
+                rowBox.Append(Gtk4IconHelper.CreateTintedIcon(iconName, r, g, b, 16));
                 var lbl = Label.New(cat.DisplayName);
                 lbl.Halign = Align.Start;
-                rowBox.Append(icon);
                 rowBox.Append(lbl);
                 var row = ListBoxRow.New();
                 row.SetChild(rowBox);
                 categoryList.Append(row);
             }
-
-            var catListScroll = ScrolledWindow.New();
-            catListScroll.SetChild(categoryList);
-            catListScroll.WidthRequest = 180;
-            catPaned.StartChild = catListScroll;
-
-            var catDetailBox = Box.New(Orientation.Vertical, 10);
-            catDetailBox.MarginStart = 12;
-            catDetailBox.MarginEnd = 8;
-
             lblSelectedCat = Label.New("");
             lblSelectedCat.AddCssClass("heading");
             lblSelectedCat.Halign = Align.Start;
-            catDetailBox.Append(lblSelectedCat);
-
-            var catFolderRow = FormRow(
-                TextResource.GetText("SETTINGS_TARGET_FOLDER") ?? "Target Folder:",
-                txtCatFolder = Entry.New(),
-                Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse..."));
+            txtCatFolder = Entry.New();
             txtCatFolder.Hexpand = true;
-            var btnBrowseCatFolder = (Button)GetChildAt(catFolderRow, 2)!;
-            btnBrowseCatFolder.OnClicked += (_, _) => BrowseFolder(txtCatFolder);
-            catDetailBox.Append(catFolderRow);
-
             txtCatExts = Entry.New();
             txtCatExts.Hexpand = true;
-            catDetailBox.Append(FormRow(
-                TextResource.GetText("SETTINGS_FILE_EXT") ?? "File Extensions:",
-                txtCatExts));
+            txtBlockedHosts = Entry.New();
+            txtBlockedHosts.Hexpand = true;
+            txtBlockedHosts.SetText(string.Join(", ", Config.Instance.BlockedHosts ?? Config.DefaultBlockedHosts));
 
-            var catHint = Label.New(TextResource.GetText("MSG_EXT_HINT") ?? "Separate extensions with spaces or commas (e.g. mp4, mkv, webm)");
-            catHint.AddCssClass("dim-label");
-            catHint.Halign = Align.Start;
-            catDetailBox.Append(catHint);
-
-            categoryList.OnRowSelected += (_, args) =>
+            // Network
+            txtNetworkTimeout = IntEntry(Config.Instance.NetworkTimeout);
+            txtMaxRetries = IntEntry(Config.Instance.MaxRetry);
+            txtFallbackUserAgent = Entry.New();
+            txtFallbackUserAgent.Hexpand = true;
+            txtFallbackUserAgent.SetText(Config.Instance.FallbackUserAgent ?? Config.DefaultFallbackUserAgent);
+            dropProxyType = DropDown.NewFromStrings(new[]
             {
-                if (args.Row is ListBoxRow r)
+                "No Proxy (Direct Connection)", "Use System Proxy", "Manual Proxy Configuration"
+            });
+            var initialProxyType = Config.Instance.Proxy.HasValue ? Config.Instance.Proxy.Value.ProxyType : ProxyType.Direct;
+            dropProxyType.Selected = initialProxyType switch
+            {
+                ProxyType.Direct => 0u,
+                ProxyType.System => 1u,
+                ProxyType.Custom => 2u,
+                _ => 0u
+            };
+            txtProxyHost = TextEntry(Config.Instance.Proxy?.Host ?? "");
+            txtProxyPort = IntEntry(Config.Instance.Proxy?.Port ?? 8080);
+            txtProxyUser = TextEntry(Config.Instance.Proxy?.UserName ?? "");
+            txtProxyPassword = TextEntry(Config.Instance.Proxy?.Password ?? "");
+            txtProxyPassword.Visibility = false;
+            proxyManualGroup = PrefGroup();
+
+            // Speed
+            chkEnableSpeedLimit = Toggle("SETTINGS_ENABLE_LIMIT", "Enable maximum download speed limit");
+            chkEnableSpeedLimit.Active = Config.Instance.EnableSpeedLimit;
+            txtSpeedLimit = IntEntry(Config.Instance.DefaltDownloadSpeed);
+
+            // Monitoring
+            chkMonitorClipboard = Toggle("SETTINGS_MONITOR_CLIPBOARD", "Monitor clipboard for downloadable links");
+            chkMonitorClipboard.Active = Config.Instance.MonitorClipboard;
+            lblIpcStatus = Label.New("");
+            lblIpcStatus.AddCssClass("caption");
+            lblIpcStatus.AddCssClass("dim-label");
+            lblIpcStatus.Halign = Align.Start;
+
+            // Advanced
+            chkShutdownAll = Toggle("MSG_HALT", "Shutdown computer after all downloads complete");
+            chkShutdownAll.Active = Config.Instance.ShutdownAfterAllFinished;
+            chkRunCmd = Toggle("EXEC_CMD", "Run a program after all downloads finish");
+            chkRunCmd.Active = Config.Instance.RunCommandAfterCompletion;
+            txtCustomCmd = TextEntry(Config.Instance.AfterCompletionCommand ?? "");
+            chkRunAntivirus = Toggle("SETTINGS_SCAN_FILES", "Scan downloaded files with antivirus scanner");
+            chkRunAntivirus.Active = Config.Instance.ScanWithAntiVirus;
+            txtAntiVirusCmd = TextEntry(Config.Instance.AntiVirusExecutable ?? "");
+            txtAntiVirusArgs = TextEntry(Config.Instance.AntiVirusArgs ?? "[file]");
+
+            // Build pages
+            stack = Stack.New();
+            stack.Vexpand = true;
+            stack.Hexpand = true;
+            stack.AddTitled(Page(BuildGeneralPage()), "general", PageMeta[0].Title);
+            stack.AddTitled(Page(BuildCategoriesPage()), "categories", PageMeta[1].Title);
+            stack.AddTitled(Page(BuildNetworkPage()), "network", PageMeta[2].Title);
+            stack.AddTitled(Page(BuildSpeedPage()), "speed", PageMeta[3].Title);
+            stack.AddTitled(Page(BuildMonitoringPage()), "monitoring", PageMeta[4].Title);
+            stack.AddTitled(Page(BuildAdvancedPage()), "advanced", PageMeta[5].Title);
+
+            BuildTabs();
+            var index = Math.Clamp(initialPage, 0, PageNames.Length - 1);
+            stack.VisibleChildName = PageNames[index];
+
+            var root = Box.New(Orientation.Vertical, 0);
+            root.Append(tabs);
+            root.Append(stack);
+            window.SetChild(root);
+
+            loading = false;
+            SelectTab(PageNames[index]);
+            UpdateIpcStatus();
+
+            // Live preview + immediate persistence for appearance
+            dropTheme.OnNotify += (_, args) =>
+            {
+                if (args.Pspec.GetName() == "selected")
                 {
-                    SaveCurrentCategoryFields();
-                    selectedCategoryIndex = r.GetIndex();
-                    LoadCategoryFields(selectedCategoryIndex);
+                    RepopulateSchemes();
+                    ApplySchemePreview();
+                    Persist();
                 }
             };
+            dropScheme.OnNotify += (_, args) =>
+            {
+                if (args.Pspec.GetName() == "selected")
+                {
+                    ApplySchemePreview();
+                    Persist();
+                }
+            };
+        }
 
-            catPaned.EndChild = catDetailBox;
-            categoriesBox.Append(catPaned);
+        // ---------------- page builders ----------------
 
-            var catActionsRow = Box.New(Orientation.Horizontal, 8);
-            var btnResetCats = Button.NewWithLabel(TextResource.GetText("BTN_RESTORE_CATEGORIES") ?? "Restore Default Categories");
-            btnResetCats.OnClicked += (_, _) =>
+        // General: folders, download behaviour, appearance, notifications, system
+        private Widget BuildGeneralPage()
+        {
+            var box = Column();
+
+            box.Append(Section(TextResource.GetText("SETTINGS_LOCATIONS") ?? "Locations"));
+            var locations = PrefGroup();
+            locations.Append(PrefRow(TextResource.GetText("SETTINGS_DEF_DWN_FLD") ?? "Download folder",
+                null, lblDownloadPath, ChangeButton(() => PickFolder(lblDownloadPath, v => downloadFolderPath = v))));
+            locations.Append(PrefRow(TextResource.GetText("SETTINGS_TEMP_FLD") ?? "Temporary folder",
+                null, lblTempPath, ChangeButton(() => PickFolder(lblTempPath, v => tempFolderPath = v))));
+            box.Append(locations);
+
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_DOWNLOADS") ?? "Downloads"));
+            var downloads = PrefGroup();
+            downloads.Append(PrefRow(TextResource.GetText("MSG_MAX_DOWNLOAD") ?? "Simultaneous downloads",
+                TextResource.GetText("SETTINGS_MAX_DOWNLOAD_DESC") ?? "Transfers running at the same time", dropMaxDownloads));
+            downloads.Append(PrefRow(TextResource.GetText("SETTINGS_MAX_SEGMENTS") ?? "Segments per download",
+                TextResource.GetText("SETTINGS_MAX_SEGMENTS_DESC") ?? "Parallel connections used for one file", dropMaxSegments));
+            downloads.Append(PrefRow(TextResource.GetText("MSG_DOUBLE_CLICK_ACTION") ?? "Double-click action",
+                null, dropDoubleClick));
+            downloads.Append(SwitchRow(chkStartAuto));
+            downloads.Append(SwitchRow(chkTimestamp));
+            downloads.Append(SwitchRow(chkKeepAwake));
+            box.Append(downloads);
+
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_APPEARANCE") ?? "Appearance"));
+            var appearance = PrefGroup();
+            appearance.Append(PrefRow(TextResource.GetText("SETTINGS_THEME") ?? "Theme", null, dropTheme));
+            appearance.Append(PrefRow(TextResource.GetText("SETTINGS_COLOR_SCHEME") ?? "Colour scheme", null, dropScheme));
+            box.Append(appearance);
+
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_NOTIFICATIONS") ?? "Notifications"));
+            var notifications = PrefGroup();
+            notifications.Append(SwitchRow(chkNotification));
+            notifications.Append(SwitchRow(chkShowComplete));
+            notifications.Append(SwitchRow(chkShowProgress));
+            notifications.Append(SwitchRow(chkPlaySound));
+            box.Append(notifications);
+
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_SYSTEM") ?? "System"));
+            var system = PrefGroup();
+            system.Append(SwitchRow(chkAutoStart));
+            box.Append(system);
+
+            return box;
+        }
+
+        // Categories: inspector on the left, details and blocked sites on the right
+        private Widget BuildCategoriesPage()
+        {
+            var box = Column();
+
+            var split = Box.New(Orientation.Horizontal, 12);
+            var listScroll = ScrolledWindow.New();
+            listScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            listScroll.SetChild(categoryList);
+            listScroll.WidthRequest = 190;
+            split.Append(listScroll);
+
+            var details = Box.New(Orientation.Vertical, 8);
+            details.Hexpand = true;
+            details.Append(lblSelectedCat);
+
+            var detailGroup = PrefGroup();
+            detailGroup.Append(PrefRow(TextResource.GetText("SETTINGS_TARGET_FOLDER") ?? "Target folder", null,
+                txtCatFolder, ChangeButton(() => PickFolderInto(txtCatFolder))));
+            detailGroup.Append(PrefRow(TextResource.GetText("SETTINGS_FILE_EXT") ?? "File extensions", null, txtCatExts));
+            details.Append(detailGroup);
+
+            var hint = Label.New(TextResource.GetText("MSG_EXT_HINT")
+                ?? "Separate extensions with spaces or commas (e.g. mp4, mkv, webm)");
+            hint.AddCssClass("caption");
+            hint.AddCssClass("dim-label");
+            hint.Halign = Align.Start;
+            hint.Wrap = true;
+            details.Append(hint);
+
+            var restore = Button.NewWithLabel(TextResource.GetText("BTN_RESTORE_CATEGORIES") ?? "Restore Default Categories");
+            restore.Halign = Align.Start;
+            restore.OnClicked += (_, _) =>
             {
                 workingCategories.Clear();
                 foreach (var def in Config.DefaultCategories)
@@ -356,487 +405,412 @@ namespace XDM.Gtk4UI.Dialogs
                         CustomColor = def.CustomColor
                     });
                 }
-                LoadCategoryFields(selectedCategoryIndex);
+                LoadCategoryFields(Math.Min(selectedCategoryIndex, workingCategories.Count - 1));
+                Persist();
             };
-            catActionsRow.Append(btnResetCats);
-            categoriesBox.Append(catActionsRow);
+            details.Append(restore);
+            split.Append(details);
+            box.Append(split);
 
-            var sepCats = Separator.New(Orientation.Horizontal);
-            sepCats.MarginTop = 6;
-            sepCats.MarginBottom = 6;
-            categoriesBox.Append(sepCats);
-
-            var lblExceptions = Label.New(TextResource.GetText("DESC_SITEEXCEPTIONS") ?? "Do not automatically capture downloads from below web sites:");
-            lblExceptions.AddCssClass("heading");
-            lblExceptions.Halign = Align.Start;
-            categoriesBox.Append(lblExceptions);
-
-            var exceptionsRow = Box.New(Orientation.Horizontal, 8);
-            txtBlockedHosts = Entry.New();
-            txtBlockedHosts.Hexpand = true;
-            txtBlockedHosts.SetText(string.Join(", ", Config.Instance.BlockedHosts ?? Config.DefaultBlockedHosts));
-            var btnResetExceptions = Button.NewWithLabel(TextResource.GetText("BTN_RESTORE_SITES") ?? "Restore Default Sites");
-            btnResetExceptions.OnClicked += (_, _) =>
+            categoryList.OnRowSelected += (_, args) =>
             {
-                txtBlockedHosts.SetText(string.Join(", ", Config.DefaultBlockedHosts));
+                if (args.Row is ListBoxRow r)
+                {
+                    SaveCurrentCategoryFields();
+                    selectedCategoryIndex = r.GetIndex();
+                    LoadCategoryFields(selectedCategoryIndex);
+                }
             };
-            exceptionsRow.Append(txtBlockedHosts);
-            exceptionsRow.Append(btnResetExceptions);
-            categoriesBox.Append(exceptionsRow);
 
-            var excHint = Label.New(TextResource.GetText("MSG_DOMAIN_HINT") ?? "Separate domains with commas or spaces (e.g. *.bank.com, example.com)");
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_SITELIST") ?? "Automatic capture exceptions"));
+            var exceptions = PrefGroup();
+            exceptions.Append(PrefRow(TextResource.GetText("DESC_SITEEXCEPTIONS") ?? "Do not capture from these sites",
+                null, txtBlockedHosts));
+            box.Append(exceptions);
+
+            var excHint = Label.New(TextResource.GetText("MSG_DOMAIN_HINT")
+                ?? "Separate domains with commas or spaces (e.g. *.bank.com, example.com)");
+            excHint.AddCssClass("caption");
             excHint.AddCssClass("dim-label");
             excHint.Halign = Align.Start;
-            categoriesBox.Append(excHint);
+            box.Append(excHint);
 
             LoadCategoryFields(0);
+            return box;
+        }
 
-            var catScroll = ScrolledWindow.New();
-            catScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
-            catScroll.SetChild(categoriesBox);
-            stack.AddTitled(catScroll, "categories", TextResource.GetText("SETTINGS_CAT") ?? "Categories");
+        // Network: timeouts, user agent, proxy
+        private Widget BuildNetworkPage()
+        {
+            var box = Column();
 
-            // -----------------------------------------------------------------
-            // --- Page 3: Network & Proxy ---
-            // -----------------------------------------------------------------
-            var networkBox = Box.New(Orientation.Vertical, 12);
-            networkBox.MarginTop = 12;
-            networkBox.MarginStart = 8;
-            networkBox.MarginEnd = 8;
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_CONNECTION") ?? "Connection"));
+            var connection = PrefGroup();
+            connection.Append(PrefRow(TextResource.GetText("SETTINGS_NET_TIMEOUT") ?? "Network timeout",
+                TextResource.GetText("SETTINGS_NET_TIMEOUT_DESC") ?? "Seconds before a stalled connection is dropped", txtNetworkTimeout));
+            connection.Append(PrefRow(TextResource.GetText("SETTINGS_RETRY") ?? "Retry attempts",
+                null, txtMaxRetries));
+            connection.Append(PrefRow(TextResource.GetText("SETTINGS_FALLBACK_UA") ?? "Fallback user agent",
+                null, txtFallbackUserAgent, ChangeButton(() => txtFallbackUserAgent.SetText(Config.DefaultFallbackUserAgent))));
+            box.Append(connection);
 
-            networkBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_CONNECTION") ?? "Connection"));
+            box.Append(Section(TextResource.GetText("SETTINGS_PROXY_CONF") ?? "Proxy"));
+            var proxy = PrefGroup();
+            proxy.Append(PrefRow(TextResource.GetText("SETTINGS_PROXY_MODE") ?? "Mode", null, dropProxyType));
+            box.Append(proxy);
 
-            txtNetworkTimeout = Entry.New();
-            txtNetworkTimeout.WidthRequest = 80;
-            txtNetworkTimeout.SetText(Config.Instance.NetworkTimeout.ToString());
-            networkBox.Append(FormRow(
-                TextResource.GetText("SETTINGS_NET_TIMEOUT") ?? "Network Timeout (sec):",
-                txtNetworkTimeout));
+            proxyManualGroup.Append(PrefRow(TextResource.GetText("SETTINGS_PROXY_HOST") ?? "Host", null, txtProxyHost));
+            proxyManualGroup.Append(PrefRow(TextResource.GetText("SETTINGS_PROXY_PORT") ?? "Port", null, txtProxyPort));
+            proxyManualGroup.Append(PrefRow(TextResource.GetText("LBL_USERNAME") ?? "User name", null, txtProxyUser));
+            proxyManualGroup.Append(PrefRow(TextResource.GetText("LBL_PASSWORD") ?? "Password", null, txtProxyPassword));
+            proxyManualGroup.Visible = dropProxyType.Selected == 2u;
+            box.Append(proxyManualGroup);
 
-            txtMaxRetries = Entry.New();
-            txtMaxRetries.WidthRequest = 80;
-            txtMaxRetries.SetText(Config.Instance.MaxRetry.ToString());
-            networkBox.Append(FormRow(
-                TextResource.GetText("SETTINGS_RETRY") ?? "Max Retry Attempts:",
-                txtMaxRetries));
-
-            var uaRow = FormRow(
-                TextResource.GetText("SETTINGS_FALLBACK_UA") ?? "Fallback User-Agent:",
-                txtFallbackUserAgent = Entry.New(),
-                Button.NewWithLabel(TextResource.GetText("BTN_RESET") ?? "Reset"));
-            txtFallbackUserAgent.Hexpand = true;
-            txtFallbackUserAgent.SetText(Config.Instance.FallbackUserAgent ?? Config.DefaultFallbackUserAgent);
-            var btnResetUa = (Button)GetChildAt(uaRow, 2)!;
-            btnResetUa.OnClicked += (_, _) => txtFallbackUserAgent.SetText(Config.DefaultFallbackUserAgent);
-            networkBox.Append(uaRow);
-
-            networkBox.Append(Section(TextResource.GetText("SETTINGS_PROXY_CONF") ?? "Proxy"));
-
-            var proxyOptions = new[] { "No Proxy (Direct Connection)", "Use System Proxy", "Manual Proxy Configuration" };
-            var initialProxyType = Config.Instance.Proxy.HasValue ? Config.Instance.Proxy.Value.ProxyType : ProxyType.Direct;
-            var proxyTypeRow = FormRow(
-                TextResource.GetText("SETTINGS_PROXY_MODE") ?? "Proxy Mode:",
-                dropProxyType = DropDown.NewFromStrings(proxyOptions));
-            dropProxyType.Selected = initialProxyType switch
-            {
-                ProxyType.Direct => 0u,
-                ProxyType.System => 1u,
-                ProxyType.Custom => 2u,
-                _ => 0u
-            };
-            networkBox.Append(proxyTypeRow);
-
-            proxyManualBox = Box.New(Orientation.Vertical, 8);
-            proxyManualBox.MarginStart = 16;
-
-            var hostRow = FormRow(
-                TextResource.GetText("SETTINGS_PROXY_HOST") ?? "Proxy Host:",
-                txtProxyHost = Entry.New());
-            txtProxyHost.Hexpand = true;
-            txtProxyHost.SetText(Config.Instance.Proxy?.Host ?? "");
-            proxyManualBox.Append(hostRow);
-
-            var portRow = FormRow(
-                TextResource.GetText("SETTINGS_PROXY_PORT") ?? "Proxy Port:",
-                txtProxyPort = Entry.New());
-            txtProxyPort.WidthRequest = 100;
-            txtProxyPort.SetText((Config.Instance.Proxy?.Port ?? 8080).ToString());
-            proxyManualBox.Append(portRow);
-
-            var userRow = FormRow(
-                TextResource.GetText("LBL_USERNAME") ?? "Username:",
-                txtProxyUser = Entry.New());
-            txtProxyUser.Hexpand = true;
-            txtProxyUser.SetText(Config.Instance.Proxy?.UserName ?? "");
-            proxyManualBox.Append(userRow);
-
-            var passRow = FormRow(
-                TextResource.GetText("LBL_PASSWORD") ?? "Password:",
-                txtProxyPassword = Entry.New());
-            txtProxyPassword.Hexpand = true;
-            txtProxyPassword.Visibility = false;
-            txtProxyPassword.SetText(Config.Instance.Proxy?.Password ?? "");
-            proxyManualBox.Append(passRow);
-
-            proxyManualBox.Visible = dropProxyType.Selected == 2u;
             dropProxyType.OnNotify += (_, args) =>
             {
                 if (args.Pspec.GetName() == "selected")
                 {
-                    proxyManualBox.Visible = dropProxyType.Selected == 2u;
+                    proxyManualGroup.Visible = dropProxyType.Selected == 2u;
                 }
             };
-            networkBox.Append(proxyManualBox);
 
-            var netScroll = ScrolledWindow.New();
-            netScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
-            netScroll.SetChild(networkBox);
-            stack.AddTitled(netScroll, "network", TextResource.GetText("SETTINGS_NETWORK") ?? "Network");
+            return box;
+        }
 
-            // -----------------------------------------------------------------
-            // --- Page 4: Speed Limiter ---
-            // -----------------------------------------------------------------
-            var speedBox = Box.New(Orientation.Vertical, 12);
-            speedBox.MarginTop = 12;
-            speedBox.MarginStart = 8;
-            speedBox.MarginEnd = 8;
+        // Speed limiter: single switch plus the limit and presets
+        private Widget BuildSpeedPage()
+        {
+            var box = Column();
 
-            chkEnableSpeedLimit = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_ENABLE_LIMIT") ?? "Enable maximum download speed limit");
-            chkEnableSpeedLimit.Active = Config.Instance.EnableSpeedLimit;
-            speedBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_LIMIT") ?? "Limit"));
-            speedBox.Append(chkEnableSpeedLimit);
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_LIMIT") ?? "Bandwidth limit"));
+            var group = PrefGroup();
+            group.Append(SwitchRow(chkEnableSpeedLimit));
+            group.Append(PrefRow(TextResource.GetText("LBL_SPEED_KB") ?? "Limit (KB/s)", null, txtSpeedLimit));
+            box.Append(group);
 
-            txtSpeedLimit = Entry.New();
-            txtSpeedLimit.WidthRequest = 120;
-            txtSpeedLimit.SetText(Config.Instance.DefaltDownloadSpeed.ToString());
-            speedBox.Append(FormRow(
-                TextResource.GetText("LBL_SPEED_KB") ?? "Speed Limit (KB/s):",
-                txtSpeedLimit));
-
-            var presetBox = Box.New(Orientation.Horizontal, 8);
-            var lblPresets = Label.New(TextResource.GetText("LBL_PRESETS") ?? "Quick Presets:");
-            lblPresets.WidthRequest = LabelWidth;
-            lblPresets.Halign = Align.Start;
-            lblPresets.Valign = Align.Center;
-            presetBox.Append(lblPresets);
-
-            var p512 = Button.NewWithLabel("512 KB/s");
-            p512.OnClicked += (_, _) => txtSpeedLimit.SetText("512");
-            var p1024 = Button.NewWithLabel("1 MB/s");
-            p1024.OnClicked += (_, _) => txtSpeedLimit.SetText("1024");
-            var p2048 = Button.NewWithLabel("2 MB/s");
-            p2048.OnClicked += (_, _) => txtSpeedLimit.SetText("2048");
-            var p5120 = Button.NewWithLabel("5 MB/s");
-            p5120.OnClicked += (_, _) => txtSpeedLimit.SetText("5120");
-
-            presetBox.Append(p512);
-            presetBox.Append(p1024);
-            presetBox.Append(p2048);
-            presetBox.Append(p5120);
-            speedBox.Append(presetBox);
-
-            stack.AddTitled(speedBox, "speed", TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter");
-
-            // -----------------------------------------------------------------
-            // --- Page 5: Monitoring ---
-            // -----------------------------------------------------------------
-            var monitoringBox = Box.New(Orientation.Vertical, 12);
-            monitoringBox.MarginTop = 12;
-            monitoringBox.MarginStart = 8;
-            monitoringBox.MarginEnd = 8;
-
-            chkMonitorClipboard = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_MONITOR_CLIPBOARD") ?? "Monitor clipboard for downloadable URLs");
-            chkMonitorClipboard.Active = Config.Instance.MonitorClipboard;
-            monitoringBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_CLIPBOARD") ?? "Clipboard"));
-            monitoringBox.Append(chkMonitorClipboard);
-
-            monitoringBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_BROWSER") ?? "Browser Integration"));
-
-            var lblBrowserInfo = Label.New(TextResource.GetText("MSG_BROWSER_INTEGRATION") ?? "Browser Integration: FetchFlow intercepts downloads automatically via its browser extension. Extensions are available for Google Chrome, Mozilla Firefox, Brave, and Edge.");
-            lblBrowserInfo.Halign = Align.Start;
-            lblBrowserInfo.Wrap = true;
-            monitoringBox.Append(lblBrowserInfo);
-
-            var storeButtonsRow = Box.New(Orientation.Horizontal, 10);
-            var btnCws = Button.NewWithLabel(TextResource.GetText("LBL_CWS_EXT") ?? "Chrome Web Store Extension");
-            btnCws.OnClicked += (_, _) => PlatformHelper.OpenBrowser("https://chromewebstore.google.com");
-            var btnAmo = Button.NewWithLabel(TextResource.GetText("LBL_AMO_EXT") ?? "Firefox Add-ons (AMO)");
-            btnAmo.OnClicked += (_, _) => PlatformHelper.OpenBrowser("https://addons.mozilla.org");
-
-            storeButtonsRow.Append(btnCws);
-            storeButtonsRow.Append(btnAmo);
-            monitoringBox.Append(storeButtonsRow);
-
-            monitoringBox.Append(Section(TextResource.GetText("SETTINGS_GROUP_IPC") ?? "IPC Relay"));
-
-            var ipcBox = Box.New(Orientation.Horizontal, 10);
-            lblIpcStatus = Label.New($"● IPC Relay: 127.0.0.1:{IpcHttpMessageProcessor.EffectivePort}");
-            lblIpcStatus.Halign = Align.Start;
-            lblIpcStatus.Hexpand = true;
-            lblIpcStatus.AddCssClass("dim-label");
-
-            btnRestartIpc = Button.NewWithLabel(TextResource.GetText("BTN_RESTART_IPC") ?? "Restart IPC Relay");
-            btnRestartIpc.OnClicked += (_, _) =>
+            var presets = Box.New(Orientation.Horizontal, 6);
+            presets.MarginStart = 12;
+            foreach (var (label, value) in new[]
             {
-                try
+                ("512 KB/s", "512"), ("1 MB/s", "1024"), ("2 MB/s", "2048"), ("5 MB/s", "5120")
+            })
+            {
+                var b = Button.NewWithLabel(label);
+                b.AddCssClass("pill");
+                b.OnClicked += (_, _) =>
                 {
-                    btnRestartIpc.Sensitive = false;
-                    BrowserMonitor.Restart();
-                    lblIpcStatus.SetText($"● IPC Relay: 127.0.0.1:{IpcHttpMessageProcessor.EffectivePort} (Restarted)");
-                    GLib.Functions.TimeoutAdd(0, 1000, () =>
+                    txtSpeedLimit.SetText(value);
+                    chkEnableSpeedLimit.Active = true;
+                    Persist();
+                };
+                presets.Append(b);
+            }
+            box.Append(presets);
+            return box;
+        }
+
+        // Monitoring: clipboard, store links, IPC relay state
+        private Widget BuildMonitoringPage()
+        {
+            var box = Column();
+
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_CLIPBOARD") ?? "Clipboard"));
+            var clipboard = PrefGroup();
+            clipboard.Append(SwitchRow(chkMonitorClipboard));
+            box.Append(clipboard);
+
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_BROWSER") ?? "Browser integration"));
+            var browser = PrefGroup();
+            browser.Append(PrefRow(TextResource.GetText("LBL_CWS_EXT") ?? "Chrome Web Store extension",
+                TextResource.GetText("SETTINGS_GROUP_BROWSER") ?? "Install the helper to capture downloads", LinkButton("https://chromewebstore.google.com")));
+            browser.Append(PrefRow(TextResource.GetText("LBL_AMO_EXT") ?? "Firefox Add-ons (AMO)",
+                null, LinkButton("https://addons.mozilla.org")));
+            box.Append(browser);
+
+            box.Append(Section(TextResource.GetText("SETTINGS_GROUP_IPC") ?? "IPC relay"));
+            var ipc = PrefGroup();
+            ipc.Append(PrefRow(TextResource.GetText("SETTINGS_GROUP_IPC") ?? "IPC relay", null, lblIpcStatus,
+                ButtonWithLabel(TextResource.GetText("BTN_RESTART_IPC") ?? "Restart IPC Relay", () => RestartIpc())));
+            box.Append(ipc);
+
+            return box;
+        }
+
+        // Advanced: post-download automation and antivirus
+        private Widget BuildAdvancedPage()
+        {
+            var box = Column();
+
+            box.Append(Section(TextResource.GetText("SETTINGS_AUTOMATION") ?? "After all downloads"));
+            var automation = PrefGroup();
+            automation.Append(SwitchRow(chkShutdownAll));
+            automation.Append(SwitchRow(chkRunCmd));
+            automation.Append(PrefRow(TextResource.GetText("LBL_COMMAND") ?? "Command", null, txtCustomCmd));
+            box.Append(automation);
+
+            box.Append(Section(TextResource.GetText("SETTINGS_ANTIVIRUS") ?? "Antivirus scanning"));
+            var antivirus = PrefGroup();
+            antivirus.Append(SwitchRow(chkRunAntivirus));
+            antivirus.Append(PrefRow(TextResource.GetText("ANTIVIR_CMD") ?? "Scanner executable", null, txtAntiVirusCmd,
+                ChangeButton(() => PickFile(txtAntiVirusCmd))));
+            antivirus.Append(PrefRow(TextResource.GetText("ANTIVIR_ARGS") ?? "Arguments", null, txtAntiVirusArgs));
+            box.Append(antivirus);
+
+            var hint = Label.New(TextResource.GetText("MSG_AV_HINT")
+                ?? "Use [file] placeholder for the downloaded file path (e.g. clamscan [file])");
+            hint.AddCssClass("caption");
+            hint.AddCssClass("dim-label");
+            hint.Halign = Align.Start;
+            box.Append(hint);
+            return box;
+        }
+
+        // ---------------- widgets ----------------
+
+        // Scrollable page column
+        private static ScrolledWindow Page(Widget content)
+        {
+            var scroll = ScrolledWindow.New();
+            scroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            scroll.SetChild(content);
+            return scroll;
+        }
+
+        // Vertical page column with consistent width and margins
+        private static Box Column()
+        {
+            var box = Box.New(Orientation.Vertical, 10);
+            box.MarginTop = 8;
+            box.MarginBottom = 16;
+            box.MarginStart = 28;
+            box.MarginEnd = 28;
+            box.WidthRequest = PageWidth;
+            box.Halign = Align.Center;
+            return box;
+        }
+
+        // Section heading above a card group
+        private static Label Section(string text)
+        {
+            var label = Label.New(text);
+            label.AddCssClass("heading");
+            label.Halign = Align.Start;
+            label.MarginStart = 2;
+            label.MarginTop = 6;
+            return label;
+        }
+
+        // Grouped card container (libadwaita boxed list)
+        private static ListBox PrefGroup()
+        {
+            var list = ListBox.New();
+            list.AddCssClass("boxed-list");
+            list.SelectionMode = SelectionMode.None;
+            return list;
+        }
+
+        // Tile row: title (and optional subtitle) on the left, control on the right
+        private static ListBoxRow PrefRow(string title, string? subtitle, params Widget[] controls)
+        {
+            title = title.TrimEnd(':', ' ');
+
+            var box = Box.New(Orientation.Horizontal, 12);
+            box.MarginTop = 8;
+            box.MarginBottom = 8;
+            box.MarginStart = 14;
+            box.MarginEnd = 12;
+
+            var text = Box.New(Orientation.Vertical, 1);
+            text.Hexpand = true;
+            text.Valign = Align.Center;
+
+            var titleLabel = Label.New(title);
+            titleLabel.Halign = Align.Start;
+            titleLabel.Xalign = 0;
+            titleLabel.Ellipsize = Pango.EllipsizeMode.End;
+            text.Append(titleLabel);
+
+            if (!string.IsNullOrEmpty(subtitle))
+            {
+                var sub = Label.New(subtitle);
+                sub.Halign = Align.Start;
+                sub.Xalign = 0;
+                sub.Ellipsize = Pango.EllipsizeMode.End;
+                sub.AddCssClass("caption");
+                sub.AddCssClass("dim-label");
+                text.Append(sub);
+            }
+            box.Append(text);
+
+            foreach (var control in controls)
+            {
+                control.Valign = Align.Center;
+                box.Append(control);
+            }
+
+            var row = ListBoxRow.New();
+            row.SetChild(box);
+            row.Activatable = false;
+            return row;
+        }
+
+        // Tile row wrapping a GNOME switch; the switch applies immediately
+        private ListBoxRow SwitchRow(Switch toggle)
+        {
+            toggle.Valign = Align.Center;
+            toggle.Halign = Align.End;
+            toggle.OnNotify += (_, args) =>
+            {
+                if (args.Pspec.GetName() == "active")
+                {
+                    Persist();
+                }
+            };
+            return PrefRow(ExtractLabel(toggle), null, toggle);
+        }
+
+        // Switch whose tooltip carries the row title (the switch itself shows no text)
+        private static Switch Toggle(string key, string fallback)
+        {
+            var toggle = Switch.New();
+            toggle.TooltipText = TextResource.GetText(key) ?? fallback;
+            return toggle;
+        }
+
+        // Row title for a switch created by Switch()
+        private static string ExtractLabel(Switch toggle) => toggle.TooltipText ?? "";
+
+        // Small secondary button used as a row action
+        private static Button ButtonWithLabel(string text, Action handler)
+        {
+            var b = Button.NewWithLabel(text);
+            b.OnClicked += (_, _) => handler();
+            return b;
+        }
+
+        // "Change…" action button
+        private static Button ChangeButton(Action action)
+        {
+            var b = Button.NewWithLabel(TextResource.GetText("SETTINGS_CHANGE") ?? "Change...");
+            b.OnClicked += (_, _) => action();
+            return b;
+        }
+
+        // Opens a browser link
+        private static Button LinkButton(string url)
+        {
+            var b = Button.NewWithLabel(TextResource.GetText("MENU_OPEN_FOLDER") ?? "Open");
+            b.OnClicked += (_, _) => PlatformHelper.OpenBrowser(url);
+            return b;
+        }
+
+        // Text entry that commits on Enter and on focus loss
+        private Entry TextEntry(string value)
+        {
+            var entry = Entry.New();
+            entry.SetText(value);
+            entry.OnActivate += (_, _) => Persist();
+            var focus = EventControllerFocus.New();
+            focus.OnLeave += (_, _) => Persist();
+            entry.AddController(focus);
+            return entry;
+        }
+
+        // Narrow numeric entry
+        private Entry IntEntry(int value)
+        {
+            var entry = TextEntry(value.ToString());
+            entry.WidthRequest = 90;
+            entry.MaxWidthChars = 8;
+            return entry;
+        }
+
+        // ---------------- tabs ----------------
+
+        // Builds the linked icon tab strip and selects the first page
+        private void BuildTabs()
+        {
+            var accent = AccentRgb();
+            for (var i = 0; i < PageNames.Length; i++)
+            {
+                var (title, iconName) = PageMeta[i];
+                var toggle = ToggleButton.New();
+                toggle.AddCssClass("flat");
+                toggle.TooltipText = title;
+
+                // Icon + label; GNOME switchers stay compact, so the label is the
+                // short first word of the page title
+                var box = Box.New(Orientation.Horizontal, 6);
+                box.Halign = Align.Center;
+                box.MarginStart = 6;
+                box.MarginEnd = 6;
+                box.Append(Gtk4IconHelper.CreateTintedIcon(iconName, accent.R, accent.G, accent.B, 16));
+                box.Append(Label.New(title.Split(' ')[0]));
+                toggle.SetChild(box);
+
+                var name = PageNames[i];
+                toggle.OnToggled += (_, _) =>
+                {
+                    if (toggle.Active)
                     {
-                        btnRestartIpc.Sensitive = true;
-                        return false;
-                    });
-                }
-                catch (Exception ex)
-                {
-                    TraceLog.Log.Debug(ex, "Failed to restart IPC relay");
-                }
-            };
-            ipcBox.Append(lblIpcStatus);
-            ipcBox.Append(btnRestartIpc);
-            monitoringBox.Append(ipcBox);
-
-            stack.AddTitled(monitoringBox, "monitoring", TextResource.GetText("SETTINGS_MONITORING") ?? "Monitoring");
-
-            // -----------------------------------------------------------------
-            // --- Page 6: Advanced & Automation ---
-            // -----------------------------------------------------------------
-            var advancedBox = Box.New(Orientation.Vertical, 12);
-            advancedBox.MarginTop = 12;
-            advancedBox.MarginStart = 8;
-            advancedBox.MarginEnd = 8;
-
-            var automationHeader = Section(TextResource.GetText("SETTINGS_AUTOMATION") ?? "Post-Download Automation");
-            advancedBox.Append(automationHeader);
-
-            chkShutdownAll = CheckButton.NewWithLabel(TextResource.GetText("MSG_HALT") ?? "Shutdown computer after all downloads complete");
-            chkShutdownAll.Active = Config.Instance.ShutdownAfterAllFinished;
-            advancedBox.Append(chkShutdownAll);
-
-            chkRunCmd = CheckButton.NewWithLabel(TextResource.GetText("EXEC_CMD") ?? "Run a program after all downloads finish");
-            chkRunCmd.Active = Config.Instance.RunCommandAfterCompletion;
-            advancedBox.Append(chkRunCmd);
-
-            var cmdRow = FormRow(
-                TextResource.GetText("LBL_COMMAND") ?? "Command:",
-                txtCustomCmd = Entry.New());
-            txtCustomCmd.Hexpand = true;
-            txtCustomCmd.SetText(Config.Instance.AfterCompletionCommand ?? "");
-            cmdRow.MarginStart = 24;
-            advancedBox.Append(cmdRow);
-
-            var sepAdv = Separator.New(Orientation.Horizontal);
-            sepAdv.MarginTop = 6;
-            sepAdv.MarginBottom = 6;
-            advancedBox.Append(sepAdv);
-
-            advancedBox.Append(Section(TextResource.GetText("SETTINGS_ANTIVIRUS") ?? "Antivirus Scanning"));
-
-            chkRunAntivirus = CheckButton.NewWithLabel(TextResource.GetText("SETTINGS_SCAN_FILES") ?? "Scan downloaded files with antivirus scanner");
-            chkRunAntivirus.Active = Config.Instance.ScanWithAntiVirus;
-            advancedBox.Append(chkRunAntivirus);
-
-            var avRow = FormRow(
-                TextResource.GetText("ANTIVIR_CMD") ?? "Antivirus Executable:",
-                txtAntiVirusCmd = Entry.New(),
-                Button.NewWithLabel(TextResource.GetText("CTX_BROWSE") ?? "Browse..."));
-            txtAntiVirusCmd.Hexpand = true;
-            txtAntiVirusCmd.SetText(Config.Instance.AntiVirusExecutable ?? "");
-            var btnBrowseAv = (Button)GetChildAt(avRow, 2)!;
-            btnBrowseAv.OnClicked += (_, _) => BrowseFile(txtAntiVirusCmd);
-            avRow.MarginStart = 24;
-            advancedBox.Append(avRow);
-
-            var argsRow = FormRow(
-                TextResource.GetText("ANTIVIR_ARGS") ?? "Command line parameters:",
-                txtAntiVirusArgs = Entry.New());
-            txtAntiVirusArgs.Hexpand = true;
-            txtAntiVirusArgs.SetText(Config.Instance.AntiVirusArgs ?? "[file]");
-            argsRow.MarginStart = 24;
-            advancedBox.Append(argsRow);
-
-            var avHint = Label.New(TextResource.GetText("MSG_AV_HINT") ?? "Use [file] placeholder for the downloaded file path (e.g. clamscan [file])");
-            avHint.AddCssClass("dim-label");
-            avHint.MarginStart = 24;
-            avHint.Halign = Align.Start;
-            advancedBox.Append(avHint);
-
-            var advScroll = ScrolledWindow.New();
-            advScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
-            advScroll.SetChild(advancedBox);
-            stack.AddTitled(advScroll, "advanced", TextResource.GetText("SETTINGS_ADV") ?? "Advanced settings");
-
-            if (initialPage >= 0 && initialPage < PageNames.Length)
-            {
-                stack.SetVisibleChildName(PageNames[initialPage]);
-            }
-            SelectNavRow(PageNames[Math.Clamp(initialPage, 0, PageNames.Length - 1)]);
-
-            // Icon sidebar + page content, like the main window
-            var contentRow = Box.New(Orientation.Horizontal, 0);
-            var navScroll = ScrolledWindow.New();
-            navScroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
-            navScroll.SetChild(settingsNav);
-            navScroll.WidthRequest = SidebarWidth;
-            contentRow.Append(navScroll);
-            contentRow.Append(stack);
-            contentRow.Vexpand = true;
-            mainBox.Append(contentRow);
-
-            // --- Action Buttons: header bar, as GNOME dialogs do ---
-            var cancelBtn = Button.NewWithLabel(TextResource.GetText("ND_CANCEL") ?? "Cancel");
-            cancelBtn.OnClicked += (_, _) => window.Close();
-
-            var saveBtn = Button.NewWithLabel(TextResource.GetText("DESC_SAVE_Q") ?? "Save");
-            saveBtn.AddCssClass("suggested-action");
-            saveBtn.OnClicked += (_, _) => SaveSettings();
-
-            header.PackStart(cancelBtn);
-            header.PackEnd(saveBtn);
-
-            window.SetChild(mainBox);
-        }
-
-        // One scheme name per curated palette for the given mode
-        private static string[] ColorSchemeNames(bool dark) =>
-            (dark ? ColorSchemeTable.DarkSchemes : ColorSchemeTable.LightSchemes)
-                .Select(scheme => scheme.DisplayName)
-                .ToArray();
-
-        // Repopulates the scheme list after a theme-mode change, keeping the index valid
-        private void RepopulateSchemes()
-        {
-            var mode = dropTheme.Selected == uint.MaxValue ? Gtk4Theme.ModeFollowSystem : (int)dropTheme.Selected;
-            var dark = mode switch
-            {
-                Gtk4Theme.ModeDark => true,
-                Gtk4Theme.ModeLight => false,
-                _ => Gtk4Theme.IsDarkActive
-            };
-
-            var previous = dropScheme.Selected == uint.MaxValue ? 0 : (int)dropScheme.Selected;
-            dropScheme.SetModel(StringList.New(ColorSchemeNames(dark)));
-            dropScheme.Selected = (uint)ColorSchemeTable.ClampSchemeIndex(dark, previous);
-        }
-
-        // Applies the selected mode and scheme to the running window immediately
-        private void ApplySchemePreview()
-        {
-            if (dropScheme.Selected != uint.MaxValue)
-            {
-                Config.Instance.ColorScheme = (int)dropScheme.Selected;
-            }
-            var mode = dropTheme.Selected == uint.MaxValue ? Gtk4Theme.ModeFollowSystem : (int)dropTheme.Selected;
-            Gtk4Theme.ApplyMode(window, mode, persist: false);
-        }
-
-        private void LoadCategoryFields(int index)
-        {
-            if (index < 0 || index >= workingCategories.Count) return;
-            var cat = workingCategories[index];
-            lblSelectedCat.SetText(cat.DisplayName);
-            txtCatFolder.SetText(cat.DefaultFolder ?? "");
-            txtCatExts.SetText(string.Join(", ", cat.FileExtensions ?? new HashSet<string>()));
-        }
-
-        private void SaveCurrentCategoryFields()
-        {
-            if (selectedCategoryIndex < 0 || selectedCategoryIndex >= workingCategories.Count) return;
-            var cat = workingCategories[selectedCategoryIndex];
-            cat.DefaultFolder = txtCatFolder.GetText()?.Trim() ?? "";
-            var rawExts = txtCatExts.GetText() ?? "";
-            var exts = rawExts.Split(new[] { ',', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                              .Select(e => e.Trim().TrimStart('.').ToLowerInvariant())
-                              .Where(e => !string.IsNullOrEmpty(e));
-            cat.FileExtensions = new HashSet<string>(exts);
-            workingCategories[selectedCategoryIndex] = cat;
-        }
-
-        // Asynchronously opens file portal folder chooser and updates the target entry
-        private void BrowseFolder(Entry targetEntry)
-        {
-            var dialog = FileDialog.New();
-            dialog.Title = "Select Folder";
-            dialog.Modal = true;
-            var currentPath = targetEntry.GetText();
-            if (!string.IsNullOrEmpty(currentPath) && Directory.Exists(currentPath))
-            {
-                dialog.SetInitialFolder(Gio.FileHelper.NewForPath(currentPath));
-            }
-            dialog.SelectFolderAsync(window).ContinueWith(t =>
-            {
-                if (t.IsCompletedSuccessfully && t.Result != null)
-                {
-                    var selected = t.Result.GetPath();
-                    if (!string.IsNullOrEmpty(selected))
-                    {
-                        GLib.Functions.IdleAdd(0, () =>
-                        {
-                            targetEntry.SetText(selected);
-                            return false;
-                        });
+                        SelectTab(name);
                     }
-                }
-            });
+                };
+                tabs.Append(toggle);
+            }
         }
 
-        // Asynchronously opens file chooser and updates the target entry with selected file
-        private void BrowseFile(Entry targetEntry)
+        // Shows one page and makes its tab the only active one
+        private void SelectTab(string name)
         {
-            var dialog = FileDialog.New();
-            dialog.Title = "Select Executable";
-            dialog.Modal = true;
-            dialog.OpenAsync(window).ContinueWith(t =>
+            stack.VisibleChildName = name;
+            var index = Array.IndexOf(PageNames, name);
+            var child = tabs.GetFirstChild();
+            for (var i = 0; child != null && i < PageNames.Length; child = child.GetNextSibling(), i++)
             {
-                if (t.IsCompletedSuccessfully && t.Result != null)
+                if (child is ToggleButton toggle)
                 {
-                    var selected = t.Result.GetPath();
-                    if (!string.IsNullOrEmpty(selected))
-                    {
-                        GLib.Functions.IdleAdd(0, () =>
-                        {
-                            targetEntry.SetText(selected);
-                            return false;
-                        });
-                    }
+                    toggle.Active = i == index;
                 }
-            });
+            }
         }
 
-        // Commits the dialog without letting a config/IO failure kill the app:
-        // an exception escaping a GObject signal handler terminates the process.
-        private void SaveSettings()
+        // ---------------- persistence ----------------
+
+        // Applies the current control values without closing the dialog; safe to
+        // call on every change because a config/IO failure must not kill the app
+        private void Persist()
         {
+            if (loading)
+            {
+                return;
+            }
+
             try
             {
                 SaveSettingsCore();
             }
             catch (Exception ex)
             {
-                TraceLog.Log.Debug(ex, "Saving settings failed: " + ex.Message);
+                TraceLog.Log.Debug(ex, "Applying settings failed: " + ex.Message);
                 Gtk4DialogHelper.ShowAlert(window,
                     (TextResource.GetText("MSG_SETTINGS_SAVE_FAILED") ?? "Settings could not be saved.")
                     + "\n\n" + ex.Message);
             }
         }
 
-        // Writes every control into Config and persists it
+        // Writes every control into Config and persists it (no window close)
         private void SaveSettingsCore()
         {
             SaveCurrentCategoryFields();
 
-            var downloadFolder = txtDownloadFolder.GetText()?.Trim();
-            if (!string.IsNullOrEmpty(downloadFolder))
+            if (!string.IsNullOrEmpty(downloadFolderPath))
             {
-                Config.Instance.DefaultDownloadFolder = downloadFolder;
+                Config.Instance.DefaultDownloadFolder = downloadFolderPath;
             }
-
-            var tempFolder = txtTempFolder.GetText()?.Trim();
-            if (!string.IsNullOrEmpty(tempFolder))
+            if (!string.IsNullOrEmpty(tempFolderPath))
             {
-                Config.Instance.TempDir = tempFolder;
+                Config.Instance.TempDir = tempFolderPath;
             }
 
             Config.Instance.ShowNotification = chkNotification.Active;
@@ -848,46 +822,41 @@ namespace XDM.Gtk4UI.Dialogs
             Config.Instance.KeepPCAwake = chkKeepAwake.Active;
             Config.Instance.MonitorClipboard = chkMonitorClipboard.Active;
 
-            // Simultaneous downloads
             var simOptions = new[] { 1, 2, 3, 4, 5, 8, 10 };
             if (dropMaxDownloads.Selected < (uint)simOptions.Length)
             {
                 Config.Instance.MaxParallelDownloads = simOptions[(int)dropMaxDownloads.Selected];
             }
 
-            // Max segments
             var segOptions = new[] { 1, 2, 4, 8, 16, 32 };
             if (dropMaxSegments.Selected < (uint)segOptions.Length)
             {
                 Config.Instance.MaxSegments = segOptions[(int)dropMaxSegments.Selected];
             }
 
-            // Double click action
             Config.Instance.DoubleClickOpenFile = dropDoubleClick.Selected == 0u;
 
-            // Theme mode and colour scheme
-            Config.Instance.ThemeMode = (int)dropTheme.Selected;
+            Config.Instance.ThemeMode = dropTheme.Selected == uint.MaxValue
+                ? Config.Instance.ThemeMode
+                : (int)dropTheme.Selected;
             if (dropScheme.Selected != uint.MaxValue)
             {
                 Config.Instance.ColorScheme = (int)dropScheme.Selected;
             }
 
-            // Categories
             Config.Instance.Categories = new List<Category>(workingCategories);
 
-            // Blocked hosts / exceptions
             var blockedText = txtBlockedHosts.GetText() ?? "";
-            Config.Instance.BlockedHosts = blockedText.Split(new[] { ',', ' ', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            Config.Instance.BlockedHosts = blockedText
+                .Split(new[] { ',', ' ', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(h => h.Trim().ToLowerInvariant())
                 .Where(h => !string.IsNullOrEmpty(h))
                 .ToArray();
 
-            // Network timeout and retries
             if (int.TryParse(txtNetworkTimeout.GetText(), out int timeout))
             {
                 Config.Instance.NetworkTimeout = Math.Max(5, timeout);
             }
-
             if (int.TryParse(txtMaxRetries.GetText(), out int retries))
             {
                 Config.Instance.MaxRetry = Math.Max(0, retries);
@@ -899,7 +868,6 @@ namespace XDM.Gtk4UI.Dialogs
                 Config.Instance.FallbackUserAgent = ua;
             }
 
-            // Proxy settings
             var proxyMode = dropProxyType.Selected;
             if (proxyMode == 0u)
             {
@@ -922,14 +890,12 @@ namespace XDM.Gtk4UI.Dialogs
                 };
             }
 
-            // Speed limit
             Config.Instance.EnableSpeedLimit = chkEnableSpeedLimit.Active;
             if (int.TryParse(txtSpeedLimit.GetText(), out int speed))
             {
                 Config.Instance.DefaltDownloadSpeed = Math.Max(0, speed);
             }
 
-            // Advanced & Automation settings
             Config.Instance.ShutdownAfterAllFinished = chkShutdownAll.Active;
             Config.Instance.RunCommandAfterCompletion = chkRunCmd.Active;
             Config.Instance.AfterCompletionCommand = txtCustomCmd.GetText()?.Trim() ?? "";
@@ -937,7 +903,6 @@ namespace XDM.Gtk4UI.Dialogs
             Config.Instance.AntiVirusExecutable = txtAntiVirusCmd.GetText()?.Trim() ?? "";
             Config.Instance.AntiVirusArgs = txtAntiVirusArgs.GetText()?.Trim() ?? "";
 
-            // Autostart
             try
             {
                 PlatformHelper.EnableAutoStart(chkAutoStart.Active);
@@ -948,100 +913,184 @@ namespace XDM.Gtk4UI.Dialogs
             }
 
             Config.SaveConfig();
-            // Apply the chosen theme immediately, then let the window re-read config
-            Gtk4Theme.ApplyMode(window, Config.Instance.ThemeMode, persist: false);
-            ApplicationContext.BroadcastConfigChange();
-            window.Close();
+
+            if (!loading)
+            {
+                Gtk4Theme.ApplyMode(window, Config.Instance.ThemeMode, persist: false);
+                ApplicationContext.BroadcastConfigChange();
+            }
         }
 
-        // Displays the settings window
-        public void Show() => window.Present();
+        // ---------------- helpers ----------------
 
-        // Icon sidebar row for one settings page
-        private void BuildNav(Stack stack)
-        {
-            settingsNav.AddCssClass("navigation-sidebar");
-            settingsNav.SelectionMode = SelectionMode.Browse;
-            for (var i = 0; i < PageNames.Length; i++)
+        // Opens the portal folder picker for an entry control
+        private void PickFolderInto(Entry target) =>
+            PickFolderCore(target.GetText(), selected =>
             {
-                var (title, iconName) = PageMeta[i];
-                var rowBox = Box.New(Orientation.Horizontal, 10);
-                rowBox.MarginTop = 6;
-                rowBox.MarginBottom = 6;
-                rowBox.MarginStart = 8;
-                rowBox.MarginEnd = 8;
+                target.SetText(selected);
+                Persist();
+            });
 
-                var (ar, ag, ab) = AccentRgb();
-                var icon = Gtk4IconHelper.CreateTintedIcon(iconName, ar, ag, ab, 18);
-                icon.Valign = Align.Center;
+        // Opens the portal folder picker and stores the result in a subtitle label
+        private void PickFolder(Label target, Action<string> store) =>
+            PickFolderCore(target.GetText(), selected =>
+            {
+                target.SetText(selected);
+                store(selected);
+                Persist();
+            });
 
-                var label = Label.New(title);
-                label.Halign = Align.Start;
-                label.Valign = Align.Center;
-                label.Hexpand = true;
-
-                rowBox.Append(icon);
-                rowBox.Append(label);
-
-                var row = ListBoxRow.New();
-                row.SetChild(rowBox);
-                row.Name = PageNames[i];
-                row.TooltipText = title;
-                navEntries.Add((row, icon, iconName));
-                settingsNav.Append(row);
+        // Shared portal folder picker
+        private void PickFolderCore(string? currentValue, Action<string> apply)
+        {
+            var dialog = FileDialog.New();
+            dialog.Title = TextResource.GetText("SETTINGS_TARGET_FOLDER") ?? "Select Folder";
+            dialog.Modal = true;
+            var current = currentValue;
+            if (!string.IsNullOrEmpty(current) && Directory.Exists(current))
+            {
+                dialog.SetInitialFolder(Gio.FileHelper.NewForPath(current));
             }
 
-            settingsNav.OnRowSelected += (_, args) =>
+            dialog.SelectFolderAsync(window).ContinueWith(t =>
             {
-                if (syncingNav)
+                if (!t.IsCompletedSuccessfully || t.Result == null)
                 {
                     return;
                 }
-                if (args.Row is ListBoxRow row && !string.IsNullOrEmpty(row.Name))
+                var selected = t.Result.GetPath();
+                if (string.IsNullOrEmpty(selected))
                 {
-                    stack.SetVisibleChildName(row.Name);
-                    UpdateNavIcons();
+                    return;
                 }
-            };
+                GLib.Functions.IdleAdd(0, () =>
+                {
+                    apply(selected);
+                    return false;
+                });
+            });
         }
 
-        // Selects a sidebar row without re-triggering the page switch
-        private void SelectNavRow(string key)
+        // Opens the portal file picker for an executable
+        private void PickFile(Entry target)
         {
-            syncingNav = true;
+            var dialog = FileDialog.New();
+            dialog.Title = TextResource.GetText("ANTIVIR_CMD") ?? "Select Executable";
+            dialog.Modal = true;
+
+            dialog.OpenAsync(window).ContinueWith(t =>
+            {
+                if (!t.IsCompletedSuccessfully || t.Result == null)
+                {
+                    return;
+                }
+                var selected = t.Result.GetPath();
+                if (string.IsNullOrEmpty(selected))
+                {
+                    return;
+                }
+                GLib.Functions.IdleAdd(0, () =>
+                {
+                    target.SetText(selected);
+                    Persist();
+                    return false;
+                });
+            });
+        }
+
+        // Refreshes the IPC relay line from the running monitor
+        private void UpdateIpcStatus()
+        {
             try
             {
-                for (var child = settingsNav.GetFirstChild(); child != null; child = child.GetNextSibling())
-                {
-                    if (child is ListBoxRow row && row.Name == key)
-                    {
-                        settingsNav.SelectRow(row);
-                        break;
-                    }
-                }
+                var port = IpcHttpMessageProcessor.EffectivePort;
+                var sessions = IpcHttpMessageProcessor.ActiveWebSocketSessionsCount;
+                lblIpcStatus.SetText(TextResource.GetText("SETTINGS_IPC_STATE")?.Replace("{port}", port.ToString())
+                    ?? $"Listening on 127.0.0.1:{port}" + (sessions > 0 ? $" · {sessions} active" : ""));
             }
-            finally
+            catch (Exception ex)
             {
-                syncingNav = false;
+                TraceLog.Log.Debug(ex, "IPC status refresh failed");
+                lblIpcStatus.SetText("");
             }
-            UpdateNavIcons();
         }
 
-        // Keeps nav icons legible: white on the accent row, accent otherwise
-        private void UpdateNavIcons()
+        // Restarts the IPC relay from the settings row
+        private void RestartIpc()
         {
-            var (ar, ag, ab) = AccentRgb();
-            foreach (var (row, icon, iconName) in navEntries)
+            try
             {
-                var selected = row.IsSelected();
-                Gtk4IconHelper.UpdateTintedIcon(icon, iconName,
-                    selected ? (byte)255 : ar,
-                    selected ? (byte)255 : ag,
-                    selected ? (byte)255 : ab, 18);
+                BrowserMonitor.Restart();
+                UpdateIpcStatus();
+            }
+            catch (Exception ex)
+            {
+                TraceLog.Log.Debug(ex, "Failed to restart IPC relay");
             }
         }
 
-        // Accent for the active colour scheme, matching Gtk4Theme.ApplyColorScheme
+        // Loads one category into the detail fields
+        private void LoadCategoryFields(int index)
+        {
+            if (index < 0 || index >= workingCategories.Count)
+            {
+                return;
+            }
+            var cat = workingCategories[index];
+            lblSelectedCat.SetText(cat.DisplayName);
+            txtCatFolder.SetText(cat.DefaultFolder ?? "");
+            txtCatExts.SetText(string.Join(", ", cat.FileExtensions ?? new HashSet<string>()));
+        }
+
+        // Writes the detail fields back into the selected category
+        private void SaveCurrentCategoryFields()
+        {
+            if (selectedCategoryIndex < 0 || selectedCategoryIndex >= workingCategories.Count)
+            {
+                return;
+            }
+            var cat = workingCategories[selectedCategoryIndex];
+            cat.DefaultFolder = txtCatFolder.GetText()?.Trim() ?? "";
+            cat.FileExtensions = new HashSet<string>((txtCatExts.GetText() ?? "")
+                .Split(new[] { ',', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(e => e.Trim().TrimStart('.').ToLowerInvariant())
+                .Where(e => !string.IsNullOrEmpty(e)));
+            workingCategories[selectedCategoryIndex] = cat;
+        }
+
+        // Scheme names for the active mode
+        private static string[] ColorSchemeNames(bool dark) =>
+            (dark ? ColorSchemeTable.DarkSchemes : ColorSchemeTable.LightSchemes)
+                .Select(scheme => scheme.DisplayName)
+                .ToArray();
+
+        // Rebuilds the scheme list after a mode change, keeping the index valid
+        private void RepopulateSchemes()
+        {
+            var mode = dropTheme.Selected == uint.MaxValue ? Gtk4Theme.ModeFollowSystem : (int)dropTheme.Selected;
+            var dark = mode switch
+            {
+                Gtk4Theme.ModeDark => true,
+                Gtk4Theme.ModeLight => false,
+                _ => Gtk4Theme.IsDarkActive
+            };
+            var previous = dropScheme.Selected == uint.MaxValue ? 0 : (int)dropScheme.Selected;
+            dropScheme.SetModel(StringList.New(ColorSchemeNames(dark)));
+            dropScheme.Selected = (uint)ColorSchemeTable.ClampSchemeIndex(dark, previous);
+        }
+
+        // Applies mode and scheme live while the dialog is open
+        private void ApplySchemePreview()
+        {
+            if (dropScheme.Selected != uint.MaxValue)
+            {
+                Config.Instance.ColorScheme = (int)dropScheme.Selected;
+            }
+            var mode = dropTheme.Selected == uint.MaxValue ? Gtk4Theme.ModeFollowSystem : (int)dropTheme.Selected;
+            Gtk4Theme.ApplyMode(window, mode, persist: false);
+        }
+
+        // Accent for the active colour scheme
         private static (byte R, byte G, byte B) AccentRgb()
         {
             try
@@ -1055,53 +1104,7 @@ namespace XDM.Gtk4UI.Dialogs
             }
         }
 
-        // Section heading inside a settings page
-        private static Label Section(string text)
-        {
-            var label = Label.New(text);
-            label.AddCssClass("heading");
-            label.Halign = Align.Start;
-            label.MarginTop = 8;
-            return label;
-        }
-
-        // Uniform two-column form row: fixed label column, expanding control, optional action
-        private static Box FormRow(string labelText, Widget control, Widget? action = null)
-        {
-            var row = Box.New(Orientation.Horizontal, 12);
-            var label = Label.New(labelText);
-            label.WidthRequest = LabelWidth;
-            label.Halign = Align.Start;
-            label.Valign = Align.Center;
-            row.Append(label);
-            row.Append(control);
-            if (action != null)
-            {
-                row.Append(action);
-            }
-            return row;
-        }
-
-        // Checkbox aligned with the control column so it lines up with the rows above
-        private static Box CheckRow(CheckButton check)
-        {
-            var row = Box.New(Orientation.Horizontal, 12);
-            var spacer = Label.New("");
-            spacer.WidthRequest = LabelWidth;
-            row.Append(spacer);
-            row.Append(check);
-            return row;
-        }
-
-        // Nth child of a widget, used to reach a button placed by FormRow
-        private static Widget? GetChildAt(Widget widget, int index)
-        {
-            var child = widget is Box box ? box.GetFirstChild() : widget.GetFirstChild();
-            for (var i = 0; i < index && child != null; i++)
-            {
-                child = child.GetNextSibling();
-            }
-            return child;
-        }
+        // Displays the settings window
+        public void Show() => window.Present();
     }
 }
