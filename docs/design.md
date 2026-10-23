@@ -315,9 +315,14 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   process (that is how the proxy-save bug killed the app), so the guard logs it and shows the
   reason instead, leaving the dialog open.
 - **Header clicks:** GTK groups the column headers in one container child of the view, and
-  `GtkColumnViewColumn` exposes no header-click signal, so each header widget is located by
-  the caption (or select-all glyph) it renders and given a capture-phase click gesture.
-  The gutter toggles select-all; Name, Size and Progress cycle the sort like GTK 3.
+  `GtkColumnViewColumn` exposes no header-click signal. The gutter header has no caption, so
+  it is identified by position (first header) and toggles select-all; Name, Size and Progress
+  are matched by caption and cycle the sort like GTK 3. Every header carries a capture-phase
+  click gesture.
+- **Row checkboxes:** a press on the gutter checkbox is claimed in the capture phase, because
+  the view's own click handler runs afterwards and would replace the accumulated
+  multi-selection with that single row. `ToggleRowAt` owns the selection change and the
+  checkbox state so the two cannot drift.
 - **Media downloader:** `VideoDownloaderWindow` is a four-page `Gtk.Stack` view over the shared
   `VideoDownloaderUIController` (URL + optional browser cookies + credentials → resolving
   spinner → ticked result list with quality and download actions → error page).

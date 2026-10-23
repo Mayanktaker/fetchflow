@@ -25,11 +25,6 @@ namespace XDM.Gtk4UI.Downloads
         private const int SizeColumnWidth = 110;
         private const int ProgressColumnWidth = 180;
 
-        // Tri-state select-all glyphs for the gutter header (same set as GTK 3)
-        private const string GutterGlyphNone = "☐";
-        private const string GutterGlyphSome = "▣";
-        private const string GutterGlyphAll = "☑";
-
         // Row data behind the model
         private readonly DownloadStore store = new();
         // Row identity model: one Gtk.StringObject per row holding the transfer id
@@ -94,7 +89,6 @@ namespace XDM.Gtk4UI.Downloads
 
             WireColumnSorting();
             UpdateSortHeaderTitles();
-            UpdateGutterGlyph();
 
             // Double click / Enter key activation: executes standard double-click action
             view.OnActivate += (_, args) =>
@@ -178,6 +172,34 @@ namespace XDM.Gtk4UI.Downloads
             }
             view.RemoveCssClass("finished");
             view.AddCssClass("unfinished");
+        }
+
+        // Toggles one row's membership in the selection; returns the new state
+        internal bool ToggleRowAt(uint position)
+        {
+            if (position == uint.MaxValue || position >= (uint)store.Count)
+            {
+                return false;
+            }
+
+            var select = !selection.IsSelected(position);
+            isUpdatingSelection = true;
+            try
+            {
+                if (select)
+                {
+                    selection.SelectItem(position, false);
+                }
+                else
+                {
+                    selection.UnselectItem(position);
+                }
+            }
+            finally
+            {
+                isUpdatingSelection = false;
+            }
+            return select;
         }
 
         // Returns the selected rows in visible order
@@ -304,7 +326,6 @@ namespace XDM.Gtk4UI.Downloads
             }
 
             CaptureSelection();
-            UpdateGutterGlyph();
             stack.VisibleChildName = store.Count == 0 ? "empty" : "list";
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -335,7 +356,6 @@ namespace XDM.Gtk4UI.Downloads
             }
 
             CaptureSelection();
-            UpdateGutterGlyph();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -347,7 +367,6 @@ namespace XDM.Gtk4UI.Downloads
                 return;
             }
             CaptureSelection();
-            UpdateGutterGlyph();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -368,16 +387,6 @@ namespace XDM.Gtk4UI.Downloads
             }
         }
 
-        // Mirrors the selection into the gutter header glyph (all / some / none)
-        private void UpdateGutterGlyph()
-        {
-            var selected = selectedIds.Count;
-            var total = store.Count;
-            colCheckbox.Title = selected <= 0
-                ? GutterGlyphNone
-                : (total > 0 && selected >= total ? GutterGlyphAll : GutterGlyphSome);
-        }
-
         // Resolves the transfer id behind a list item
         private static string? IdOf(ListItem item) =>
             (item.Item as StringObject)?.GetString();
@@ -386,10 +395,9 @@ namespace XDM.Gtk4UI.Downloads
         internal bool HeadersWired => headersWired;
         private bool headersWired;
 
-        // Gives every column header its click behaviour: the gutter toggles select-all
-        // and Name/Size/Progress cycle the sort, like the GTK 3 header buttons.
-        // GtkColumnViewColumn exposes no header-click signal and GtkColumnHeader is not
-        // bound, so each header widget is located by the caption it renders.
+        // Gives every column header its click behaviour: the first (gutter) column
+        // toggles select-all, Name/Size/Progress cycle the sort. The gutter header has
+        // no caption, so it is identified by position rather than by its text.
         private void TryWireHeaders()
         {
             if (headersWired)
@@ -398,8 +406,7 @@ namespace XDM.Gtk4UI.Downloads
             }
 
             var wired = 0;
-            // GTK groups the column headers in one container child of the view, so the
-            // individual header widgets are the container's children.
+            // GTK groups the column headers in one container child of the view
             for (var child = view.GetFirstChild(); child != null; child = child.GetNextSibling())
             {
                 if (child is ListView)
@@ -407,16 +414,19 @@ namespace XDM.Gtk4UI.Downloads
                     continue;
                 }
 
-                var inner = child.GetFirstChild();
-                if (inner == null)
+                var index = 0;
+                for (var header = child.GetFirstChild(); header != null; header = header.GetNextSibling())
                 {
-                    wired += WireHeader(child) ? 1 : 0;
-                    continue;
-                }
-
-                for (var header = inner; header != null; header = header.GetNextSibling())
-                {
-                    wired += WireHeader(header) ? 1 : 0;
+                    if (index == 0)
+                    {
+                        AttachClick(header, ToggleSelectAll);
+                        wired++;
+                    }
+                    else
+                    {
+                        wired += WireSortHeader(header) ? 1 : 0;
+                    }
+                    index++;
                 }
             }
 
@@ -427,15 +437,9 @@ namespace XDM.Gtk4UI.Downloads
             }
         }
 
-        // Wires one header widget by the caption (or select-all glyph) it renders
-        private bool WireHeader(Widget header)
+        // Wires one sortable header by the caption it renders
+        private bool WireSortHeader(Widget header)
         {
-            if (ContainsGutterGlyph(header))
-            {
-                AttachClick(header, ToggleSelectAll);
-                return true;
-            }
-
             var caption = FirstLabelText(header);
             if (caption == null)
             {
@@ -489,28 +493,6 @@ namespace XDM.Gtk4UI.Downloads
             return null;
         }
 
-        // True when a widget subtree renders one of the tri-state select-all glyphs
-        private static bool ContainsGutterGlyph(Widget widget)
-        {
-            if (widget is Label label)
-            {
-                var text = label.GetText();
-                if (text == GutterGlyphNone || text == GutterGlyphSome || text == GutterGlyphAll)
-                {
-                    return true;
-                }
-            }
-
-            for (var child = widget.GetFirstChild(); child != null; child = child.GetNextSibling())
-            {
-                if (ContainsGutterGlyph(child))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         // Multi-select gutter checkbox column matching GTK 3
         private ColumnViewColumn BuildCheckboxColumn()
         {
@@ -524,27 +506,26 @@ namespace XDM.Gtk4UI.Downloads
                 check.MarginStart = 6;
                 check.MarginEnd = 6;
 
-                check.OnToggled += (_, _) =>
+                check.CanFocus = false;
+
+                // Claim the press in the capture phase: otherwise the view's own click
+                // handler runs afterwards and replaces the multi-selection with this one
+                // row, which is why ticking several boxes appeared to do nothing.
+                var click = GestureClick.New();
+                click.SetButton(1);
+                click.SetPropagationPhase(PropagationPhase.Capture);
+                click.OnPressed += (_, _) =>
                 {
-                    if (isUpdatingSelection)
+                    var selected = ToggleRowAt(item.Position);
+                    if (item.Child is CheckButton box)
                     {
-                        return;
+                        isUpdatingSelection = true;
+                        box.Active = selected;
+                        isUpdatingSelection = false;
                     }
-                    var id = IdOf(item);
-                    if (string.IsNullOrEmpty(id))
-                    {
-                        return;
-                    }
-                    var pos = item.Position;
-                    if (check.Active)
-                    {
-                        selection.SelectItem(pos, false);
-                    }
-                    else
-                    {
-                        selection.UnselectItem(pos);
-                    }
+                    click.SetState(EventSequenceState.Claimed);
                 };
+                check.AddController(click);
 
                 item.SetChild(check);
             };
@@ -573,15 +554,15 @@ namespace XDM.Gtk4UI.Downloads
             {
                 var item = (ListItem)args.Object;
                 var rowBox = Box.New(Orientation.Horizontal, 10);
-                rowBox.MarginTop = 6;
-                rowBox.MarginBottom = 6;
+                rowBox.MarginTop = 4;
+                rowBox.MarginBottom = 4;
                 rowBox.MarginStart = 8;
                 rowBox.MarginEnd = 10;
 
                 var icon = Gtk4IconHelper.CreateIcon("file-download-line", 24);
                 icon.Valign = Align.Center;
 
-                var textBox = Box.New(Orientation.Vertical, 2);
+                var textBox = Box.New(Orientation.Vertical, 1);
                 textBox.Hexpand = true;
                 textBox.Valign = Align.Center;
 
