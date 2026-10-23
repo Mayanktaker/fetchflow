@@ -109,31 +109,39 @@ namespace XDM.Gtk4UI
             return menu;
         }
 
-        // Builds the primary menu, grouped the way GNOME header menus are
+        // Builds the primary menu, grouped the way GNOME header menus are.
+        // Capture and management flows live in hover submenus so the top level
+        // stays short; frequent one-shot actions stay flat.
         private Gio.MenuModel BuildMainMenu()
         {
             var root = Gio.Menu.New();
 
-            var downloads = Gio.Menu.New();
-            downloads.Append(TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch Download...", "app." + AppActions.BatchDownload);
-            downloads.Append(TextResource.GetText("LBL_VIDEO_DOWNLOAD") ?? "Video Downloader...", "app." + AppActions.VideoDownload);
-            downloads.Append(TextResource.GetText("MSG_MEDIA_CAPTURE") ?? "Media Grabber", "app." + AppActions.MediaGrabber);
-            downloads.Append(TextResource.GetText("DESC_Q_TITLE") ?? "Queue & Scheduler...", "app." + AppActions.Scheduler);
-            downloads.Append(TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter...", "app." + AppActions.SpeedLimiter);
-            downloads.Append(TextResource.GetText("CTX_CHECKSUM") ?? "Calculate Checksum...", "app." + AppActions.VerifyChecksum);
-            downloads.Append(TextResource.GetText("MENU_IMPORT_EXPORT") ?? "Import / Export...", "app." + AppActions.ImportExport);
-            downloads.Append(TextResource.GetText("MENU_DELETE_COMPLETED") ?? "Remove Finished Downloads", "app." + AppActions.RemoveFinished);
-            root.AppendSection(null, downloads);
+            var capture = Gio.Menu.New();
+            capture.Append(TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch Download...", "app." + AppActions.BatchDownload);
+            capture.Append(TextResource.GetText("LBL_VIDEO_DOWNLOAD") ?? "Video Downloader...", "app." + AppActions.VideoDownload);
+            capture.Append(TextResource.GetText("MSG_MEDIA_CAPTURE") ?? "Media Grabber", "app." + AppActions.MediaGrabber);
+            root.AppendSubmenu(TextResource.GetText("LBL_DOWNLOADS") ?? "Downloads", capture);
+
+            var manage = Gio.Menu.New();
+            manage.Append(TextResource.GetText("DESC_Q_TITLE") ?? "Queue & Scheduler...", "app." + AppActions.Scheduler);
+            manage.Append(TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter...", "app." + AppActions.SpeedLimiter);
+            manage.Append(TextResource.GetText("CTX_CHECKSUM") ?? "Calculate Checksum...", "app." + AppActions.VerifyChecksum);
+            manage.Append(TextResource.GetText("MENU_IMPORT_EXPORT") ?? "Import / Export...", "app." + AppActions.ImportExport);
+            manage.Append(TextResource.GetText("MENU_DELETE_COMPLETED") ?? "Remove Finished Downloads", "app." + AppActions.RemoveFinished);
+            root.AppendSubmenu(TextResource.GetText("MENU_GROUP_MANAGE") ?? "Manage", manage);
+
+            var open = Gio.Menu.New();
+            open.Append(TextResource.GetText("CTX_OPEN_FILE") ?? "Open File", "app." + AppActions.OpenFile);
+            open.Append(TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder", "app." + AppActions.OpenFolder);
+            root.AppendSection(null, open);
 
             var help = Gio.Menu.New();
             help.Append(TextResource.GetText("MENU_CHECK_UPDATE") ?? "Check for Update", "app." + AppActions.CheckForUpdate);
             help.Append(TextResource.GetText("LBL_SUPPORT_PAGE") ?? "Help and Support", "app." + AppActions.HelpSupport);
             help.Append(TextResource.GetText("LBL_REPORT_PROBLEM") ?? "Report a Problem", "app." + AppActions.ReportProblem);
-            root.AppendSection(null, help);
+            root.AppendSubmenu(TextResource.GetText("MENU_GROUP_HELP") ?? "Help", help);
 
             var appSection = Gio.Menu.New();
-            appSection.Append(TextResource.GetText("CTX_OPEN_FILE") ?? "Open File", "app." + AppActions.OpenFile);
-            appSection.Append(TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder", "app." + AppActions.OpenFolder);
             appSection.Append(TextResource.GetText("MENU_TOGGLE_THEME") ?? "Switch Theme", "app." + AppActions.ToggleTheme);
             appSection.Append(TextResource.GetText("MENU_LANG") ?? "Language", "app." + AppActions.Language);
             appSection.Append(TextResource.GetText("TITLE_SETTINGS") ?? "Settings...", "app." + AppActions.Settings);

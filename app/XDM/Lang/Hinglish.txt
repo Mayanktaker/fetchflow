@@ -410,3 +410,5 @@ MSG_LANG_RESTART=Nayi bhasha agle baar FetchFlow shuru hone par lagegi.
 MSG_SETTINGS_SAVE_FAILED=Settings save nahi ho sakin.
 MSG_ACTION_FAILED=Yeh kaam poora nahi ho saka.
 MENU_TOGGLE_THEME=Theme badlein
+MENU_GROUP_MANAGE=Manage
+MENU_GROUP_HELP=Help
