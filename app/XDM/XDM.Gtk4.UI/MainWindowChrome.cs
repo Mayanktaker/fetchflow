@@ -179,10 +179,7 @@ namespace XDM.Gtk4UI
             }
 
             var statusCard = Box.New(Orientation.Vertical, 0);
-            statusCard.MarginTop = 8;
-            statusCard.MarginBottom = 8;
-            statusCard.MarginStart = 8;
-            statusCard.MarginEnd = 8;
+            statusCard.AddCssClass("sidebar-status-card");
             statusCard.Append(statusList);
 
             categoryList = ListBox.New();
@@ -206,6 +203,7 @@ namespace XDM.Gtk4UI
             sidebar.Append(BuildSidebarHeading());
             sidebar.Append(scrolled);
             sidebar.WidthRequest = SidebarWidth;
+            UpdateSidebarIcons();
             return sidebar;
         }
 
@@ -473,6 +471,8 @@ namespace XDM.Gtk4UI
             TintButtonIcon(btnSpeedLimit, "time-line", 53, 132, 228, 14);
 
             bar.Append(btnSort);
+            bar.Append(btnSpeedLimit);
+            bar.Append(btnScheduler);
 
             return bar;
         }

@@ -9,8 +9,8 @@
 
 @define-color accent #3584e4;
 @define-color accent_hover #5a9bea;
-@define-color view_bg #ffffff;
-@define-color view_finished_bg #f8f8f8;
+@define-color view_bg #ececec;
+@define-color view_finished_bg #e2e2e2;
 @define-color meta_text #6f6f6f;
 @define-color border_color #cacaca;
 
@@ -32,11 +32,11 @@ listview.download-list > row {
   padding: 2px 4px;
   border-radius: 10px;
   background-color: #ffffff;
-  border: 1px solid alpha(#ffffff, 0.06);
+  border: 1px solid alpha(#000000, 0.08);
 }
 
 listview.download-list > row:hover {
-  background-color: #f2f2f2;
+  background-color: #f4f4f4;
 }
 
 listview.download-list > row:selected {
