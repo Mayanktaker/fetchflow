@@ -445,3 +445,4 @@ LBL_NO_RESULTS_DESC=Try a different search term, or clear the search.
 STAT_PAUSED=Paused
 LBL_IDLE=Idle
 LBL_ACTIVE_COUNT=active
+LBL_QUEUED_COUNT=queued

@@ -217,6 +217,20 @@ list.navigation-sidebar > row:selected:hover,
   color: #b91c1c;
 }
 
+/* Live transfer pulse beside the window title */
+@keyframes fetchflow-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.25; }
+  100% { opacity: 1; }
+}
+
+.title-pulse {
+  color: @accent;
+  font-size: 10px;
+  margin-left: 2px;
+  animation: fetchflow-pulse 1.8s ease-in-out infinite;
+}
+
 /* Footer activity summary and the row hover shortcut */
 .activity-label {
   color: @meta_text;

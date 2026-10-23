@@ -622,8 +622,10 @@ namespace XDM.Gtk4UI.Downloads
         // Writes the file name, underlining the part the search matched
         private void SetRowName(Label label, string value)
         {
-            var query = keyword?.Trim() ?? "";
-            var index = query.Length == 0 ? -1 : value.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+            var (scope, query) = DownloadItem.SplitQuery(keyword);
+            var index = scope != "name" || query.Length == 0
+                ? -1
+                : value.IndexOf(query, StringComparison.OrdinalIgnoreCase);
             if (index < 0)
             {
                 label.SetText(value);
@@ -758,9 +760,11 @@ namespace XDM.Gtk4UI.Downloads
             }
 
             var searching = !string.IsNullOrWhiteSpace(keyword);
+            var (_, term) = DownloadItem.SplitQuery(keyword);
             emptyPage.SetIconName(searching ? "system-search-symbolic" : "folder-download-symbolic");
             emptyPage.SetTitle(searching
-                ? string.Format(TextResource.GetText("LBL_NO_RESULTS") ?? "No results for \u201c{0}\u201d", keyword)
+                ? string.Format(TextResource.GetText("LBL_NO_RESULTS") ?? "No results for \u201c{0}\u201d",
+                    term.Length > 0 ? term : keyword)
                 : TextResource.GetText("LBL_NO_DOWNLOADS") ?? "No downloads to show");
             emptyPage.SetDescription(searching
                 ? TextResource.GetText("LBL_NO_RESULTS_DESC") ?? "Try a different search term."

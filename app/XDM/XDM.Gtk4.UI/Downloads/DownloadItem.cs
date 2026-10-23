@@ -78,10 +78,45 @@ namespace XDM.Gtk4UI.Downloads
             return amount * factor;
         }
 
-        // Case-insensitive match used by the toolbar search filter
-        public bool Matches(string keyword) =>
-            string.IsNullOrWhiteSpace(keyword) ||
-            Name.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+        // Case-insensitive match used by the toolbar search filter. A scope prefix
+        // narrows the field (name:, site:, folder:, with url: accepted for site);
+        // a bare term searches the file name.
+        public bool Matches(string keyword)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return true;
+            }
+
+            var (scope, term) = SplitQuery(keyword);
+            if (term.Length == 0)
+            {
+                return true;
+            }
+
+            var field = scope switch
+            {
+                "site" => Source,
+                "folder" => Location,
+                _ => Name
+            };
+            return (field ?? "").Contains(term, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Splits "scope:term" into its parts; unknown prefixes stay part of the name
+        public static (string Scope, string Term) SplitQuery(string? keyword)
+        {
+            var query = (keyword ?? "").Trim();
+            foreach (var prefix in new[] { "name:", "site:", "url:", "folder:" })
+            {
+                if (query.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return (prefix == "url:" ? "site" : prefix.TrimEnd(':'),
+                        query.Substring(prefix.Length).Trim());
+                }
+            }
+            return ("name", query);
+        }
 
         // Copies live transfer state from the core row into this projection
         public void CopyLiveStateFrom(IInProgressDownloadRow row)

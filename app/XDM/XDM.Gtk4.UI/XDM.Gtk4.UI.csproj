@@ -36,6 +36,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Full license text for the About window's Legal page -->
+    <EmbeddedResource Include="..\..\..\LICENSE" LogicalName="FetchFlow.LICENSE" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="theme/**" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="..\XDM.Gtk.UI\svg-icons\**" LinkBase="svg-icons" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
     <Content Include="..\XDM.Gtk.UI\images\**" LinkBase="images" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />

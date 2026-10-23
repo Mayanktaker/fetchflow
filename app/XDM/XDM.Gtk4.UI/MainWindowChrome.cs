@@ -29,6 +29,8 @@ namespace XDM.Gtk4UI
         private Label? viewTitleLabel;
         // Contextual header actions, shown only while rows are selected
         private Box? rowActionsBox;
+        // Live transfer pulse beside the window title, visible while work is running
+        private readonly Label titlePulse = Label.New("●");
         // Footer activity summary (active count and aggregate speed); clicking it
         // opens the progress window
         private readonly Label lblActivity = Label.New("");
@@ -53,8 +55,12 @@ namespace XDM.Gtk4UI
                 TextResource.GetText("LBL_DOWNLOADS") ?? "Downloads");
             var titleBox = Box.New(Orientation.Horizontal, 10);
             titleBox.Valign = Align.Center;
+            titlePulse.AddCssClass("title-pulse");
+            titlePulse.TooltipText = "Downloading";
+            titlePulse.Visible = false;
             titleBox.Append(Gtk4IconHelper.CreateIcon("fetchflow-logo", 28));
             titleBox.Append(windowTitle);
+            titleBox.Append(titlePulse);
             header.SetTitleWidget(titleBox);
 
             // Transfer actions stay in the header; Open/Open Folder live in the menu
@@ -239,18 +245,27 @@ namespace XDM.Gtk4UI
                 {
                     lblActivity.SetText(TextResource.GetText("LBL_IDLE") ?? "Idle");
                     btnActivity.TooltipText = TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress";
+                    titlePulse.Visible = false;
+                    windowTitle?.SetSubtitle(TextResource.GetText("LBL_DOWNLOADS") ?? "Downloads");
                     return;
                 }
 
                 var speed = active.Sum(row => row.SpeedBytesPerSecond);
-                var text = $"{active.Count} {TextResource.GetText("LBL_ACTIVE_COUNT") ?? "active"}";
-                if (speed > 0)
-                {
-                    text += " · " + FormattingHelper.FormatSize(speed) + "/s";
-                }
-                lblActivity.SetText(text);
-                btnActivity.TooltipText = $"{text} · " +
+                var queued = active.Count(row => (row.Status ?? "")
+                    .Contains("Wait", StringComparison.OrdinalIgnoreCase));
+                var speedText = speed > 0 ? " · " + FormattingHelper.FormatSize(speed) + "/s" : "";
+                var activeText = $"{active.Count} {TextResource.GetText("LBL_ACTIVE_COUNT") ?? "active"}";
+                var queuedText = queued > 0
+                    ? $" · {queued} {TextResource.GetText("LBL_QUEUED_COUNT") ?? "queued"}"
+                    : "";
+
+                lblActivity.SetText(activeText + queuedText + speedText);
+                btnActivity.TooltipText = lblActivity.GetText() + " · " +
                     (TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress");
+
+                // The title doubles as a compact live indicator while transfers run
+                titlePulse.Visible = true;
+                windowTitle?.SetSubtitle(activeText + speedText);
             }
             catch (Exception ex)
             {

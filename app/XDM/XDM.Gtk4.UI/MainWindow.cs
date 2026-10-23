@@ -5,6 +5,7 @@
 // Presentation (header, sidebar, status bar) lives in MainWindowChrome.cs.
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Gtk;
 using Translations;
@@ -573,16 +574,48 @@ namespace XDM.Gtk4UI
             about.SetSupportUrl(Links.SupportUrl);
             about.SetIssueUrl(Links.IssueUrl);
             about.SetCopyright(AppInfo.APP_COPYRIGHT_TEXT);
-            // Legal page: project license (LICENSE = GPL-2.0-or-later)
-            about.SetLicenseType(Gtk.License.Gpl20);
-            // Credits page: project first, then the upstream core it builds on
+            // Legal page: the project's own LICENSE text (GPL-2.0-or-later). The type
+            // alone leaves libadwaita's Legal page empty on newer versions.
+            // libadwaita treats the license type and a license body as exclusive: a
+            // type-only window renders an empty Legal page here, so the full text wins
+            var licenseText = LoadLicenseText();
+            if (!string.IsNullOrEmpty(licenseText))
+            {
+                about.SetLicense(licenseText);
+            }
+            else
+            {
+                about.SetLicenseType(Gtk.License.Gpl20);
+            }
+            // Credits page: the company name stands alone (the Website row already
+            // links it); a trailing "(url)" renders as a stray bracket otherwise
             about.SetDevelopers(new[]
             {
-                "Mayanktaker Computers & Web Development (" + AppInfo.APP_DEVELOPER_URL + ")",
+                "Mayanktaker Computers & Web Development",
                 AppInfo.APP_ORIGINAL_AUTHOR_CREDIT
             });
             about.SetTranslatorCredits(TextResource.GetText("APP_TRANSLATOR_CREDITS") ?? "See the Lang contributors.");
             return about;
+        }
+
+        // Reads the embedded LICENSE so the Legal page shows the real text
+        private static string? LoadLicenseText()
+        {
+            try
+            {
+                using var stream = typeof(MainWindow).Assembly.GetManifestResourceStream("FetchFlow.LICENSE");
+                if (stream == null)
+                {
+                    return null;
+                }
+                using var reader = new StreamReader(stream);
+                return reader.ReadToEnd();
+            }
+            catch (Exception ex)
+            {
+                TraceLog.Log.Debug(ex, "License text load failed: " + ex.Message);
+                return null;
+            }
         }
 
         // Ctrl+T swaps light/dark and remembers the choice
@@ -692,7 +725,8 @@ namespace XDM.Gtk4UI
             new() { Id = "demo-1", Name = "ubuntu-24.04-desktop-amd64.iso", Status = "Downloading · 4.2 MB/s", DownloadSpeed = "4.2 MB/s", SizeText = "1.8 GB", Progress = 0.42, RawProgress = 42 },
             new() { Id = "demo-2", Name = "annual-report-2026.pdf", Status = "Paused", SizeText = "12.4 MB", Progress = 0.68, RawProgress = 68 },
             new() { Id = "demo-3", Name = "conference-talk.mp4", Status = "Complete", SizeText = "740 MB", Progress = 1.0, RawProgress = 100, IsComplete = true },
-            new() { Id = "demo-4", Name = "dataset-2026-10.zip", Status = "Downloading · 900 KB/s", DownloadSpeed = "900 KB/s", SizeText = "3.1 GB", Progress = 0.11, RawProgress = 11 }
+            new() { Id = "demo-4", Name = "dataset-2026-10.zip", Status = "Downloading · 900 KB/s", DownloadSpeed = "900 KB/s", SizeText = "3.1 GB", Progress = 0.11, RawProgress = 11 },
+            new() { Id = "demo-5", Name = "design-system.fig", Status = "Waiting", SizeText = "84 MB" }
         };
     }
 }

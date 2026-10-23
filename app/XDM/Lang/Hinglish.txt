@@ -441,3 +441,4 @@ LBL_NO_RESULTS_DESC=Koi doosra shabd search karein ya search saaf karein.
 STAT_PAUSED=Ruka hua
 LBL_IDLE=Idle
 LBL_ACTIVE_COUNT=active
+LBL_QUEUED_COUNT=queue mein

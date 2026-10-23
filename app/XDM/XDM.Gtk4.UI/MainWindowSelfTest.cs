@@ -68,8 +68,10 @@ namespace XDM.Gtk4UI
 
             // About window: Legal and Credits pages must carry content
             var about = BuildAboutWindow(Window);
-            Expect(about.GetLicenseType() == Gtk.License.Gpl20, "about license set");
             Expect(about.GetDevelopers().Length >= 2, "about credits list project + upstream");
+            Expect(about.GetLicense()?.Contains("GNU GENERAL PUBLIC LICENSE") == true,
+                "about license text set from LICENSE");
+            Expect(about.GetDevelopers().All(d => !d.Contains('(')), "about developer names carry no bracketed url");
             Expect(!string.IsNullOrEmpty(about.GetIssueUrl()), "about issue url set");
             Expect(!string.IsNullOrEmpty(about.GetSupportUrl()), "about support url set");
 

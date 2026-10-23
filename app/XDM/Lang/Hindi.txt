@@ -441,3 +441,4 @@ LBL_NO_RESULTS_DESC=कोई दूसरा शब्द खोजें य�
 STAT_PAUSED=रुका हुआ
 LBL_IDLE=निष्क्रिय
 LBL_ACTIVE_COUNT=सक्रिय
+LBL_QUEUED_COUNT=कतार में
