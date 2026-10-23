@@ -217,6 +217,18 @@ list.navigation-sidebar > row:selected:hover,
   color: #b91c1c;
 }
 
+/* Footer activity summary and the row hover shortcut */
+.activity-label {
+  color: @meta_text;
+}
+
+.row-action {
+  padding: 4px;
+  border-radius: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
 /* Settings entry pinned under the category list */
 .sidebar-action {
   margin: 0 8px;

@@ -41,6 +41,43 @@ namespace XDM.Gtk4UI.Downloads
         // Original core row for a completed entry
         public IFinishedDownloadRow? FinishedRow { get; init; }
 
+        // Live speed in bytes per second, parsed from the formatted "4.2 MB/s" text
+        public double SpeedBytesPerSecond => ParseSpeed(DownloadSpeed);
+
+        // Parses a human speed string ("900 KB/s", "4.2 MB/s", "1,5 GB/s") into bytes
+        public static double ParseSpeed(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return 0;
+            }
+
+            var value = text.Trim();
+            var cut = value.IndexOfAny(new[] { ' ', '/' });
+            if (cut < 0)
+            {
+                return 0;
+            }
+
+            var number = value.Substring(0, cut).Replace(',', '.');
+            if (!double.TryParse(number, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var amount))
+            {
+                return 0;
+            }
+
+            var unit = value.Substring(cut).Trim().TrimStart('/').ToUpperInvariant();
+            var factor = unit switch
+            {
+                "KB/S" or "KB" => 1024d,
+                "MB/S" or "MB" => 1024d * 1024,
+                "GB/S" or "GB" => 1024d * 1024 * 1024,
+                "TB/S" or "TB" => 1024d * 1024 * 1024 * 1024,
+                _ => 1d
+            };
+            return amount * factor;
+        }
+
         // Case-insensitive match used by the toolbar search filter
         public bool Matches(string keyword) =>
             string.IsNullOrWhiteSpace(keyword) ||

@@ -439,3 +439,5 @@ LBL_CLEAR_SEARCH=Search saaf karein
 LBL_NO_RESULTS=“{0}” ke liye koi result nahi
 LBL_NO_RESULTS_DESC=Koi doosra shabd search karein ya search saaf karein.
 STAT_PAUSED=Ruka hua
+LBL_IDLE=Idle
+LBL_ACTIVE_COUNT=active

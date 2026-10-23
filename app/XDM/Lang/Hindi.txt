@@ -439,3 +439,5 @@ LBL_CLEAR_SEARCH=खोज साफ़ करें
 LBL_NO_RESULTS=“{0}” के लिए कोई परिणाम नहीं
 LBL_NO_RESULTS_DESC=कोई दूसरा शब्द खोजें या खोज साफ़ करें।
 STAT_PAUSED=रुका हुआ
+LBL_IDLE=निष्क्रिय
+LBL_ACTIVE_COUNT=सक्रिय

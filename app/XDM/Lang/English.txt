@@ -443,3 +443,5 @@ LBL_CLEAR_SEARCH=Clear search
 LBL_NO_RESULTS=No results for “{0}”
 LBL_NO_RESULTS_DESC=Try a different search term, or clear the search.
 STAT_PAUSED=Paused
+LBL_IDLE=Idle
+LBL_ACTIVE_COUNT=active

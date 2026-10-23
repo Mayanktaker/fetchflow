@@ -29,6 +29,10 @@ namespace XDM.Gtk4UI
         private Label? viewTitleLabel;
         // Contextual header actions, shown only while rows are selected
         private Box? rowActionsBox;
+        // Footer activity summary (active count and aggregate speed)
+        private readonly Label lblActivity = Label.New("");
+        // Search debounce generation: stale timers exit without filtering
+        private int searchGeneration;
         // Sidebar rows, kept so icons can turn white while their row is selected
         private readonly List<SidebarEntry> sidebarEntries = new();
         // Right-aligned live count labels, one per sidebar row
@@ -69,11 +73,7 @@ namespace XDM.Gtk4UI
             searchEntry.PlaceholderText = TextResource.GetText("LBL_SEARCH") ?? "Search";
             searchEntry.TooltipText = "Search downloads (Ctrl+F)";
             // Search filters the list in place; it never rebuilds the view from scratch
-            searchEntry.OnSearchChanged += (_, _) =>
-            {
-                downloadList.Filter(searchEntry.GetText() ?? "");
-                UpdateViewHeading();
-            };
+            searchEntry.OnSearchChanged += (_, _) => ApplySearchDebounced();
 
             updateDot.TooltipText = TextResource.GetText("MSG_UPDATE_AVAILABLE") ?? "Update available";
 
@@ -200,6 +200,58 @@ namespace XDM.Gtk4UI
             footer.Append(divider);
             footer.Append(button);
             return footer;
+        }
+
+        // Applies the search keyword after a short pause, so typing does not rebuild
+        // the list once per keystroke
+        private void ApplySearchDebounced()
+        {
+            var generation = ++searchGeneration;
+            GLib.Functions.TimeoutAdd(0, 180, () =>
+            {
+                if (generation != searchGeneration)
+                {
+                    return false;
+                }
+                downloadList.Filter(searchEntry.GetText() ?? "");
+                UpdateViewHeading();
+                return false;
+            });
+        }
+
+        // Clears the pending search and applies an empty keyword at once
+        private void ClearSearchImmediately()
+        {
+            searchGeneration++;
+            downloadList.Filter("");
+            UpdateViewHeading();
+        }
+
+        // Footer status: how many transfers run and how fast, in total
+        private void UpdateActivitySummary()
+        {
+            try
+            {
+                var active = allRows.Where(row => !row.IsComplete).ToList();
+                if (active.Count == 0)
+                {
+                    lblActivity.SetText(TextResource.GetText("LBL_IDLE") ?? "Idle");
+                    return;
+                }
+
+                var speed = active.Sum(row => row.SpeedBytesPerSecond);
+                var text = $"{active.Count} {TextResource.GetText("LBL_ACTIVE_COUNT") ?? "active"}";
+                if (speed > 0)
+                {
+                    text += " · " + FormattingHelper.FormatSize(speed) + "/s";
+                }
+                lblActivity.SetText(text);
+            }
+            catch (Exception ex)
+            {
+                TraceLog.Log.Debug(ex, "Activity summary failed: " + ex.Message);
+                lblActivity.SetText("");
+            }
         }
 
         // Shows the header action group only when one action can actually run
@@ -329,19 +381,7 @@ namespace XDM.Gtk4UI
         }
 
         // Active accent from the shared scheme table, matching Gtk4Theme.ApplyColorScheme
-        private static (byte R, byte G, byte B) AccentForState()
-        {
-            try
-            {
-                var index = ColorSchemeTable.ClampSchemeIndex(Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
-                var scheme = ColorSchemeTable.GetScheme(Gtk4Theme.IsDarkActive, index);
-                return Gtk4IconHelper.ParseHex(scheme.AccentHex);
-            }
-            catch
-            {
-                return (53, 132, 228);
-            }
-        }
+        private static (byte R, byte G, byte B) AccentForState() => Gtk4IconHelper.CurrentAccent();
 
         // Keeps sidebar icons legible: white on the accent row, own colour otherwise
         private void UpdateSidebarIcons()
@@ -589,6 +629,10 @@ namespace XDM.Gtk4UI
             var bar = Box.New(Orientation.Horizontal, 10);
             bar.AddCssClass("bottom-bar");
 
+            lblActivity.AddCssClass("caption");
+            lblActivity.AddCssClass("activity-label");
+            lblActivity.Valign = Align.Center;
+            bar.Append(lblActivity);
             bar.Append(lblExtensionStatus);
 
             // Flexible spacer keeps the trailing controls pinned to the right edge

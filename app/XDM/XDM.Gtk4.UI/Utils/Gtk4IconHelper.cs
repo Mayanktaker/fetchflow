@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Gtk;
+using XDM.Core;
+using XDM.Core.UI;
 
 namespace XDM.Gtk4UI.Utils
 {
@@ -256,6 +258,20 @@ namespace XDM.Gtk4UI.Utils
             if (!string.IsNullOrEmpty(cssClass))
             {
                 button.AddCssClass(cssClass);
+            }
+        }
+
+        // Accent of the active colour scheme, for widgets that tint their own icons
+        public static (byte R, byte G, byte B) CurrentAccent()
+        {
+            try
+            {
+                var index = ColorSchemeTable.ClampSchemeIndex(Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
+                return ParseHex(ColorSchemeTable.GetScheme(Gtk4Theme.IsDarkActive, index).AccentHex);
+            }
+            catch
+            {
+                return (53, 132, 228);
             }
         }
 

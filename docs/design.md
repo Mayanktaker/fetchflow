@@ -286,7 +286,9 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   accent-filled track, so the eye lands on the name first and rows stay compact. A
   `.status-pill` between the text column and Size names the live state — Downloading
   (accent), Paused (amber), Queued (neutral), Failed (red) — and hides itself once the
-  row is complete, where the check plus finish date already say it.
+  row is complete, where the check plus finish date already say it. Hovering a row reveals
+  one accent-tinted shortcut at its end: pause, resume (paused rows) or open (finished
+  rows). It selects its own row first, so the shared core action applies to it.
 - **Native-first styling:** the GTK 4 stylesheets deliberately stay minimal. Buttons, entries, header bars, sidebar rows, progress bars, hover/active/selection states and focus rings are drawn by libadwaita/Adwaita, so the app looks and behaves like the user's desktop and follows its accessibility settings. The stylesheets only carry what native theming cannot express: the Active vs Complete list surfaces, a thin column divider, the accent token rewritten from `ColorSchemeTable`, the bandwidth/extension state colours and the dialog section-heading weight. Sidebar lists use libadwaita's `navigation-sidebar` class and the Active/Complete block uses `boxed-list`, instead of hand-written row styling.
 - **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
   System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved
@@ -326,10 +328,11 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Rows own their selection natively:** the rows use the `MultiSelection` plus GTK's native
   Ctrl/Shift click semantics; Select All and the "N selected" count live in the content
   headline.
-- **Status footer:** one slim bar below a hairline. Connectivity (extension badge) sits on the
-  left; Browser Monitoring is a `Gtk.Switch` with a caption, followed by the bandwidth limiter
-  and the queue window on the right. Its buttons draw their icons from the active scheme
-  accent and are re-tinted whenever the theme changes.
+- **Status footer:** one slim bar below a hairline. It opens with the activity summary —
+  `N active · X/s` while transfers run (`Idle` otherwise), computed from the visible rows'
+  parsed speeds — followed by the connectivity badge; Browser Monitoring is a `Gtk.Switch`
+  with a caption, then the bandwidth limiter and the queue window on the right. Its buttons
+  draw their icons from the active scheme accent and are re-tinted whenever the theme changes.
 - **Sidebar rows:** plain `navigation-sidebar` rows with an 8px inset. Icons keep their
   category colour at rest and turn white on the accent selection (counts fade to 85% white),
   so nothing disappears into the accent fill. A Settings entry (accent gear icon, Ctrl+,)

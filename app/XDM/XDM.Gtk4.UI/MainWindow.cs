@@ -131,7 +131,6 @@ namespace XDM.Gtk4UI
             if (demo)
             {
                 main.SetRows(DemoRows(), InProgressKey);
-                main.downloadList.ToggleSelectAll(); // TEMP demo selection screenshot
             }
             return main;
         }
@@ -295,6 +294,7 @@ namespace XDM.Gtk4UI
                 searchEntry.SetText("");
                 searchToggle.Active = false;
                 searchBar.SearchModeEnabled = false;
+                ClearSearchImmediately();
             };
 
             // Browser-extension connectivity drives the live status badge
@@ -347,6 +347,7 @@ namespace XDM.Gtk4UI
             allRows.RemoveAll(row => row.ProgressRow?.DownloadEntry.Id == id || row.FinishedRow?.DownloadEntry.Id == id);
             lastRepaintTicks.Remove(id);
             ApplyView(currentView);
+            UpdateActivitySummary();
         }
 
         // Refreshes one row's live transfer state without rebuilding the list
@@ -360,6 +361,7 @@ namespace XDM.Gtk4UI
 
             item.CopyLiveStateFrom(item.ProgressRow);
             downloadList.UpdateRow(id);
+            UpdateActivitySummary();
         }
 
         // Decides whether a progress tick should repaint, throttling per transfer
@@ -411,6 +413,7 @@ namespace XDM.Gtk4UI
             downloadList.Reload(rows);
             UpdateSidebarCounts();
             UpdateViewHeading();
+            UpdateActivitySummary();
         }
 
         // Filters category rows using the same predicate as the GTK 3 UI
@@ -686,10 +689,10 @@ namespace XDM.Gtk4UI
         // Formats an in-progress row for display
         private static IEnumerable<DownloadItem> DemoRows() => new List<DownloadItem>
         {
-            new() { Id = "demo-1", Name = "ubuntu-24.04-desktop-amd64.iso", Status = "Downloading · 4.2 MB/s", SizeText = "1.8 GB", Progress = 0.42 },
-            new() { Id = "demo-2", Name = "annual-report-2026.pdf", Status = "Paused", SizeText = "12.4 MB", Progress = 0.68 },
-            new() { Id = "demo-3", Name = "conference-talk.mp4", Status = "Complete", SizeText = "740 MB", Progress = 1.0, IsComplete = true },
-            new() { Id = "demo-4", Name = "dataset-2026-10.zip", Status = "Downloading · 900 KB/s", SizeText = "3.1 GB", Progress = 0.11 }
+            new() { Id = "demo-1", Name = "ubuntu-24.04-desktop-amd64.iso", Status = "Downloading · 4.2 MB/s", DownloadSpeed = "4.2 MB/s", SizeText = "1.8 GB", Progress = 0.42, RawProgress = 42 },
+            new() { Id = "demo-2", Name = "annual-report-2026.pdf", Status = "Paused", SizeText = "12.4 MB", Progress = 0.68, RawProgress = 68 },
+            new() { Id = "demo-3", Name = "conference-talk.mp4", Status = "Complete", SizeText = "740 MB", Progress = 1.0, RawProgress = 100, IsComplete = true },
+            new() { Id = "demo-4", Name = "dataset-2026-10.zip", Status = "Downloading · 900 KB/s", DownloadSpeed = "900 KB/s", SizeText = "3.1 GB", Progress = 0.11, RawProgress = 11 }
         };
     }
 }

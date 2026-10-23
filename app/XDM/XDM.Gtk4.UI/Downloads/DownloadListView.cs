@@ -413,6 +413,51 @@ namespace XDM.Gtk4UI.Downloads
             progressHost.Append(inProgressBox);
             rowBox.Append(progressHost);
 
+            // Hover action: one row-local shortcut (open / pause / resume)
+            var quick = Button.New();
+            quick.AddCssClass("flat");
+            quick.AddCssClass("row-action");
+            quick.Valign = Align.Center;
+            quick.Focusable = false;
+            quick.Visible = false;
+            quick.SetChild(Gtk4IconHelper.CreateTintedIcon("pause-line", 53, 132, 228, 16));
+            rowBox.Append(quick);
+
+            // Reveal on pointer entry so the row stays calm at rest
+            var motion = EventControllerMotion.New();
+            motion.OnEnter += (_, _) => quick.Visible = true;
+            motion.OnLeave += (_, _) => quick.Visible = false;
+            rowBox.AddController(motion);
+
+            // The shortcut selects its own row first, so the shared core action applies
+            quick.OnClicked += (_, _) =>
+            {
+                var quickId = IdOf(item);
+                if (string.IsNullOrEmpty(quickId) || store.Lookup(quickId) is not { } quickRow)
+                {
+                    return;
+                }
+                var position = item.Position;
+                if (position == uint.MaxValue)
+                {
+                    return;
+                }
+                selection.UnselectAll();
+                selection.SelectItem(position, false);
+                if (quickRow.IsComplete)
+                {
+                    UIActions.OpenSelectedFile();
+                }
+                else if (IsStopped(quickRow))
+                {
+                    UIActions.ResumeDownloads();
+                }
+                else
+                {
+                    UIActions.StopSelectedDownloads();
+                }
+            };
+
             item.SetChild(rowBox);
             AttachContextMenu(item, rowBox);
         }
@@ -442,6 +487,19 @@ namespace XDM.Gtk4UI.Downloads
                 (r, g, b) = Gtk4IconHelper.BrightenForDark(r, g, b);
             }
             Gtk4IconHelper.UpdateTintedIcon(icon, IconResource.GetSVGNameForFileType(row.Name), r, g, b, 28);
+
+            // Recycled rows start with the shortcut hidden
+            if (GetChildAt(rowBox, 5) is Button quickAction)
+            {
+                var (accentR, accentG, accentB) = Gtk4IconHelper.CurrentAccent();
+                var (quickIcon, quickTooltip) = QuickActionFor(row);
+                if (quickAction.GetChild() is Image quickImage)
+                {
+                    Gtk4IconHelper.UpdateTintedIcon(quickImage, quickIcon, accentR, accentG, accentB, 16);
+                }
+                quickAction.TooltipText = quickTooltip;
+                quickAction.Visible = false;
+            }
 
             if (textBox.GetFirstChild() is Label name &&
                 GetChildAt(textBox, 1) is Label meta)
@@ -505,10 +563,34 @@ namespace XDM.Gtk4UI.Downloads
             }
             cells.Percent?.SetText($"{row.RawProgress}%");
             // The pill already names the state, so this line carries live numbers only
-            cells.SpeedEta?.SetText(!string.IsNullOrWhiteSpace(row.DownloadSpeed)
-                ? $"{row.DownloadSpeed} · {row.ETA}"
-                : row.ETA);
+            var live = new List<string>(2);
+            if (!string.IsNullOrWhiteSpace(row.DownloadSpeed))
+            {
+                live.Add(row.DownloadSpeed);
+            }
+            if (!string.IsNullOrWhiteSpace(row.ETA))
+            {
+                live.Add(row.ETA);
+            }
+            cells.SpeedEta?.SetText(string.Join(" · ", live));
         }
+
+        // Row-local shortcut: open a finished file, or pause/resume the transfer
+        private static (string Icon, string Tooltip) QuickActionFor(DownloadItem row)
+        {
+            if (row.IsComplete)
+            {
+                return ("external-link-line", TextResource.GetText("CTX_OPEN_FILE") ?? "Open file");
+            }
+            return IsStopped(row)
+                ? ("play-line", TextResource.GetText("MENU_RESUME") ?? "Resume")
+                : ("pause-line", TextResource.GetText("MENU_PAUSE") ?? "Pause");
+        }
+
+        // True when the transfer is paused or stopped rather than running
+        private static bool IsStopped(DownloadItem row) =>
+            (row.Status ?? "").Contains("Stop", StringComparison.OrdinalIgnoreCase) ||
+            (row.Status ?? "").Contains("Paus", StringComparison.OrdinalIgnoreCase);
 
         // Maps the transfer state to one pill caption and tone
         private static void BindStatusPill(Label pill, DownloadItem row)
