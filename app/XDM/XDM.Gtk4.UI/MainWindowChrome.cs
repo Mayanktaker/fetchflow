@@ -123,7 +123,9 @@ namespace XDM.Gtk4UI
         {
             // Active / Complete sit in their own card, matching the GTK 3 sidebar
             statusList = ListBox.New();
-            statusList.AddCssClass("sidebar-status-list");
+            // Native GNOME sidebar rows + a grouped card for the Active/Complete block
+            statusList.AddCssClass("navigation-sidebar");
+            statusList.AddCssClass("boxed-list");
             statusList.SelectionMode = SelectionMode.Browse;
             statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_UNFINISHED") ?? "Active", InProgressKey, "download-2-line", 59, 130, 246));
             statusList.Append(BuildSidebarRow(TextResource.GetText("ALL_FINISHED") ?? "Complete", FinishedKey, "check-line", 46, 194, 126));
@@ -135,11 +137,14 @@ namespace XDM.Gtk4UI
             }
 
             var statusCard = Box.New(Orientation.Vertical, 0);
-            statusCard.AddCssClass("sidebar-status-card");
+            statusCard.MarginTop = 8;
+            statusCard.MarginBottom = 8;
+            statusCard.MarginStart = 8;
+            statusCard.MarginEnd = 8;
             statusCard.Append(statusList);
 
             categoryList = ListBox.New();
-            categoryList.AddCssClass("sidebar-category-list");
+            categoryList.AddCssClass("navigation-sidebar");
             categoryList.SelectionMode = SelectionMode.Browse;
             foreach (var category in Config.Instance.Categories)
             {
@@ -155,7 +160,6 @@ namespace XDM.Gtk4UI
             scrolled.Vexpand = true;
 
             var sidebar = Box.New(Orientation.Vertical, 0);
-            sidebar.AddCssClass("sidebar");
             sidebar.Append(statusCard);
             sidebar.Append(BuildSidebarHeading());
             sidebar.Append(scrolled);
