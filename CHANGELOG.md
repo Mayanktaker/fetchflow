@@ -4,45 +4,25 @@ All notable user-facing changes to FetchFlow are documented here.
 For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
-## Unreleased
+## v9.1.17.0 (2026-10-23)
 
 ### What's new
 
-- **Search works again:** typing in the search box now filters the download list as you type, without leaving the view you are in
-- **Selections stay put:** your selection is no longer cleared while downloads are running, and it survives switching between Active and Complete
-- **Your look, remembered:** light, dark or follow-system is applied at startup and stays applied; the seven dark and seven light colour schemes now reach the modern Linux windows too
-- **Media Grabber:** a new window lists the streams FetchFlow captures from your browser — pick one and download it
-- **Video downloader:** paste a video page address, optionally reuse your browser cookies, choose a quality and download
-- **A calmer Settings window:** pages are listed down the side and Cancel/Save sit in the window header, the way other GNOME apps work
-- **Less fussy list:** the per-row checkboxes are gone — select with Ctrl/Shift-click or the bottom-bar Select All
-- **Simpler list, smarter bottom bar:** the Select All, sort, limiter and scheduler buttons share one accent-coloured icon tone, and a hairline separates the bar from the list; Active and Complete sit on a card again with matching icons
- the column header is gone (no more dragging columns); Select All sits on the left of the bottom bar and a new Sort menu on the right shows what you are sorting by
-- **Sidebar tidied:** Active and Complete no longer look raised, and their icons turn white while selected
-- **Multi-select works again:** ticking several checkboxes now keeps every ticked row selected instead of collapsing to one
-- **Clearer rows:** the source site and the save folder now sit on separate, very quiet lines under the file name, so the name is the first thing you see; the list header is easier to read and the scrollbar no longer covers the cards
-- **Download rows are cards:** each download sits on its own rounded card, so Active and Complete are easier to scan; the Net button icon and the title bar no longer repeat the app mark
-- **Cleaner title bar:** the app mark and view name sit in the middle, the main actions on the left, and search opens from the magnifier button (or Ctrl+F); theme switching and Open File/Open Folder moved into the main menu
-- **Looks like the rest of your desktop:** the modern Linux windows now use your system's own buttons, fields, hover and selection styling instead of hand-drawn chrome, so they match GNOME and your chosen theme
-- **Sort by clicking a header:** click File name, Size or Progress to sort, and use the header checkbox to select everything
-- **Counts where you need them:** Active, Complete and every category show how many downloads they hold
-- **More at a glance in each row:** the source site and destination folder now appear under the file name
-- **Check for updates, remove finished downloads and Exit** are back in the main menu
-- **Language picker is back:** choose FetchFlow's interface language from the main menu; it applies the next time FetchFlow starts
+- **A redesigned main window:** the view name and item count sit in a headline above the list, Active and Complete live in a calm sidebar with live counts, and each download is a roomier card with a thin progress bar
+- **Rows that explain themselves:** every transfer shows a state pill — Downloading, Paused, Queued or Failed — and hovering a row reveals its shortcut (pause, resume, open file, or open folder on finished downloads)
+- **A footer that reports:** it opens with "N active · speed" (or Idle when quiet) and clicking it opens the progress window; the window subtitle and a small pulsing dot mirror the live state while transfers run
+- **Search that teaches itself:** results filter as you type, the match is underlined in your accent colour, `site:` and `folder:` narrow the search, and an empty result explains itself with a Clear search button
+- **Settings, GNOME-style:** pages are tabs with icons across the top, options sit in grouped cards, and every change applies immediately — there is no Save button anymore
+- **Your colour scheme everywhere:** the accent now reaches switches, buttons, checkboxes, progress bars and the sidebar selection on the modern Linux interface, and icons stay readable on dark themes
+- **About pages that work:** Credits no longer shows a stray bracket, Legal shows the real license text, and the full license is also readable under Help → License with a Copy button
 
 ### Bug fixes
 
-- **Saving settings no longer closes the app:** with the proxy set to Direct or System, pressing Save (including when changing the theme in Settings) could quit FetchFlow unexpectedly
-- The search box used to do nothing at all
-- Selecting several downloads cleared itself as soon as progress updated
-- The theme choice was saved but ignored, and the light theme never appeared
-- The Browser Monitoring switch in the bottom bar had no effect
-- Downloads that need a user name and password failed silently instead of asking for them
-- Batch downloads stopped at a "coming soon" message instead of opening the selection window
-- The Browser Monitoring link opened the Network settings page instead of monitoring
-- The footer showed internal wording, and the About window displayed a fixed old version
-- The extension indicator always said "Ready" even when nothing was connected
-- Some Settings and dialog labels appeared as raw codes such as `SETTINGS_TEMP_FLD`
-- A long folder path could push the Size and Progress columns out of the window
+- Saving settings no longer closes the app, including when changing the theme
+- Selecting several downloads no longer collapses as soon as progress updates
+- The Browser Monitoring switch in the bottom bar works again
+- The sidebar counts sit beside each view instead of being glued to its name, and stay readable on the selected row
+- The footer no longer repeats a transfer's state twice, and long folder paths no longer push Size and Progress out of the window
 
 ---
 ## v9.1.16.0 (2026-10-05)
