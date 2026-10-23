@@ -60,6 +60,12 @@ listview.download-list > row:selected {
   color: @accent;
 }
 
+/* The bar is a distinct surface so it never blends into the list */
+.bottom-bar {
+  border-top: 1px solid @border_color;
+  padding: 4px 10px;
+}
+
 /* Bandwidth limiter is active */
 .bottom-bar button.speed-limit-enabled {
   color: @accent;

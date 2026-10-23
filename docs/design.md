@@ -276,9 +276,9 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
 - **List chrome:** the list is a header-less `Gtk.ListView` — one card per row (6px gaps,
-  10px radius, subtle border) with no column header and no column resizing. Each row lays out
-  checkbox | icon | name+source+destination | size | progress itself, so the columns never
-  need dragging. The view carries an 8px end margin so the overlay scrollbar never sits on a
+  10px radius, subtle border) with no column header, no checkbox column and no column
+  resizing. Each row lays out icon | name+source+destination | size | progress itself;
+  selection is by click, Ctrl+click, Shift+click or Select All. The view carries an 8px end margin so the overlay scrollbar never sits on a
   card, and the row body keeps native Ctrl/Shift multi-selection.
 - **Row hierarchy:** three lines per row — the file name (14px, 600), the source site plus
   file type, and the destination folder. The two meta lines use an 11px `@meta_text` tone
@@ -315,13 +315,19 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   through `UiGuard.Run`. An exception escaping a GObject signal handler terminates the whole
   process (that is how the proxy-save bug killed the app), so the guard logs it and shows the
   reason instead, leaving the dialog open.
+- **Bottom bar:** a distinct surface with a top border so it never merges with the list.
+  Left: Select All (with the "N selected" count), a separator, then Browser Monitoring and the
+  extension badge. Right: the Sort menu button showing the active column/direction, then the
+  bandwidth limiter and the queue window. Every bar and header action uses **symbolic** icons,
+  so it inherits the theme foreground and never drifts in colour.
 - **Select and sort live in the bottom bar:** the left side owns selection (Select All toggles
   the whole view, plus the "N selected" count), the right side owns the view controls: a Sort
   menu button showing the current column and direction (Name/Size/Date), then the bandwidth
   limiter and the queue window. The list header was removed rather than restyled.
-- **Sidebar rows:** plain `navigation-sidebar` rows (no card/shadow on the Active/Complete
-  block). Icons keep their category colour at rest and turn white on the accent selection, so
-  they never disappear into it.
+- **Sidebar rows:** the Active/Complete block sits on its own `boxed-list` card; category rows
+  stay plain. Active and Complete share one icon rule — both take the active colour-scheme
+  accent at rest and turn white on the accent selection — while category icons keep their
+  palette colour.
 - **Row checkboxes:** a press on the gutter checkbox is claimed in the capture phase, because
   the view's own click handler runs afterwards and would replace the accumulated
   multi-selection with that single row. `ToggleRowAt` owns the selection change and the

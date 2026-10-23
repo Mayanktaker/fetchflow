@@ -23,7 +23,6 @@ namespace XDM.Gtk4UI.Downloads
     internal sealed class DownloadListView
     {
         // Fixed geometry tokens
-        private const int CheckboxWidth = 34;
         private const int SizeWidth = 90;
         private const int ProgressWidth = 160;
 
@@ -351,33 +350,11 @@ namespace XDM.Gtk4UI.Downloads
             var rowBox = Box.New(Orientation.Horizontal, 10);
             rowBox.MarginTop = 4;
             rowBox.MarginBottom = 4;
-            rowBox.MarginStart = 8;
+            rowBox.MarginStart = 10;
             rowBox.MarginEnd = 6;
 
-            // Selection checkbox: claims the press so the view cannot collapse the selection
-            var check = CheckButton.New();
-            check.Valign = Align.Center;
-            check.WidthRequest = CheckboxWidth;
-            check.Halign = Align.Center;
-            check.CanFocus = false;
-            var click = GestureClick.New();
-            click.SetButton(1);
-            click.SetPropagationPhase(PropagationPhase.Capture);
-            click.OnPressed += (_, _) =>
-            {
-                var selected = ToggleRowAt(item.Position);
-                if (item.Child is Box box && box.GetFirstChild() is CheckButton toggle)
-                {
-                    isUpdatingSelection = true;
-                    toggle.Active = selected;
-                    isUpdatingSelection = false;
-                }
-                click.SetState(EventSequenceState.Claimed);
-            };
-            check.AddController(click);
-            rowBox.Append(check);
-
-            // File-type icon
+            // File-type icon (selection is by click / Ctrl / Shift / Select All,
+            // so rows carry no checkbox)
             var icon = Gtk4IconHelper.CreateIcon("file-download-line", 24);
             icon.Valign = Align.Center;
             rowBox.Append(icon);
@@ -467,19 +444,10 @@ namespace XDM.Gtk4UI.Downloads
                 return;
             }
 
-            if (rowBox.GetFirstChild() is not CheckButton check)
-            {
-                return;
-            }
-
-            isUpdatingSelection = true;
-            check.Active = selection.IsSelected(item.Position);
-            isUpdatingSelection = false;
-
-            var icon = GetChildAt(rowBox, 1) as Image;
-            var textBox = GetChildAt(rowBox, 2) as Box;
-            var size = GetChildAt(rowBox, 3) as Label;
-            var progressHost = GetChildAt(rowBox, 4) as Box;
+            var icon = GetChildAt(rowBox, 0) as Image;
+            var textBox = GetChildAt(rowBox, 1) as Box;
+            var size = GetChildAt(rowBox, 2) as Label;
+            var progressHost = GetChildAt(rowBox, 3) as Box;
             if (icon == null || textBox == null || size == null || progressHost == null)
             {
                 return;
