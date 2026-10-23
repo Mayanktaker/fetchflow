@@ -168,6 +168,40 @@ namespace XDM.Gtk4UI
             return root;
         }
 
+        // Settings entry pinned under the category list, as in the GNOME sidebar pattern
+        private Widget BuildSidebarFooter()
+        {
+            var (r, g, b) = AccentForState();
+            var button = Button.New();
+            button.AddCssClass("flat");
+            button.AddCssClass("sidebar-action");
+            button.TooltipText = TextResource.GetText("TITLE_SETTINGS") ?? "Settings";
+
+            var box = Box.New(Orientation.Horizontal, 10);
+            box.MarginStart = 10;
+            box.MarginEnd = 10;
+            var icon = Gtk4IconHelper.CreateTintedIcon("settings-3-line", r, g, b, 18);
+            icon.Valign = Align.Center;
+            var label = Label.New(TextResource.GetText("TITLE_SETTINGS") ?? "Settings");
+            label.Halign = Align.Start;
+            label.Hexpand = true;
+            box.Append(icon);
+            box.Append(label);
+            button.SetChild(box);
+            button.OnClicked += (_, _) => OnSettings();
+
+            var footer = Box.New(Orientation.Vertical, 0);
+            footer.MarginTop = 4;
+            footer.MarginBottom = 8;
+            var divider = Separator.New(Orientation.Horizontal);
+            divider.MarginStart = 12;
+            divider.MarginEnd = 12;
+            divider.MarginTop = 4;
+            footer.Append(divider);
+            footer.Append(button);
+            return footer;
+        }
+
         // Shows the header action group only when one action can actually run
         private void UpdateRowActionsVisibility(int selectedCount)
         {
@@ -257,6 +291,11 @@ namespace XDM.Gtk4UI
             {
                 categories[category.Name] = category;
                 var (iconName, r, g, b) = CategoryIconPalette.Resolve(category);
+                // Category tints are tuned for light surfaces; lift them on dark
+                if (Gtk4Theme.IsDarkActive)
+                {
+                    (r, g, b) = Gtk4IconHelper.BrightenForDark(r, g, b);
+                }
                 categoryList.Append(BuildSidebarRow(category.DisplayName, category.Name, iconName, r, g, b));
             }
             categoryList.OnRowSelected += (_, args) => OnSidebarRowSelected(args, categoryList, false);
@@ -274,6 +313,7 @@ namespace XDM.Gtk4UI
             sidebar.Append(statusList);
             sidebar.Append(BuildSidebarHeading("LBL_CATEGORIES", "Categories"));
             sidebar.Append(scrolled);
+            sidebar.Append(BuildSidebarFooter());
             sidebar.WidthRequest = SidebarWidth;
             UpdateSidebarIcons();
             return sidebar;

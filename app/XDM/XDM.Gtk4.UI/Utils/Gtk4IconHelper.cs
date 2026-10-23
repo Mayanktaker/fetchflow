@@ -259,6 +259,16 @@ namespace XDM.Gtk4UI.Utils
             }
         }
 
+        // Lightens a tint so line icons keep their contrast on dark surfaces
+        public static (byte R, byte G, byte B) BrightenForDark(byte r, byte g, byte b)
+        {
+            const float blend = 0.30f;
+            return (
+                (byte)(r + (255 - r) * blend),
+                (byte)(g + (255 - g) * blend),
+                (byte)(b + (255 - b) * blend));
+        }
+
         // Parses a #rrggbb accent hex into bytes (falling back to the default blue)
         public static (byte R, byte G, byte B) ParseHex(string hex)
         {

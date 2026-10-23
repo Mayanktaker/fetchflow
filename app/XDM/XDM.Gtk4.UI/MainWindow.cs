@@ -287,6 +287,9 @@ namespace XDM.Gtk4UI
                 return false;
             };
 
+            // The empty state offers the same primary action as the header
+            downloadList.AddDownloadRequested += (_, _) => NewButton.Activate();
+
             // Browser-extension connectivity drives the live status badge
             ApplicationContext.ApplicationEvent += OnApplicationEvent;
 

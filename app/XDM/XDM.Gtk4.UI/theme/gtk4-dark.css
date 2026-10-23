@@ -192,6 +192,13 @@ list.navigation-sidebar > row:selected:hover,
   color: @meta_text;
 }
 
+/* Settings entry pinned under the category list */
+.sidebar-action {
+  margin: 0 8px;
+  padding: 6px 0;
+  border-radius: 8px;
+}
+
 /* Counts stay legible on the accent-filled selected row */
 list.navigation-sidebar > row:selected .sidebar-count {
   color: alpha(#ffffff, 0.85);
@@ -201,11 +208,6 @@ list.navigation-sidebar > row:selected .sidebar-count {
 .download-size {
   font-size: 12px;
   color: @meta_text;
-}
-
-.download-path {
-  font-size: 10.5px;
-  color: alpha(@meta_text, 0.8);
 }
 
 /* Thin, soft progress bar so the row reads as a card, not a table */

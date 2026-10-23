@@ -55,6 +55,8 @@ namespace XDM.Gtk4UI.Downloads
         public event EventHandler? SelectionChanged;
         // Fires when the sort column or direction changes
         public event EventHandler? SortChanged;
+        // Fires when the empty state's primary action is pressed
+        public event EventHandler? AddDownloadRequested;
 
         // Short caption for the bottom-bar sort button
         public string SortCaption
@@ -137,12 +139,26 @@ namespace XDM.Gtk4UI.Downloads
             }
 
             cells.Name.SetText(item.Name);
-            cells.Source.SetText(item.Source);
-            cells.Source.SetVisible(!string.IsNullOrEmpty(item.Source));
-            cells.Location.SetText(item.Location);
-            cells.Location.SetVisible(!string.IsNullOrEmpty(item.Location));
+            var meta = CombineMeta(item);
+            cells.Meta.SetText(meta);
+            cells.Meta.SetVisible(!string.IsNullOrEmpty(meta));
             cells.Size.SetText(item.SizeText);
             BindProgress(cells, item);
+        }
+
+        // Joins the source site and destination folder into one quiet meta line
+        private static string CombineMeta(DownloadItem item)
+        {
+            var parts = new List<string>(2);
+            if (!string.IsNullOrEmpty(item.Source))
+            {
+                parts.Add(item.Source);
+            }
+            if (!string.IsNullOrEmpty(item.Location))
+            {
+                parts.Add(item.Location);
+            }
+            return string.Join("   ·   ", parts);
         }
 
         // Marks which surface the list is showing (Active vs Complete)
@@ -310,8 +326,8 @@ namespace XDM.Gtk4UI.Downloads
             icon.Valign = Align.Center;
             rowBox.Append(icon);
 
-            // Name + source + destination
-            var textBox = Box.New(Orientation.Vertical, 2);
+            // Name + one quiet meta line (source site, file type, destination)
+            var textBox = Box.New(Orientation.Vertical, 3);
             textBox.Hexpand = true;
             textBox.Valign = Align.Center;
 
@@ -320,19 +336,13 @@ namespace XDM.Gtk4UI.Downloads
             name.Ellipsize = Pango.EllipsizeMode.End;
             name.AddCssClass("download-name");
 
-            var source = Label.New("");
-            source.Halign = Align.Start;
-            source.Ellipsize = Pango.EllipsizeMode.End;
-            source.AddCssClass("download-meta");
-
-            var location = Label.New("");
-            location.Halign = Align.Start;
-            location.Ellipsize = Pango.EllipsizeMode.Middle;
-            location.AddCssClass("download-path");
+            var meta = Label.New("");
+            meta.Halign = Align.Start;
+            meta.Ellipsize = Pango.EllipsizeMode.Middle;
+            meta.AddCssClass("download-meta");
 
             textBox.Append(name);
-            textBox.Append(source);
-            textBox.Append(location);
+            textBox.Append(meta);
             rowBox.Append(textBox);
 
             // Size
@@ -407,21 +417,23 @@ namespace XDM.Gtk4UI.Downloads
             }
 
             var (r, g, b) = GetCategoryColorForFileType(row.Name);
-            Gtk4IconHelper.UpdateTintedIcon(icon, IconResource.GetSVGNameForFileType(row.Name), r, g, b, 24);
+            if (Gtk4Theme.IsDarkActive)
+            {
+                (r, g, b) = Gtk4IconHelper.BrightenForDark(r, g, b);
+            }
+            Gtk4IconHelper.UpdateTintedIcon(icon, IconResource.GetSVGNameForFileType(row.Name), r, g, b, 28);
 
             if (textBox.GetFirstChild() is Label name &&
-                GetChildAt(textBox, 1) is Label source &&
-                GetChildAt(textBox, 2) is Label location)
+                GetChildAt(textBox, 1) is Label meta)
             {
                 name.SetText(row.Name);
-                source.SetText(row.Source);
-                source.SetVisible(!string.IsNullOrEmpty(row.Source));
-                location.SetText(row.Location);
-                location.SetVisible(!string.IsNullOrEmpty(row.Location));
+                var metaText = CombineMeta(row);
+                meta.SetText(metaText);
+                meta.SetVisible(!string.IsNullOrEmpty(metaText));
 
                 size.SetText(row.SizeText);
 
-                var cells = new RowCells(name, source, location, size,
+                var cells = new RowCells(name, meta, size,
                     progressHost.GetFirstChild() as Box ?? Box.New(Orientation.Vertical, 0),
                     progressHost.GetLastChild() as Box ?? Box.New(Orientation.Vertical, 0));
                 if (cells.FinishedBox.GetLastChild() is Label finishedLabel &&
@@ -494,13 +506,21 @@ namespace XDM.Gtk4UI.Downloads
         }
 
         // Empty state shown when there are no rows (or the search matched nothing)
-        private static Widget BuildEmptyState()
+        private Widget BuildEmptyState()
         {
             var page = Adw.StatusPage.New();
             page.SetIconName("folder-download-symbolic");
             page.SetTitle(TextResource.GetText("LBL_NO_DOWNLOADS") ?? "No downloads to show");
             page.SetDescription(TextResource.GetText("DESC_NO_DOWNLOADS") ?? "Downloads you start will appear here.");
             page.Vexpand = true;
+
+            // Primary call to action so the empty view is a starting point, not a dead end
+            var add = Button.NewWithLabel(TextResource.GetText("LBL_ADD_DOWNLOAD") ?? "Add download");
+            add.AddCssClass("suggested-action");
+            add.AddCssClass("pill");
+            add.Halign = Align.Center;
+            add.OnClicked += (_, _) => AddDownloadRequested?.Invoke(this, EventArgs.Empty);
+            page.SetChild(add);
             return page;
         }
 
@@ -600,8 +620,7 @@ namespace XDM.Gtk4UI.Downloads
         private sealed class RowCells
         {
             public Label Name { get; }
-            public Label Source { get; }
-            public Label Location { get; }
+            public Label Meta { get; }
             public Label Size { get; }
             public Box FinishedBox { get; }
             public Box InProgressBox { get; }
@@ -609,12 +628,11 @@ namespace XDM.Gtk4UI.Downloads
             public Label? Percent { get; set; }
             public Label? SpeedEta { get; set; }
 
-            public RowCells(Label name, Label source, Label location, Label size,
+            public RowCells(Label name, Label meta, Label size,
                 Box finishedBox, Box inProgressBox)
             {
                 Name = name;
-                Source = source;
-                Location = location;
+                Meta = meta;
                 Size = size;
                 FinishedBox = finishedBox;
                 InProgressBox = inProgressBox;
