@@ -29,8 +29,10 @@ namespace XDM.Gtk4UI
         private Label? viewTitleLabel;
         // Contextual header actions, shown only while rows are selected
         private Box? rowActionsBox;
-        // Footer activity summary (active count and aggregate speed)
+        // Footer activity summary (active count and aggregate speed); clicking it
+        // opens the progress window
         private readonly Label lblActivity = Label.New("");
+        private readonly Button btnActivity = Button.New();
         // Search debounce generation: stale timers exit without filtering
         private int searchGeneration;
         // Sidebar rows, kept so icons can turn white while their row is selected
@@ -236,6 +238,7 @@ namespace XDM.Gtk4UI
                 if (active.Count == 0)
                 {
                     lblActivity.SetText(TextResource.GetText("LBL_IDLE") ?? "Idle");
+                    btnActivity.TooltipText = TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress";
                     return;
                 }
 
@@ -246,6 +249,8 @@ namespace XDM.Gtk4UI
                     text += " · " + FormattingHelper.FormatSize(speed) + "/s";
                 }
                 lblActivity.SetText(text);
+                btnActivity.TooltipText = $"{text} · " +
+                    (TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress");
             }
             catch (Exception ex)
             {
@@ -632,7 +637,13 @@ namespace XDM.Gtk4UI
             lblActivity.AddCssClass("caption");
             lblActivity.AddCssClass("activity-label");
             lblActivity.Valign = Align.Center;
-            bar.Append(lblActivity);
+            btnActivity.AddCssClass("flat");
+            btnActivity.AddCssClass("activity-button");
+            btnActivity.Valign = Align.Center;
+            btnActivity.SetChild(lblActivity);
+            btnActivity.TooltipText = TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress";
+            btnActivity.OnClicked += (_, _) => UIActions.ShowProgressWindow();
+            bar.Append(btnActivity);
             bar.Append(lblExtensionStatus);
 
             // Flexible spacer keeps the trailing controls pinned to the right edge

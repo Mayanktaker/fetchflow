@@ -222,6 +222,13 @@ list.navigation-sidebar > row:selected:hover,
   color: @meta_text;
 }
 
+/* The summary doubles as the progress-window shortcut */
+.activity-button {
+  padding: 2px 6px;
+  border-radius: 8px;
+  min-height: 0;
+}
+
 .row-action {
   padding: 4px;
   border-radius: 8px;
@@ -266,5 +273,4 @@ progressbar.download-progress progress {
 /* Status footer: one hairline, generous padding, quiet labels */
 .bottom-bar {
   padding: 5px 14px;
-  border-top: 1px solid alpha(@border_color, 0.7);
 }

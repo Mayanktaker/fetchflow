@@ -148,7 +148,7 @@ namespace XDM.Gtk4UI.Downloads
                 return;
             }
 
-            cells.Name.SetText(item.Name);
+            SetRowName(cells.Name, item.Name);
             var meta = CombineMeta(item);
             cells.Meta.SetText(meta);
             cells.Meta.SetVisible(!string.IsNullOrEmpty(meta));
@@ -423,40 +423,35 @@ namespace XDM.Gtk4UI.Downloads
             quick.SetChild(Gtk4IconHelper.CreateTintedIcon("pause-line", 53, 132, 228, 16));
             rowBox.Append(quick);
 
+            // Finished rows also offer "open folder" beside "open file"
+            var quickFolder = Button.New();
+            quickFolder.AddCssClass("flat");
+            quickFolder.AddCssClass("row-action");
+            quickFolder.Valign = Align.Center;
+            quickFolder.Focusable = false;
+            quickFolder.Visible = false;
+            quickFolder.TooltipText = TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open folder";
+            quickFolder.SetChild(Gtk4IconHelper.CreateTintedIcon("folder-shared-line", 53, 132, 228, 16));
+            quickFolder.OnClicked += (_, _) => RunRowAction(item, openFolder: true);
+            rowBox.Append(quickFolder);
+
             // Reveal on pointer entry so the row stays calm at rest
             var motion = EventControllerMotion.New();
-            motion.OnEnter += (_, _) => quick.Visible = true;
-            motion.OnLeave += (_, _) => quick.Visible = false;
+            motion.OnEnter += (_, _) =>
+            {
+                var hoverId = IdOf(item);
+                quick.Visible = true;
+                quickFolder.Visible = !string.IsNullOrEmpty(hoverId) && store.Lookup(hoverId)?.IsComplete == true;
+            };
+            motion.OnLeave += (_, _) =>
+            {
+                quick.Visible = false;
+                quickFolder.Visible = false;
+            };
             rowBox.AddController(motion);
 
             // The shortcut selects its own row first, so the shared core action applies
-            quick.OnClicked += (_, _) =>
-            {
-                var quickId = IdOf(item);
-                if (string.IsNullOrEmpty(quickId) || store.Lookup(quickId) is not { } quickRow)
-                {
-                    return;
-                }
-                var position = item.Position;
-                if (position == uint.MaxValue)
-                {
-                    return;
-                }
-                selection.UnselectAll();
-                selection.SelectItem(position, false);
-                if (quickRow.IsComplete)
-                {
-                    UIActions.OpenSelectedFile();
-                }
-                else if (IsStopped(quickRow))
-                {
-                    UIActions.ResumeDownloads();
-                }
-                else
-                {
-                    UIActions.StopSelectedDownloads();
-                }
-            };
+            quick.OnClicked += (_, _) => RunRowAction(item, openFolder: false);
 
             item.SetChild(rowBox);
             AttachContextMenu(item, rowBox);
@@ -500,11 +495,20 @@ namespace XDM.Gtk4UI.Downloads
                 quickAction.TooltipText = quickTooltip;
                 quickAction.Visible = false;
             }
+            if (GetChildAt(rowBox, 6) is Button quickFolderAction)
+            {
+                var (folderR, folderG, folderB) = Gtk4IconHelper.CurrentAccent();
+                if (quickFolderAction.GetChild() is Image folderImage)
+                {
+                    Gtk4IconHelper.UpdateTintedIcon(folderImage, "folder-shared-line", folderR, folderG, folderB, 16);
+                }
+                quickFolderAction.Visible = false;
+            }
 
             if (textBox.GetFirstChild() is Label name &&
                 GetChildAt(textBox, 1) is Label meta)
             {
-                name.SetText(row.Name);
+                SetRowName(name, row.Name);
                 var metaText = CombineMeta(row);
                 meta.SetText(metaText);
                 meta.SetVisible(!string.IsNullOrEmpty(metaText));
@@ -573,6 +577,68 @@ namespace XDM.Gtk4UI.Downloads
                 live.Add(row.ETA);
             }
             cells.SpeedEta?.SetText(string.Join(" · ", live));
+        }
+
+        // Selects one row and runs its core action, so the shared handlers apply
+        private void RunRowAction(ListItem item, bool openFolder)
+        {
+            var id = IdOf(item);
+            if (string.IsNullOrEmpty(id) || store.Lookup(id) is not { } row)
+            {
+                return;
+            }
+            var position = item.Position;
+            if (position == uint.MaxValue)
+            {
+                return;
+            }
+
+            selection.UnselectAll();
+            selection.SelectItem(position, false);
+
+            if (row.IsComplete)
+            {
+                if (openFolder)
+                {
+                    UIActions.OpenSelectedFolder();
+                }
+                else
+                {
+                    UIActions.OpenSelectedFile();
+                }
+                return;
+            }
+
+            if (IsStopped(row))
+            {
+                UIActions.ResumeDownloads();
+            }
+            else
+            {
+                UIActions.StopSelectedDownloads();
+            }
+        }
+
+        // Writes the file name, underlining the part the search matched
+        private void SetRowName(Label label, string value)
+        {
+            var query = keyword?.Trim() ?? "";
+            var index = query.Length == 0 ? -1 : value.IndexOf(query, StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
+            {
+                label.SetText(value);
+                return;
+            }
+
+            // Accent + underline, so the match reads at a glance in either theme
+            var (r, g, b) = Gtk4IconHelper.CurrentAccent();
+            var accent = $"#{r:x2}{g:x2}{b:x2}";
+            label.SetMarkup(
+                GLib.Markup.EscapeText(value.Substring(0, index)) +
+                $"<span foreground=\"{accent}\" underline=\"single\">" +
+                GLib.Markup.EscapeText(value.Substring(index, query.Length)) +
+                "</span>" +
+                GLib.Markup.EscapeText(value.Substring(index + query.Length)));
         }
 
         // Row-local shortcut: open a finished file, or pause/resume the transfer
