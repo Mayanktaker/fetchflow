@@ -14,6 +14,7 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - **Media Grabber:** a new window lists the streams FetchFlow captures from your browser — pick one and download it
 - **Video downloader:** paste a video page address, optionally reuse your browser cookies, choose a quality and download
 - **A calmer Settings window:** pages are listed down the side and Cancel/Save sit in the window header, the way other GNOME apps work
+- **Clearer rows:** the source site and the save folder now sit on separate, very quiet lines under the file name, so the name is the first thing you see; the list header is easier to read and the scrollbar no longer covers the cards
 - **Download rows are cards:** each download sits on its own rounded card, so Active and Complete are easier to scan; the Net button icon and the title bar no longer repeat the app mark
 - **Cleaner title bar:** the app mark and view name sit in the middle, the main actions on the left, and search opens from the magnifier button (or Ctrl+F); theme switching and Open File/Open Folder moved into the main menu
 - **Looks like the rest of your desktop:** the modern Linux windows now use your system's own buttons, fields, hover and selection styling instead of hand-drawn chrome, so they match GNOME and your chosen theme

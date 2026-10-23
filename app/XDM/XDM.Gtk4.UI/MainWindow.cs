@@ -401,7 +401,8 @@ namespace XDM.Gtk4UI
             {
                 Id = row.DownloadEntry.Id,
                 Name = row.Name,
-                Meta = BuildMetaText(row.DownloadEntry, includeExtension: false),
+                Source = BuildSourceText(row.DownloadEntry, includeExtension: false),
+                Location = FriendlyPath(row.DownloadEntry.TargetDir),
                 SizeText = FormattingHelper.FormatSize(row.Size),
                 RawSize = row.Size,
                 DateAdded = row.DateAdded,
@@ -416,7 +417,8 @@ namespace XDM.Gtk4UI
         {
             Id = row.DownloadEntry.Id,
             Name = row.Name,
-            Meta = BuildMetaText(row.DownloadEntry, includeExtension: true),
+            Source = BuildSourceText(row.DownloadEntry, includeExtension: true),
+            Location = FriendlyPath(row.DownloadEntry.TargetDir),
             Status = TextResource.GetText("STAT_FINISHED") ?? "Complete",
             SizeText = FormattingHelper.FormatSize(row.Size),
             RawSize = row.Size,
@@ -427,9 +429,8 @@ namespace XDM.Gtk4UI
             FinishedRow = row
         };
 
-        // Builds the row's secondary line: source domain, target folder, and the
-        // file extension for finished downloads (matches the GTK 3 row meta line)
-        private static string BuildMetaText(DownloadItemBase entry, bool includeExtension)
+        // Builds the row's source line: the site name plus the file type for finished rows
+        private static string BuildSourceText(DownloadItemBase entry, bool includeExtension)
         {
             var parts = new List<string>();
 
@@ -437,12 +438,6 @@ namespace XDM.Gtk4UI
             if (!string.IsNullOrEmpty(domain))
             {
                 parts.Add("◉ " + domain);
-            }
-
-            var folder = FriendlyPath(entry.TargetDir);
-            if (!string.IsNullOrEmpty(folder))
-            {
-                parts.Add("◫ " + folder);
             }
 
             if (includeExtension)

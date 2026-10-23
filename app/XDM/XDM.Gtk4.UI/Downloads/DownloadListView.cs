@@ -79,6 +79,8 @@ namespace XDM.Gtk4UI.Downloads
             view.ShowColumnSeparators = false;
             view.Hexpand = true;
             view.Vexpand = true;
+            // Leave a strip so the overlay scrollbar never sits on a card
+            view.MarginEnd = 8;
 
             colCheckbox = BuildCheckboxColumn();
             colName = BuildNameColumn();
@@ -145,7 +147,13 @@ namespace XDM.Gtk4UI.Downloads
             if (nameCells.TryGetValue(id, out var name))
             {
                 name.Name.SetText(item.Name);
-                name.Status.SetText(RowSubLine(item));
+                if (name.Source != null)
+                {
+                    name.Source.SetText(item.Source);
+                    name.Source.SetVisible(!string.IsNullOrEmpty(item.Source));
+                }
+                name.Location.SetText(item.Location);
+                name.Location.SetVisible(!string.IsNullOrEmpty(item.Location));
             }
 
             if (sizeCells.TryGetValue(id, out var size))
@@ -241,7 +249,7 @@ namespace XDM.Gtk4UI.Downloads
         // Updates sort arrows on column titles
         private void UpdateSortHeaderTitles()
         {
-            var arrow = store.SortAscending ? " ▲" : " ▼";
+            var arrow = store.SortAscending ? " ▴" : " ▾";
             var nameCaption = TextResource.GetText("SORT_NAME") ?? "File name";
             var sizeCaption = TextResource.GetText("SORT_SIZE") ?? "Size";
             var progressCaption = TextResource.GetText("LBL_PROGRESS") ?? "Progress";
@@ -580,17 +588,23 @@ namespace XDM.Gtk4UI.Downloads
                 var name = Label.New("");
                 name.Halign = Align.Start;
                 name.Ellipsize = Pango.EllipsizeMode.End;
+                name.AddCssClass("download-name");
 
-                var status = Label.New("");
-                status.Halign = Align.Start;
-                // Meta lines carry long paths: ellipsizing keeps the column's minimum
-                // width small so Size/Progress are never pushed out of the window
-                status.Ellipsize = Pango.EllipsizeMode.Middle;
-                status.Hexpand = true;
-                status.AddCssClass("dim-label");
+                // Source and destination sit on their own, very dim lines so the
+                // file name stays the first thing the eye lands on
+                var source = Label.New("");
+                source.Halign = Align.Start;
+                source.Ellipsize = Pango.EllipsizeMode.End;
+                source.AddCssClass("download-meta");
+
+                var location = Label.New("");
+                location.Halign = Align.Start;
+                location.Ellipsize = Pango.EllipsizeMode.Middle;
+                location.AddCssClass("download-meta");
 
                 textBox.Append(name);
-                textBox.Append(status);
+                textBox.Append(source);
+                textBox.Append(location);
 
                 rowBox.Append(icon);
                 rowBox.Append(textBox);
@@ -613,15 +627,18 @@ namespace XDM.Gtk4UI.Downloads
                     Gtk4IconHelper.UpdateTintedIcon(icon, svgName, r, g, b, 24);
                 }
 
-                if (rowBox.GetLastChild() is Box textBox)
+                if (rowBox.GetLastChild() is Box textBox &&
+                    textBox.GetFirstChild() is Label name &&
+                    textBox.GetLastChild() is Label location)
                 {
-                    if (textBox.GetFirstChild() is Label name)
+                    name.SetText(row.Name);
+                    location.SetText(row.Location);
+                    location.SetVisible(!string.IsNullOrEmpty(row.Location));
+
+                    if (GetChildAt(textBox, 1) is Label source)
                     {
-                        name.SetText(row.Name);
-                    }
-                    if (textBox.GetLastChild() is Label status)
-                    {
-                        status.SetText(RowSubLine(row));
+                        source.SetText(row.Source);
+                        source.SetVisible(!string.IsNullOrEmpty(row.Source));
                     }
                 }
 
@@ -629,9 +646,10 @@ namespace XDM.Gtk4UI.Downloads
                 if (rowBox.GetFirstChild() is Image boundIcon &&
                     rowBox.GetLastChild() is Box boundBox &&
                     boundBox.GetFirstChild() is Label boundName &&
-                    boundBox.GetLastChild() is Label boundStatus)
+                    boundBox.GetLastChild() is Label boundLocation)
                 {
-                    nameCells[id] = new NameCells(boundIcon, boundName, boundStatus);
+                    nameCells[id] = new NameCells(boundIcon, boundName,
+                        GetChildAt(boundBox, 1) as Label, boundLocation);
                 }
             };
             factory.OnUnbind += (_, args) =>
@@ -804,10 +822,6 @@ namespace XDM.Gtk4UI.Downloads
                 : row.Status);
         }
 
-        // Secondary line: the source/folder meta when known, else the transfer status
-        private static string RowSubLine(DownloadItem row) =>
-            string.IsNullOrEmpty(row.Meta) ? row.Status : row.Meta;
-
         // Resolves vibrant category colors matching GTK 3 CategoryIconPalette
         private static (byte R, byte G, byte B) GetCategoryColorForFileType(string filename)
         {
@@ -918,18 +932,31 @@ namespace XDM.Gtk4UI.Downloads
             popover.Popup();
         }
 
+        // Nth child of a box, used for the middle source line
+        private static Widget? GetChildAt(Box box, int index)
+        {
+            var child = box.GetFirstChild();
+            for (var i = 0; i < index && child != null; i++)
+            {
+                child = child.GetNextSibling();
+            }
+            return child;
+        }
+
         // Widgets behind one bound name cell, refreshed on a progress tick
         private sealed class NameCells
         {
             public Image Icon { get; }
             public Label Name { get; }
-            public Label Status { get; }
+            public Label? Source { get; }
+            public Label Location { get; }
 
-            public NameCells(Image icon, Label name, Label status)
+            public NameCells(Image icon, Label name, Label? source, Label location)
             {
                 Icon = icon;
                 Name = name;
-                Status = status;
+                Source = source;
+                Location = location;
             }
         }
 

@@ -275,10 +275,14 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
-- **List chrome:** download rows are cards (6px gaps, 10px radius, subtle border) so the
-  two-line rows read as discrete items; list separators are off and the header keeps a
-  one-pixel divider to mark the draggable column edge. Card surface, hover and accent-tinted
-  selection are the only row styling the stylesheet owns.
+- **List chrome:** download rows are cards (6px gaps, 10px radius, subtle border) so each
+  row reads as a discrete item; list separators are off and the header keeps a one-pixel
+  divider to mark the draggable column edge. The list view carries an 8px end margin so the
+  overlay scrollbar never sits on a card.
+- **Row hierarchy:** three lines per row — the file name (14px, 600), the source site plus
+  file type, and the destination folder. The two meta lines use an 11px `@meta_text` tone
+  (~55% of body text) so the eye lands on the name first. The header row is 13px semibold on
+  `@header_text` with a 36px minimum height, matching a native table header.
 - **Native-first styling:** the GTK 4 stylesheets deliberately stay minimal. Buttons, entries, header bars, sidebar rows, progress bars, hover/active/selection states and focus rings are drawn by libadwaita/Adwaita, so the app looks and behaves like the user's desktop and follows its accessibility settings. The stylesheets only carry what native theming cannot express: the Active vs Complete list surfaces, a thin column divider, the accent token rewritten from `ColorSchemeTable`, the bandwidth/extension state colours and the dialog section-heading weight. Sidebar lists use libadwaita's `navigation-sidebar` class and the Active/Complete block uses `boxed-list`, instead of hand-written row styling.
 - **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
   System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved
