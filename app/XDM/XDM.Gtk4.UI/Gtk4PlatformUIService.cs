@@ -194,14 +194,12 @@ namespace XDM.Gtk4UI
             SpeedLimiterUIController.Run(window);
         }
 
-        // Creates and shows media grabber popup
-        public void CreateAndShowMediaGrabber() => ShowYoutubeDLDialog();
+        // Creates and shows the captured-media grabber window
+        public void CreateAndShowMediaGrabber() =>
+            new MediaGrabberWindow(mainWindow.Window).Show();
 
-        // Shows browser extension registration window
-        public void ShowExtensionRegistrationWindow() =>
-            ShowMessageBox(mainWindow.Window,
-                TextResource.GetText("MSG_EXT_REG_UNAVAILABLE")
-                ?? "Extension registration is available from Settings > Browser Monitoring.");
+        // Browser integration lives in Settings > Browser Monitoring (install buttons + IPC state)
+        public void ShowExtensionRegistrationWindow() => ShowSettingsDialog(PageMonitoring);
 
         // Displays checksum verification dialog
         public void ShowChecksumDialog(object? window, string filePath)

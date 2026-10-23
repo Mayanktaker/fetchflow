@@ -253,6 +253,10 @@ namespace XDM.Gtk4UI
             ydlView.SwitchToFinalPage();
             ydlView.CloseWindow();
 
+            // Media grabber window builds against the registered VideoTracker
+            var grabber = new MediaGrabberWindow(mainWindow.Window);
+            grabber.Show();
+
             // List/theme regression checks for the P0 fixes (search, selection, ThemeMode)
             mainWindow.RunSelfTest();
 

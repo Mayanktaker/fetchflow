@@ -78,6 +78,7 @@ namespace XDM.Gtk4UI
             var downloads = Gio.Menu.New();
             downloads.Append(TextResource.GetText("MENU_BATCH_DOWNLOAD") ?? "Batch Download...", "app." + AppActions.BatchDownload);
             downloads.Append(TextResource.GetText("LBL_VIDEO_DOWNLOAD") ?? "Video Downloader...", "app." + AppActions.VideoDownload);
+            downloads.Append(TextResource.GetText("MSG_MEDIA_CAPTURE") ?? "Media Grabber", "app." + AppActions.MediaGrabber);
             downloads.Append(TextResource.GetText("DESC_Q_TITLE") ?? "Queue & Scheduler...", "app." + AppActions.Scheduler);
             downloads.Append(TextResource.GetText("MENU_SPEED_LIMITER") ?? "Speed Limiter...", "app." + AppActions.SpeedLimiter);
             downloads.Append(TextResource.GetText("CTX_CHECKSUM") ?? "Calculate Checksum...", "app." + AppActions.VerifyChecksum);

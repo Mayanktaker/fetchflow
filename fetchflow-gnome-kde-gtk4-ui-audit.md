@@ -21,7 +21,8 @@ Measured environment: CachyOS GNOME on Wayland, GTK 4.24.1, GTK 3.24.52, libadwa
   Browser Monitoring link opened the wrong page; the footer printed developer text; About
   hardcoded the version; the extension badge was static; Active and Complete shared one
   surface; and the header overflowed with labelled buttons. Still open: FF-UI-026…035
-  (rubber-band selection, media grabber/extension-registration entry points). The yt-dlp
+  (none in the GTK 4 parity scope; rubber-band selection and keep-above are accepted platform
+  limitations, FF-UI-032/039). The yt-dlp
   media downloader, sidebar counts, row meta lines, header select-all click, colour schemes,
   settings sidebar, libadwaita shell and the localization pass all landed in the parity work.
 - Feature areas already at GTK 3 parity in GTK 4 (not "full parity": see the open findings above):

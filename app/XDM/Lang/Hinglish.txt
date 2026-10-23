@@ -404,3 +404,5 @@ MSG_NO_MATCH=Abhi koi match nahi
 BTN_RECALCULATE=Dobara calculate karein
 LBL_VERIFY_HASH=Expected hash se jaanchein:
 LBL_HEADERS_COOKIES=HTTP headers aur cookies:
+MSG_MEDIA_DOWNLOAD_STARTED=Download shuru hua. Yeh download list mein dikhega.
+MSG_MEDIA_FETCHING=Formats aa rahe hain...

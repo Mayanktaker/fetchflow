@@ -124,7 +124,8 @@ namespace XDM.Gtk4UI
                 checkForUpdate: () => main.CheckForUpdateClicked?.Invoke(main, EventArgs.Empty),
                 helpSupport: () => main.HelpClicked?.Invoke(main, EventArgs.Empty),
                 reportProblem: () => main.BugReportClicked?.Invoke(main, EventArgs.Empty),
-                removeFinished: () => main.ConfirmRemoveFinished());
+                removeFinished: () => main.ConfirmRemoveFinished(),
+                mediaGrabber: () => ApplicationContext.PlatformUIService?.CreateAndShowMediaGrabber());
             if (demo)
             {
                 main.SetRows(DemoRows(), InProgressKey);

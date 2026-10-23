@@ -404,3 +404,5 @@ MSG_NO_MATCH=अभी कोई मेल नहीं
 BTN_RECALCULATE=पुनः गणना करें
 LBL_VERIFY_HASH=अपेक्षित हैश से जाँचें:
 LBL_HEADERS_COOKIES=HTTP हेडर और कुकीज़:
+MSG_MEDIA_DOWNLOAD_STARTED=डाउनलोड शुरू हुआ। यह डाउनलोड सूची में दिखेगा।
+MSG_MEDIA_FETCHING=फ़ॉर्मेट प्राप्त हो रहे हैं...
