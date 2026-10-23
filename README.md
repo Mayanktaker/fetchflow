@@ -150,7 +150,17 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/install-fetchflow.sh | bash
 # Options: bash install-fetchflow.sh --version 9.1.16.0 --yes --check --uninstall
 ```
-The script auto-detects your distro, installs system deps (`gtk3`, `ffmpeg`, `xdg-desktop-portal`), then installs the native package (`.pkg.tar.zst` on Arch-family, `.rpm` on Fedora, `.deb` on Debian/Ubuntu) with a portable `/opt/fetchflow` tarball fallback.
+The script auto-detects your distro, installs system deps (`gtk4` + `libadwaita`, or `gtk3` on older systems, plus `ffmpeg`, `xdg-desktop-portal`), then installs the native package (`.pkg.tar.zst` on Arch-family, `.rpm` on Fedora, `.deb` on Debian/Ubuntu) with a portable `/opt/fetchflow` tarball fallback.
+
+### Which version will I get? (picked automatically)
+You don't need to choose — the installer checks your system and installs the right one:
+
+- **Modern desktops** (GNOME, KDE Plasma, Ubuntu 24.04+, Fedora, Sway/Hyprland/COSMIC) → the **GTK 4** app (`fetchflow`). Needs GTK 4 + libadwaita, installed automatically if missing.
+- **Older / GTK 3–only desktops** (Xfce, MATE, older Cinnamon) → the **GTK 3** app, with an extra `fetchflow-gtk3` launcher. Same features, classic look.
+- **KDE Plasma** → the GTK 4 app. It respects your Breeze theme and the system tray works out of the box.
+- **Arch / CachyOS / Manjaro** → detected on your machine; the right dependencies are installed for you (`yay -S fetchflow-bin` works too).
+- **Windows 10/11** → a separate native app (no GTK involved) — see the Windows section below.
+- **Want to force it?** Run the installer with `--gtk4` or `--gtk3`.
 
 ### CachyOS / Manjaro / Arch / EndeavourOS / Garuda
 ```bash
