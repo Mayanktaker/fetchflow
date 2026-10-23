@@ -154,11 +154,13 @@ namespace XDM.Gtk4UI
             dlg.Show();
         }
 
-        // Opens the media stream downloader
-        public void ShowYoutubeDLDialog() =>
-            ShowMessageBox(mainWindow.Window,
-                TextResource.GetText("MSG_YTDLP_UNAVAILABLE")
-                ?? "The media stream downloader is not part of the GTK 4 build yet.");
+        // Opens the media stream downloader (yt-dlp) driven by the shared controller
+        public void ShowYoutubeDLDialog()
+        {
+            var view = new VideoDownloaderWindow(mainWindow.Window);
+            var controller = new VideoDownloaderUIController(view);
+            controller.Run();
+        }
 
         // Shows batch downloader
         public void ShowBatchDownloadWindow()

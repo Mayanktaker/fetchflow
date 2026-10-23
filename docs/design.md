@@ -299,6 +299,9 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Sidebar counts:** Active, Complete and every category append `(n)` while they contain rows.
 - **Select-all header:** the gutter header renders ☐/▣/☑ and carries a capture-phase click
   gesture (located by its glyph, since `GtkColumnViewColumn` exposes no header-click signal).
+- **Media downloader:** `VideoDownloaderWindow` is a four-page `Gtk.Stack` view over the shared
+  `VideoDownloaderUIController` (URL + optional browser cookies + credentials → resolving
+  spinner → ticked result list with quality and download actions → error page).
 - **Colour schemes:** on load the stylesheet's `@accent`/`@accent_hover` tokens are rewritten
   from the active `ColorSchemeTable` entry, so the 7 dark and 7 light palettes drive GTK 4
   exactly as they drive GTK 3 and WPF.

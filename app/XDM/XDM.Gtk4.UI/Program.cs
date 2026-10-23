@@ -245,6 +245,14 @@ namespace XDM.Gtk4UI
             vidDlg.IsMp3CheckboxChecked = false;
             vidDlg.DisposeWindow();
 
+            // Media downloader view: pages, result list and quality selection
+            var ydlView = new VideoDownloaderWindow(mainWindow.Window);
+            ydlView.SetVideoResultList(new[] { "Video A", "Video B" }, new[] { "1080p", "720p" });
+            if (ydlView.SelectedItemCount != 2) throw new InvalidOperationException("Video rows not pre-selected");
+            if (ydlView.SelectedFormat != 0) throw new InvalidOperationException("Default quality not selected");
+            ydlView.SwitchToFinalPage();
+            ydlView.CloseWindow();
+
             // List/theme regression checks for the P0 fixes (search, selection, ThemeMode)
             mainWindow.RunSelfTest();
 
