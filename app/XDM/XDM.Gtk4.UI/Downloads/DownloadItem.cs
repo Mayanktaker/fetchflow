@@ -4,6 +4,7 @@
 // each row by its stable Id (the StringObject string), so no GObject subclassing
 // is required and rows survive sorting, filtering and in-place progress updates.
 using System;
+using XDM.Core;
 using XDM.Core.UI;
 
 namespace XDM.Gtk4UI.Downloads
@@ -36,6 +37,8 @@ namespace XDM.Gtk4UI.Downloads
         public string DownloadSpeed { get; set; } = "";
         // Live estimated time of arrival ("00:02:15")
         public string ETA { get; set; } = "";
+        // True when the transfer stopped because of an error (drives the Failed pill)
+        public bool HasError { get; set; }
         // Original core row when this entry belongs to the live UI model
         public IInProgressDownloadRow? ProgressRow { get; init; }
         // Original core row for a completed entry
@@ -124,8 +127,19 @@ namespace XDM.Gtk4UI.Downloads
             Status = row.Status + FormatSuffix(row);
             Progress = Math.Clamp(row.Progress / 100.0, 0.0, 1.0);
             RawProgress = row.Progress;
-            DownloadSpeed = row.DownloadSpeed ?? "";
-            ETA = row.ETA ?? "";
+            HasError = row.DownloadEntry.LastErrorCode != ErrorCode.None;
+            // Only a running transfer reports live numbers: without this reset
+            // the last tick's speed would sit frozen under a paused row forever
+            if (row.Status == DownloadStatus.Downloading)
+            {
+                DownloadSpeed = row.DownloadSpeed ?? "";
+                ETA = row.ETA ?? "";
+            }
+            else
+            {
+                DownloadSpeed = "";
+                ETA = "";
+            }
         }
 
         // Appends the live speed or ETA to the status text the way the row shows it

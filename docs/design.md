@@ -289,7 +289,10 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   row is complete, where the check plus finish date already say it. Hovering a row reveals
   one accent-tinted shortcut at its end: pause, resume (paused rows) or open (finished
   rows). Finished rows show a second shortcut that opens the destination folder. Both
-  select their own row first, so the shared core actions apply to it.
+  select their own row first, so the shared core actions apply to it. Pause, resume and
+  failure arrive with no progress tick, so the core row lookup re-syncs the affected row
+  on idle: the pill flips (Downloading to Paused/Failed), the frozen speed clears and
+  the hover shortcut swaps pause for resume.
 - **Native-first styling:** the GTK 4 stylesheets deliberately stay minimal. Buttons, entries, header bars, sidebar rows, progress bars, hover/active/selection states and focus rings are drawn by libadwaita/Adwaita, so the app looks and behaves like the user's desktop and follows its accessibility settings. The stylesheets only carry what native theming cannot express: the Active vs Complete list surfaces, a thin column divider, the accent token rewritten from `ColorSchemeTable`, the bandwidth/extension state colours and the dialog section-heading weight. Sidebar lists use libadwaita's `navigation-sidebar` class and the Active/Complete block uses `boxed-list`, instead of hand-written row styling.
 - **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
   System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved

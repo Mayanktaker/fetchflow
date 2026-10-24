@@ -352,6 +352,20 @@ namespace XDM.Gtk4UI
             UpdateActivitySummary();
         }
 
+        // Re-syncs one row after a core state change (pause/resume/fail), which
+        // arrives with no progress tick, so bound cells would otherwise stay frozen
+        public void RefreshRowState(string id)
+        {
+            var item = allRows.FirstOrDefault(row => row.Id == id);
+            if (item?.ProgressRow == null)
+            {
+                return;
+            }
+            item.CopyLiveStateFrom(item.ProgressRow);
+            downloadList.UpdateRow(id);
+            UpdateActivitySummary();
+        }
+
         // Refreshes one row's live transfer state without rebuilding the list
         public void UpdateProgressRow(string id)
         {

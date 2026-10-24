@@ -59,6 +59,24 @@ namespace XDM.Gtk4UI
             SetRows(rows, InProgressKey);
             Expect(downloadList.GetSelectedItems().Count == 3, "selection restored by transfer id");
 
+            // Pausing arrives with no progress tick, so the row must re-sync on
+            // demand: stopped state, no frozen speed, and no error flag
+            var paused = NewRow("t4", "paused-four.bin", 43);
+            paused.Entry.Status = DownloadStatus.Stopped;
+            paused.Entry.DownloadSpeed = "9.8 MB/s";
+            paused.Entry.ETA = "00:01:51";
+            SetRows(new[] { paused.Item }, InProgressKey);
+            RefreshRowState("t4");
+            var pausedItem = allRows.First(row => row.Id == "t4");
+            Expect(pausedItem.Status.Contains("Stop"), "paused row carries the stopped state");
+            Expect(pausedItem.DownloadSpeed == "", "paused drops the frozen speed");
+            Expect(!pausedItem.HasError, "paused row is not an error");
+
+            // A failed transfer keeps the stopped state but raises the error flag
+            paused.Entry.LastErrorCode = ErrorCode.Generic;
+            RefreshRowState("t4");
+            Expect(allRows.First(row => row.Id == "t4").HasError, "failed row raises the error flag");
+
             // Theme mode round-trip across the shared Config codes
             Gtk4Theme.ApplyMode(Window, Gtk4Theme.ModeLight, persist: false);
             Expect(!Gtk4Theme.IsDarkActive, "light mode applied");

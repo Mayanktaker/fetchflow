@@ -486,13 +486,6 @@ namespace XDM.Gtk4UI.Downloads
             // Recycled rows start with the shortcut hidden
             if (GetChildAt(rowBox, 5) is Button quickAction)
             {
-                var (accentR, accentG, accentB) = Gtk4IconHelper.CurrentAccent();
-                var (quickIcon, quickTooltip) = QuickActionFor(row);
-                if (quickAction.GetChild() is Image quickImage)
-                {
-                    Gtk4IconHelper.UpdateTintedIcon(quickImage, quickIcon, accentR, accentG, accentB, 16);
-                }
-                quickAction.TooltipText = quickTooltip;
                 quickAction.Visible = false;
             }
             if (GetChildAt(rowBox, 6) is Button quickFolderAction)
@@ -518,6 +511,8 @@ namespace XDM.Gtk4UI.Downloads
                 var cells = new RowCells(name, meta, statusPill, size,
                     progressHost.GetFirstChild() as Box ?? Box.New(Orientation.Vertical, 0),
                     progressHost.GetLastChild() as Box ?? Box.New(Orientation.Vertical, 0));
+                cells.Quick = GetChildAt(rowBox, 5) as Button;
+                cells.QuickFolder = GetChildAt(rowBox, 6) as Button;
                 if (cells.FinishedBox.GetLastChild() is Label finishedLabel &&
                     cells.InProgressBox.GetFirstChild() is Box barRow &&
                     barRow.GetFirstChild() is ProgressBar bar &&
@@ -549,6 +544,7 @@ namespace XDM.Gtk4UI.Downloads
             cells.FinishedBox.Visible = row.IsComplete;
             cells.InProgressBox.Visible = !row.IsComplete;
             BindStatusPill(cells.Status, row);
+            RefreshQuickAction(cells, row);
 
             if (row.IsComplete)
             {
@@ -660,6 +656,23 @@ namespace XDM.Gtk4UI.Downloads
             (row.Status ?? "").Contains("Stop", StringComparison.OrdinalIgnoreCase) ||
             (row.Status ?? "").Contains("Paus", StringComparison.OrdinalIgnoreCase);
 
+        // Re-tints the hover shortcut for the row's current state (pause flips to
+        // resume and back). Visibility stays hover-driven and is never forced here.
+        private static void RefreshQuickAction(RowCells cells, DownloadItem row)
+        {
+            if (cells.Quick == null)
+            {
+                return;
+            }
+            var (icon, tooltip) = QuickActionFor(row);
+            if (cells.Quick.GetChild() is Image image)
+            {
+                var (r, g, b) = Gtk4IconHelper.CurrentAccent();
+                Gtk4IconHelper.UpdateTintedIcon(image, icon, r, g, b, 16);
+            }
+            cells.Quick.TooltipText = tooltip;
+        }
+
         // Maps the transfer state to one pill caption and tone
         private static void BindStatusPill(Label pill, DownloadItem row)
         {
@@ -677,7 +690,8 @@ namespace XDM.Gtk4UI.Downloads
             var status = row.Status ?? "";
             string text;
             string tone;
-            if (status.Contains("Fail", StringComparison.OrdinalIgnoreCase) ||
+            if (row.HasError ||
+                status.Contains("Fail", StringComparison.OrdinalIgnoreCase) ||
                 status.Contains("Error", StringComparison.OrdinalIgnoreCase))
             {
                 text = TextResource.GetText("STAT_FAILED") ?? "Failed";
@@ -871,6 +885,8 @@ namespace XDM.Gtk4UI.Downloads
             public Label Meta { get; }
             public Label Status { get; }
             public Label Size { get; }
+            public Button? Quick { get; set; }
+            public Button? QuickFolder { get; set; }
             public Box FinishedBox { get; }
             public Box InProgressBox { get; }
             public ProgressBar? Bar { get; set; }

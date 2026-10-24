@@ -92,8 +92,22 @@ namespace XDM.Gtk4UI
             }
         }
 
-        public IInProgressDownloadRow? FindInProgressItem(string id) =>
-            inProgress.FirstOrDefault(row => row.DownloadEntry.Id == id);
+        public IInProgressDownloadRow? FindInProgressItem(string id)
+        {
+            var row = inProgress.FirstOrDefault(row => row.DownloadEntry.Id == id);
+            if (row != null)
+            {
+                // Core mutates this row's status right after finding it (started,
+                // cancelled, failed) with no progress tick to follow, so re-sync
+                // the visible cells once that mutation has run
+                GLib.Functions.IdleAdd(0, () =>
+                {
+                    window.RefreshRowState(id);
+                    return false;
+                });
+            }
+            return row;
+        }
 
         public IFinishedDownloadRow? FindFinishedItem(string id) =>
             finished.FirstOrDefault(row => row.DownloadEntry.Id == id);
