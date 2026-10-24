@@ -803,6 +803,16 @@ namespace XDM.GtkUI
                 var isConn = IpcHttpMessageProcessor.IsConnected;
                 var port = IpcHttpMessageProcessor.EffectivePort;
 
+                // Monitoring off means nothing will be captured, so the badge
+                // must not claim the extension is ready or active
+                if (!Config.Instance.IsBrowserMonitoringEnabled)
+                {
+                    var off = TextResource.GetText("MSG_EXT_DISABLED") ?? "Monitoring Off";
+                    lblExtensionStatus.Markup = $"<span color='#94a3b8' size='small'>○ {off}</span>";
+                    lblExtensionStatus.TooltipText = "Browser monitoring is off — turn it on to capture downloads";
+                    return;
+                }
+
                 if (count > 0)
                 {
                     lblExtensionStatus.Markup = $"<span color='#22c55e' size='small'>● Extension Active ({count})</span>";

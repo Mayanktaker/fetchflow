@@ -342,9 +342,11 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   that opens the progress window. The
   connectivity badge follows it — while monitoring is switched off the badge reads
   "Monitoring Off" (dimmed) instead of claiming the extension is ready, since
-  nothing would be captured; Browser Monitoring is a `Gtk.Switch`
+  nothing would be captured — the GTK 3 badge behaves the same way; Browser Monitoring is a `Gtk.Switch`
   with a caption, then the bandwidth limiter and the queue window on the right. Footer
-  buttons render at 12px so they stay quieter than the content. Its buttons
+  buttons render at 12px so they stay quieter than the content, and the activity
+  summary takes the dimmed tone while monitoring is off (its numbers stay
+  truthful — the engine runs regardless). Its buttons
   draw their icons from the active scheme accent and are re-tinted whenever the theme changes.
 - **Sidebar rows:** plain `navigation-sidebar` rows with an 8px inset. Icons keep their
   category colour at rest and turn white on the accent selection (counts fade to 85% white),

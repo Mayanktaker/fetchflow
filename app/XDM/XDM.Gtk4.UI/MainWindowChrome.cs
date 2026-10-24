@@ -258,6 +258,16 @@ namespace XDM.Gtk4UI
                     : "";
 
                 lblActivity.SetText(activeText + queuedText + speedText);
+                // Numbers stay truthful (the engine runs regardless), but the tone
+                // drops while monitoring is off — capture, not downloads, is paused
+                if (!Config.Instance.IsBrowserMonitoringEnabled)
+                {
+                    lblActivity.AddCssClass("dim-label");
+                }
+                else
+                {
+                    lblActivity.RemoveCssClass("dim-label");
+                }
                 btnActivity.TooltipText = lblActivity.GetText() + " · " +
                     (TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress");
 
