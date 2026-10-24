@@ -700,6 +700,17 @@ namespace XDM.Gtk4UI
             Window.Present();
         }
 
+        // Screenshot preview for docs captures: demo rows (and an optional view)
+        // instead of the user's real downloads. Driven by --shot=<mode>.
+        internal void LoadDemoPreview(string mode)
+        {
+            SetRows(DemoRows(), InProgressKey);
+            if (mode == "complete")
+            {
+                SelectView(FinishedKey);
+            }
+        }
+
         // Formats an in-progress row for display
         private static IEnumerable<DownloadItem> DemoRows() => new List<DownloadItem>
         {

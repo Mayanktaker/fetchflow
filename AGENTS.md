@@ -39,6 +39,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | `scripts/lint-shell.sh` | Shell lint gate — shared target list used by `lint.yml`; runs `shellcheck -S warning` over every repo script |
 | `scripts/lint-credit-headers.sh` | Rule 5 gate — requires the credit header on files you *changed* (upstream XDM files stay grandfathered); `--staged`, `--base <ref>`, `--all` (report-only baseline) |
 | `scripts/clean-artifacts.sh` | Reclaim stale generated packaging trees (dry run by default, `--yes` to delete, `--keep-current` to spare the live version) |
+| `scripts/capture-screenshots.sh` | Re-shoot README/site screenshots (throwaway HOME, demo rows via `--shot=`, Xvfb); re-run on releases that change UI |
 | `scripts/cleanup-junk-captures.sh` | Purge junk captures (quit app first; auto-backup) |
 
 ## Rules

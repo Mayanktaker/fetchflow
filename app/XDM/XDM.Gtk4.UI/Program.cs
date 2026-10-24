@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Gtk;
 using TraceLog;
 using Translations;
@@ -79,6 +80,9 @@ namespace XDM.Gtk4UI
             var demo = Array.Exists(args, a => a == "--demo");
             var smoke = Array.Exists(args, a => a == "--smoke");
             var background = Array.Exists(args, a => a == "--background");
+            // Screenshot preview for docs (scripts/capture-screenshots.sh):
+            // --shot=main|settings|complete loads demo rows instead of real data
+            var shot = args.FirstOrDefault(a => a.StartsWith("--shot=", StringComparison.Ordinal))?.Substring("--shot=".Length) ?? "";
             if (smoke)
             {
                 Environment.SetEnvironmentVariable("FETCHFLOW_SKIP_SINGLE_INSTANCE", "1");
@@ -126,6 +130,19 @@ namespace XDM.Gtk4UI
                     if (!background)
                     {
                         activeMainWindow.ShowAndActivate();
+                    }
+                    if (!string.IsNullOrEmpty(shot))
+                    {
+                        var shotMode = shot;
+                        GLib.Functions.TimeoutAdd(0, 1500, () =>
+                        {
+                            activeMainWindow.LoadDemoPreview(shotMode);
+                            if (shotMode == "settings")
+                            {
+                                new XDM.Gtk4UI.Dialogs.SettingsDialog(activeMainWindow.Window, 0).Show();
+                            }
+                            return false;
+                        });
                     }
                     isContextConfigured = true;
                 }
