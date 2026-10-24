@@ -288,8 +288,10 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   (accent), Paused (amber), Queued (neutral), Failed (red) — and hides itself once the
   row is complete, where the check plus finish date already say it. Hovering a row reveals
   one accent-tinted shortcut at its end: pause, resume (paused rows) or open (finished
-  rows). Finished rows show a second shortcut that opens the destination folder. Both
-  select their own row first, so the shared core actions apply to it. Pause, resume and
+  rows). Finished rows show a second shortcut that opens the destination folder and a
+  third, red shortcut that removes the download through the same confirm dialog as the
+  context menu. All three select their own row first, so the shared core actions apply
+  to it. Pause, resume and
   failure arrive with no progress tick, so the core row lookup re-syncs the affected row
   on idle: the pill flips (Downloading to Paused/Failed), the frozen speed clears and
   the hover shortcut swaps pause for resume.

@@ -435,23 +435,38 @@ namespace XDM.Gtk4UI.Downloads
             quickFolder.OnClicked += (_, _) => RunRowAction(item, openFolder: true);
             rowBox.Append(quickFolder);
 
+            // Finished rows also offer a delete shortcut beside the open actions
+            var quickDelete = Button.New();
+            quickDelete.AddCssClass("flat");
+            quickDelete.AddCssClass("row-action");
+            quickDelete.Valign = Align.Center;
+            quickDelete.Focusable = false;
+            quickDelete.Visible = false;
+            quickDelete.TooltipText = TextResource.GetText("MENU_DELETE_DWN") ?? "Remove from List";
+            quickDelete.SetChild(Gtk4IconHelper.CreateTintedIcon("delete-bin-7-line", 220, 38, 38, 16));
+            quickDelete.OnClicked += (_, _) => RunRowAction(item, delete: true);
+            rowBox.Append(quickDelete);
+
             // Reveal on pointer entry so the row stays calm at rest
             var motion = EventControllerMotion.New();
             motion.OnEnter += (_, _) =>
             {
                 var hoverId = IdOf(item);
+                var isFinished = !string.IsNullOrEmpty(hoverId) && store.Lookup(hoverId)?.IsComplete == true;
                 quick.Visible = true;
-                quickFolder.Visible = !string.IsNullOrEmpty(hoverId) && store.Lookup(hoverId)?.IsComplete == true;
+                quickFolder.Visible = isFinished;
+                quickDelete.Visible = isFinished;
             };
             motion.OnLeave += (_, _) =>
             {
                 quick.Visible = false;
                 quickFolder.Visible = false;
+                quickDelete.Visible = false;
             };
             rowBox.AddController(motion);
 
             // The shortcut selects its own row first, so the shared core action applies
-            quick.OnClicked += (_, _) => RunRowAction(item, openFolder: false);
+            quick.OnClicked += (_, _) => RunRowAction(item);
 
             item.SetChild(rowBox);
             AttachContextMenu(item, rowBox);
@@ -496,6 +511,10 @@ namespace XDM.Gtk4UI.Downloads
                     Gtk4IconHelper.UpdateTintedIcon(folderImage, "folder-shared-line", folderR, folderG, folderB, 16);
                 }
                 quickFolderAction.Visible = false;
+            }
+            if (GetChildAt(rowBox, 7) is Button quickDeleteAction)
+            {
+                quickDeleteAction.Visible = false;
             }
 
             if (textBox.GetFirstChild() is Label name &&
@@ -576,7 +595,7 @@ namespace XDM.Gtk4UI.Downloads
         }
 
         // Selects one row and runs its core action, so the shared handlers apply
-        private void RunRowAction(ListItem item, bool openFolder)
+        private void RunRowAction(ListItem item, bool openFolder = false, bool delete = false)
         {
             var id = IdOf(item);
             if (string.IsNullOrEmpty(id) || store.Lookup(id) is not { } row)
@@ -594,6 +613,12 @@ namespace XDM.Gtk4UI.Downloads
 
             if (row.IsComplete)
             {
+                if (delete)
+                {
+                    // Same confirm-then-remove flow as the context menu
+                    UIActions.DeleteDownloads(false, null);
+                    return;
+                }
                 if (openFolder)
                 {
                     UIActions.OpenSelectedFolder();
@@ -605,6 +630,10 @@ namespace XDM.Gtk4UI.Downloads
                 return;
             }
 
+            if (delete)
+            {
+                return;
+            }
             if (IsStopped(row))
             {
                 UIActions.ResumeDownloads();
