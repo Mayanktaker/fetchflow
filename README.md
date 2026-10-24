@@ -38,6 +38,22 @@
 
 ---
 
+## 🖼️ Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/fetchflow-main-window.png" width="860" alt="FetchFlow main window with download list" />
+  <br />
+  <em>Main window — download list with state pills, live counts, and a reporting footer (dark theme).</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/fetchflow-settings.png" width="860" alt="FetchFlow Settings with icon tabs" />
+  <br />
+  <em>Settings — icon tabs, grouped cards, and changes that apply immediately.</em>
+</p>
+
+---
+
 ## ⚡ Key Capabilities
 
 | Capability | Engineering Detail |
