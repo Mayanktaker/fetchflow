@@ -52,6 +52,18 @@
   <em>Settings — icon tabs, grouped cards, and changes that apply immediately.</em>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/fetchflow-paused-row.png" width="860" alt="Paused download with Paused pill and resume shortcut" />
+  <br />
+  <em>A paused download — amber Paused pill, frozen speed cleared, resume shortcut at the row end.</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/fetchflow-finished-actions.png" width="860" alt="Finished download with open, open folder and delete shortcuts" />
+  <br />
+  <em>A finished download — open, open folder and delete shortcuts beside the date.</em>
+</p>
+
 ---
 
 ## ⚡ Key Capabilities

@@ -201,13 +201,8 @@ namespace XDM.Gtk4UI
             button.OnClicked += (_, _) => OnSettings();
 
             var footer = Box.New(Orientation.Vertical, 0);
-            footer.MarginTop = 4;
+            footer.MarginTop = 8;
             footer.MarginBottom = 8;
-            var divider = Separator.New(Orientation.Horizontal);
-            divider.MarginStart = 12;
-            divider.MarginEnd = 12;
-            divider.MarginTop = 4;
-            footer.Append(divider);
             footer.Append(button);
             return footer;
         }
