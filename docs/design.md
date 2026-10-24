@@ -337,17 +337,22 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   Ctrl/Shift click semantics; Select All and the "N selected" count live in the content
   headline.
 - **Status footer:** one slim bar with no divider (the list surface already separates it). It opens with the activity summary —
-  `N active · X/s` while transfers run (`Idle` otherwise), computed from the visible rows'
+  `N active · X/s` while transfers run (`Idle` — or `Idle — Monitoring Off` when capture
+  is off — otherwise), computed from the visible rows'
   parsed speeds, a `· N queued` count for waiting transfers — and doubles as a flat button
   that opens the progress window. The
   connectivity badge follows it — while monitoring is switched off the badge reads
   "Monitoring Off" (dimmed) instead of claiming the extension is ready, since
   nothing would be captured — the GTK 3 badge behaves the same way; Browser Monitoring is a `Gtk.Switch`
-  with a caption, then the bandwidth limiter and the queue window on the right. Footer
-  buttons render at 12px so they stay quieter than the content, and the activity
-  summary takes the dimmed tone while monitoring is off (its numbers stay
+  with a caption, then the bandwidth limiter and the queue window on the right. All
+  footer controls render at 11px so the bar stays quieter than the content in both
+  themes, and the monitoring-off tooltip is translated like the badge label. The
+  activity summary takes the dimmed tone while monitoring is off (its numbers stay
   truthful — the engine runs regardless). Its buttons
   draw their icons from the active scheme accent and are re-tinted whenever the theme changes.
+- **Seamless surfaces:** the paned grab handle paints nothing (`opacity: 0`, still
+  draggable), download cards carry no outline, and header bars cast no shadow, so
+  sidebar, list and header meet with no hairlines in either theme.
 - **Sidebar rows:** plain `navigation-sidebar` rows with an 8px inset. Icons keep their
   category colour at rest and turn white on the accent selection (counts fade to 85% white),
   so nothing disappears into the accent fill. A Settings entry (accent gear icon, Ctrl+,)

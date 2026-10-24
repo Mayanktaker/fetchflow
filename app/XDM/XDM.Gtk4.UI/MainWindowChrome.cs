@@ -240,7 +240,11 @@ namespace XDM.Gtk4UI
                 var active = allRows.Where(row => !row.IsComplete).ToList();
                 if (active.Count == 0)
                 {
-                    lblActivity.SetText(TextResource.GetText("LBL_IDLE") ?? "Idle");
+                    // Name the reason when the queue is empty because capture is off
+                    lblActivity.SetText(!Config.Instance.IsBrowserMonitoringEnabled
+                        ? (TextResource.GetText("LBL_IDLE") ?? "Idle") + " — " +
+                          (TextResource.GetText("MSG_EXT_DISABLED") ?? "Monitoring Off")
+                        : TextResource.GetText("LBL_IDLE") ?? "Idle");
                     btnActivity.TooltipText = TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress";
                     titlePulse.Visible = false;
                     windowTitle?.SetSubtitle(TextResource.GetText("LBL_DOWNLOADS") ?? "Downloads");
@@ -706,7 +710,8 @@ namespace XDM.Gtk4UI
                     SetExtensionStateClass("ext-idle");
                     var off = TextResource.GetText("MSG_EXT_DISABLED") ?? "Monitoring Off";
                     lblExtensionStatus.SetMarkup($"<span size=\"small\">○ {off}</span>");
-                    lblExtensionStatus.TooltipText = "Browser monitoring is off — turn it on to capture downloads";
+                    lblExtensionStatus.TooltipText = TextResource.GetText("MSG_EXT_DISABLED_DESC")
+                        ?? "Browser monitoring is off — turn it on to capture downloads";
                     return;
                 }
 

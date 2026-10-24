@@ -250,9 +250,34 @@ list.navigation-sidebar > row:selected:hover,
   min-height: 0;
 }
 
-/* Footer controls stay quieter than the content above them */
+/* Footer controls share one quiet size in both themes */
+.bottom-bar button,
+.bottom-bar button label,
+.bottom-bar .caption,
+.bottom-bar .activity-label {
+  font-size: 11px;
+}
+
 .bottom-bar button {
-  font-size: 12px;
+  padding: 3px 10px;
+  min-height: 0;
+}
+
+/* Seamless surfaces: no hairlines between sidebar, content, header or cards */
+/* The paned grab handle keeps its size (still draggable) but paints nothing */
+paned > separator,
+paned > widget {
+  opacity: 0;
+}
+
+headerbar {
+  box-shadow: none;
+}
+
+listview.download-list > row,
+listview.download-list > row:hover,
+listview.download-list > row:selected {
+  border-color: transparent;
 }
 
 /* Settings entry pinned under the category list */

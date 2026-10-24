@@ -447,3 +447,4 @@ LBL_COPY=कॉपी करें
 LBL_COPIED=कॉपी हो गया
 LBL_SEARCH_HINT=फ़ाइलें खोजें — site: या folder: आज़माएँ
 MSG_EXT_DISABLED=निगरानी बंद
+MSG_EXT_DISABLED_DESC=ब्राउज़र निगरानी बंद है — डाउनलोड कैप्चर करने के लिए इसे चालू करें

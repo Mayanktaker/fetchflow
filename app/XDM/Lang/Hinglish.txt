@@ -447,3 +447,4 @@ LBL_COPY=Copy karein
 LBL_COPIED=Copy ho gaya
 LBL_SEARCH_HINT=Files search karein — site: ya folder: try karein
 MSG_EXT_DISABLED=Monitoring off
+MSG_EXT_DISABLED_DESC=Browser monitoring off hai — downloads capture karne ke liye ise on karein

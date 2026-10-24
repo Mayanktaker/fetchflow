@@ -809,7 +809,7 @@ namespace XDM.GtkUI
                 {
                     var off = TextResource.GetText("MSG_EXT_DISABLED") ?? "Monitoring Off";
                     lblExtensionStatus.Markup = $"<span color='#94a3b8' size='small'>○ {off}</span>";
-                    lblExtensionStatus.TooltipText = "Browser monitoring is off — turn it on to capture downloads";
+                    lblExtensionStatus.TooltipText = TextResource.GetText("MSG_EXT_DISABLED_DESC") ?? "Browser monitoring is off — turn it on to capture downloads";
                     return;
                 }
 

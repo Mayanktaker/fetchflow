@@ -451,3 +451,4 @@ LBL_COPY=Copy
 LBL_COPIED=Copied
 LBL_SEARCH_HINT=Search files — try site: or folder:
 MSG_EXT_DISABLED=Monitoring Off
+MSG_EXT_DISABLED_DESC=Browser monitoring is off — turn it on to capture downloads
