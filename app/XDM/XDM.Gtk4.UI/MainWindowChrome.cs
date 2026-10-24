@@ -689,6 +689,17 @@ namespace XDM.Gtk4UI
         {
             try
             {
+                // Monitoring off means nothing will be captured, so the badge
+                // must not claim the extension is ready or active
+                if (!Config.Instance.IsBrowserMonitoringEnabled)
+                {
+                    SetExtensionStateClass("ext-idle");
+                    var off = TextResource.GetText("MSG_EXT_DISABLED") ?? "Monitoring Off";
+                    lblExtensionStatus.SetMarkup($"<span size=\"small\">○ {off}</span>");
+                    lblExtensionStatus.TooltipText = "Browser monitoring is off — turn it on to capture downloads";
+                    return;
+                }
+
                 var count = IpcHttpMessageProcessor.ActiveWebSocketSessionsCount;
                 var isConnected = IpcHttpMessageProcessor.IsConnected;
 

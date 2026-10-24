@@ -340,13 +340,16 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   `N active · X/s` while transfers run (`Idle` otherwise), computed from the visible rows'
   parsed speeds, a `· N queued` count for waiting transfers — and doubles as a flat button
   that opens the progress window. The
-  connectivity badge follows it; Browser Monitoring is a `Gtk.Switch`
-  with a caption, then the bandwidth limiter and the queue window on the right. Its buttons
+  connectivity badge follows it — while monitoring is switched off the badge reads
+  "Monitoring Off" (dimmed) instead of claiming the extension is ready, since
+  nothing would be captured; Browser Monitoring is a `Gtk.Switch`
+  with a caption, then the bandwidth limiter and the queue window on the right. Footer
+  buttons render at 12px so they stay quieter than the content. Its buttons
   draw their icons from the active scheme accent and are re-tinted whenever the theme changes.
 - **Sidebar rows:** plain `navigation-sidebar` rows with an 8px inset. Icons keep their
   category colour at rest and turn white on the accent selection (counts fade to 85% white),
   so nothing disappears into the accent fill. A Settings entry (accent gear icon, Ctrl+,)
-  is pinned under the category list and separated by a hairline.
+  is pinned under the category list with breathing room instead of a divider.
 - **Empty state:** `AdwStatusPage` with a pill-shaped `.suggested-action` "Add download"
   button, wired to the same primary action as the header so an empty view is actionable.
   When a search filters everything out the page switches to a search icon, "No results for

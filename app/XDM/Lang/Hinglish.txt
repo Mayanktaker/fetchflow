@@ -446,3 +446,4 @@ LBL_LICENSE=License
 LBL_COPY=Copy karein
 LBL_COPIED=Copy ho gaya
 LBL_SEARCH_HINT=Files search karein — site: ya folder: try karein
+MSG_EXT_DISABLED=Monitoring off

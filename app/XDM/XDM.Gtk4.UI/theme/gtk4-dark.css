@@ -250,6 +250,11 @@ list.navigation-sidebar > row:selected:hover,
   min-height: 0;
 }
 
+/* Footer controls stay quieter than the content above them */
+.bottom-bar button {
+  font-size: 12px;
+}
+
 /* Settings entry pinned under the category list */
 .sidebar-action {
   margin: 0 8px;
