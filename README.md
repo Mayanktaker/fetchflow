@@ -43,7 +43,7 @@
 <p align="center">
   <img src="docs/screenshots/fetchflow-main-window.png" width="860" alt="FetchFlow main window with download list" />
   <br />
-  <em>Main window — download list with state pills, live counts, and a reporting footer (dark theme).</em>
+  <em>Main window — download list with state pills, live counts, and a reporting footer (light theme).</em>
 </p>
 
 <p align="center">
