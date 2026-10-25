@@ -107,7 +107,7 @@ treeview.sidebar-status-list:hover {
 
 treeview.sidebar-status-list:selected {
   background-color: #f43f5e;
-  background-image: linear-gradient(135deg, #f43f5e, #f97316);
+  background-image: linear-gradient(135deg, #e03a56, #e56a14);
   color: #ffffff;
   border-radius: 5px;
 }
@@ -170,7 +170,7 @@ treeview.sidebar-list:hover {
 
 treeview.sidebar-list:selected {
   background-color: #f43f5e;
-  background-image: linear-gradient(135deg, #f43f5e, #f97316);
+  background-image: linear-gradient(135deg, #e03a56, #e56a14);
   color: #ffffff;
   border-radius: 6px;
 }
@@ -288,7 +288,7 @@ entry.toolbar-search-entry {
   padding: 3px 12px;
   margin: 0;
   border-radius: 999px;
-  background-color: #fff1f2;
+  background-color: #2f272c;
   border: 1px solid #3d3d3d;
   font-size: 13px;
   transition: all 150ms ease;
@@ -401,7 +401,7 @@ button.flat:disabled {
 /* Primary (suggested) — Download/Add/Save/Start/OK */
 button.suggested-action {
   background-color: #f43f5e;
-  background-image: linear-gradient(to bottom, #fb7185, #e11d48);
+  background-image: linear-gradient(to bottom, #e26678, #ca1a41);
   border: 1px solid #be123c;
   color: #ffffff;
   border-radius: 6px;
@@ -410,8 +410,8 @@ button.suggested-action {
 }
 
 button.suggested-action:hover {
-  background-color: #fb7185;
-  background-image: linear-gradient(to bottom, #fda4af, #fa6985);
+  background-color: #d73753;
+  background-image: linear-gradient(to bottom, #dc4f68, #bd3049);
   border-color: #a8203f;
   border-radius: 6px;
 }
@@ -1093,7 +1093,6 @@ entry.toolbar-search-entry {
 }
 
 entry.toolbar-search-entry:focus {
-  background-color: #2f272c;
   border-color: #fb7185;
 }
 
@@ -1110,13 +1109,13 @@ treeview.sidebar-list row:hover {
 treeview.sidebar-list row:selected,
 treeview.sidebar-list:selected {
   background-color: #f43f5e;
-  background-image: linear-gradient(135deg, #f43f5e, #fb7185);
+  background-image: linear-gradient(135deg, #dc3955, #e26678);
   color: #ffffff;
 }
 
 treeview.sidebar-list row:selected:hover,
 treeview.sidebar-list:selected:hover {
-  background-color: #fb7185;
+  background-color: #d73753;
   color: #ffffff;
 }
 

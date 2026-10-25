@@ -412,8 +412,8 @@ button.suggested-action {
 }
 
 button.suggested-action:hover {
-  background-color: #c4b5fd;
-  background-image: linear-gradient(to bottom, #ddd6fe, #7c3aed);
+  background-color: #6d33d1;
+  background-image: linear-gradient(to bottom, #7f4bd7, #602db8);
   border-color: #6d28d9;
   border-radius: 6px;
 }
@@ -1118,7 +1118,7 @@ treeview.sidebar-list:selected {
 
 treeview.sidebar-list row:selected:hover,
 treeview.sidebar-list:selected:hover {
-  background-color: #8b5cf6;
+  background-color: #6d33d1;
   color: #ffffff;
 }
 

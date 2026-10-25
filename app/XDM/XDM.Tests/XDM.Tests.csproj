@@ -33,6 +33,8 @@
     <Compile Include="..\XDM.Core\UI\IconMap.cs" Link="UI\IconMap.cs" />
     <!-- ColorSchemeDefaultsTests: per-mode palette defaults -->
     <Compile Include="..\XDM.Core\UI\ColorSchemeTable.cs" Link="UI\ColorSchemeTable.cs" />
+    <!-- ThemeContrastTests: WCAG math behind accent ink / hover selection -->
+    <Compile Include="..\XDM.Core\UI\ThemeContrast.cs" Link="UI\ThemeContrast.cs" />
     <Compile Include="..\XDM.Core\Category.cs" Link="Category.cs" />
     <Compile Include="..\XDM.Core\UI\CategoryIconPalette.cs" Link="UI\CategoryIconPalette.cs" />
     <Compile Include="..\XDM.Core\Util\MimeTypes.cs" Link="Util\MimeTypes.cs" />

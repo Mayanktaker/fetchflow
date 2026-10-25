@@ -108,7 +108,7 @@ treeview.sidebar-status-list:hover {
 
 treeview.sidebar-status-list:selected {
   background-color: #d97706;
-  background-image: linear-gradient(135deg, #d97706, #ea580c);
+  background-image: linear-gradient(135deg, #d57506, #e5560c);
   color: #fffdf9;
   border-radius: 5px;
 }
@@ -172,7 +172,7 @@ treeview.sidebar-list:hover {
 
 treeview.sidebar-list:selected {
   background-color: #d97706;
-  background-image: linear-gradient(135deg, #d97706, #ea580c);
+  background-image: linear-gradient(135deg, #d57506, #e5560c);
   color: #fffdf9;
   border-radius: 6px;
 }
@@ -403,7 +403,7 @@ button.flat:disabled {
 /* Primary (suggested) — Download/Add/Save/Start/OK */
 button.suggested-action {
   background-color: #d97706;
-  background-image: linear-gradient(to bottom, #f59e0b, #c2410c);
+  background-image: linear-gradient(to bottom, #c47e09, #9b340a);
   border: 1px solid #78350f;
   color: #fffdf9;
   border-radius: 6px;
@@ -412,8 +412,8 @@ button.suggested-action {
 }
 
 button.suggested-action:hover {
-  background-color: #ea580c;
-  background-image: linear-gradient(to bottom, #fcd34d, #d97706);
+  background-color: #bf6905;
+  background-image: linear-gradient(to bottom, #c77b23, #a85c04);
   border-color: #b45309;
   border-radius: 6px;
 }
@@ -1112,14 +1112,14 @@ treeview.sidebar-list row:hover {
 treeview.sidebar-list row:selected,
 treeview.sidebar-list:selected {
   background-color: #d97706;
-  background-image: linear-gradient(135deg, #d97706, #f59e0b);
+  background-image: linear-gradient(135deg, #ae5f05, #c47e09);
   color: #fffdf9;
 }
 
 treeview.sidebar-list row:selected:hover,
 treeview.sidebar-list:selected:hover {
-  background-color: #f59e0b;
-  color: #fffdf9;
+  background-color: #bf6905;
+  color: #ffffff;
 }
 
 /* Download list column header: the real GTK header on the theme accent surface

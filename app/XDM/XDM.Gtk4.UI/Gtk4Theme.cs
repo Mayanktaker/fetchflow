@@ -44,9 +44,13 @@ namespace XDM.Gtk4UI
         // Raw Config.ThemeMode value currently applied
         public static int ActiveMode { get; private set; } = ModeFollowSystem;
 
+        // Scheme index pinned by FETCHFLOW_COLOR_SCHEME for previews and screenshots
+        private static int? previewScheme;
+
         // Applies the mode saved in configuration. FETCHFLOW_THEME_MODE=light|dark
-        // overrides it for previews and screenshots, so a run can pin one theme
-        // without touching the user's settings.
+        // and FETCHFLOW_COLOR_SCHEME=<index> override it for previews and
+        // screenshots, so a run can pin one theme/scheme without touching the
+        // user's settings.
         public static void ApplyFromConfig(Widget anchor)
         {
             var mode = Environment.GetEnvironmentVariable("FETCHFLOW_THEME_MODE") switch
@@ -55,6 +59,9 @@ namespace XDM.Gtk4UI
                 "dark" => ModeDark,
                 _ => Config.Instance.ThemeMode
             };
+            previewScheme = int.TryParse(Environment.GetEnvironmentVariable("FETCHFLOW_COLOR_SCHEME"), out var pinned)
+                ? pinned
+                : (int?)null;
             ApplyMode(anchor, mode, persist: false);
         }
 
@@ -123,24 +130,24 @@ namespace XDM.Gtk4UI
             });
         }
 
-        // Rewrites the accent tokens from the shared ColorSchemeTable entry, so the
-        // GTK 4 frontend honours the same 14 curated schemes as GTK 3 and WPF.
+        // Rewrites the scheme tokens shared with GTK 3 and WPF: the accent, the
+        // readable ink for text painted on it, its hover, and the card surfaces.
         private static string ApplyColorScheme(string css, bool dark)
         {
             try
             {
-                var index = ColorSchemeTable.ClampSchemeIndex(dark, Config.Instance.ColorScheme);
+                var index = ColorSchemeTable.ClampSchemeIndex(dark, previewScheme ?? Config.Instance.ColorScheme);
                 var scheme = ColorSchemeTable.GetScheme(dark, index);
                 if (string.IsNullOrWhiteSpace(scheme.AccentHex))
                 {
                     return css;
                 }
 
-                var hover = Lighten(scheme.AccentHex, 0.25);
-                css = System.Text.RegularExpressions.Regex.Replace(
-                    css, @"@define-color accent #[0-9a-fA-F]{3,8};", $"@define-color accent {scheme.AccentHex};");
-                css = System.Text.RegularExpressions.Regex.Replace(
-                    css, @"@define-color accent_hover #[0-9a-fA-F]{3,8};", $"@define-color accent_hover {hover};");
+                css = ReplaceToken(css, "accent", scheme.AccentHex);
+                css = ReplaceToken(css, "accent_hover", ThemeContrast.HoverFor(scheme.AccentHex));
+                css = ReplaceToken(css, "accent_foreground", ThemeContrast.InkFor(scheme.AccentHex));
+                css = ReplaceToken(css, "row_bg", scheme.CardBackgroundHex);
+                css = ReplaceToken(css, "row_hover", scheme.HoverBackgroundHex);
                 return css;
             }
             catch (Exception ex)
@@ -150,22 +157,12 @@ namespace XDM.Gtk4UI
             }
         }
 
-        // Mixes a #rrggbb color toward white by the given amount (0..1)
-        private static string Lighten(string hex, double amount)
+        // Rewrites one @define-color token, leaving every other token untouched
+        private static string ReplaceToken(string css, string token, string value)
         {
-            var value = hex.TrimStart('#');
-            if (value.Length != 6)
-            {
-                return hex;
-            }
-
-            var r = Convert.ToInt32(value.Substring(0, 2), 16);
-            var g = Convert.ToInt32(value.Substring(2, 2), 16);
-            var b = Convert.ToInt32(value.Substring(4, 2), 16);
-            r = (int)Math.Round(r + (255 - r) * amount);
-            g = (int)Math.Round(g + (255 - g) * amount);
-            b = (int)Math.Round(b + (255 - b) * amount);
-            return $"#{r:x2}{g:x2}{b:x2}";
+            return System.Text.RegularExpressions.Regex.Replace(
+                css, @"@define-color " + token + @" #[0-9a-fA-F]{3,8};",
+                $"@define-color {token} {value};");
         }
 
         // Loads the mode's stylesheet and swaps the display provider

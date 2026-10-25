@@ -118,7 +118,7 @@ treeview.sidebar-status-list:hover {
 
 treeview.sidebar-status-list:selected {
   background-color: #3584e4;
-  background-image: linear-gradient(135deg, #3584e4, #4893ec);
+  background-image: linear-gradient(135deg, #3481df, #4790e7);
   color: #ffffff;
   border-radius: 5px;
 }
@@ -182,7 +182,7 @@ treeview.sidebar-list:hover {
 
 treeview.sidebar-list:selected {
   background-color: #3584e4;
-  background-image: linear-gradient(135deg, #3584e4, #4893ec);
+  background-image: linear-gradient(135deg, #3481df, #4790e7);
   color: #ffffff;
   border-radius: 6px;
 }
@@ -422,8 +422,8 @@ button.suggested-action {
 }
 
 button.suggested-action:hover {
-  background-color: #4a91eb;
-  background-image: linear-gradient(to bottom, #559cf4, #428ded);
+  background-color: #2f74c9;
+  background-image: linear-gradient(to bottom, #4885cf, #2966b1);
   border-color: #1f5ca5;
   border-radius: 6px;
 }
@@ -1140,13 +1140,13 @@ treeview.sidebar-list row:hover {
 treeview.sidebar-list row:selected,
 treeview.sidebar-list:selected {
   background-color: #3584e4;
-  background-image: linear-gradient(135deg, #3584e4, #5a9bea);
+  background-image: linear-gradient(135deg, #327cd6, #5592dc);
   color: #ffffff;
 }
 
 treeview.sidebar-list row:selected:hover,
 treeview.sidebar-list:selected:hover {
-  background-color: #5a9bea;
+  background-color: #2f74c9;
   color: #ffffff;
 }
 

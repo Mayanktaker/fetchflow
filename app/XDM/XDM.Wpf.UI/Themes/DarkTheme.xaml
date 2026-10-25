@@ -86,9 +86,9 @@
      <SolidColorBrush x:Key="RowActiveBrush" Color="#27443C"/>
      <SolidColorBrush x:Key="RowAlternateBrush" Color="#172421"/>
      <SolidColorBrush x:Key="CardBackgroundBrush" Color="#1D2C29"/>
-     <SolidColorBrush x:Key="CardBorderBrush" Color="#2A3F3A"/>
-     <SolidColorBrush x:Key="HeaderBarBackgroundBrush" Color="#101816"/>
-     <SolidColorBrush x:Key="BaseSurfaceBrush" Color="#131C1A"/>
+     <SolidColorBrush x:Key="CardBorderBrush" Color="#2A2A2A"/>
+     <SolidColorBrush x:Key="HeaderBarBackgroundBrush" Color="#1A1A1A"/>
+     <SolidColorBrush x:Key="BaseSurfaceBrush" Color="#1D1D1D"/>
      <SolidColorBrush x:Key="CheckBoxFocusVisual" Color="#10B981" Opacity="0.6"/>
 
     <core:Double x:Key="ButtonDisabledOpacity">0.4</core:Double>

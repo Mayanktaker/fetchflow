@@ -10,7 +10,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 |:---|:---|
 | Core | C# / .NET 8 (`net8.0`), AOT single-file binary; Windows UI on .NET Framework 4.7.2 (`XDM.Wpf.UI`, `XDM.WinForms.IntegrationUI`) |
 | Linux UI | Two frontends sharing `XDM.Core`: **`XDM.Gtk4.UI`** (primary, GTK 4 via GirCore 0.8.1 + libadwaita via `GirCore.Adw-1` 0.8.1, `AdwApplicationWindow` + `AdwToolbarView`/`AdwHeaderBar` shell, code-built UI, own `theme/gtk4-*.css`; **libadwaita >= 1.4 is a runtime dependency of the GTK 4 packages only** — GTK 3-only desktops fall back to `XDM.Gtk.UI`) and **`XDM.Gtk.UI`** (compatibility, GTK 3 via GtkSharp, Glade XML + 14 live CSS themes) for GTK 3-only desktops. Installer & packages feature automatic GTK detection (GTK 4 preferred when available; fallback to GTK 3) installing only the matching frontend and launcher (`/usr/bin/fetchflow`), with explicit `--gtk4` and `--gtk3` overrides available. Neither UI may reference the other — see `docs/audit/gtk4-coupling-inventory.md` |
-| Windows UI | WPF `XDM.Wpf.UI` at GTK feature parity since 9.1.15.11: themes via `Utils/WpfThemeManager.cs` (live swap), Checksum + Import/Export dialogs, theme/scheme settings. Scheme data single-sourced in `XDM.Core/UI/ColorSchemeTable.cs` (both UIs consume it — keep hex tokens in sync there only) |
+| Windows UI | WPF `XDM.Wpf.UI` at GTK feature parity since 9.1.15.11: themes via `Utils/WpfThemeManager.cs` (live swap), Checksum + Import/Export dialogs, theme/scheme settings. Scheme data single-sourced in `XDM.Core/UI/ColorSchemeTable.cs` (both UIs consume it — keep hex tokens in sync there only), and the accent ink/hover rule in `XDM.Core/UI/ThemeContrast.cs` (contrast floor: see `docs/design.md`) |
 | Database | SQLite (`System.Data.SQLite`), DB at `~/.fetchflow-app-data/downloads.db`, crash log `crash.log` (5 MB cap) |
 | Video | `yt-dlp` CLI wrapper via `VideoUrlHelper.cs` |
 | Extensions | Manifest V3 vanilla JS: `app/XDM/chrome-extension/`, `app/XDM/firefox-amo/` (shared `noise-filter.js` twin + core `NetworkHelper.cs` — keep all 3 blocklists identical) |
@@ -37,6 +37,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | `bash scripts/generate-winget-manifest.sh` | Generate Windows Package Manager (Winget) v1.6.0 manifests |
 | `bash scripts/install-fetchflow.sh --check` | Universal Linux installer verify (arch/cachy/manjaro, fedora, debian, suse, tarball fallback) |
 | `scripts/lint-shell.sh` | Shell lint gate — shared target list used by `lint.yml`; runs `shellcheck -S warning` over every repo script |
+| `scripts/theme-contrast.py` | Regenerates the GTK 3 accent ink/hover hex values from the contrast floor (idempotent; `--dry-run` to review) |
 | `scripts/lint-credit-headers.sh` | Rule 5 gate — requires the credit header on files you *changed* (upstream XDM files stay grandfathered); `--staged`, `--base <ref>`, `--all` (report-only baseline) |
 | `scripts/clean-artifacts.sh` | Reclaim stale generated packaging trees (dry run by default, `--yes` to delete, `--keep-current` to spare the live version) |
 | `scripts/capture-screenshots.sh` | Re-shoot README/site screenshots (throwaway HOME, demo rows via `--shot=`, Xvfb); re-run on releases that change UI |

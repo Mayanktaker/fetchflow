@@ -8,10 +8,13 @@
    token that the shared color schemes rewrite at load time. */
 
 @define-color accent #3584e4;
-@define-color accent_hover #5a9bea;
+@define-color accent_hover #2f74c9;
+@define-color accent_foreground #ffffff;
+@define-color row_bg #262626;
+@define-color row_hover #303030;
 @define-color view_bg #232323;
 @define-color view_finished_bg #2a2a2a;
-@define-color meta_text #8f8f8f;
+@define-color meta_text #9a9a9a;
 @define-color border_color #404040;
 
 /* Active and Complete keep distinct surfaces so the two views read apart */
@@ -31,12 +34,12 @@ listview.download-list > row {
   margin: 4px 10px;
   padding: 6px 8px;
   border-radius: 12px;
-  background-color: #262626;
+  background-color: @row_bg;
   border: 1px solid alpha(#ffffff, 0.06);
 }
 
 listview.download-list > row:hover {
-  background-color: #303030;
+  background-color: @row_hover;
 }
 
 listview.download-list > row:selected {
@@ -91,13 +94,13 @@ switch:checked:active {
 }
 
 switch:checked > slider {
-  background-color: #ffffff;
+  background-color: @accent_foreground;
 }
 
 button.suggested-action {
   background-color: @accent;
   border-color: @accent;
-  color: #ffffff;
+  color: @accent_foreground;
 }
 
 button.suggested-action:hover {
@@ -110,7 +113,7 @@ checkbutton check:indeterminate,
 checkbutton check:checked:hover {
   background-color: @accent;
   border-color: @accent;
-  color: #ffffff;
+  color: @accent_foreground;
 }
 
 progressbar > trough > progress,
@@ -149,13 +152,13 @@ list.navigation-sidebar > row:selected,
 .navigation-sidebar > row:selected,
 .sidebar > row:selected {
   background-color: @accent;
-  color: #ffffff;
+  color: @accent_foreground;
 }
 
 list.navigation-sidebar > row:selected:hover,
 .navigation-sidebar > row:selected:hover {
   background-color: @accent_hover;
-  color: #ffffff;
+  color: @accent_foreground;
 }
 
 /* ---------------------------------------------------------------------------
@@ -294,7 +297,7 @@ listview.download-list > row:selected {
 
 /* Counts stay legible on the accent-filled selected row */
 list.navigation-sidebar > row:selected .sidebar-count {
-  color: alpha(#ffffff, 0.85);
+  color: alpha(@accent_foreground, 0.85);
 }
 
 /* Row typography: size column and destination path are deliberately quiet */

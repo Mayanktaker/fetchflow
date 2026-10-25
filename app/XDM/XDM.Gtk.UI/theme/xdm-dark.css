@@ -117,7 +117,7 @@ treeview.sidebar-status-list:hover {
 
 treeview.sidebar-status-list:selected {
   background-color: #3584e4;
-  background-image: linear-gradient(135deg, #3584e4, #4893ec);
+  background-image: linear-gradient(135deg, #3481df, #4790e7);
   color: #ffffff;
   border-radius: 5px;
 }
@@ -180,7 +180,7 @@ treeview.sidebar-list:hover {
 
 treeview.sidebar-list:selected {
   background-color: #3584e4;
-  background-image: linear-gradient(135deg, #3584e4, #4893ec);
+  background-image: linear-gradient(135deg, #3481df, #4790e7);
   color: #ffffff;
   border-radius: 6px;
 }
@@ -298,7 +298,7 @@ entry.toolbar-search-entry {
   padding: 3px 12px;
   margin: 0;
   border-radius: 999px;
-  background-color: #f4f4f4;
+  background-color: #282828;
   border: 1px solid #3d3d3d;
   font-size: 13px;
   transition: all 150ms ease;
@@ -420,8 +420,8 @@ button.suggested-action {
 }
 
 button.suggested-action:hover {
-  background-color: #5a9bea;
-  background-image: linear-gradient(to bottom, #5ba0f4, #4a91eb);
+  background-color: #2f74c9;
+  background-image: linear-gradient(to bottom, #4885cf, #2966b1);
   border-color: #3b7ecb;
   border-radius: 6px;
 }
@@ -1121,7 +1121,6 @@ entry.toolbar-search-entry {
 }
 
 entry.toolbar-search-entry:focus {
-  background-color: #282828;
   border-color: #5a9bea;
 }
 
@@ -1138,13 +1137,13 @@ treeview.sidebar-list row:hover {
 treeview.sidebar-list row:selected,
 treeview.sidebar-list:selected {
   background-color: #3584e4;
-  background-image: linear-gradient(135deg, #3584e4, #5a9bea);
+  background-image: linear-gradient(135deg, #327cd6, #5592dc);
   color: #ffffff;
 }
 
 treeview.sidebar-list row:selected:hover,
 treeview.sidebar-list:selected:hover {
-  background-color: #5a9bea;
+  background-color: #2f74c9;
   color: #ffffff;
 }
 

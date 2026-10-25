@@ -51,6 +51,25 @@ Exceptions:
 
 ## GTK4 (libadwaita) alignment
 
+GTK 4 does not reuse the GTK 3 stylesheets at all (they fail the GTK 4 parser);
+`XDM.Gtk4.UI/theme/gtk4-{light,dark}.css` are minimal on purpose and the shell is
+drawn by libadwaita. Five `@define-color` tokens are rewritten at load time from
+the shared scheme table (`Gtk4Theme.ApplyColorScheme`), so the 14 schemes reach
+the primary frontend without a stylesheet per scheme:
+
+| Token | Source |
+|---|---|
+| `accent` | `ColorSchemeDefinition.AccentHex` |
+| `accent_hover` | `ThemeContrast.HoverFor(accent)` |
+| `accent_foreground` | `ThemeContrast.InkFor(accent)` — white or `#1a1a1a` |
+| `row_bg` | `ColorSchemeDefinition.CardBackgroundHex` |
+| `row_hover` | `ColorSchemeDefinition.HoverBackgroundHex` |
+
+Every rule that paints text on the accent uses `@accent_foreground` (never a
+literal `#ffffff`), which is what keeps Espresso Mocha / Cyberpunk Matrix / Nord
+Emerald readable. `FETCHFLOW_COLOR_SCHEME=<index>` pins a scheme for previews and
+screenshots, next to the existing `FETCHFLOW_THEME_MODE=light|dark`.
+
 Every GTK theme ends with one `GTK4 (libadwaita) alignment` layer. Adwaita on GTK4
 is flat and generously rounded, so the layer removes the GTK3 bevel gradients
 (`background-image: none`) from buttons, selected sidebar rows, the headerbar and
@@ -180,19 +199,57 @@ only build gate, so treat WPF changes as CI-verified, not locally verified.
 | elevated | #2e2e2e | #ffffff |
 | border | #404040 | #cacaca |
 | text | #f4f4f4 | #222222 |
-| dim text | #b4b4b4 | #6b6b6b |
-| accent / hover / active | #3584e4 / #5a9bea / #2767b8 | same |
+| dim text | #b4b4b4 | #5f5f5f |
+| accent / hover / active | #3584e4 / #2f74c9 / #2767b8 | same |
 | destructive / hover / active | #e01b24 / #ef4a52 / #a5121a | same |
 | brand / hover | #f97316 / #fb923c | #ea580c / #f97316 |
 | success | #4ade80 | #16a34a |
+
+`dim text` and the accent `hover` are derived, not free choices: see the contrast
+floor below. The light `dim text` was `#6b6b6b`, which only reached 3.88:1 on the
+finished-list surface.
 
 ## Color Schemes & Palettes
 
 FetchFlow provides 7 curated color schemes for Dark mode and 7 curated color schemes for Light mode, selectable from Settings -> General -> Color Scheme.
 
+### Contrast floor (enforced)
+
+One rule decides the text colour on every accent-painted surface, and all three
+frontends share it (`XDM.Core/UI/ThemeContrast.cs`):
+
+| Constraint | Floor | Where |
+|---|---|---|
+| Label on a scheme accent (semibold 11–14px control text) | **3.0:1** (WCAG AA large text) | buttons, selected rows, menu highlight, checkboxes, list header band |
+| Text typed into a field | **4.5:1** (WCAG AA body text) | toolbar search entry, plain entries |
+| Disabled / backdrop text | exempt | deliberately quiet |
+
+- `ThemeContrast.InkFor(accent)` returns white while white still clears 3.0:1,
+  and `#1a1a1a` once the fill is too bright for it (Espresso Mocha, Cyberpunk
+  Matrix, Nord Emerald are dark-ink themes).
+- `ThemeContrast.HoverFor(accent)` returns a **deeper** accent (`0.88×`), not a
+  lighter one: lightening a hover washed the label out (white on `#fbbf24` was
+  1.67:1). The same hover is used for `button.suggested-action:hover` and the
+  selected sidebar row.
+- A bevel gradient counts by its **lightest stop**, which is what the eye reads.
+- GTK 3 has no CSS variables, so `scripts/theme-contrast.py` writes these literal
+  hex values into the 14 theme files. It is idempotent — re-run it after changing
+  a scheme accent or adding a theme. GTK 4 folds the same two functions into its
+  `accent_foreground` / `accent_hover` tokens at load time; WPF maps `InkFor` onto
+  `AccentForegroundBrush`.
+- `ThemeContrastTests` fails the build if any theme, token or scheme breaks a
+  floor, and `EverySchemeSurfaceTokenMatchesItsStylesheet` keeps the surface
+  columns below honest against the shipped CSS.
+- The browser extensions carry the same rule as CSS custom properties:
+  `--accent` is the **fill** and `--accent-text` the **text** colour (one token
+  cannot serve both — deepening the fill for white text makes it unreadable as
+  text). A bright fill takes dark ink, so the brand-orange CTA and the
+  success-green "queued" button use `#1a1a1a` labels.
+  `ExtensionThemeContrastTests` pins both modes and keeps the Chrome/Firefox
+  stylesheets in sync.
+
 ### Dark Theme Palettes (7 Schemes)
 
-| Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex & Hover | TreeView Hover |
 | Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex & Hover | TreeView Hover | Active Row Hex |
 |:---|:---|:---|:---|:---|:---|:---|:---|
 | `0` | **Charcoal Blue (Default)** | `#1d1d1d` | `#161616` | `#262626` | `#3584e4` / `#5a9bea` | `#262c36` | `#323b4a` |

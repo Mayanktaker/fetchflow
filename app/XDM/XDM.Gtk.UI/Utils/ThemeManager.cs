@@ -99,7 +99,10 @@ namespace XDM.GtkUI.Utils
                     s.HoverBackgroundHex,
                     s.ActiveBackgroundHex,
                     s.AlternateBackgroundHex,
-                    s.CardBackgroundHex
+                    s.CardBackgroundHex,
+                    s.BaseSurfaceHex,
+                    s.SidebarHex,
+                    s.HeaderBarHex
                 }),
                 LightSchemes = System.Linq.Enumerable.Select(LightSchemes, s => new
                 {
@@ -113,7 +116,10 @@ namespace XDM.GtkUI.Utils
                     s.HoverBackgroundHex,
                     s.ActiveBackgroundHex,
                     s.AlternateBackgroundHex,
-                    s.CardBackgroundHex
+                    s.CardBackgroundHex,
+                    s.BaseSurfaceHex,
+                    s.SidebarHex,
+                    s.HeaderBarHex
                 })
             };
             return Newtonsoft.Json.JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.Indented);
@@ -135,7 +141,10 @@ namespace XDM.GtkUI.Utils
                     string active = dict.TryGetValue("ActiveBackgroundHex", out var actObj) ? actObj?.ToString() ?? "#323b4a" : "#323b4a";
                     string alt = dict.TryGetValue("AlternateBackgroundHex", out var altObj) ? altObj?.ToString() ?? "#1f1f1f" : "#1f1f1f";
                     string card = dict.TryGetValue("CardBackgroundHex", out var cardObj) ? cardObj?.ToString() ?? "#262626" : "#262626";
-                    return new ColorSchemeDefinition(id, displayName, css, 53, 132, 228, accent, hover, active, alt, card);
+                    string baseSurface = dict.TryGetValue("BaseSurfaceHex", out var baseObj) ? baseObj?.ToString() ?? "#1d1d1d" : "#1d1d1d";
+                    string sidebar = dict.TryGetValue("SidebarHex", out var sideObj) ? sideObj?.ToString() ?? "#161616" : "#161616";
+                    string header = dict.TryGetValue("HeaderBarHex", out var headObj) ? headObj?.ToString() ?? "#1a1a1a" : "#1a1a1a";
+                    return new ColorSchemeDefinition(id, displayName, css, 53, 132, 228, accent, hover, active, alt, card, baseSurface, sidebar, header);
                 }
             }
             catch (Exception ex)

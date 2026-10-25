@@ -13,6 +13,8 @@
 //   RowActiveBrush        <- ActiveBackgroundHex   (row selected)
 //   RowAlternateBrush     <- AlternateBackgroundHex (alternating rows)
 //   CardBackgroundBrush   <- CardBackgroundHex     (cards / odd rows)
+//   BaseSurfaceBrush      <- BaseSurfaceHex        (window / page surface)
+//   HeaderBarBackgroundBrush <- HeaderBarHex       (title bar strip)
 // Existing accent/selection-driven theme keys overridden from scheme tokens so legacy
 // StaticResource/DynamicResource consumers follow the active scheme:
 //   CategoryHighlight, ListViewSelectedBackcolor, SystemColors.HighlightBrushKey  <- ActiveBackgroundHex
@@ -319,8 +321,8 @@ namespace XDM.Wpf.UI.Utils
             targets["RowActiveBrush"] = SchemeBrushMapper.ParseColor(scheme.ActiveBackgroundHex);
             targets["RowAlternateBrush"] = SchemeBrushMapper.ParseColor(scheme.AlternateBackgroundHex);
             targets["CardBackgroundBrush"] = SchemeBrushMapper.ParseColor(scheme.CardBackgroundHex);
-            targets["BaseSurfaceBrush"] = SchemeBrushMapper.ParseColor(IsDarkActive ? "#131C1A" : "#F4F8FA");
-            targets["HeaderBarBackgroundBrush"] = SchemeBrushMapper.ParseColor(IsDarkActive ? "#101816" : "#E3EDF1");
+            targets["BaseSurfaceBrush"] = SchemeBrushMapper.ParseColor(scheme.BaseSurfaceHex);
+            targets["HeaderBarBackgroundBrush"] = SchemeBrushMapper.ParseColor(scheme.HeaderBarHex);
             targets["CardBorderBrush"] = IsDarkActive ? Color.FromArgb(20, 255, 255, 255) : Color.FromArgb(255, 226, 232, 240);
             targets["CategoryHighlight"] = targets["RowActiveBrush"];
             targets["ListViewSelectedBackcolor"] = targets["RowActiveBrush"];

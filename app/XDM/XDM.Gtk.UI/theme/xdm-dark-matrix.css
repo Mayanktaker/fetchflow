@@ -108,7 +108,7 @@ treeview.sidebar-status-list:hover {
 treeview.sidebar-status-list:selected {
   background-color: #06b6d4;
   background-image: linear-gradient(135deg, #06b6d4, #3b82f6);
-  color: #ffffff;
+  color: #1a1a1a;
   border-radius: 5px;
 }
 
@@ -171,7 +171,7 @@ treeview.sidebar-list:hover {
 treeview.sidebar-list:selected {
   background-color: #06b6d4;
   background-image: linear-gradient(135deg, #06b6d4, #3b82f6);
-  color: #ffffff;
+  color: #1a1a1a;
   border-radius: 6px;
 }
 
@@ -224,7 +224,7 @@ list.sidebar > row:selected,
 list row:selected,
 list.sidebar row:selected {
   background-color: #06b6d4;
-  color: #ffffff;
+  color: #1a1a1a;
   border-radius: 6px;
   outline: none;
 }
@@ -288,7 +288,7 @@ entry.toolbar-search-entry {
   padding: 3px 12px;
   margin: 0;
   border-radius: 999px;
-  background-color: #f0fdfa;
+  background-color: #1c2840;
   border: 1px solid #3d3d3d;
   font-size: 13px;
   transition: all 150ms ease;
@@ -307,7 +307,7 @@ entry:disabled {
 
 entry selection {
   background-color: #06b6d4;
-  color: #ffffff;
+  color: #1a1a1a;
 }
 
 /* ComboBox */
@@ -403,15 +403,15 @@ button.suggested-action {
   background-color: #06b6d4;
   background-image: linear-gradient(to bottom, #22d3ee, #0891b2);
   border: 1px solid #0e7490;
-  color: #ffffff;
+  color: #1a1a1a;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   transition: all 120ms ease;
 }
 
 button.suggested-action:hover {
-  background-color: #22d3ee;
-  background-image: linear-gradient(to bottom, #a5f3fc, #67e8f9);
+  background-color: #05a0bb;
+  background-image: linear-gradient(to bottom, #23abc3, #048da5);
   border-color: #0369a1;
   border-radius: 6px;
 }
@@ -554,7 +554,7 @@ checkbutton check:checked,
 radiobutton radio:checked {
   background-color: #06b6d4;
   border-color: #06b6d4;
-  color: #ffffff;
+  color: #1a1a1a;
 }
 
 /* Thin, unobtrusive scrollbars */
@@ -599,7 +599,7 @@ menuitem label {
 
 menuitem:hover {
   background-color: #06b6d4;
-  color: #ffffff;
+  color: #1a1a1a;
   border-radius: 4px;
 }
 
@@ -1093,7 +1093,6 @@ entry.toolbar-search-entry {
 }
 
 entry.toolbar-search-entry:focus {
-  background-color: #1c2840;
   border-color: #22d3ee;
 }
 
@@ -1111,13 +1110,13 @@ treeview.sidebar-list row:selected,
 treeview.sidebar-list:selected {
   background-color: #06b6d4;
   background-image: linear-gradient(135deg, #06b6d4, #22d3ee);
-  color: #ffffff;
+  color: #1a1a1a;
 }
 
 treeview.sidebar-list row:selected:hover,
 treeview.sidebar-list:selected:hover {
-  background-color: #22d3ee;
-  color: #ffffff;
+  background-color: #05a0bb;
+  color: #1a1a1a;
 }
 
 /* Download list column header: the real GTK header on the theme accent surface
@@ -1134,7 +1133,7 @@ treeview.finished header button {
   border-bottom: 1px solid rgba(0, 0, 0, 0.22);
   border-radius: 0;
   box-shadow: none;
-  color: #ffffff;
+  color: #1a1a1a;
   padding: 14px 12px;
 }
 

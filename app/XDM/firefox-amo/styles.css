@@ -19,9 +19,9 @@
   --border-focus: #3584e4;
   --text: #f4f4f4;
   --text-dim: #b4b4b4;
-  --text-faint: #787878;
+  --text-faint: #969696;
   --accent: #3584e4;
-  --accent-hover: #5a9bea;
+  --accent-text: #8ab4f0;
   --accent-active: #2767b8;
   --accent-gradient: linear-gradient(135deg, #3584e4 0%, #4893ec 100%);
   --destructive: #e01b24;
@@ -54,7 +54,8 @@
     --border-soft: #e0e0e0;
     --text: #222222;
     --text-dim: #6b6b6b;
-    --text-faint: #9a9a9a;
+    --text-faint: #6f6f6f;
+    --accent-text: #2767b8;
     --brand-from: #ea580c;
     --brand-to: #f97316;
     --brand-gradient: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
@@ -288,7 +289,7 @@ body.popup {
 }
 
 .search-refresh-btn:hover {
-  color: var(--accent);
+  color: var(--accent-text);
   background-color: var(--border-soft);
 }
 
@@ -382,7 +383,7 @@ body.popup {
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-text);
   background-color: rgba(53, 132, 228, 0.1);
   border: 1px solid rgba(53, 132, 228, 0.25);
   border-radius: var(--r-sm);
@@ -392,7 +393,7 @@ body.popup {
 
 .btn-switch-tab:hover {
   background-color: rgba(53, 132, 228, 0.2);
-  color: var(--accent-hover);
+  color: var(--accent-text);
 }
 
 /* Media Cards */
@@ -542,7 +543,7 @@ body.popup {
 
 .btn-queued {
   background: var(--success) !important;
-  color: #ffffff !important;
+  color: #1a1a1a !important;
   border-color: var(--success) !important;
   pointer-events: none;
   transition: all 0.2s ease;
@@ -550,7 +551,7 @@ body.popup {
 
 .btn-quick-audio.btn-queued {
   background-color: var(--success) !important;
-  color: #ffffff !important;
+  color: #1a1a1a !important;
   border-color: var(--success) !important;
 }
 
@@ -633,14 +634,14 @@ body.popup {
   border-radius: var(--r-sm);
   background: transparent;
   border: none;
-  color: var(--accent);
+  color: var(--accent-text);
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .media-card:hover .media-card-action {
   background-color: rgba(53, 132, 228, 0.15);
-  color: var(--accent-hover);
+  color: var(--accent-text);
 }
 
 /* Toolbar */
@@ -824,7 +825,7 @@ body.popup {
 
 .btn-primary {
   background: var(--brand-gradient);
-  color: #ffffff;
+  color: #1a1a1a;
   border: none;
   box-shadow: 0 1px 4px rgba(249, 115, 22, 0.3);
 }
@@ -1090,7 +1091,7 @@ body.popup {
 .section-download-all-btn:hover {
   background-color: var(--brand-from);
   border-color: var(--brand-from);
-  color: #fff;
+  color: #1a1a1a;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(249, 115, 22, 0.25);
 }
