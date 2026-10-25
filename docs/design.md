@@ -367,6 +367,11 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   the view's own click handler runs afterwards and would replace the accumulated
   multi-selection with that single row. `ToggleRowAt` owns the selection change and the
   checkbox state so the two cannot drift.
+- **Settings dialog:** icon tab strip over grouped boxed-list cards; every control applies
+  immediately, so the header carries only the title and the native window control closes it
+  (closing persists any typed field). The window measures the visible page
+  (`FitToPage`) and sizes itself between 380 and 700 px, so a short page such as Advanced
+  opens without empty space below its last card while long pages scroll.
 - **Media downloader:** `VideoDownloaderWindow` is a four-page `Gtk.Stack` view over the shared
   `VideoDownloaderUIController` (URL + optional browser cookies + credentials → resolving
   spinner → ticked result list with quality and download actions → error page).

@@ -103,20 +103,19 @@ namespace XDM.Gtk4UI.Dialogs
             window = Window.New();
             window.Title = TextResource.GetText("TITLE_SETTINGS") ?? "Settings";
             window.Modal = true;
-            window.SetDefaultSize(900, 700);
+            window.SetDefaultSize(900, 600);
             if (parent != null) window.SetTransientFor(parent);
 
-            // Header: title + Close only; every control applies immediately
+            // Header: title only. Closing uses the native window control, and the
+            // close request persists first, so no duplicate Close button is needed.
             var header = HeaderBar.New();
             header.TitleWidget = Label.New(window.Title);
-            var closeBtn = Button.NewWithLabel(TextResource.GetText("BTN_CLOSE") ?? "Close");
-            closeBtn.OnClicked += (_, _) =>
+            window.SetTitlebar(header);
+            window.OnCloseRequest += (_, _) =>
             {
                 Persist();
-                window.Close();
+                return false;
             };
-            header.PackEnd(closeBtn);
-            window.SetTitlebar(header);
 
             // Tab strip (linked toggle buttons with icons), like GNOME view switchers
             tabs = Box.New(Orientation.Horizontal, 0);
@@ -572,8 +571,27 @@ namespace XDM.Gtk4UI.Dialogs
         {
             var scroll = ScrolledWindow.New();
             scroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
+            // Report the content height, so FitToPage can size the dialog to it
+            scroll.SetPropagateNaturalHeight(true);
             scroll.SetChild(content);
             return scroll;
+        }
+
+        // Sizes the dialog to the page on screen, within sane bounds: a short page
+        // (Advanced) must not open with empty space below its last card
+        private void FitToPage(string name)
+        {
+            if (stack.GetChildByName(name) is not Widget page)
+            {
+                return;
+            }
+
+            page.Measure(Orientation.Vertical, PageWidth, out _, out var natural, out _, out _);
+            const int chrome = 104;
+            const int minHeight = 380;
+            const int maxHeight = 700;
+            var height = Math.Clamp(natural + chrome, minHeight, maxHeight);
+            window.SetDefaultSize(900, height);
         }
 
         // Vertical page column with consistent width and margins
@@ -764,6 +782,7 @@ namespace XDM.Gtk4UI.Dialogs
         private void SelectTab(string name)
         {
             stack.VisibleChildName = name;
+            FitToPage(name);
             var index = Array.IndexOf(PageNames, name);
             var child = tabs.GetFirstChild();
             for (var i = 0; child != null && i < PageNames.Length; child = child.GetNextSibling(), i++)

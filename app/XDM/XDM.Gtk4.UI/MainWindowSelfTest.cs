@@ -93,7 +93,59 @@ namespace XDM.Gtk4UI
             Expect(!string.IsNullOrEmpty(about.GetIssueUrl()), "about issue url set");
             Expect(!string.IsNullOrEmpty(about.GetSupportUrl()), "about support url set");
 
+            // Footer parity guard: the light stylesheet once kept a stale
+            // .bottom-bar padding rule, making its footer bar 15px taller than the
+            // dark one. Both stylesheets must declare the same footer rules.
+            Expect(FooterRulesMatch(), "theme footer rules match");
+
             Console.WriteLine("[GTK4 SMOKE] list/theme self-test passed");
+        }
+
+
+        // Collapses the .bottom-bar rule blocks of both stylesheets for comparison
+        private static bool FooterRulesMatch()
+        {
+            var light = FooterRules("gtk4-light.css");
+            var dark = FooterRules("gtk4-dark.css");
+            return light.Length > 0 && light == dark;
+        }
+
+        // Extracts and normalises every .bottom-bar declaration block in a stylesheet
+        private static string FooterRules(string fileName)
+        {
+            try
+            {
+                var path = System.IO.Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory, "theme", fileName);
+                if (!System.IO.File.Exists(path))
+                {
+                    return "";
+                }
+
+                var text = System.IO.File.ReadAllText(path);
+                var builder = new System.Text.StringBuilder();
+                var index = text.IndexOf(".bottom-bar", StringComparison.Ordinal);
+                while (index >= 0)
+                {
+                    var open = text.IndexOf('{', index);
+                    var close = open < 0 ? -1 : text.IndexOf('}', open);
+                    if (open < 0 || close < 0)
+                    {
+                        break;
+                    }
+                    var selector = text.Substring(index, open - index).Trim();
+                    var body = text.Substring(open + 1, close - open - 1);
+                    builder.Append(selector).Append('{')
+                        .Append(string.Join(" ", body.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)))
+                        .Append("}\n");
+                    index = text.IndexOf(".bottom-bar", close, StringComparison.Ordinal);
+                }
+                return builder.ToString();
+            }
+            catch (Exception)
+            {
+                return "";
+            }
         }
 
         // Builds a live in-progress row projection for the self-test

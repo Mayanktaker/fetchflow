@@ -44,10 +44,18 @@ namespace XDM.Gtk4UI
         // Raw Config.ThemeMode value currently applied
         public static int ActiveMode { get; private set; } = ModeFollowSystem;
 
-        // Applies the mode saved in configuration
+        // Applies the mode saved in configuration. FETCHFLOW_THEME_MODE=light|dark
+        // overrides it for previews and screenshots, so a run can pin one theme
+        // without touching the user's settings.
         public static void ApplyFromConfig(Widget anchor)
         {
-            ApplyMode(anchor, Config.Instance.ThemeMode, persist: false);
+            var mode = Environment.GetEnvironmentVariable("FETCHFLOW_THEME_MODE") switch
+            {
+                "light" => ModeLight,
+                "dark" => ModeDark,
+                _ => Config.Instance.ThemeMode
+            };
+            ApplyMode(anchor, mode, persist: false);
         }
 
         // Applies a mode, optionally persisting it, and re-applies on system changes
