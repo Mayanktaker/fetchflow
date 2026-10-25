@@ -7,6 +7,9 @@
 # paints surfaces, so it can be generated instead of duplicated: one template,
 # one token source, 14 files that cannot drift.
 #
+# The spacing and type scales are read from XDM.Core/UI/DesignTokens.cs, so a
+# value that is not on the scale fails this script instead of quietly shipping.
+#
 # Usage:
 #   scripts/theme-native.py            # rewrite the theme files
 #   scripts/theme-native.py --check    # exit 1 if a file differs (CI / pre-commit)
@@ -14,6 +17,7 @@ import re
 import sys
 
 TABLE = 'app/XDM/XDM.Core/UI/ColorSchemeTable.cs'
+TOKENS = 'app/XDM/XDM.Core/UI/DesignTokens.cs'
 THEME_DIR = 'app/XDM/XDM.Gtk.UI/theme/'
 
 DARK_TEXT = {'fg': '#f4f4f4', 'view_fg': '#e4e4e4', 'dim': '#b4b4b4', 'caption': '#b4b4b4',
@@ -59,6 +63,11 @@ ROW = re.compile(
     r'\s*"(?P<card>#[0-9a-fA-F]{6})",\s*"(?P<base>#[0-9a-fA-F]{6})",'
     r'\s*"(?P<sidebar>#[0-9a-fA-F]{6})",\s*"(?P<header>#[0-9a-fA-F]{6})"\)')
 
+# Spacing and type declarations the scale guards check
+SPACE_DECL = re.compile(
+    r'(?<![\w-])(?:padding|margin)(?:-(?:top|right|bottom|left))?\s*:\s*([^;]+);')
+SIZE_DECL = re.compile(r'(?<![\w-])font-size\s*:\s*([^;]+);')
+
 
 def schemes():
     """Every scheme row, tagged with the mode it belongs to."""
@@ -71,6 +80,25 @@ def schemes():
     return out
 
 
+def token_scale(name):
+    """One int[] token array from DesignTokens.cs (the single scale source)."""
+    src = open(TOKENS).read()
+    m = re.search(name + r'\s*=\s*\{([^}]*)\}', src)
+    if not m:
+        raise SystemExit(f"DesignTokens.cs has no {name} array")
+    return sorted(int(v) for v in re.findall(r'\d+', m.group(1)))
+
+
+def ink_for(fill):
+    """Label ink that clears the 3.0:1 floor on this fill (ThemeContrast.InkFor)."""
+    return '#ffffff' if cr('#ffffff', fill) >= 3.0 else '#1a1a1a'
+
+
+def deepen(accent, factor):
+    """A deeper accent, the form ThemeContrast.HoverFor/active use."""
+    return hx([c * factor for c in rgb(accent)])
+
+
 def theme(s, t):
     """One stylesheet: tokens from the table, structure identical in every theme."""
     accent = s['accent']
@@ -81,6 +109,10 @@ def theme(s, t):
     edge = mix(accent, card, 0.55)
     edge_soft = mix(accent, card, 0.30)
     focus = mix(accent, card, 0.45)
+    # Primary action: scheme accent fill, ink derived so the label always reads
+    ink = ink_for(accent)
+    action_hover = deepen(accent, 0.88)
+    action_active = deepen(accent, 0.76)
     # The band is the theme's own header tone, not the accent
     band = s['header']
     band_hover = mix(t['fg'], band, 0.06 if not s['dark'] else 0.08)
@@ -138,7 +170,7 @@ label.header-title-view {{
 /* Update-available dot after the title group */
 label.update-dot {{
   color: {'#33d17a' if s['dark'] else '#26a269'};
-  font-size: 10px;
+  font-size: 11px;
   margin-left: 6px;
 }}
 
@@ -278,11 +310,33 @@ progressbar progress {{
   border-radius: 999px;
 }}
 
+/* The one control we brand: the primary action carries the scheme accent, and
+   its ink is derived from that fill (docs/design.md rule 1). Adwaita owns every
+   other control, so this rule is the documented exception, not a drift. */
+button.suggested-action {{
+  background-color: {accent};
+  background-image: none;
+  border-color: {action_active};
+  color: {ink};
+}}
+
+button.suggested-action:hover {{
+  background-color: {action_hover};
+  border-color: {action_active};
+  color: {ink};
+}}
+
+button.suggested-action:active,
+button.suggested-action:checked {{
+  background-color: {action_active};
+  color: {ink};
+}}
+
 /* Search entry: Adwaita's colours, our compact metrics so the toolbar height
    stays stable between themes */
 entry.toolbar-search-entry {{
   min-height: 26px;
-  padding: 3px 12px;
+  padding: 4px 12px;
   margin: 0;
   border-radius: 999px;
   transition: all 150ms ease;
@@ -290,18 +344,44 @@ entry.toolbar-search-entry {{
 """
 
 
+def off_scale(css, spacing, type_scale):
+    """Declarations whose px value is not on the shared spacing/type scale."""
+    bad = []
+    for value in SPACE_DECL.findall(css):
+        bad += [f"{value.strip()}" for px in re.findall(r'(\d+)px', value)
+                if int(px) not in spacing]
+    for value in SIZE_DECL.findall(css):
+        bad += [f"font-size {value.strip()}" for px in re.findall(r'(\d+)px', value)
+                if int(px) not in type_scale]
+    return bad
+
+
 def main():
     check = '--check' in sys.argv
+    spacing = token_scale('Spacing')
+    type_scale = token_scale('TypeScale')
     drift = []
     for s in schemes():
         t = DARK_TEXT if s['dark'] else LIGHT_TEXT
         css = theme(s, t)
         path = THEME_DIR + s['css']
+        # Guard: every gap and type size must come from the shared scales
+        off = off_scale(css, spacing, type_scale)
+        if off:
+            raise SystemExit(f"{s['css']}: off-scale values: " + ', '.join(sorted(set(off))))
         # Guard: the generated selection must stay readable with its own ink
         sel = mix(s['accent'], s['card'], 0.20)
         if cr(t['ink'], sel) < 3.2:
             raise SystemExit(f"selection tint unreadable in {s['css']}: "
                              f"{t['ink']} on {sel} = {cr(t['ink'], sel):.2f}:1")
+        # Guard: the primary action's label must read on accent, hover and active
+        action_ink = ink_for(s['accent'])
+        for what, fill in (('action', s['accent']),
+                           ('action:hover', deepen(s['accent'], 0.88)),
+                           ('action:active', deepen(s['accent'], 0.76))):
+            if cr(action_ink, fill) < 3.0:
+                raise SystemExit(f"{s['css']}: {what} ink {action_ink} on {fill} "
+                                 f"= {cr(action_ink, fill):.2f}:1")
         if check:
             if not __import__('os').path.exists(path) or open(path).read() != css:
                 drift.append(s['css'])

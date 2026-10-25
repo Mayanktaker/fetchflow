@@ -49,7 +49,7 @@ label.header-title-view {
 /* Update-available dot after the title group */
 label.update-dot {
   color: #33d17a;
-  font-size: 10px;
+  font-size: 11px;
   margin-left: 6px;
 }
 
@@ -189,11 +189,33 @@ progressbar progress {
   border-radius: 999px;
 }
 
+/* The one control we brand: the primary action carries the scheme accent, and
+   its ink is derived from that fill (docs/design.md rule 1). Adwaita owns every
+   other control, so this rule is the documented exception, not a drift. */
+button.suggested-action {
+  background-color: #3584e4;
+  background-image: none;
+  border-color: #2864ad;
+  color: #ffffff;
+}
+
+button.suggested-action:hover {
+  background-color: #2f74c9;
+  border-color: #2864ad;
+  color: #ffffff;
+}
+
+button.suggested-action:active,
+button.suggested-action:checked {
+  background-color: #2864ad;
+  color: #ffffff;
+}
+
 /* Search entry: Adwaita's colours, our compact metrics so the toolbar height
    stays stable between themes */
 entry.toolbar-search-entry {
   min-height: 26px;
-  padding: 3px 12px;
+  padding: 4px 12px;
   margin: 0;
   border-radius: 999px;
   transition: all 150ms ease;

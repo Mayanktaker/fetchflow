@@ -35,6 +35,9 @@
     <Compile Include="..\XDM.Core\UI\ColorSchemeTable.cs" Link="UI\ColorSchemeTable.cs" />
     <!-- ThemeContrastTests: WCAG math behind accent ink / hover selection -->
     <Compile Include="..\XDM.Core\UI\ThemeContrast.cs" Link="UI\ThemeContrast.cs" />
+    <Compile Include="..\XDM.Core\UI\DesignTokens.cs" Link="UI\DesignTokens.cs" />
+    <Compile Include="..\XDM.Core\UI\ThemeModePolicy.cs" Link="UI\ThemeModePolicy.cs" />
+    <Compile Include="..\XDM.Core\UI\ThemeModes.cs" Link="UI\ThemeModes.cs" />
     <Compile Include="..\XDM.Core\Category.cs" Link="Category.cs" />
     <Compile Include="..\XDM.Core\UI\CategoryIconPalette.cs" Link="UI\CategoryIconPalette.cs" />
     <Compile Include="..\XDM.Core\Util\MimeTypes.cs" Link="Util\MimeTypes.cs" />
@@ -79,6 +82,7 @@
     <Compile Include="..\XDM.Core\TraceLog\Log.cs" Link="TraceLog\Log.cs" />
     <!-- TreeViewMultiSelectSmokeTests: right-click selection preservation predicate -->
     <Compile Include="..\XDM.Gtk.UI\Utils\TreeViewSelectionHelper.cs" Link="Utils\TreeViewSelectionHelper.cs" />
+    <Compile Include="..\XDM.Gtk.UI\Utils\ThemeSettingsApplier.cs" Link="Utils\ThemeSettingsApplier.cs" />
     <!-- DownloadListHeaderPolicyTests: download list column-header decisions -->
     <Compile Include="..\XDM.Gtk.UI\Utils\DownloadListHeaderPolicy.cs" Link="Utils\DownloadListHeaderPolicy.cs" />
   </ItemGroup>

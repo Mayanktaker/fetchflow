@@ -77,6 +77,9 @@
     <Compile Include="..\XDM.Core\UI\BatchDownloadUIController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ColorSchemeTable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ThemeContrast.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DesignTokens.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ThemeModePolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ThemeModes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\CommonUtils.cs" />
     <Compile Include="..\XDM.Core\UI\ComponentUpdaterUIController.cs" />
     <Compile Include="..\XDM.Core\UI\DownloadCompleteUIController.cs" />

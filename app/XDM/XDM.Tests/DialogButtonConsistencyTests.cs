@@ -1,11 +1,12 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
-// Guards the button consistency the UI was fixed for: peer buttons in one dialog
-// action row (Add / Edit / Delete / Defaults next to Cancel / Save) must have the
-// same border and the same hover, and no button style may be so faint on hover
-// that it looks dead.
+// Guards the GTK 3 theming policy: a theme paints surfaces only (Adwaita draws
+// every control, with the branded primary action as the one allow-listed
+// exception), a selected row reads as a softer version of itself when its window
+// loses focus, and the app-owned surfaces cannot silently disappear.
 //
-// The action-row treatment (`dialog-action-button`) is generated from each theme's
-// OWN `button` rules, so these assertions are what prove a theme cannot drift.
+// The old `button.flat:hover` alpha guard is gone with the hand-drawn buttons it
+// measured: no theme declares a `button` rule any more, and
+// `EveryTheme_LeavesControlChromeToAdwaita` is what keeps it that way.
 
 using System;
 using System.Collections.Generic;
@@ -148,43 +149,6 @@ namespace XDM.Tests
             return (r * 299 + g * 587 + b * 114) / 1000;
         }
 
-        // A borderless button must still show a hover a user can see. A theme that
-        // leaves controls to Adwaita (no `button` rules at all) inherits the
-        // toolkit's own flat hover, so there is nothing of ours to check.
-        [TestMethod]
-        public void EveryTheme_FlatHover_IsVisibleEnough()
-        {
-            var failures = new List<string>();
-            foreach (var theme in Directory.GetFiles(ThemeDir, "*.css"))
-            {
-                var name = Path.GetFileName(theme);
-                var rules = Parse(File.ReadAllText(theme));
-                if (Prop(rules, "button", "background-color") == null)
-                {
-                    // Native-controls theme: Adwaita owns the hover
-                    continue;
-                }
-                var hover = Prop(rules, "button.flat:hover", "background-color");
-                var match = hover != null
-                    ? Regex.Match(hover, @"([\d.]+)\)")
-                    : Match.Empty;
-                if (!match.Success)
-                {
-                    failures.Add($"{name}: button.flat:hover has no alpha to read " +
-                        $"(got '{hover}')");
-                    continue;
-                }
-                if (double.Parse(match.Groups[1].Value) < 0.10)
-                {
-                    failures.Add($"{name}: button.flat:hover alpha " +
-                        $"{match.Groups[1].Value} is too faint to see");
-                }
-            }
-
-            Assert.AreEqual(0, failures.Count,
-                "a borderless button must still show a hover a user can see:\n"
-                + string.Join("\n", failures));
-        }
         // The native-controls policy: a theme paints surfaces, never controls.
         // Adwaita draws buttons, entries, menus, popovers, switches and checks, so
         // a rule for any of them is drift back toward hand-drawn chrome — and it
@@ -199,8 +163,9 @@ namespace XDM.Tests
             var owned = new[] { "button", "entry", "menu", "menuitem", "popover",
                 "tooltip", "switch", "check", "radio", "scrollbar", "separator",
                 "combobox", "spinbutton", "notebook", "frame" };
-            // Selectors we deliberately own (surfaces + the search field's metrics)
-            var allowed = new[] { "entry.toolbar-search-entry" };
+            // Selectors we deliberately own (surfaces + the search field's metrics
+            // and the branded primary action, which carries the scheme accent)
+            var allowed = new[] { "entry.toolbar-search-entry", "button.suggested-action" };
 
             var failures = new List<string>();
             foreach (var theme in Directory.GetFiles(ThemeDir, "*.css"))
@@ -231,7 +196,7 @@ namespace XDM.Tests
                 "window", "headerbar", "treeview", "treeview.unfinished row",
                 "treeview.finished row", "treeview.unfinished row:selected",
                 "treeview.unfinished row:selected:backdrop", "list.sidebar",
-                "progressbar progress",
+                "progressbar progress", "button.suggested-action",
             };
 
             var failures = new List<string>();
