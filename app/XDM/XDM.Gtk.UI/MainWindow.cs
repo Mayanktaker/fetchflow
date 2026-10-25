@@ -689,6 +689,19 @@ namespace XDM.GtkUI
             return CreateButtonWithContent(image, lbl, accessibleName);
         }
 
+        // Re-tints a button's icon in place. Button.Image REPLACES the whole child,
+        // which silently dropped a labeled button's text; swap the pixbuf instead.
+        private static void SetButtonIcon(Button button, Gdk.Pixbuf? pixbuf)
+        {
+            if (pixbuf == null) return;
+            if (button.Child is HBox box && box.Children.Length > 0 && box.Children[0] is Image image)
+            {
+                image.Pixbuf = pixbuf;
+                return;
+            }
+            button.Image = new Image(pixbuf);
+        }
+
         private Button CreateButtonWithContent(Image image, Label? label, string? accessibleName = null)
         {
             // Icon-only buttons: no side margins/spacing; the image expands and GtkMisc's
@@ -754,7 +767,10 @@ namespace XDM.GtkUI
             activityBox.Add(btnActivity);
             hbox.PackStart(activityBox, false, false, 0);
 
-            btnSpeedLimit = CreateButtonWithContent("time-line", null, DimR, DimG, DimB, TextResource.GetText("MENU_SPEED_LIMITER"));
+            // Labeled like GTK 4's control: icon-only left a bare clock in the bar
+            btnSpeedLimit = CreateButtonWithContent("time-line",
+                TextResource.GetText("MENU_SPEED_LIMITER"), DimR, DimG, DimB,
+                TextResource.GetText("MENU_SPEED_LIMITER"));
             btnSpeedLimit.Clicked += BtnSpeedLimit_Clicked;
             btnSpeedLimit.ButtonPressEvent += (o, args) =>
             {
@@ -869,7 +885,7 @@ namespace XDM.GtkUI
                 var pix = LoadSvg("time-line", 16);
                 if (pix != null)
                 {
-                    btnSpeedLimit.Image = new Image(GtkHelper.TintPixbuf(pix, AccentR, AccentG, AccentB));
+                    SetButtonIcon(btnSpeedLimit, GtkHelper.TintPixbuf(pix, AccentR, AccentG, AccentB));
                 }
             }
             else
@@ -878,7 +894,7 @@ namespace XDM.GtkUI
                 var pix = LoadSvg("time-line", 16);
                 if (pix != null)
                 {
-                    btnSpeedLimit.Image = new Image(GtkHelper.TintPixbuf(pix, DimR, DimG, DimB));
+                    SetButtonIcon(btnSpeedLimit, GtkHelper.TintPixbuf(pix, DimR, DimG, DimB));
                 }
             }
         }

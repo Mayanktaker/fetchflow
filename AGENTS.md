@@ -36,13 +36,14 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 | `bash scripts/build-windows-local.sh` | Local standalone Windows portable ZIP release (`fetchflow-windows-x64-portable-*.zip`) |
 | `bash scripts/generate-winget-manifest.sh` | Generate Windows Package Manager (Winget) v1.6.0 manifests |
 | `bash scripts/install-fetchflow.sh --check` | Universal Linux installer verify (arch/cachy/manjaro, fedora, debian, suse, tarball fallback) |
-| theme CSS | `theme/**` is copied into `bin/…/theme/` at **build** time — editing a `.css` changes nothing until you rebuild (or use `scripts/relaunch-gtk4.sh`, which builds) |
+| theme CSS | `theme/**` is copied into `bin/…/theme/` at **build** time — editing a `.css` changes nothing until you rebuild (or use `scripts/relaunch-app.sh`, which builds) |
 | `scripts/lint-shell.sh` | Shell lint gate — shared target list used by `lint.yml`; runs `shellcheck -S warning` over every repo script |
 | `scripts/theme-native.py` | Regenerates all 14 GTK 3 theme stylesheets from `ColorSchemeTable.cs` (`--check` fails on drift) — hand-edited theme files are lost |
 | `scripts/lint-credit-headers.sh` | Rule 5 gate — requires the credit header on files you *changed* (upstream XDM files stay grandfathered); `--staged`, `--base <ref>`, `--all` (report-only baseline) |
 | `scripts/clean-artifacts.sh` | Reclaim stale generated packaging trees (dry run by default, `--yes` to delete, `--keep-current` to spare the live version) |
 | `scripts/capture-screenshots.sh` | Re-shoot README/site screenshots (throwaway HOME, demo rows via `--shot=`, Xvfb); re-run on releases that change UI |
-| `scripts/relaunch-gtk4.sh` | Rebuild Release and relaunch the GTK 4 dev build (comm-guarded stop, IPC check); use for live testing |
+| `scripts/relaunch-app.sh [--gtk4\|--gtk3] [--no-build]` | Rebuild Release and relaunch either frontend (setsid launch so it survives the shell, comm-guarded stop, IPC check); use for live testing |
+| `scripts/relaunch-gtk4.sh` | Compatibility wrapper for `relaunch-app.sh --gtk4` |
 | `scripts/cleanup-junk-captures.sh` | Purge junk captures (quit app first; auto-backup) |
 
 ## Rules
