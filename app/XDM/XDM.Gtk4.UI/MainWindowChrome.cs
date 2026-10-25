@@ -408,7 +408,7 @@ namespace XDM.Gtk4UI
         private void UpdateBottomBarIcons()
         {
             var (ar, ag, ab) = AccentForState();
-            TintButtonIcon(btnSelectAll, "checkbox-line", ar, ag, ab, 14);
+            TintButtonIcon(btnSelectAll, "checkbox-checked", ar, ag, ab, 14);
             TintButtonIcon(btnScheduler, "list-settings-line", ar, ag, ab, 14);
             TintButtonIcon(btnSpeedLimit, "time-line", ar, ag, ab, 14);
         }

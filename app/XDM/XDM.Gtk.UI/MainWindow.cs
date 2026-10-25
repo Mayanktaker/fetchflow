@@ -175,10 +175,6 @@ namespace XDM.GtkUI
         private const int DownloadMetaFinishedWidth = 176;
         private const int DownloadSizeColumnMinWidth = 110;
         private const int DownloadSizeColumnMaxWidth = 720;
-        // Selection gutter column: default width + clamp (never narrower than the toggle)
-        private const int DownloadGutterWidth = 52;   // 22px box + 8px padding each side
-        private const int DownloadGutterMinWidth = 36;
-        private const int DownloadGutterMaxWidth = 200;
         // File name column: starting width, then it absorbs the leftover space
         private const int DownloadNameColumnWidth = 420;
         // File name column: takes the leftover width, clamped so drag stays usable
@@ -190,7 +186,6 @@ namespace XDM.GtkUI
         private IPlatformClipboardMonitor clipboarMonitor;
         private TreePath? hoveredInprogressPath;
         private TreePath? hoveredFinishedPath;
-        private TreeViewColumn? inprogressCheckCol, finishedCheckCol;
         private TreeViewColumn? inprogressNameCol, inprogressSizeCol, finishedNameCol, finishedSizeCol;
         private TreePath[]? inprogressRightClickSnapshot, finishedRightClickSnapshot;
         private const int SortTypeColumnId = 100;
@@ -729,8 +724,11 @@ namespace XDM.GtkUI
             hbox.MarginStart = 8;
             hbox.MarginEnd = 8;
             // Select-all acts on the list that owns the current selection
-            btnSelectAll = CreateButtonWithContent("checkbox-line", null, DimR, DimG, DimB,
-                TextResource.GetText("LBL_SELECT_ALL") ?? "Select All");
+            // Labeled like GTK 4's control: icon-only left an empty hole when the
+            // named icon was missing from svg-icons
+            btnSelectAll = CreateButtonWithContent("checkbox-checked",
+                TextResource.GetText("LBL_SELECT_ALL") ?? "Select All",
+                DimR, DimG, DimB, TextResource.GetText("LBL_SELECT_ALL") ?? "Select All");
             btnSelectAll.Clicked += (_, _) => ToggleSelectAll(ActiveListIsFinished());
             btnSelectAll.StyleContext.AddClass("bottombar-button");
             hbox.PackStart(btnSelectAll, false, false, 0);
@@ -1473,9 +1471,6 @@ namespace XDM.GtkUI
             // Drag-select (rubber band) — GTK defaults OFF, which silently broke
             // drag-based multi-selection attempts on the Active list.
             lvInprogress.RubberBanding = true;
-            // Real GTK column header (GTK4-style): every column is drag-resizable; the
-            // accent surface comes from the treeview.<view> header rules in the theme
-            lvInprogress.HeadersVisible = true;
             lvInprogress.EnableGridLines = TreeViewGridLines.None;
             // Per-view surface tint (see treeview.unfinished in the theme layer)
             lvInprogress.StyleContext.AddClass("unfinished");
@@ -1497,32 +1492,6 @@ namespace XDM.GtkUI
                 MinWidth = DownloadNameColumnMinWidth,
                 MaxWidth = DownloadNameColumnMaxWidth
             };
-            // Dedicated selection-checkbox column — click any rows to build a
-            // multi-selection without Ctrl/Shift; state mirrors TreeSelection.
-            inprogressCheckCol = new TreeViewColumn
-            {
-                Resizable = true,   // before Sizing, or GTK may rewrite the mode
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = DownloadGutterWidth,
-                SortColumnId = -1,
-                MinWidth = DownloadGutterMinWidth,
-                MaxWidth = DownloadGutterMaxWidth
-            };
-            var inprogressCheckRenderer = new CellRendererPixbuf();
-            inprogressCheckRenderer.SetPadding(8, DownloadRowToggleVerticalPadding);
-            inprogressCheckCol.PackStart(inprogressCheckRenderer, true);
-            inprogressCheckCol.SetCellDataFunc(inprogressCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
-            {
-                var checkPath = model.GetPath(iter);
-                var selected = lvInprogress.Selection.PathIsSelected(checkPath);
-                ((CellRendererPixbuf)cell).Pixbuf = GtkHelper.LoadSelectionCheckbox(
-                    selected, AccentR, AccentG, AccentB);
-                // Gutter rail: plain card base in every state, never the row fill
-                ((CellRendererPixbuf)cell).CellBackground = TreeViewSelectionHelper.GutterCellBackground(
-                    checkPath, ThemeManager.ActiveCardBackgroundHex, ThemeManager.ActiveAlternateRowColor);
-            }));
-            lvInprogress.AppendColumn(inprogressCheckCol);
-
             var fileIconRenderer = new CellRendererPixbuf { };
             fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, DownloadRowIconVerticalPadding);
             inprogressCardCol.PackStart(fileIconRenderer, false);
@@ -1556,7 +1525,7 @@ namespace XDM.GtkUI
 
             lvInprogress.AppendColumn(inprogressCardCol);
             lvInprogress.AppendColumn(inprogressSizeCol);
-            WireListColumnHeaders(inprogressCheckCol, inprogressCardCol, inprogressSizeCol, true);
+            WireListColumnHeaders(inprogressCardCol, inprogressSizeCol, true);
 
             lvInprogress.Selection.Changed += (_, _) =>
             {
@@ -1688,9 +1657,6 @@ namespace XDM.GtkUI
             lvFinished.Selection.Mode = SelectionMode.Multiple;
             // Drag-select (rubber band) — same as the Active list
             lvFinished.RubberBanding = true;
-            // Real GTK column header (GTK4-style): every column is drag-resizable; the
-            // accent surface comes from the treeview.<view> header rules in the theme
-            lvFinished.HeadersVisible = true;
             lvFinished.EnableGridLines = TreeViewGridLines.None;
             // Per-view surface tint (see treeview.finished in the theme layer)
             lvFinished.StyleContext.AddClass("finished");
@@ -1709,30 +1675,6 @@ namespace XDM.GtkUI
                 MinWidth = DownloadNameColumnMinWidth,
                 MaxWidth = DownloadNameColumnMaxWidth
             };
-            // Dedicated selection-checkbox column — same pure-toggle semantics as Active
-            finishedCheckCol = new TreeViewColumn
-            {
-                Sizing = TreeViewColumnSizing.Fixed,
-                FixedWidth = DownloadGutterWidth,
-                SortColumnId = -1,
-                MinWidth = DownloadGutterMinWidth,
-                MaxWidth = DownloadGutterMaxWidth
-            };
-            var finishedCheckRenderer = new CellRendererPixbuf();
-            finishedCheckRenderer.SetPadding(8, DownloadRowToggleVerticalPadding);
-            finishedCheckCol.PackStart(finishedCheckRenderer, true);
-            finishedCheckCol.SetCellDataFunc(finishedCheckRenderer, new CellLayoutDataFunc((_, cell, model, iter) =>
-            {
-                var checkPath = model.GetPath(iter);
-                var selected = lvFinished.Selection.PathIsSelected(checkPath);
-                ((CellRendererPixbuf)cell).Pixbuf = GtkHelper.LoadSelectionCheckbox(
-                    selected, AccentR, AccentG, AccentB);
-                // Gutter rail: plain card base in every state, never the row fill
-                ((CellRendererPixbuf)cell).CellBackground = TreeViewSelectionHelper.GutterCellBackground(
-                    checkPath, ThemeManager.ActiveCardBackgroundHex, ThemeManager.ActiveAlternateRowColor);
-            }));
-            lvFinished.AppendColumn(finishedCheckCol);
-
             var fileIconRenderer = new CellRendererPixbuf { };
             fileIconRenderer.SetPadding(DownloadIconHorizontalPadding, DownloadRowIconVerticalPadding);
             finishedCardCol.PackStart(fileIconRenderer, false);
@@ -1766,7 +1708,7 @@ namespace XDM.GtkUI
 
             lvFinished.AppendColumn(finishedCardCol);
             lvFinished.AppendColumn(finishedSizeCol);
-            WireListColumnHeaders(finishedCheckCol, finishedCardCol, finishedSizeCol, false);
+            WireListColumnHeaders(finishedCardCol, finishedSizeCol, false);
 
             lvFinished.Selection.Changed += (_, _) =>
             {
@@ -1820,12 +1762,12 @@ namespace XDM.GtkUI
             return listHost;
         }
 
-        // Wires a download list's three column headers: gutter (select-all), File name
-        // and Size. The headers are GTK's own header buttons, so dragging a column edge
+        // Wires a download list's column headers: File name and Size. The headers are
+        // GTK's own header buttons, so dragging a column edge
         // resizes it natively and each caption follows its column. sort-column-id stays
         // -1 to detach GTK's built-in click sorting — clicks route through the app's
         // persisted sort state instead (SetDownloadSort is the single source of truth).
-        private void WireListColumnHeaders(TreeViewColumn gutterCol, TreeViewColumn nameCol, TreeViewColumn sizeCol, bool inprogress)
+        private void WireListColumnHeaders(TreeViewColumn nameCol, TreeViewColumn sizeCol, bool inprogress)
         {
             if (inprogress)
             {
@@ -1951,16 +1893,6 @@ namespace XDM.GtkUI
                 inprogressRightClickSnapshot = lvInprogress.Selection.GetSelectedRows(out _);
                 args.RetVal = true;
             }
-            else if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 1
-                && ToggleDownloadRow(lvInprogress, inprogressCheckCol, args))
-            {
-                // Toggle on press (file-manager semantics) and CLAIM the event: without
-                // the claim GTK's default handler runs afterwards and REPLACES the
-                // selection with this one row, which made multi-select impossible and
-                // made an untick instantly re-tick. [GLib.ConnectBefore] is what makes
-                // this claim effective — it puts us ahead of GTK's class handler.
-                args.RetVal = true;
-            }
             else
             {
                 inprogressRightClickSnapshot = null;
@@ -1988,12 +1920,6 @@ namespace XDM.GtkUI
                 finishedRightClickSnapshot = lvFinished.Selection.GetSelectedRows(out _);
                 args.RetVal = true;
             }
-            else if (args.Event.Type == Gdk.EventType.ButtonPress && args.Event.Button == 1
-                && ToggleDownloadRow(lvFinished, finishedCheckCol, args))
-            {
-                // See OnInprogressButtonPress: toggle on press + claim
-                args.RetVal = true;
-            }
             else
             {
                 finishedRightClickSnapshot = null;
@@ -2013,25 +1939,6 @@ namespace XDM.GtkUI
         // Safety net: if the press claim ever misses (theme hitbox drift, Wayland
         // coordinate skew), the press collapses to 1 row — reselect the snapshot so
         // the context menu and Delete act on every row the user had selected.
-        // Checkbox click: toggle the row's membership in the selection. Runs on
-        // button-PRESS (file-manager semantics) and returns true when it handled the
-        // click, so the caller can treat a gutter press differently from a row press.
-        private static bool ToggleDownloadRow(TreeView view, TreeViewColumn? gutterCol, ButtonPressEventArgs args)
-        {
-            if (gutterCol == null) return false;
-            // Header-window events carry header coordinates and must never be
-            // mistaken for a row click (they would resolve to a row anyway)
-            if (!TreeViewSelectionHelper.IsRowEvent(view, args.Event.Window)) return false;
-            var x = args.Event.X;
-            var y = args.Event.Y;
-            // RAW event coordinates: rows live in the bin window, which starts below
-            // the header, so GTK has already excluded the header for us
-            if (!TreeViewSelectionHelper.HitTestToggleCell(view, gutterCol, x, y)) return false;
-            if (!TreeViewSelectionHelper.TryGetRowAtEvent(view, x, y, out TreePath path)) return false;
-            TreeViewSelectionHelper.ToggleSelectionPath(view, path);
-            return true;
-        }
-
         private static void RestoreSnapshotIfCollapsed(TreeView view, ref TreePath[]? snapshot)
         {
             try

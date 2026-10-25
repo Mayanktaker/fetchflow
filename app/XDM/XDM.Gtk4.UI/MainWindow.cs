@@ -207,7 +207,7 @@ namespace XDM.Gtk4UI
             btnScheduler.OnClicked += (_, _) => OnScheduler();
 
             btnSelectAll = Gtk4IconHelper.CreateActionButton(
-                "checkbox-line",
+                "checkbox-checked",
                 TextResource.GetText("LBL_SELECT_ALL") ?? "Select All",
                 "Select all downloads (Ctrl+A)",
                 "flat",
