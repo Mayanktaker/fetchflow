@@ -66,70 +66,6 @@ namespace XDM.Tests
                 && props.TryGetValue(property, out var value) ? value : null;
         }
 
-        [TestMethod]
-        public void EveryTheme_ActionRowButtons_MatchTheThemeBaseButton()
-        {
-            var themes = Directory.GetFiles(ThemeDir, "*.css");
-            Assert.IsTrue(themes.Length > 0, "no themes found");
-
-            var failures = new List<string>();
-            foreach (var theme in themes)
-            {
-                var name = Path.GetFileName(theme);
-                var rules = Parse(File.ReadAllText(theme));
-                var same = new (string What, string A, string B)[]
-                {
-                    ("normal background",
-                        Prop(rules, "button.dialog-action-button", "background-color"),
-                        Prop(rules, "button", "background-color")),
-                    ("border",
-                        Prop(rules, "button.dialog-action-button", "border"),
-                        Prop(rules, "button", "border")),
-                    ("hover background",
-                        Prop(rules, "button.dialog-action-button:hover", "background-color"),
-                        Prop(rules, "button:hover", "background-color")),
-                    ("active background",
-                        Prop(rules, "button.dialog-action-button:active", "background-color"),
-                        Prop(rules, "button:active", "background-color")),
-                    ("disabled background",
-                        Prop(rules, "button.dialog-action-button:disabled", "background-color"),
-                        Prop(rules, "button:disabled", "background-color")),
-                };
-                foreach (var (what, a, b) in same)
-                {
-                    if (a != b)
-                    {
-                        failures.Add($"{name}: action-row {what} '{a}' != base button '{b}'");
-                    }
-                }
-
-                // The destructive variant must keep the subtle red of the old flat
-                // style, not become a loud filled button.
-                foreach (var (what, actionSel, baseSel) in new[]
-                {
-                    ("colour", "button.dialog-action-button.destructive-action",
-                        "button.flat.destructive-action"),
-                    ("hover background", "button.dialog-action-button.destructive-action:hover",
-                        "button.flat.destructive-action:hover"),
-                })
-                {
-                    var a = Prop(rules, actionSel, "color")
-                        ?? Prop(rules, actionSel, "background-color");
-                    var b = Prop(rules, baseSel, "color")
-                        ?? Prop(rules, baseSel, "background-color");
-                    if (a != b)
-                    {
-                        failures.Add($"{name}: destructive {what} '{a}' != '{b}'");
-                    }
-                }
-            }
-
-            Assert.AreEqual(0, failures.Count,
-                "dialog action-row buttons must match the theme's base button in every "
-                + "theme, or the row reads as links next to the dialog's other buttons:\n"
-                + string.Join("\n", failures));
-        }
-
         // An unfocused (backdrop) selected download row used to be painted with the
         // FULL header accent in 12 of 14 themes — indistinguishable from the header
         // and it swallowed the accent-coloured tick box. It must be derived from the
@@ -242,6 +178,9 @@ namespace XDM.Tests
             return (r * 299 + g * 587 + b * 114) / 1000;
         }
 
+        // A borderless button must still show a hover a user can see. A theme that
+        // leaves controls to Adwaita (no `button` rules at all) inherits the
+        // toolkit's own flat hover, so there is nothing of ours to check.
         [TestMethod]
         public void EveryTheme_FlatHover_IsVisibleEnough()
         {
@@ -250,6 +189,11 @@ namespace XDM.Tests
             {
                 var name = Path.GetFileName(theme);
                 var rules = Parse(File.ReadAllText(theme));
+                if (Prop(rules, "button", "background-color") == null)
+                {
+                    // Native-controls theme: Adwaita owns the hover
+                    continue;
+                }
                 var hover = Prop(rules, "button.flat:hover", "background-color");
                 var match = hover != null
                     ? Regex.Match(hover, @"([\d.]+)\)")
@@ -270,6 +214,71 @@ namespace XDM.Tests
             Assert.AreEqual(0, failures.Count,
                 "a borderless button must still show a hover a user can see:\n"
                 + string.Join("\n", failures));
+        }
+        // The native-controls policy: a theme paints surfaces, never controls.
+        // Adwaita draws buttons, entries, menus, popovers, switches and checks, so
+        // a rule for any of them is drift back toward hand-drawn chrome — and it
+        // would silently override the user's desktop theme.
+        //
+        // This replaces the old action-row check: that test proved a generated
+        // `dialog-action-button` matched the theme's `button` rules, which only
+        // mattered while we painted buttons ourselves.
+        [TestMethod]
+        public void EveryTheme_LeavesControlChromeToAdwaita()
+        {
+            var owned = new[] { "button", "entry", "menu", "menuitem", "popover",
+                "tooltip", "switch", "check", "radio", "scrollbar", "separator",
+                "combobox", "spinbutton", "notebook", "frame" };
+            // Selectors we deliberately own (surfaces + the search field's metrics)
+            var allowed = new[] { "entry.toolbar-search-entry" };
+
+            var failures = new List<string>();
+            foreach (var theme in Directory.GetFiles(ThemeDir, "*.css"))
+            {
+                var name = Path.GetFileName(theme);
+                foreach (var selector in Parse(File.ReadAllText(theme)).Keys)
+                {
+                    if (allowed.Any(a => selector.StartsWith(a, StringComparison.Ordinal)))
+                        continue;
+                    var node = selector.Split(':', ' ')[0];
+                    if (!owned.Any(o => node == o || node.StartsWith(o + ".")))
+                        continue;
+                    failures.Add($"{name}: '{selector}' styles a control Adwaita owns");
+                }
+            }
+
+            Assert.AreEqual(0, failures.Count,
+                "themes must paint surfaces only; Adwaita draws every control "
+                + "(see docs/design.md - Native controls):\n" + string.Join("\n", failures.Take(15)));
+        }
+
+        // Every theme must still ship the pieces Adwaita cannot express
+        [TestMethod]
+        public void EveryTheme_KeepsTheSurfacesOnlyWeCanDraw()
+        {
+            var required = new[]
+            {
+                "window", "headerbar", "treeview", "treeview.unfinished row",
+                "treeview.finished row", "treeview.unfinished row:selected",
+                "treeview.unfinished row:selected:backdrop", "list.sidebar",
+                "treeview.unfinished header button", "progressbar progress",
+            };
+
+            var failures = new List<string>();
+            foreach (var theme in Directory.GetFiles(ThemeDir, "*.css"))
+            {
+                var name = Path.GetFileName(theme);
+                var rules = Parse(File.ReadAllText(theme));
+                foreach (var selector in required)
+                {
+                    if (!rules.ContainsKey(selector))
+                        failures.Add($"{name}: missing '{selector}'");
+                }
+            }
+
+            Assert.AreEqual(0, failures.Count,
+                "a theme must still paint the app-owned surfaces:\n"
+                + string.Join("\n", failures.Take(15)));
         }
     }
 }

@@ -2,10 +2,10 @@
 
 // ThemeContrast — WCAG relative-luminance math shared by every frontend, so a
 // colour scheme's accent can never be paired with text that cannot be read.
-// Pure functions only (no UI toolkit): GTK 3 precomputes its literal hex values
-// with the same rule (scripts/theme-contrast.py regenerates them), GTK 4 folds
-// InkFor/HoverFor into its accent_foreground and accent_hover tokens, and WPF
-// maps the same values onto AccentForegroundBrush.
+// Pure functions only (no UI toolkit). GTK 4 folds InkFor/HoverFor into its
+// accent_foreground and accent_hover tokens and WPF maps InkFor onto
+// AccentForegroundBrush. GTK 3 needs none of it: it leaves every control to
+// Adwaita and tints selections instead of filling them (scripts/theme-native.py).
 //
 // The floor is 3.0:1 — WCAG AA for large text. Every accent-painted surface in
 // this app carries semibold control labels (11-14px), which is the closest

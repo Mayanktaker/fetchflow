@@ -218,12 +218,19 @@ namespace XDM.Tests
                 var fill = BackgroundPattern.Matches(field.Groups[1].Value)
                     .Cast<Match>().Select(m => m.Groups[1].Value).FirstOrDefault()
                     ?? backgrounds.GetValueOrDefault("entry.toolbar-search-entry");
-                Assert.IsNotNull(fill, $"{name}: search field has no background");
 
                 // The ink comes from the later block that only sets the colour
                 var ink = Regex.Match(css,
                     @"entry\.toolbar-search-entry\s*\{\s*color:\s*(#[0-9a-fA-F]{3,8})\s*;",
                     RegexOptions.Singleline).Groups[1].Value;
+
+                // A native-controls theme sets neither colour: Adwaita owns the pair
+                if (fill == null && ink.Length == 0)
+                {
+                    continue;
+                }
+
+                Assert.IsNotNull(fill, $"{name}: search field sets a text colour but no background");
                 Assert.IsTrue(ink.Length > 0, $"{name}: search field declares no text colour");
 
                 if (!ThemeContrast.TryContrast(ink, fill, out var ratio) || ratio < FieldFloor)
