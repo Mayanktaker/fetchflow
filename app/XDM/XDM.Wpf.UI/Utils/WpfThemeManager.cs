@@ -45,10 +45,10 @@ namespace XDM.Wpf.UI.Utils
         private const string AppsUseLightThemeValueName = "AppsUseLightTheme";
         // AppsUseLightTheme value that means the system runs apps dark
         private const int AppsUseLightThemeDark = 0;
-        // Config.ThemeMode codes: 0 = Light, 1 = Dark, 2 = Follow System
-        private const int ThemeModeLight = 0;
-        private const int ThemeModeDark = 1;
-        private const int ThemeModeFollowSystem = 2;
+        // Config.ThemeMode codes (single source: XDM.Core/UI/ThemeModes.cs)
+        private const int ThemeModeLight = ThemeModes.Light;
+        private const int ThemeModeDark = ThemeModes.Dark;
+        private const int ThemeModeFollowSystem = ThemeModes.FollowSystem;
 
         // Tracks whether the dark theme is actively rendered
         public static bool IsDarkActive { get; private set; }
@@ -74,16 +74,8 @@ namespace XDM.Wpf.UI.Utils
         public static void ApplyFromConfig()
         {
             EnsureSystemThemeWatcher();
-            bool? dark;
-            if (Config.Instance.ThemeMode == ThemeModeFollowSystem)
-            {
-                dark = null;
-            }
-            else
-            {
-                dark = Config.Instance.ThemeMode == ThemeModeDark;
-            }
-            ApplyTheme(dark, Config.Instance.ColorScheme);
+            ApplyTheme(ThemeModes.ToDarkRequest(Config.Instance.ThemeMode),
+                Config.Instance.ColorScheme);
         }
 
         // One-time SystemEvents hook so "Follow System" reacts to the Windows
@@ -148,7 +140,7 @@ namespace XDM.Wpf.UI.Utils
         // Toggles between Dark and Light mode, persisting the choice like GTK ThemeManager
         public static void ToggleTheme()
         {
-            var newMode = IsDarkActive ? ThemeModeLight : ThemeModeDark;
+            var newMode = ThemeModes.FromDark(!IsDarkActive);
             Config.Instance.ThemeMode = newMode;
             Config.SaveConfig();
             ApplyTheme(newMode == ThemeModeDark, Config.Instance.ColorScheme);

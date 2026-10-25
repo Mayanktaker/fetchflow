@@ -12,7 +12,7 @@ Status values: `open` · `fixed` · `accepted` (documented limitation) · `needs
 
 | ID | Sev | Desktop | Finding | Evidence | Status |
 |:---|:---|:---|:---|:---|:---|
-| FF-UI-001 | P1 | KDE, Cinnamon | The GTK 3 frontend forces `Gtk.Settings.Default.ThemeName = "Adwaita"` at startup and on every theme change, overriding the user's chosen GTK theme (Breeze on Plasma, Mint-Y on Cinnamon) for every widget the app CSS does not cover. | `Utils/ThemeManager.cs` (`AdwaitaThemeName` assignment in `ApplyTheme`) | fixed in GTK 4 (never sets the theme name, only the dark flag); accepted for the GTK 3 compatibility frontend |
+| FF-UI-001 | P1 | KDE, Cinnamon | The GTK 3 frontend forces `Gtk.Settings.Default.ThemeName = "Adwaita"` at startup and on every theme change, overriding the user's chosen GTK theme (Breeze on Plasma, Mint-Y on Cinnamon) for every widget the app CSS does not cover. | `Utils/ThemeManager.cs` (`AdwaitaThemeName` assignment in `ApplyTheme`) | fixed in GTK 4 (never sets the theme name, only the dark flag); fixed in GTK 3 for Follow System (`ThemeName` is only forced when the user picks an explicit Light/Dark mode, where the app's own surfaces must match the toolkit's control colours) |
 | FF-UI-002 | P1 | GNOME, KDE | Two notification transports: download-complete uses the D-Bus `org.freedesktop.Notifications` helper, while media-capture and generic notifications shell out to `notify-send`. On a session without that binary the second path fails silently. | `GtkPlatformUIService.ShowMediaNotification` / `ShowDesktopNotification` vs `Utils/DesktopNotificationHelper.cs` | fixed |
 | FF-UI-003 | P1 | GNOME, KDE | No accessibility names anywhere in the GTK UI. Icon-only controls (main menu, speed limiter, theme toggle, update dot) are announced as unlabeled buttons by Orca/screen readers. | Zero `Atk`/`Accessible` references before this audit | fixed in GTK 4 via tooltips and accessible labels on all actions, controls, and dialog fields; toolbar/header addressed in GTK 3 |
 | FF-UI-004 | P2 | GNOME, KDE | Keyboard accelerators are largely absent. GTK 4 now registers Gio actions with Ctrl+N (new download), Ctrl+F (search), Ctrl+T (theme) and Ctrl+Q (quit); GTK 3 handles Ctrl+F and Ctrl+N at window level. No other shortcut exists and there is no shortcut reference UI. | `XDM.Gtk4.UI/AppActions.cs`, `XDM.Gtk.UI/MainWindow.cs` (`WireKeyboardShortcuts`) | fixed in GTK 4 (registered accelerators for Ctrl+N, Ctrl+F, Ctrl+T, Ctrl+Q, F5, Ctrl+B, Ctrl+Shift+Q, Ctrl+I, Ctrl+,, F1) |
@@ -57,6 +57,11 @@ Status values: `open` · `fixed` · `accepted` (documented limitation) · `needs
 
 | FF-UI-040 | P0 | GNOME, KDE, Windows | Saving settings while the proxy was Direct or System threw `ArgumentNullException` from `BinaryWriter.Write(string)` (null `Host`/`UserName`) and terminated the app. Changing the theme in Settings was the visible trigger. | crash trace: `ConfigIO.SerializeProxyInfo` → `Config.SaveConfig` → `SettingsDialog.SaveSettings` | fixed (null-guarded proxy and string-array writes in shared Core; settings Save now catches and reports instead of crashing; smoke asserts the Direct-proxy serialization) |
 
+| FF-UI-041 | P2 | all | The spacing scale was documented as `4 / 8 / 12 / 16 / 24`, but the generated GTK 3 themes used 2, 3, 6, 10, 14, 18 and 20px and `MainWindow` carried its own literals, so the "system" was guidance no change could be held to. | `scripts/theme-native.py` template, `MainWindow` `DownloadRow*Padding` | fixed (`XDM.Core/UI/DesignTokens.cs` holds `Spacing`/`TypeScale`; the generator parses them and refuses off-scale values, `Gtk3DesignTokenTests` re-checks the shipped CSS, and `MainWindow` reads the named steps) |
+| FF-UI-042 | P2 | all | A scheme's accent painted selections and progress but never the primary action, because Adwaita owned every button — so a scheme and its primary button disagreed on the same screen. | `scripts/theme-native.py` (no `suggested-action` rule), `EveryTheme_LeavesControlChromeToAdwaita` | fixed (`button.suggested-action` generated from the scheme: accent fill, `0.88×` hover, `0.76×` active, `InkFor` label; allow-listed in the policy test and pinned by `Gtk3DesignTokenTests`) |
+| FF-UI-043 | P3 | all | `docs/design.md` described CSS that no longer shipped: a `padding: 12px 12px` row inset (actual `margin: 4px 10px; padding: 6px 8px`), accent active `#2767b8` (actual `0.76×` = `#2864ad`), a lighter-hover column that contradicted the deeper-hover rule, a 10px update dot and a 16px headline absent from the type table, and a reference to `scripts/theme-contrast.py`, which had been deleted. | `docs/design.md` vs `theme/*.css` | fixed (docs now quote the shipped values and point at the derivation instead of duplicating 14 hex columns) |
+| FF-UI-044 | P1 | GNOME 42+ | Follow System resolved the desktop's dark variant from the `gtk-theme-name` substring only. GNOME keeps the name `Adwaita` and sets `gtk-application-prefer-dark-theme`, so the default mode painted **light** app surfaces under dark toolkit controls. | `ThemeManager.ApplyTheme` (name-only derivation), verified: `ThemeName=Adwaita` + `preferDark=True` derived light (`#fcfcfc`) | fixed (`ThemeModePolicy.IsSessionDark` reads either signal; the desktop flag is captured before the app writes it and Follow System hands it back; pinned by `ThemeModePolicyTests`) |
+
 ## What is still unverified
 
 These need a live session and are **not** claimed as findings yet:
@@ -68,7 +73,24 @@ These need a live session and are **not** claimed as findings yet:
   is not the same as a live pass.
 - GNOME: headerbar button ordering against the platform default, notification
   appearance in the GNOME message tray, Orca navigation through the download list.
-- Cinnamon/XFCE/MATE: GTK 3 compatibility run of the P0 journeys.
+- Cinnamon/XFCE/MATE: GTK 3 compatibility run of the P0 journeys. The FF-UI-001
+  fix changed what those desktops render (Follow System now leaves Breeze/Mint-Y
+  widget chrome alone; only an explicit Light/Dark choice forces Adwaita), and that
+  is statically verified only — both paths need a live pass.
+- **Breeze / Mint-Y pixels — closable, environment gap only.** FF-UI-001 and
+  FF-UI-044 are proven at the settings level (`ThemeSettingsApplyTests` against a real
+  `Gtk.Settings`, plus a live follower run), but no container in use carries an
+  Adwaita/Breeze/Mint-Y theme, so the desktop's own widget chrome was never *rendered*
+  here. To close: install `breeze-gtk` (or `mint-y-themes-gtk3`), keep Follow System,
+  then confirm (a) flat controls keep the desktop look, (b) `button.suggested-action`
+  keeps the scheme accent at provider priority 800, (c) no dialog becomes unreadable.
+  No code change is expected from this — it is an environment gap, not a defect.
+- **`prefer-dark` under a real xsettings manager.** In a sandbox without one, GTK
+  re-applies the xsettings defaults whenever the theme *name* changes, so an
+  in-process `gtk-application-prefer-dark-theme` assignment is reset. The live follow
+  itself is proven (5/5 checks under Xvfb, driven through `Gtk.Settings`
+  notifications), but a real GNOME session — where the xsettings manager owns that
+  value — still deserves one confirming run.
 - Any backend-specific (Wayland vs X11) difference beyond the startup path already
   exercised by the smoke suite.
 

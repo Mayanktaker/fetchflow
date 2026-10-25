@@ -30,10 +30,10 @@ namespace XDM.Wpf.UI.Dialogs.Settings
     /// </summary>
     public partial class GeneralSettingsView : UserControl, ISettingsPage
     {
-        // ThemeMode combo indices (Config.ThemeMode: 0 Light, 1 Dark, 2 Follow System)
-        private const int ThemeModeLight = 0;
-        private const int ThemeModeDark = 1;
-        private const int ThemeModeFollowSystem = 2;
+        // ThemeMode combo indices (single source: XDM.Core/UI/ThemeModes.cs)
+        private const int ThemeModeLight = ThemeModes.Light;
+        private const int ThemeModeDark = ThemeModes.Dark;
+        private const int ThemeModeFollowSystem = ThemeModes.FollowSystem;
         // Highest scheme index carried over verbatim when switching theme mode (GTK parity)
         private const int MaxPortableSchemeIndex = 3;
         // Default export filename for palette JSON files
@@ -132,19 +132,12 @@ namespace XDM.Wpf.UI.Dialogs.Settings
             Config.Instance.ThemeMode = CmbTheme.SelectedIndex >= 0 ? CmbTheme.SelectedIndex : Config.Instance.ThemeMode;
             Config.Instance.ColorScheme = CmbColorScheme.SelectedIndex >= 0 ? CmbColorScheme.SelectedIndex : 0;
             WpfThemeManager.ApplyTheme(
-                Config.Instance.ThemeMode == ThemeModeFollowSystem ? null : (bool?)(Config.Instance.ThemeMode == ThemeModeDark),
+                ThemeModes.ToDarkRequest(Config.Instance.ThemeMode),
                 Config.Instance.ColorScheme);
         }
 
         // Clamps a raw ThemeMode value into the valid combo index range
-        private static int ClampThemeMode(int mode)
-        {
-            if (mode < ThemeModeLight || mode > ThemeModeFollowSystem)
-            {
-                return ThemeModeFollowSystem;
-            }
-            return mode;
-        }
+        private static int ClampThemeMode(int mode) => ThemeModes.Clamp(mode);
 
         // Returns whether dark theme is resolved for the current combo selection
         private bool IsDarkSelected()
@@ -169,7 +162,7 @@ namespace XDM.Wpf.UI.Dialogs.Settings
         private void ApplySelectedTheme()
         {
             WpfThemeManager.ApplyTheme(
-                CmbTheme.SelectedIndex == ThemeModeFollowSystem ? null : (bool?)(CmbTheme.SelectedIndex == ThemeModeDark),
+                ThemeModes.ToDarkRequest(CmbTheme.SelectedIndex),
                 CmbColorScheme.SelectedIndex);
         }
 

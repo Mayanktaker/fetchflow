@@ -19,17 +19,34 @@ Spec: docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.m
 
 ## Spacing
 
-4 / 8 / 12 / 16 / 24 px — all margins, paddings and gaps derive from this scale.
+`XDM.Core/UI/DesignTokens.cs` (`Spacing`) is the scale:
+
+`0 / 2 / 4 / 6 / 8 / 10 / 12 / 14 / 16 / 18 / 20 / 24 px`
+
+A 2px grid, not 4px: compact chrome (a 2px headerbar inset, a 6px card inset) and
+roomy chrome (a 24px section) have to share one list, and a 4px grid cannot hold the
+compact end without inventing an "exception" per rule. Font sizes come from the
+`TypeScale` array in the same file.
+
+The scale is enforced, not advisory:
+
+- `scripts/theme-native.py` parses both arrays and refuses to write a theme whose
+  `padding`, `margin` or `font-size` is off the grid.
+- `Gtk3DesignTokenTests.EveryGtk3Theme_UsesOnlyScaleSpacingAndType` fails the build
+  on the same rule, so a hand-edited theme cannot slip past the generator.
+- `MainWindow`'s row and button metrics read the named steps
+  (`DesignTokens.RowTogglePadding`, `DesignTokens.ButtonContentSpacing`, …) instead
+  of carrying literals of their own.
 
 Exceptions:
 
-- Download list rows (Active/Complete TreeViews) use a 12px card inset
-  (`padding: 12px 12px;` in BOTH the primary and the cascade row block of every
-  theme). GTK3 sizes a row from its cell renderers, NOT from CSS `margin`/`padding`,
-  so the gap between items comes from two places: the 12px CSS inset that insets the
-  painted card, plus the renderers' vertical padding in `MainWindow`
-  (`DownloadRowToggleVerticalPadding` 12, `DownloadRowIconVerticalPadding` 12,
-  `DownloadRowNameVerticalPadding` 10, `DownloadRowMetaVerticalPadding` 16).
+- Download list rows paint their card with `margin: 4px 10px; padding: 6px 8px;`
+  (all on the grid) in the row block of every theme. GTK3 sizes a row from its cell
+  renderers, NOT from CSS `margin`/`padding`,
+  so the gap between items comes from two places: the CSS inset that insets the
+  painted card, plus the renderers' vertical padding in `MainWindow`, which reads
+  `DesignTokens.RowTogglePadding` (12), `RowIconPadding` (12), `RowNamePadding` (10)
+  and `RowMetaPadding` (16).
   Result: 67px row pitch, ~43px card, 24px gap between cards. Row `margin` is inert
   in GTK3 — never "fix" list spacing there.
 - No column header on the download lists (GTK 4 parity): select-all is a
@@ -61,12 +78,58 @@ one on, both worth knowing before editing the generator template:
 
 ## Native controls (GTK 3)
 
-GTK 3 theme files paint **surfaces only**. Adwaita draws every control — buttons
-(plain, `suggested-action`, `destructive-action`, `flat`), entries, comboboxes,
-menus, popovers, tooltips, switches, checks, radios, scrollbars, separators and
-frames. A rule for any of them is drift, because it overrides the desktop theme
-the user actually chose, which is the whole reason GTK 3 remains the fallback
-frontend for GTK 3-only desktops.
+GTK 3 theme files paint **surfaces only**, with one branded exception: the primary
+action (`button.suggested-action`). Adwaita draws every other control — buttons
+(plain, `destructive-action`, `flat`), entries, comboboxes, menus, popovers,
+tooltips, switches, checks, radios, scrollbars, separators and frames. A rule for
+any of them is drift, because it overrides the desktop theme the user actually
+chose, which is the whole reason GTK 3 remains the fallback frontend for GTK 3-only
+desktops.
+
+Why the primary action is the exception: GTK 3 has no accent API, so a scheme's
+accent would otherwise reach selections and progress but never the one button the
+user is meant to press — the scheme and its primary button disagreed. The rule is
+generated from the scheme (fill = accent, hover = `0.88×`, active = `0.76×`, ink =
+`ThemeContrast.InkFor`), and its label must clear the 3.0:1 floor on all three
+fills (`Gtk3DesignTokenTests.EveryGtk3Theme_PrimaryActionCarriesTheSchemeAccent`).
+It is an allow-listed selector in `EveryTheme_LeavesControlChromeToAdwaita`, so
+adding a second control there is a deliberate change, not an accident.
+
+In the window that control is the toolbar's **New** button: `ReliefStyle.Normal`,
+class `suggested-action`, and its glyph tinted with the same ink the label uses
+(`PrimaryActionInk`), re-tinted when the scheme changes. Dialogs use it for their
+accepting action. That is the GTK 3 equivalent of GTK 4's single labelled "Add
+download" header action — one accented action per surface, never a row of them.
+
+The GTK theme *name* follows the same principle: with **Follow System**, the desktop
+theme is left untouched (Breeze on Plasma, Mint-Y on Cinnamon) and the app's own
+surfaces follow the system's light/dark preference. Only an explicit Light or Dark
+choice forces `Adwaita`, because that is the case where our surfaces and the
+toolkit's control colours must agree.
+
+Follow System has to resolve "dark" from **either** signal GTK 3 offers, because
+desktops disagree on which one they use: a `-dark` theme name (Breeze-Dark,
+Mint-Y-Dark) or `gtk-application-prefer-dark-theme` with the name left as
+`Adwaita` (GNOME 42+). `ThemeModePolicy.IsSessionDark` owns that rule; reading the
+name alone painted *light* surfaces on a dark GNOME session, leaving dark toolkit
+controls on a light app surface. The desktop's flag is captured before the app ever
+writes it, so returning to Follow System hands the setting back instead of echoing
+our own last write.
+
+Following the desktop live uses `Gtk.Settings.AddNotification` on
+`gtk-theme-name` and `gtk-application-prefer-dark-theme`
+(`ThemeManager.WatchSystemTheme`, subscribed from `ApplyTheme`, idempotent). Note the
+API split that cost a detour here: GtkSharp exposes **no** usable `Notify` *event*
+for `GtkSettings` (it binds an inaccessible `Notify(string)` instead), so a
+subscription must go through `AddNotification(property, handler)` — do not
+"simplify" it to an event, and do not add a polling timer; one was written, measured
+at 1.8 µs per poll, and deleted as unnecessary once the existing handler was found.
+
+A desktop-driven re-derive is **read-only**: it never writes the theme name or the
+flag back, because writing the flag back clobbered a desktop change that arrives in
+two steps (name first, then `prefer-dark`) and left the app stuck in the previous
+mode. `isApplyingSettings` marks our own writes so their notification is ignored
+rather than misread as a desktop change.
 
 Owned by us, and therefore in the theme files:
 
@@ -77,11 +140,12 @@ Owned by us, and therefore in the theme files:
 | selected / backdrop row = accent **tint** over the card | selection must follow the scheme accent |
 | sidebar + its selection tint | same |
 | `progressbar progress` | GTK 3 has no accent API, so the fill carries the scheme |
+| `button.suggested-action` | the one branded control: the scheme accent must reach the primary action |
 | search entry metrics (26px, pill) | keeps the toolbar height stable across themes |
 
 `EveryTheme_LeavesControlChromeToAdwaita` fails the build if a control rule
-reappears, and `EveryTheme_KeepsTheSurfacesOnlyWeCanDraw` if an owned surface
-goes missing.
+reappears (the allow-list holds the search entry and the primary action only), and
+`EveryTheme_KeepsTheSurfacesOnlyWeCanDraw` if an owned surface goes missing.
 
 The 14 theme files are **generated** — `scripts/theme-native.py` writes them from
 `XDM.Core/UI/ColorSchemeTable.cs` (`--check` verifies no drift). Hand-editing a
@@ -140,9 +204,11 @@ Four rules must hold for that checkbox to work. All four are pinned by
   the checkbox dead. The toggle now happens on press, in our own handler, and the
   event is left unclaimed so ctrl/shift-click still works.
 
-`button.flat:hover` must stay at **alpha >= 0.10** (0.10 light / 0.13 dark): a 6%
-wash is invisible on a light surface and reads as a dead button. Both invariants
-are enforced by `DialogButtonConsistencyTests` across all 14 themes.
+The old `button.flat:hover` alpha rule (0.10 light / 0.13 dark, "a 6% wash is
+invisible") went with the hand-drawn buttons it measured: no theme declares a
+`button` rule any more, so there is nothing of ours left to hover. The guard that
+matters now is the policy test itself — a control rule cannot come back without
+`button.suggested-action` being the only allow-listed exception.
 
 ## Unfocused (backdrop) states
 
@@ -191,7 +257,7 @@ only build gate, so treat WPF changes as CI-verified, not locally verified.
 | border | #404040 | #cacaca |
 | text | #f4f4f4 | #222222 |
 | dim text | #b4b4b4 | #5f5f5f |
-| accent / hover / active | #3584e4 / #2f74c9 / #2767b8 | same |
+| accent / hover / active | #3584e4 / #2f74c9 / #2864ad | same |
 | destructive / hover / active | #e01b24 / #ef4a52 / #a5121a | same |
 | brand / hover | #f97316 / #fb923c | #ea580c / #f97316 |
 | success | #4ade80 | #16a34a |
@@ -211,7 +277,7 @@ frontends share it (`XDM.Core/UI/ThemeContrast.cs`):
 
 | Constraint | Floor | Where |
 |---|---|---|
-| Label on a scheme accent (semibold 11–14px control text) | **3.0:1** (WCAG AA large text) | buttons, selected rows, menu highlight, checkboxes, list header band |
+| Label on a scheme accent (semibold 11–14px control text) | **3.0:1** (WCAG AA large text) | primary action (`button.suggested-action`), selected rows, menu highlight, checkboxes, sidebar selection |
 | Text typed into a field | **4.5:1** (WCAG AA body text) | toolbar search entry, plain entries |
 | Disabled / backdrop text | exempt | deliberately quiet |
 
@@ -223,14 +289,21 @@ frontends share it (`XDM.Core/UI/ThemeContrast.cs`):
   1.67:1). The same hover is used for `button.suggested-action:hover` and the
   selected sidebar row.
 - A bevel gradient counts by its **lightest stop**, which is what the eye reads.
-- GTK 3 has no CSS variables, so `scripts/theme-contrast.py` writes these literal
-  hex values into the 14 theme files. It is idempotent — re-run it after changing
-  a scheme accent or adding a theme. GTK 4 folds the same two functions into its
+- GTK 3 has no CSS variables, so `scripts/theme-native.py` writes these literal
+  hex values into the 14 theme files: the primary action's fill, its `0.88×` hover
+  and its `0.76×` active step, plus the ink `InkFor` chooses. Re-run it after
+  changing a scheme accent or adding a theme; the generator refuses to write a
+  scheme whose accent, hover or active cannot carry that ink.
+- The palette tables above list the **accent** only. Hover and active are derived
+  (`0.88×` / `0.76×`), so for the default scheme they are `#2f74c9` / `#2864ad` —
+  hand-copying 14 more hex columns would drift the moment a scheme changes.
+- GTK 4 folds the same two functions into its
   `accent_foreground` / `accent_hover` tokens at load time; WPF maps `InkFor` onto
   `AccentForegroundBrush`.
 - `ThemeContrastTests` fails the build if any theme, token or scheme breaks a
-  floor, and `EverySchemeSurfaceTokenMatchesItsStylesheet` keeps the surface
-  columns below honest against the shipped CSS.
+  floor, `Gtk3DesignTokenTests` if a generated primary action stops carrying its
+  scheme accent or its ink, and `EverySchemeSurfaceTokenMatchesItsStylesheet` keeps
+  the surface columns below honest against the shipped CSS.
 - The browser extensions carry the same rule as CSS custom properties:
   `--accent` is the **fill** and `--accent-text` the **text** colour (one token
   cannot serve both — deepening the fill for white text makes it unreadable as
@@ -241,40 +314,44 @@ frontends share it (`XDM.Core/UI/ThemeContrast.cs`):
 
 ### Dark Theme Palettes (7 Schemes)
 
-| Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex & Hover | TreeView Hover | Active Row Hex |
+| Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex | TreeView Hover | Active Row Hex |
 |:---|:---|:---|:---|:---|:---|:---|:---|
-| `0` | **Charcoal Blue (Default)** | `#1d1d1d` | `#161616` | `#262626` | `#3584e4` / `#5a9bea` | `#262c36` | `#323b4a` |
-| `1` | **Midnight Violet** | `#161420` | `#110f1a` | `#211e30` | `#8b5cf6` / `#a78bfa` | `#282038` | `#382d4e` |
-| `2` | **Nord Emerald** | `#131c1a` | `#0d1513` | `#1d2c29` | `#10b981` / `#34d399` | `#1b302a` | `#27443c` |
-| `3` | **Sunset Amber** | `#1a1618` | `#141012` | `#2b2328` | `#f43f5e` / `#fb7185` | `#332128` | `#462e37` |
-| `4` | **Dracula Orchid** | `#191622` | `#13101c` | `#221d2e` | `#ec4899` / `#f472b6` | `#301e38` | `#422b4d` |
-| `5` | **Cyberpunk Matrix** | `#0f172a` | `#0a0f1d` | `#182236` | `#06b6d4` / `#22d3ee` | `#162a3d` | `#223b55` |
-| `6` | **Espresso Mocha** | `#1c1816` | `#14110f` | `#26211e` | `#f59e0b` / `#fbbf24` | `#30241b` | `#443327` |
+| `0` | **Charcoal Blue (Default)** | `#1d1d1d` | `#161616` | `#262626` | `#3584e4` | `#262c36` | `#323b4a` |
+| `1` | **Midnight Violet** | `#161420` | `#110f1a` | `#211e30` | `#8b5cf6` | `#282038` | `#382d4e` |
+| `2` | **Nord Emerald** | `#131c1a` | `#0d1513` | `#1d2c29` | `#10b981` | `#1b302a` | `#27443c` |
+| `3` | **Sunset Amber** | `#1a1618` | `#141012` | `#2b2328` | `#f43f5e` | `#332128` | `#462e37` |
+| `4` | **Dracula Orchid** | `#191622` | `#13101c` | `#221d2e` | `#ec4899` | `#301e38` | `#422b4d` |
+| `5` | **Cyberpunk Matrix** | `#0f172a` | `#0a0f1d` | `#182236` | `#06b6d4` | `#162a3d` | `#223b55` |
+| `6` | **Espresso Mocha** | `#1c1816` | `#14110f` | `#26211e` | `#f59e0b` | `#30241b` | `#443327` |
 
 ### Light Theme Palettes (7 Schemes)
 
-| Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex & Hover | TreeView Hover | Active Row Hex |
+| Scheme ID | Scheme Name | Base Surface | Sidebar | Card Surface | Accent Hex | TreeView Hover | Active Row Hex |
 |:---|:---|:---|:---|:---|:---|:---|:---|
-| `0` | **Classic Blue (Default)** | `#fcfcfc` | `#ececec` | `#ffffff` | `#3584e4` / `#5a9bea` | `#f0f4f9` | `#dbe7f7` |
-| `1` | **Nordic Frost** | `#f4f8fa` | `#e3edf1` | `#f8fafb` | `#0891b2` / `#06b6d4` | `#e6f4f8` | `#cfe2ea` |
-| `2` | **Solarized Sand** | `#faf6ee` | `#ede6d8` | `#fdfbf6` | `#d97706` / `#f59e0b` | `#f7eee0` | `#ecddc5` |
-| `3` | **Rose Garden** | `#fbf5f7` | `#f2e4ea` | `#fdf8fa` | `#e11d48` / `#f43f5e` | `#fbe8ee` | `#f4d1dc` |
-| `4` | **Matcha Forest** | `#f3f8f5` | `#e2ede6` | `#ffffff` | `#059669` / `#10b981` | `#e3f3eb` | `#cbe7d7` |
-| `5` | **Lavender Bloom** | `#f7f5fb` | `#eae5f4` | `#ffffff` | `#7c3aed` / `#8b5cf6` | `#ede7fa` | `#ded2f5` |
-| `6` | **Citrus Peach** | `#fdf6f0` | `#f6e7db` | `#ffffff` | `#ea580c` / `#f97316` | `#fdece0` | `#f7d8c0` |
+| `0` | **Classic Blue (Default)** | `#fcfcfc` | `#ececec` | `#ffffff` | `#3584e4` | `#f0f4f9` | `#dbe7f7` |
+| `1` | **Nordic Frost** | `#f4f8fa` | `#e3edf1` | `#f8fafb` | `#0891b2` | `#e6f4f8` | `#cfe2ea` |
+| `2` | **Solarized Sand** | `#faf6ee` | `#ede6d8` | `#fdfbf6` | `#d97706` | `#f7eee0` | `#ecddc5` |
+| `3` | **Rose Garden** | `#fbf5f7` | `#f2e4ea` | `#fdf8fa` | `#e11d48` | `#fbe8ee` | `#f4d1dc` |
+| `4` | **Matcha Forest** | `#f3f8f5` | `#e2ede6` | `#ffffff` | `#059669` | `#e3f3eb` | `#cbe7d7` |
+| `5` | **Lavender Bloom** | `#f7f5fb` | `#eae5f4` | `#ffffff` | `#7c3aed` | `#ede7fa` | `#ded2f5` |
+| `6` | **Citrus Peach** | `#fdf6f0` | `#f6e7db` | `#ffffff` | `#ea580c` | `#fdece0` | `#f7d8c0` |
 
 ## Typography
 
 | Level | Size | Weight | Use |
 |-------|------|--------|-----|
 | Caption | 11px | 400/600 | Badges, sidebar headings, update dot |
-| Secondary | 12px | 400/500 | Bottombar, paths, version badge, status |
+| Secondary | 12px | 400/500 | Bottombar, paths, version badge, status, view count |
 | Body | 13px | 400 | Search entry, taglines |
 | Body-lg | 14px | 400 | Default (GTK inherited), extension text |
+| Headline | 16px | 700 | Content headline (view title) |
 | Title | 15px | 700 | Dialog titles (download-complete) |
 | Display | 17px | 700 | About dialog app name |
 
 Font: system font only (Cantarell/Adwaita on GTK, `system-ui, sans-serif` in extensions).
+These are the only sizes the theme layer may paint: `DesignTokens.TypeScale` holds
+them, and `theme-native.py` plus `Gtk3DesignTokenTests` reject anything else, so a
+"10px dot" or an "18px heading" cannot drift in.
 
 ## Rules
 
@@ -344,10 +421,13 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   on idle: the pill flips (Downloading to Paused/Failed), the frozen speed clears and
   the hover shortcut swaps pause for resume.
 - **Native-first styling:** the GTK 4 stylesheets deliberately stay minimal. Buttons, entries, header bars, sidebar rows, progress bars, hover/active/selection states and focus rings are drawn by libadwaita/Adwaita, so the app looks and behaves like the user's desktop and follows its accessibility settings. The stylesheets only carry what native theming cannot express: the Active vs Complete list surfaces, a thin column divider, the accent token rewritten from `ColorSchemeTable`, the bandwidth/extension state colours and the dialog section-heading weight. Sidebar lists use libadwaita's `navigation-sidebar` class and the Active/Complete block uses `boxed-list`, instead of hand-written row styling.
-- **Theme mode:** the shared `Config.ThemeMode` codes are `0 = Light`, `1 = Dark`, `2 = Follow
-  System` (default `2`) and are identical for GTK 3, GTK 4 and WPF. GTK 4 applies the saved
-  mode at startup, follows the session preference live while in Follow System, and persists
-  the Ctrl+T toggle. It never forces `gtk-theme-name`.
+- **Theme mode:** the shared `Config.ThemeMode` codes live in one place,
+  `XDM.Core/UI/ThemeModes.cs` (`Light = 0`, `Dark = 1`, `FollowSystem = 2`, default
+  `2`), together with the two conversions every frontend used to re-derive by hand
+  (`ToDarkRequest`, `FromDark`) and the out-of-range `Clamp`. GTK 3, GTK 4 and WPF all
+  read from it, so a wrong or transposed code cannot differ per frontend. GTK 4 applies
+  the saved mode at startup, follows the session preference live while in Follow
+  System, and persists the Ctrl+T toggle. It never forces `gtk-theme-name`.
 - **Per-view surfaces:** the Active list uses `view` and the Complete list uses
   `view-finished` (`#2a2a2a` dark / `#f8f8f8` light). The list widget carries an
   `unfinished`/`finished` style class so the two views read apart, matching GTK 3.

@@ -4,6 +4,24 @@ All notable user-facing changes to FetchFlow are documented here.
 For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
+
+## Unreleased
+
+### What's new
+
+- **Keyboard shortcuts for the whole app:** flip the theme (Ctrl+T), open batch download (Ctrl+B) or the scheduler (Ctrl+Shift+Q), import/export (Ctrl+I), settings (Ctrl+,) and About (F1); act on the selection with open (Ctrl+O), copy link (Ctrl+C), restart (Ctrl+R) or save-as (Ctrl+S); Alt+Enter shows properties and Ctrl+Shift+V grabs video. Ctrl+F, Ctrl+N and Ctrl+Q keep working as before
+- **Empty lists explain themselves:** Active and Complete now show a friendly note with an Add download button when there is nothing to show, and say plainly when a search matched nothing, with a Clear search button to get back to the full list
+- **See what's selected:** the bottom bar counts your selection ("N selected") so multi-select actions are never a guess, and hides again once nothing is selected
+- **A footer that tells the truth when idle:** it now says Idle when nothing is downloading — and says plainly when that's because Browser Monitoring is off — and counts queued downloads alongside the running ones and the live speed
+- **The theme follows your system live:** with Follow System on, switching your desktop between light and dark repaints FetchFlow immediately instead of waiting for a restart
+- **The completion sound plays again:** with "Play sound when download finishes" turned on in Settings, a chime now rings as each download finishes on the modern Linux interface
+- **Saved logins, overwrite and palette tools in Settings:** the modern Linux interface now manages saved site credentials (add, edit and delete), offers "overwrite existing files" and "auto-select folder by category" switches, and can export all colour schemes to a JSON file or validate a palette file — all under the new Credentials tab and the Appearance card
+
+### Bug fixes
+
+- **Select All now acts on the list you are looking at:** the toolbar button no longer selects rows in the hidden Active or Complete list
+
+---
 ## v9.1.17.0 (2026-10-23)
 
 ### What's new
