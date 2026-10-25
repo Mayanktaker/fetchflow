@@ -346,7 +346,8 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   nothing would be captured — the GTK 3 badge behaves the same way; Browser Monitoring is a `Gtk.Switch`
   with a caption, then the bandwidth limiter and the queue window on the right. All
   footer controls render at 11px so the bar stays quieter than the content in both
-  themes, and the monitoring-off tooltip is translated like the badge label. The
+  themes, and `.bottom-bar` padding is defined once per stylesheet (a leftover
+  light-only padding rule used to make the light bar 15px taller), and the monitoring-off tooltip is translated like the badge label. The
   activity summary takes the dimmed tone while monitoring is off (its numbers stay
   truthful — the engine runs regardless). Its buttons
   draw their icons from the active scheme accent and are re-tinted whenever the theme changes.

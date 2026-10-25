@@ -263,6 +263,11 @@ list.navigation-sidebar > row:selected:hover,
   min-height: 0;
 }
 
+/* Footer bar: identical padding in both themes so the bar height never differs */
+.bottom-bar {
+  padding: 4px 14px;
+}
+
 /* Seamless surfaces: no hairlines between sidebar, content, header or cards */
 /* The paned grab handle keeps its size (still draggable) but paints nothing */
 paned > separator,
