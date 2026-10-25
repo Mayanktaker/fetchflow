@@ -12,6 +12,7 @@ using XDMApp = XDM.Core.Application;
 using System.Linq;
 using XDM.Core.BrowserMonitoring;
 using XDM.Core.Util;
+using XDM.Core.UI;
 using XDM.GtkUI.Utils;
 
 namespace XDM.GtkUI
@@ -146,7 +147,7 @@ namespace XDM.GtkUI
                     provider.LoadFromData(globalStyleSheet);
                     Gtk.StyleContext.AddProviderForScreen(screen, provider, 800);
                 }
-                ThemeManager.ApplyTheme(Config.Instance.ThemeMode == 2 ? null : (bool?)(Config.Instance.ThemeMode == 1), Config.Instance.ColorScheme);
+                ThemeManager.ApplyTheme(ThemeModes.ToDarkRequest(Config.Instance.ThemeMode), Config.Instance.ColorScheme);
             }
             catch (Exception cssEx)
             {

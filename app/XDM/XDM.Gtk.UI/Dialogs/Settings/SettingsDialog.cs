@@ -12,6 +12,7 @@ using Translations;
 using UI = Gtk.Builder.ObjectAttribute;
 using XDM.GtkUI.Utils;
 using XDM.Core.Util;
+using XDM.Core.UI;
 using TraceLog;
 using XDM.Core.BrowserMonitoring;
 using XDM.GtkUI.Dialogs.ChromeIntegrator;
@@ -155,7 +156,7 @@ namespace XDM.GtkUI.Dialogs.Settings
             CmbTheme.AppendText("Light");
             CmbTheme.AppendText("Dark");
             CmbTheme.AppendText("Follow System");
-            CmbTheme.Active = Config.Instance.ThemeMode;
+            CmbTheme.Active = ThemeModes.Clamp(Config.Instance.ThemeMode);
 
             PopulateColorSchemeOptions(IsDarkSelected());
             // Config.ColorScheme is -1 until the user picks one; assigning it raw left
@@ -168,14 +169,14 @@ namespace XDM.GtkUI.Dialogs.Settings
                 var wasScheme = CmbColorScheme.Active;
                 PopulateColorSchemeOptions(IsDarkSelected());
                 CmbColorScheme.Active = ThemeManager.ResolveSchemeIndex(IsDarkSelected(), wasScheme);
-                ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), CmbColorScheme.Active);
+                ThemeManager.ApplyTheme(ThemeModes.ToDarkRequest(CmbTheme.Active), CmbColorScheme.Active);
             };
 
             CmbColorScheme.Changed += (_, _) =>
             {
                 if (CmbColorScheme.Active >= 0)
                 {
-                    ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), CmbColorScheme.Active);
+                    ThemeManager.ApplyTheme(ThemeModes.ToDarkRequest(CmbTheme.Active), CmbColorScheme.Active);
                 }
             };
  
@@ -479,7 +480,7 @@ namespace XDM.GtkUI.Dialogs.Settings
 
         private void BtnCancel_Clicked(object? sender, EventArgs e)
         {
-            ThemeManager.ApplyTheme(Config.Instance.ThemeMode == 2 ? null : (bool?)(Config.Instance.ThemeMode == 1), Config.Instance.ColorScheme);
+            ThemeManager.ApplyTheme(ThemeModes.ToDarkRequest(Config.Instance.ThemeMode), Config.Instance.ColorScheme);
             Destroy();
         }
 
@@ -934,11 +935,11 @@ namespace XDM.GtkUI.Dialogs.Settings
             Config.Instance.Categories = GtkHelper.GetListStoreValues<Category>(categoryStore, 3);
             Config.Instance.FolderSelectionMode = ChkAutoCat.Active ? FolderSelectionMode.Auto : FolderSelectionMode.Manual;
             Config.Instance.DefaultDownloadFolder = TxtDownloadFolder.Text;
-            Config.Instance.ThemeMode = CmbTheme.Active;
+            Config.Instance.ThemeMode = ThemeModes.Clamp(CmbTheme.Active);
             Config.Instance.ColorScheme = (CmbColorScheme != null && CmbColorScheme.Active >= 0)
                 ? CmbColorScheme.Active
                 : ThemeManager.DefaultSchemeIndex(IsDarkSelected());
-            ThemeManager.ApplyTheme(CmbTheme.Active == 2 ? null : (bool?)(CmbTheme.Active == 1), Config.Instance.ColorScheme);
+            ThemeManager.ApplyTheme(ThemeModes.ToDarkRequest(CmbTheme.Active), Config.Instance.ColorScheme);
             Config.Instance.DoubleClickOpenFile = CmbDblClickAction.Active == 1;
         }
 

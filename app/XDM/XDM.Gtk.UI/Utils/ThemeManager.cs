@@ -21,8 +21,6 @@ namespace XDM.GtkUI.Utils
         private const string FallbackLightCss = "xdm-light.css";
         // Provider priority matching font-size layer
         private const uint ThemeProviderPriority = 800;
-        // Standard GTK3 Adwaita base theme name
-        private const string AdwaitaThemeName = "Adwaita";
 
         // Curated dark theme color schemes (shared table alias)
         public static ColorSchemeDefinition[] DarkSchemes => ColorSchemeTable.DarkSchemes;
@@ -35,6 +33,80 @@ namespace XDM.GtkUI.Utils
 
         // Tracks whether the dark theme is actively rendered
         public static bool IsDarkActive { get; private set; }
+
+        // The desktop's own prefer-dark flag, captured before the app ever writes it
+        private static bool? sessionPrefersDark;
+
+        // True while we write the settings ourselves, so their notification cannot re-enter
+        private static bool isApplyingSettings;
+
+        // Reads the desktop preference once: after our first write it would only echo us
+        private static void CaptureSessionPreference()
+        {
+            if (sessionPrefersDark.HasValue) return;
+            try
+            {
+                sessionPrefersDark = Gtk.Settings.Default.ApplicationPreferDarkTheme;
+            }
+            catch { }
+        }
+
+        // The session's dark variant, from either signal GTK 3 exposes
+        private static bool SessionIsDark()
+        {
+            try
+            {
+                return ThemeModePolicy.IsSessionDark(
+                    Gtk.Settings.Default.ThemeName, sessionPrefersDark == true);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Guards the one desktop-theme subscription so ApplyTheme can call it freely
+        private static bool watchingSystemTheme;
+
+        // Tracks the desktop theme live while following the system (GTK 4 parity)
+        public static void WatchSystemTheme()
+        {
+            if (watchingSystemTheme) return;
+            watchingSystemTheme = true;
+            try
+            {
+                var settings = Gtk.Settings.Default;
+                if (settings == null) return;
+                settings.AddNotification("gtk-theme-name", OnSystemThemeChanged);
+                settings.AddNotification("gtk-application-prefer-dark-theme", OnSystemThemeChanged);
+            }
+            catch { }
+        }
+
+        // Desktop theme changed: re-resolve, but only while following the system
+        private static void OnSystemThemeChanged(object o, GLib.NotifyArgs args)
+        {
+            try
+            {
+                // While following, the desktop owns this flag: refresh the capture so a later
+                // explicit Light/Dark switch hands back the *current* desktop preference.
+                // Our own write must not poison it, hence the isApplyingSettings check.
+                if (!isApplyingSettings && args.Property == "gtk-application-prefer-dark-theme")
+                {
+                    sessionPrefersDark = Gtk.Settings.Default.ApplicationPreferDarkTheme;
+                }
+                if (Config.Instance.ThemeMode != ThemeModes.FollowSystem) return;
+                if (IsDarkActive == SessionIsDark()) return;
+                Gtk.Application.Invoke((_, _) =>
+                {
+                    // Read-only: writing the flag back would clobber a desktop change that
+                    // arrives in two steps (theme name first, prefer-dark next)
+                    try { ApplyTheme(null, Config.Instance.ColorScheme, restoreSessionPreference: false); }
+                    catch { }
+                });
+            }
+            catch { }
+        }
 
         // Default scheme per mode (fresh installs / unset choice)
         public static int DefaultDarkSchemeIndex => ColorSchemeTable.DefaultDarkSchemeIndex;   // Charcoal Blue
@@ -157,28 +229,19 @@ namespace XDM.GtkUI.Utils
         // Toggles between Dark and Light mode, persisting choice to Config
         public static void ToggleTheme()
         {
-            var newMode = IsDarkActive ? 0 : 1; // 0 = Light, 1 = Dark
+            var newMode = ThemeModes.FromDark(!IsDarkActive);
             Config.Instance.ThemeMode = newMode;
             Config.SaveConfig();
-            ApplyTheme(newMode == 1, Config.Instance.ColorScheme);
+            ApplyTheme(newMode == ThemeModes.Dark, Config.Instance.ColorScheme);
         }
 
         // Swaps the theme provider on the default screen and applies the GTK dark preference
-        public static void ApplyTheme(bool? darkRequested, int? colorSchemeRequested = null)
+        public static void ApplyTheme(bool? darkRequested, int? colorSchemeRequested = null,
+            bool restoreSessionPreference = true)
         {
-            bool dark = darkRequested ?? false;
-            if (!darkRequested.HasValue)
-            {
-                try
-                {
-                    string themeName = Gtk.Settings.Default.ThemeName?.ToLowerInvariant() ?? "";
-                    if (themeName.Contains("dark"))
-                    {
-                        dark = true;
-                    }
-                }
-                catch { }
-            }
+            WatchSystemTheme();
+            CaptureSessionPreference();
+            bool dark = darkRequested ?? SessionIsDark();
             IsDarkActive = dark;
 
             // Resolve color scheme index (-1/unset or out-of-range => mode default)
@@ -230,22 +293,21 @@ namespace XDM.GtkUI.Utils
             // GTK-level theme and dark preference: ensures Adwaita icons and CSD decorations resolve per mode
             try
             {
-                Gtk.Settings.Default.ThemeName = AdwaitaThemeName;
-                if (darkRequested == true || (darkRequested == null && dark))
-                {
-                    Gtk.Settings.Default.ApplicationPreferDarkTheme = true;
-                }
-                else
-                {
-                    if (darkRequested != null)
-                    {
-                        Gtk.Settings.Default.ApplicationPreferDarkTheme = false;
-                    }
-                }
+                // Follow System keeps the desktop's own GTK theme, so Breeze/Mint-Y stay
+                // intact (FF-UI-001). An explicit Light/Dark choice forces Adwaita so the
+                // native controls match the surface the scheme paints. The write also
+                // re-notifies the settings we listen to, so it must not re-enter here.
+                isApplyingSettings = true;
+                ThemeSettingsApplier.Apply(Gtk.Settings.Default, darkRequested, sessionPrefersDark,
+                    restoreSessionPreference);
             }
             catch (Exception settingsEx)
             {
                 Log.Debug("Non-fatal: could not apply theme preference: " + settingsEx.Message);
+            }
+            finally
+            {
+                isApplyingSettings = false;
             }
 
             ThemeChanged?.Invoke(dark);

@@ -31,6 +31,11 @@ namespace XDM.GtkUI
         private TreeView lvInprogress, lvFinished;
         private ScrolledWindow swInProgress, swFinished;
         private Widget? listHostInProgress, listHostFinished;
+        // Empty-state stacks and pages: each list swaps between "list" and "empty"
+        private Gtk.Stack? stackInProgress, stackFinished;
+        private EmptyStatePanel? emptyInProgress, emptyFinished;
+        // Bottom-bar selection counter, shown only while a selection exists
+        private Label? lblSelectionCount;
         private TreeModelFilter finishedDownloadFilter;
         private TreeModelFilter inprogressDownloadFilter;
         private TreeModelSort inprogressDownloadsStoreSorted;
@@ -136,6 +141,10 @@ namespace XDM.GtkUI
         private static byte AccentR => ThemeManager.ActiveAccentColor.R;
         private static byte AccentG => ThemeManager.ActiveAccentColor.G;
         private static byte AccentB => ThemeManager.ActiveAccentColor.B;
+        // Ink the branded primary action draws with: white or near-black, per scheme
+        private static byte PrimaryInkR => PrimaryActionInk().R;
+        private static byte PrimaryInkG => PrimaryActionInk().G;
+        private static byte PrimaryInkB => PrimaryActionInk().B;
         // Destructive red — delete/remove actions  
         private const byte DestructR = 239, DestructG = 68, DestructB = 68;  // #ef4444
         // Success green — completed items, active status
@@ -158,20 +167,20 @@ namespace XDM.GtkUI
         private const byte SkyR = 56, SkyG = 189, SkyB = 248;             // #38bdf8
 
         // Button content geometry: labeled buttons keep spacing + symmetric side margins
-        private const int ButtonContentSpacing = 10;
-        private const int ButtonBoxMargin = 2;
+        private const int ButtonContentSpacing = DesignTokens.ButtonContentSpacing;
+        private const int ButtonBoxMargin = DesignTokens.ButtonBoxMargin;
         private const int DownloadColumnSpacing = 0;
         private const int DownloadIconSize = 28;
-        private const int DownloadIconHorizontalPadding = 12;
-        private const int DownloadNameHorizontalPadding = 12;
-        private const int DownloadMetaHorizontalPadding = 16;
+        private const int DownloadIconHorizontalPadding = DesignTokens.RowIconHorizontalPadding;
+        private const int DownloadNameHorizontalPadding = DesignTokens.RowNameHorizontalPadding;
+        private const int DownloadMetaHorizontalPadding = DesignTokens.RowMetaHorizontalPadding;
         // Row vertical padding: GTK3 sizes a row from its cell renderers (CSS row
         // margin/padding only inset the painted card), so this is what separates the
         // list items. Sized against the 12px card inset in the theme CSS.
-        private const int DownloadRowToggleVerticalPadding = 12;
-        private const int DownloadRowIconVerticalPadding = 12;
-        private const int DownloadRowNameVerticalPadding = 10;
-        private const int DownloadRowMetaVerticalPadding = 16;
+        private const int DownloadRowToggleVerticalPadding = DesignTokens.RowTogglePadding;
+        private const int DownloadRowIconVerticalPadding = DesignTokens.RowIconPadding;
+        private const int DownloadRowNameVerticalPadding = DesignTokens.RowNamePadding;
+        private const int DownloadRowMetaVerticalPadding = DesignTokens.RowMetaPadding;
         // Size column: default width + the clamp its header drag handle respects
         private const int DownloadMetaActiveWidth = 196;
         private const int DownloadMetaFinishedWidth = 176;
@@ -421,6 +430,7 @@ namespace XDM.GtkUI
             ThemeManager.ThemeChanged += isDark => Gtk.Application.Invoke((_, _) =>
             {
                 RefreshMenuIcons(isDark);
+                RefreshPrimaryActionButton();
                 SyncHeaderSortState();
                 lvFinished?.QueueDraw();
                 lvInprogress?.QueueDraw();
@@ -674,7 +684,7 @@ namespace XDM.GtkUI
             return vbMain;
         }
 
-        private Button CreateButtonWithContent(string icon, string? text = null, byte? r = null, byte? g = null, byte? b = null, string? accessibleName = null)
+        private Button CreateButtonWithContent(string icon, string? text = null, byte? r = null, byte? g = null, byte? b = null, string? accessibleName = null, bool primary = false)
         {
             Label? lbl = null;
             if (!string.IsNullOrEmpty(text))
@@ -686,7 +696,18 @@ namespace XDM.GtkUI
                 ? GtkHelper.TintPixbuf(rawPixbuf, r.Value, g.Value, b.Value)
                 : rawPixbuf;
             var image = pixbuf != null ? new Image(pixbuf) : new Image();
-            return CreateButtonWithContent(image, lbl, accessibleName);
+            return CreateButtonWithContent(image, lbl, accessibleName, primary);
+        }
+
+        // Ink the branded primary action draws with, derived from the active accent
+        private static (byte R, byte G, byte B) PrimaryActionInk()
+        {
+            if (ThemeContrast.TryParseHex(ThemeContrast.InkFor(ThemeManager.ActiveAccentHex),
+                out var r, out var g, out var b))
+            {
+                return ((byte)r, (byte)g, (byte)b);
+            }
+            return (0xff, 0xff, 0xff);
         }
 
         // Re-tints a button's icon in place. Button.Image REPLACES the whole child,
@@ -702,7 +723,17 @@ namespace XDM.GtkUI
             button.Image = new Image(pixbuf);
         }
 
-        private Button CreateButtonWithContent(Image image, Label? label, string? accessibleName = null)
+        // Re-tints the primary action's glyph when the scheme, and so its ink, changes
+        private void RefreshPrimaryActionButton()
+        {
+            if (btnNew == null) return;
+            var pix = LoadSvg("links-line", 16);
+            if (pix == null) return;
+            var (r, g, b) = PrimaryActionInk();
+            SetButtonIcon(btnNew, GtkHelper.TintPixbuf(pix, r, g, b));
+        }
+
+        private Button CreateButtonWithContent(Image image, Label? label, string? accessibleName = null, bool primary = false)
         {
             // Icon-only buttons: no side margins/spacing; the image expands and GtkMisc's
             // default 0.5 xalign centers the glyph inside the button. Labeled buttons unchanged.
@@ -720,13 +751,14 @@ namespace XDM.GtkUI
 
             var button = new Button
             {
-                Relief = ReliefStyle.None,
+                Relief = primary ? ReliefStyle.Normal : ReliefStyle.None,
                 Valign = Align.Center,
 
             };
             button.Add(hbox);
-            // Register as flat so the theme's toolbar hover/active states apply
-            button.StyleContext.AddClass("flat");
+            // The primary action carries the scheme accent (GTK 4 parity); the rest stay
+            // flat so the theme's toolbar hover/active states apply
+            button.StyleContext.AddClass(primary ? "suggested-action" : "flat");
             // Screen readers announce icon-only buttons by this name (GNOME/KDE both
             // read the ATK name; an Image child contributes nothing readable)
             var name = accessibleName ?? label?.Text;
@@ -789,6 +821,11 @@ namespace XDM.GtkUI
             btnScheduler.StyleContext.AddClass("bottombar-button");
 
             hbox.PackEnd(btnScheduler, false, false, 0);
+
+            // Selection counter on the bar's right side, visible only while selecting
+            lblSelectionCount = new Label { Visible = false };
+            lblSelectionCount.StyleContext.AddClass("view-count");
+            hbox.PackEnd(lblSelectionCount, false, false, 0);
 
             // Container card for bottom statusbar matching the top action toolbar surface
             var bottombarCard = new EventBox
@@ -975,7 +1012,8 @@ namespace XDM.GtkUI
                 MarginStart = 8,
                 MarginEnd = 8
             };
-            btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"), AccentR, AccentG, AccentB);
+            btnNew = CreateButtonWithContent("links-line", TextResource.GetText("DESC_NEW"),
+                PrimaryInkR, PrimaryInkG, PrimaryInkB, primary: true);
             toolbar.PackStart(btnNew, false, false, 0);
             btnDel = CreateButtonWithContent("delete-bin-7-line", TextResource.GetText("DESC_DEL"), DestructR, DestructG, DestructB);
             toolbar.PackStart(btnDel, false, false, 0);
@@ -1003,6 +1041,7 @@ namespace XDM.GtkUI
                 searchKeyword = searchEntry.Text;
                 finishedDownloadFilter.Refilter();
                 inprogressDownloadFilter.Refilter();
+                UpdateEmptyStates();
             };
             toolbar.PackEnd(searchEntry, false, false, 0);
 
@@ -1032,28 +1071,110 @@ namespace XDM.GtkUI
             return toolbarCard;
         }
 
-        // Ctrl+F focuses search, Ctrl+N opens the New menu — parity with the GTK 4
-        // frontend's app actions. Window-level key handling keeps it independent of
-        // which widget currently has focus; GTK bubbles unhandled keys up here.
+        // Window-level shortcuts (GTK 4 app-action parity): F1 and Alt+Return are
+        // handled without Ctrl; everything else below is Ctrl-gated. GTK bubbles
+        // unhandled keys up here, so this works whatever widget has focus.
         private void WireKeyboardShortcuts()
         {
             KeyPressEvent += (_, args) =>
             {
-                if ((args.Event.State & Gdk.ModifierType.ControlMask) == 0)
+                try
                 {
-                    return;
-                }
-                switch (args.Event.Key)
-                {
-                    case Gdk.Key.f:
-                        searchEntry.GrabFocus();
+                    var key = args.Event.Key;
+                    var state = args.Event.State;
+                    bool ctrl = (state & Gdk.ModifierType.ControlMask) != 0;
+                    bool shift = (state & Gdk.ModifierType.ShiftMask) != 0;
+                    bool alt = (state & Gdk.ModifierType.Mod1Mask) != 0;
+                    // F1 is NOT Ctrl-gated, so it must precede the Ctrl early-return
+                    if (key == Gdk.Key.F1)
+                    {
+                        MenuAbout_Activated(null, EventArgs.Empty);
                         args.RetVal = true;
-                        break;
-                    case Gdk.Key.n:
-                        btnNew.Activate();
+                        return;
+                    }
+                    // Alt+Return opens properties for the selected download
+                    if (alt && (key == Gdk.Key.Return || key == Gdk.Key.KP_Enter))
+                    {
+                        UIActions.ShowSeletectedItemProperties();
                         args.RetVal = true;
-                        break;
+                        return;
+                    }
+                    if (!ctrl)
+                    {
+                        return;
+                    }
+                    // Ctrl+Shift chords dispatch before the plain-Ctrl letters below
+                    if (shift && (key == Gdk.Key.q || key == Gdk.Key.Q))
+                    {
+                        SchedulerClicked?.Invoke(this, EventArgs.Empty);
+                        args.RetVal = true;
+                        return;
+                    }
+                    if (shift && (key == Gdk.Key.v || key == Gdk.Key.V))
+                    {
+                        YoutubeDLDownloadClicked?.Invoke(this, EventArgs.Empty);
+                        args.RetVal = true;
+                        return;
+                    }
+                    switch (key)
+                    {
+                        case Gdk.Key.f:
+                        case Gdk.Key.F:
+                            searchEntry?.GrabFocus();
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.n:
+                        case Gdk.Key.N:
+                            btnNew?.Activate();
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.t:
+                        case Gdk.Key.T:
+                            ThemeManager.ToggleTheme();
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.b:
+                        case Gdk.Key.B:
+                            BatchDownloadClicked?.Invoke(this, EventArgs.Empty);
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.i:
+                        case Gdk.Key.I:
+                            MenuImportExport_Activated(null, EventArgs.Empty);
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.comma:
+                            MenuSettings_Activated(null, EventArgs.Empty);
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.q:
+                        case Gdk.Key.Q:
+                            MenuExit_Activated(null, EventArgs.Empty);
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.o:
+                        case Gdk.Key.O:
+                            UIActions.OpenSelectedFile();
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.c:
+                        case Gdk.Key.C:
+                            if (ActiveListIsFinished()) UIActions.CopyURL2(); else UIActions.CopyURL1();
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.r:
+                        case Gdk.Key.R:
+                            UIActions.RestartDownload();
+                            args.RetVal = true;
+                            break;
+                        case Gdk.Key.s:
+                        case Gdk.Key.S:
+                            UIActions.SaveAs();
+                            args.RetVal = true;
+                            break;
+                    }
                 }
+                catch { }
             };
         }
 
@@ -1296,6 +1417,7 @@ namespace XDM.GtkUI
                     }
                 } while (categoryTreeStore.IterNext(ref catIter));
             }
+            UpdateEmptyStates();
         }
 
         private void OnStatusChanged(object? sender, EventArgs e)
@@ -1413,6 +1535,50 @@ namespace XDM.GtkUI
                 }
             }
             catch { }
+            UpdateEmptyStates();
+        }
+
+        // The visible list host is the truth for which view is on screen
+        private bool IsInProgressView() => listHostInProgress?.Visible != false;
+
+        // Empty-state clear button: exits the search and shows the list again
+        private void ClearSearchFromEmptyState()
+        {
+            try
+            {
+                if (searchEntry != null)
+                {
+                    searchEntry.Text = string.Empty;
+                }
+                searchKeyword = null;
+                try { inprogressDownloadFilter?.Refilter(); } catch { }
+                try { finishedDownloadFilter?.Refilter(); } catch { }
+                UpdateEmptyStates();
+            }
+            catch { }
+        }
+
+        // Keeps both stacks honest; only the active view is visible but neither goes stale
+        private void UpdateEmptyStates()
+        {
+            try { UpdateEmptyState(true); } catch { }
+            try { UpdateEmptyState(false); } catch { }
+        }
+
+        // Shows the empty page when the visible (filtered) model has no rows left
+        private void UpdateEmptyState(bool inProgress)
+        {
+            var stack = inProgress ? stackInProgress : stackFinished;
+            var panel = inProgress ? emptyInProgress : emptyFinished;
+            TreeModelSort? sorted = inProgress ? inprogressDownloadsStoreSorted : finishedDownloadsStoreSorted;
+            if (stack == null || panel == null || sorted == null) return;
+            if (sorted.IterNChildren() > 0)
+            {
+                stack.VisibleChildName = "list";
+                return;
+            }
+            panel.ShowFor(!string.IsNullOrWhiteSpace(searchKeyword), searchKeyword);
+            stack.VisibleChildName = "empty";
         }
 
         private Widget CreateInProgressListView()
@@ -1544,6 +1710,7 @@ namespace XDM.GtkUI
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 SyncSelectAllHeader(true);
+                UpdateSelectionCount();
                 // The gutter checkbox is drawn by a cell-data-func, so the row has to
                 // be re-rendered explicitly or the tick can stay stale.
                 lvInprogress.QueueDraw();
@@ -1590,8 +1757,16 @@ namespace XDM.GtkUI
             swInProgress = new ScrolledWindow { OverlayScrolling = true, Margin = 6, MarginBottom = 2, MarginTop = 2, ShadowType = ShadowType.None };
             swInProgress.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swInProgress.Add(lvInprogress);
-            swInProgress.ShowAll();
-            listHost.PackStart(swInProgress, true, true, 0);
+            // Stack swaps the list for the empty page instead of showing bare headers
+            stackInProgress = new Gtk.Stack { TransitionType = StackTransitionType.None };
+            stackInProgress.AddNamed(swInProgress, "list");
+            emptyInProgress = new EmptyStatePanel(
+                () => { try { btnNew?.Activate(); } catch { } },
+                ClearSearchFromEmptyState);
+            stackInProgress.AddNamed(emptyInProgress.Page, "empty");
+            stackInProgress.VisibleChildName = "list";
+            stackInProgress.ShowAll();
+            listHost.PackStart(stackInProgress, true, true, 0);
             listHost.ShowAll();
             listHostInProgress = listHost;
             return listHost;
@@ -1727,6 +1902,7 @@ namespace XDM.GtkUI
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 SyncSelectAllHeader(false);
+                UpdateSelectionCount();
                 // See above: force the gutter checkbox to repaint with the new state
                 lvFinished.QueueDraw();
             };
@@ -1768,8 +1944,16 @@ namespace XDM.GtkUI
             swFinished = new ScrolledWindow { OverlayScrolling = true, Margin = 6, MarginBottom = 2, MarginTop = 2, ShadowType = ShadowType.None };
             swFinished.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
             swFinished.Add(lvFinished);
-            swFinished.ShowAll();
-            listHost.PackStart(swFinished, true, true, 0);
+            // Same list/empty swap as the Active list so both views start somewhere
+            stackFinished = new Gtk.Stack { TransitionType = StackTransitionType.None };
+            stackFinished.AddNamed(swFinished, "list");
+            emptyFinished = new EmptyStatePanel(
+                () => { try { btnNew?.Activate(); } catch { } },
+                ClearSearchFromEmptyState);
+            stackFinished.AddNamed(emptyFinished.Page, "empty");
+            stackFinished.VisibleChildName = "list";
+            stackFinished.ShowAll();
+            listHost.PackStart(stackFinished, true, true, 0);
             listHost.ShowAll();
             listHostFinished = listHost;
             return listHost;
@@ -1819,7 +2003,7 @@ namespace XDM.GtkUI
             btnSelectAll = CreateButtonWithContent("checkbox-checked",
                 TextResource.GetText("LBL_SELECT_ALL") ?? "Select All",
                 DimR, DimG, DimB, TextResource.GetText("LBL_SELECT_ALL") ?? "Select All");
-            btnSelectAll.Clicked += (_, _) => ToggleSelectAll(ActiveListIsFinished());
+            btnSelectAll.Clicked += (_, _) => ToggleSelectAll(IsInProgressView());
             bar.PackEnd(btnSelectAll, false, false, 0);
 
             // Sort menu, the same six entries GTK 4 offers (Name/Size/Date, both ways)
@@ -1837,7 +2021,7 @@ namespace XDM.GtkUI
         private void UpdateViewHeading()
         {
             if (lblViewCount == null) return;
-            var view = ActiveListIsFinished() ? lvFinished : lvInprogress;
+            var view = IsInProgressView() ? lvInprogress : lvFinished;
             var selected = view?.Selection.CountSelectedRows() ?? 0;
             var total = view?.Model?.IterNChildren() ?? 0;
             lblViewCount.Text = selected > 0
@@ -1845,7 +2029,7 @@ namespace XDM.GtkUI
                 : $"{total} {TextResource.GetText("LBL_ITEMS") ?? "items"}";
         }
 
-        // The list that owns the current selection, so one button serves both lists
+        // The list that owns the current selection: the Ctrl+C copy source
         private bool ActiveListIsFinished()
         {
             var finishedSelected = lvFinished?.Selection.CountSelectedRows() ?? 0;
@@ -1857,7 +2041,7 @@ namespace XDM.GtkUI
         private void SyncSelectAllTooltip()
         {
             if (btnSelectAll == null) return;
-            var view = ActiveListIsFinished() ? lvFinished : lvInprogress;
+            var view = IsInProgressView() ? lvInprogress : lvFinished;
             var selected = view?.Selection.CountSelectedRows() ?? 0;
             var total = view?.Model?.IterNChildren() ?? 0;
             btnSelectAll.TooltipText = selected == total && total > 0
@@ -1914,6 +2098,24 @@ namespace XDM.GtkUI
             {
                 view.Selection.SelectAll();
             }
+            UpdateSelectionCount();
+        }
+
+        // Bottom-bar counter mirrors the GTK 4 headline: "N selected", hidden at zero
+        private void UpdateSelectionCount()
+        {
+            try
+            {
+                if (lblSelectionCount == null) return;
+                var view = IsInProgressView() ? lvInprogress : lvFinished;
+                var selected = view?.Selection.CountSelectedRows() ?? 0;
+                lblSelectionCount.Visible = selected > 0;
+                if (selected > 0)
+                {
+                    lblSelectionCount.Text = $"{selected} {TextResource.GetText("LBL_SELECTED") ?? "selected"}";
+                }
+            }
+            catch { }
         }
 
         // Mirrors the persisted sort state onto both lists' column headers. The active
@@ -2632,15 +2834,40 @@ namespace XDM.GtkUI
                             minEta = e;
                     }
                     var etaText = minEta > 0 ? $" · ETA: {FormattingHelper.ToHMS(minEta)}" : "";
+                    // Queued rows wait behind the running ones, counted from the status column
+                    int queued = 0;
+                    try
+                    {
+                        if (inprogressDownloadsStore != null && inprogressDownloadsStore.GetIterFirst(out TreeIter qiter))
+                        {
+                            do
+                            {
+                                var st = inprogressDownloadsStore.GetValue(qiter, 4) as string;
+                                if (!string.IsNullOrEmpty(st) && st.IndexOf("Wait", StringComparison.OrdinalIgnoreCase) >= 0)
+                                    queued++;
+                            } while (inprogressDownloadsStore.IterNext(ref qiter));
+                        }
+                    }
+                    catch { }
+                    var activeText = $"{count} {TextResource.GetText("LBL_ACTIVE_COUNT") ?? "active"}";
+                    var queuedText = queued > 0 ? $" · {queued} {TextResource.GetText("LBL_QUEUED_COUNT") ?? "queued"}" : "";
 
-                    lblTotalSpeed.Markup = $"<span color='#f97316'><b>⚡ {formatted}</b></span>{etaText} <span color='#888888' size='small'>({count} active)</span>";
+                    lblTotalSpeed.Markup = $"<span color='#f97316'><b>⚡ {formatted}</b></span>{etaText} <span color='#888888' size='small'>({activeText}{queuedText})</span>";
                     lblTotalSpeed.TooltipText = $"Aggregate live download speed: {formatted}{etaText} across {count} transfer(s)";
                     lblTotalSpeed.Visible = true;
-                    trayManager?.UpdateSpeedStatus($"{formatted}{etaText} ({count} active)");
+                    trayManager?.UpdateSpeedStatus($"{formatted}{etaText} ({activeText}{queuedText})");
                 }
                 else
                 {
-                    lblTotalSpeed.Visible = false;
+                    // Idle names the reason when capture is off, matching the GTK 4 footer
+                    var idle = TextResource.GetText("LBL_IDLE") ?? "Idle";
+                    if (!Config.Instance.IsBrowserMonitoringEnabled)
+                    {
+                        idle += " — " + (TextResource.GetText("MSG_EXT_DISABLED") ?? "Monitoring Off");
+                    }
+                    lblTotalSpeed.Markup = $"<span color='#888888' size='small'>{GLib.Markup.EscapeText(idle)}</span>";
+                    lblTotalSpeed.TooltipText = TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress";
+                    lblTotalSpeed.Visible = true;
                     trayManager?.UpdateSpeedStatus("");
                 }
             }
