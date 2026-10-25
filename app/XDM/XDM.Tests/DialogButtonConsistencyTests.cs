@@ -79,8 +79,6 @@ namespace XDM.Tests
                 var name = Path.GetFileName(theme);
                 var rules = Parse(File.ReadAllText(theme));
 
-                string Accent() =>
-                    FirstDecl(rules, "treeview.unfinished header button", "background-color");
                 string Focused() =>
                     FirstDecl(rules, "treeview.unfinished row:selected", "background-color");
                 string Backdrop() =>
@@ -88,20 +86,16 @@ namespace XDM.Tests
                 string BackdropText() =>
                     FirstDecl(rules, "treeview.unfinished row:selected:backdrop", "color");
 
-                var accent = Accent();
                 var backdrop = Backdrop();
                 var focused = Focused();
                 var text = BackdropText();
 
-                if (backdrop == null || accent == null)
+                // The header band is gone (GTK 4 parity); what still matters is that a
+                // backdrop row reads as a softer version of its own focused selection
+                if (backdrop == null || focused == null)
                 {
-                    failures.Add($"{name}: missing backdrop or header rule");
+                    failures.Add($"{name}: missing backdrop or selected-row rule");
                     continue;
-                }
-                if (string.Equals(backdrop, accent, StringComparison.OrdinalIgnoreCase))
-                {
-                    failures.Add($"{name}: unfocused selected row ({backdrop}) IS the header "
-                        + "accent — the row blends into the header and hides its tick box");
                 }
                 if (text == null || backdrop == null
                     || string.Equals(text.TrimStart('#'), backdrop.TrimStart('#'),
@@ -130,30 +124,6 @@ namespace XDM.Tests
             Assert.AreEqual(0, failures.Count,
                 "unfocused selected download rows must read as a softer version of the "
                 + "focused selection, never as the header colour:\n"
-                + string.Join("\n", failures));
-        }
-
-        // The header's select-all tick was 11.5px (inherited caption size) — too small
-        [TestMethod]
-        public void EveryTheme_HeaderSelectAllGlyph_IsBigEnough()
-        {
-            var failures = new List<string>();
-            foreach (var theme in Directory.GetFiles(ThemeDir, "*.css"))
-            {
-                var name = Path.GetFileName(theme);
-                var rules = Parse(File.ReadAllText(theme));
-                var size = FirstDecl(rules,
-                    "treeview.unfinished header button.list-header-gutter label", "font-size");
-                var px = double.TryParse(
-                    size?.Replace("px", "").Trim(),
-                    System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
-                if (px < 14)
-                    failures.Add($"{name}: select-all glyph font-size is '{size ?? "<rule missing>"}'"
-                        + " (need >= 14px)");
-            }
-
-            Assert.AreEqual(0, failures.Count,
-                "the header select-all tick must be big enough to see and hit:\n"
                 + string.Join("\n", failures));
         }
 
@@ -261,7 +231,7 @@ namespace XDM.Tests
                 "window", "headerbar", "treeview", "treeview.unfinished row",
                 "treeview.finished row", "treeview.unfinished row:selected",
                 "treeview.unfinished row:selected:backdrop", "list.sidebar",
-                "treeview.unfinished header button", "progressbar progress",
+                "progressbar progress",
             };
 
             var failures = new List<string>();

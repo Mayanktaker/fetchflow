@@ -12,65 +12,6 @@ namespace XDM.Tests
     public class DownloadListHeaderPolicyTests
     {
         [TestMethod]
-        public void NextSort_SwitchingColumn_StartsDescending()
-        {
-            var (column, descending) = DownloadListHeaderPolicy.NextSort("Size", "Name", false);
-            Assert.AreEqual("Size", column);
-            Assert.IsTrue(descending, "a newly chosen column always starts descending");
-        }
-
-        [TestMethod]
-        public void NextSort_SameColumn_FlipsDirection()
-        {
-            var (_, first) = DownloadListHeaderPolicy.NextSort("Name", "Name", false);
-            Assert.IsTrue(first, "ascending flips to descending");
-            var (_, second) = DownloadListHeaderPolicy.NextSort("Name", "Name", first);
-            Assert.IsFalse(second, "descending flips back to ascending");
-        }
-
-        [TestMethod]
-        public void NextSort_SameColumnFromDifferentSortState_StillFlips()
-        {
-            var (column, descending) = DownloadListHeaderPolicy.NextSort("Size", "Size", true);
-            Assert.AreEqual("Size", column);
-            Assert.IsFalse(descending);
-        }
-
-        [TestMethod]
-        public void Caption_ActiveSortColumnHasNoHint()
-        {
-            Assert.AreEqual("File name",
-                DownloadListHeaderPolicy.Caption("File name", isActiveSort: true),
-                "the active sort column shows GTK's own direction arrow, not a hint");
-        }
-
-        [TestMethod]
-        public void Caption_IdleSortableColumnCarriesTheHint()
-        {
-            Assert.AreEqual($"Size {DownloadListHeaderPolicy.SortableHint}",
-                DownloadListHeaderPolicy.Caption("Size", isActiveSort: false),
-                "idle sortable columns must still advertise that they sort");
-        }
-
-        [TestMethod]
-        public void SelectAllGlyph_NoneSomeAll()
-        {
-            Assert.AreEqual(DownloadListHeaderPolicy.GlyphNone,
-                DownloadListHeaderPolicy.SelectAllGlyph(0, 5));
-            Assert.AreEqual(DownloadListHeaderPolicy.GlyphSome,
-                DownloadListHeaderPolicy.SelectAllGlyph(2, 5));
-            Assert.AreEqual(DownloadListHeaderPolicy.GlyphAll,
-                DownloadListHeaderPolicy.SelectAllGlyph(5, 5));
-        }
-
-        [TestMethod]
-        public void SelectAllGlyph_EmptyListReadsAsNone()
-        {
-            Assert.AreEqual(DownloadListHeaderPolicy.GlyphNone,
-                DownloadListHeaderPolicy.SelectAllGlyph(0, 0));
-        }
-
-        [TestMethod]
         public void SelectAllShouldClear_OnlyWhenEverythingIsSelected()
         {
             Assert.IsFalse(DownloadListHeaderPolicy.SelectAllShouldClear(0, 5),

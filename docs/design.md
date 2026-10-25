@@ -32,22 +32,13 @@ Exceptions:
   `DownloadRowNameVerticalPadding` 10, `DownloadRowMetaVerticalPadding` 16).
   Result: 67px row pitch, ~43px card, 24px gap between cards. Row `margin` is inert
   in GTK3 — never "fix" list spacing there.
-- Download list column header: 14px vertical padding
-  (`treeview.<view> header button`) → a 52px header bar, matching a GTK4 headerbar.
-  **The accent goes on the header BUTTON, not on `treeview.<view> header`** — GTK3's
-  `GtkTreeViewHeader` is not reachable as a `treeview header` CSS node (the header
-  buttons' parent IS the treeview), so styling the container matches nothing and the
-  bar renders transparent, i.e. invisible on a light surface. Pinned by
-  `DownloadListHeaderVisibilityTests`.
-- Column resizing needs `Sizing = Fixed` on all three columns, and `Resizable` must be
-  set **before** `Sizing`: setting it while the mode is AUTOSIZE makes GTK silently
-  rewrite the mode to GROW_ONLY, which re-derives the width from cell content and
-  throws the user's drag away. Same test pins this.
-  Caption insets live on the `list-header-name` / `list-header-size` header-button
-  classes (66px / 18px) so each caption lines up pixel-exact with the row text it
-  labels — verified by `DownloadListColumnHeaderSmokeTests`.
-  The header is GTK's own (three drag-resizable columns: gutter | File name | Size);
-  see `MainWindow.WireListColumnHeaders` and `DownloadListHeaderPolicy`.
+- No column header on the download lists (GTK 4 parity): select-all is a
+  bottom-bar button on the left and sort is a bottom-bar menu button on the
+  right, offering the same six entries GTK 4 does (Name / Size / Date, both
+  directions). The persisted sort (`Config.DownloadSortColumn` /
+  `DownloadSortDescending`) stays the single source of truth; the sort button's
+  label mirrors it. Column widths stay fixed (gutter | name | size) since the
+  header that used to drag-resize them is gone.
 
 ## Theme file structure
 
@@ -85,7 +76,6 @@ Owned by us, and therefore in the theme files:
 | download rows as cards (12px, no shadow) | Adwaita has no card row |
 | selected / backdrop row = accent **tint** over the card | selection must follow the scheme accent |
 | sidebar + its selection tint | same |
-| column-header band (flat, opaque) + caption insets | GTK 3's dragging header is ours |
 | `progressbar progress` | GTK 3 has no accent API, so the fill carries the scheme |
 | search entry metrics (26px, pill) | keeps the toolbar height stable across themes |
 
@@ -164,11 +154,9 @@ are enforced by `DialogButtonConsistencyTests` across all 14 themes.
   darken it to 85% — text colour and border are the focused selection's values.
   Pinned by `DialogButtonConsistencyTests.
   EveryTheme_UnfocusedSelectedRow_IsLighterThanTheHeader`.
-- The header select-all tick renders at **17px** via the
-  `list-header-gutter` class on the gutter header button (11.5px was inherited from
-  the caption rule and unreadable). Both halves are pinned: the CSS rule by
-  `EveryTheme_HeaderSelectAllGlyph_IsBigEnough`, the actual rendered height by
-  `EveryTheme_SelectAllGlyphRendersLarge` (fails at 14px rendered, passes at ~21px).
+- The header select-all tick is gone with the header: the bottom-bar select-all
+  button carries the toggle, and its tooltip reads "Deselect All" while
+  everything is selected — the state the old ☑ glyph conveyed.
 
 ## Portability
 
@@ -431,7 +419,9 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   immediately, so the header carries only the title and the native window control closes it
   (closing persists any typed field). The window measures the visible page
   (`FitToPage`) and sizes itself between 380 and 700 px, so a short page such as Advanced
-  opens without empty space below its last card while long pages scroll.
+  opens without empty space below its last card while long pages scroll. Deltas under
+  48 px are skipped (`FitStep`) so hopping between similar pages never flickers, and the
+  first fit happens before presenting so the dialog never flashes at a default size.
 - **Media downloader:** `VideoDownloaderWindow` is a four-page `Gtk.Stack` view over the shared
   `VideoDownloaderUIController` (URL + optional browser cookies + credentials → resolving
   spinner → ticked result list with quality and download actions → error page).

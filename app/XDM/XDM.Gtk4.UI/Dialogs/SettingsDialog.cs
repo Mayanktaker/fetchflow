@@ -96,6 +96,10 @@ namespace XDM.Gtk4UI.Dialogs
 
         // Guards config writes while widgets are being populated
         private bool loading = true;
+        // Last height FitToPage applied; smaller deltas are skipped as flicker
+        private int lastFittedHeight;
+        // Resizes below this many pixels read as jitter, not as fitting
+        private const int FitStep = 48;
 
         // Builds the dialog from current configuration
         public SettingsDialog(Window? parent, int initialPage = 0)
@@ -578,7 +582,8 @@ namespace XDM.Gtk4UI.Dialogs
         }
 
         // Sizes the dialog to the page on screen, within sane bounds: a short page
-        // (Advanced) must not open with empty space below its last card
+        // (Advanced) must not open with empty space below its last card. Deltas
+        // under FitStep are skipped so hopping between similar pages never flickers.
         private void FitToPage(string name)
         {
             if (stack.GetChildByName(name) is not Widget page)
@@ -587,10 +592,19 @@ namespace XDM.Gtk4UI.Dialogs
             }
 
             page.Measure(Orientation.Vertical, PageWidth, out _, out var natural, out _, out _);
+            if (natural <= 0)
+            {
+                return;
+            }
             const int chrome = 104;
             const int minHeight = 380;
             const int maxHeight = 700;
             var height = Math.Clamp(natural + chrome, minHeight, maxHeight);
+            if (lastFittedHeight > 0 && Math.Abs(height - lastFittedHeight) < FitStep)
+            {
+                return;
+            }
+            lastFittedHeight = height;
             window.SetDefaultSize(900, height);
         }
 
@@ -1123,7 +1137,12 @@ namespace XDM.Gtk4UI.Dialogs
             }
         }
 
-        // Displays the settings window
-        public void Show() => window.Present();
+        // Displays the settings window, pre-fitted so it never flashes at the
+        // default size first (a zero measure means "not laid out yet": skip it)
+        public void Show()
+        {
+            FitToPage(stack.VisibleChildName ?? PageNames[0]);
+            window.Present();
+        }
     }
 }

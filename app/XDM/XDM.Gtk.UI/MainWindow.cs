@@ -37,7 +37,8 @@ namespace XDM.GtkUI
         private TreeModelSort finishedDownloadsStoreSorted;
         private string? searchKeyword;
         private Category? category;
-        private Button btnNew, btnDel, btnOpenFile, btnOpenFolder, btnResume, btnPause, btnMenu, btnScheduler, btnSpeedLimit;
+        private Button btnNew, btnDel, btnOpenFile, btnOpenFolder, btnResume, btnPause, btnMenu, btnScheduler, btnSpeedLimit, btnSelectAll;
+        private MenuButton? btnSort;
         private IButton newButton, deleteButton, pauseButton, resumeButton, openFileButton, openFolderButton;
         private IMenuItem[] menuItems;
         private Menu newDownloadMenu;
@@ -727,6 +728,14 @@ namespace XDM.GtkUI
             hbox.Margin = 4;
             hbox.MarginStart = 8;
             hbox.MarginEnd = 8;
+            // Select-all acts on the list that owns the current selection
+            btnSelectAll = CreateButtonWithContent("checkbox-line", null, DimR, DimG, DimB,
+                TextResource.GetText("LBL_SELECT_ALL") ?? "Select All");
+            btnSelectAll.Clicked += (_, _) => ToggleSelectAll(ActiveListIsFinished());
+            btnSelectAll.StyleContext.AddClass("bottombar-button");
+            hbox.PackStart(btnSelectAll, false, false, 0);
+            SyncSelectAllTooltip();
+
             btnMonitoring = new CheckButton { MarginStart = 5 };
             btnMonitoring.Clicked += BtnMonitoring_Clicked;
             hbox.PackStart(btnMonitoring, false, false, 0);
@@ -762,6 +771,13 @@ namespace XDM.GtkUI
             btnScheduler.StyleContext.AddClass("bottombar-button");
 
             hbox.PackEnd(btnScheduler, false, false, 0);
+
+            // Sort menu, the same six entries GTK 4 offers (Name/Size/Date, both ways)
+            btnSort = new MenuButton { TooltipText = "Sort downloads" };
+            btnSort.StyleContext.AddClass("bottombar-button");
+            btnSort.Label = SortCaption();
+            btnSort.Popup = BuildSortMenu();
+            hbox.PackEnd(btnSort, false, false, 0);
 
             // Container card for bottom statusbar matching the top action toolbar surface
             var bottombarCard = new EventBox
@@ -1451,6 +1467,8 @@ namespace XDM.GtkUI
 
             inprogressDownloadsStoreSorted = sortedStore;
             lvInprogress = new TreeView(sortedStore);
+            // GTK 4 parity: no column header — select-all and sort live in the bottom bar
+            lvInprogress.HeadersVisible = false;
             lvInprogress.Selection.Mode = SelectionMode.Multiple;
             // Drag-select (rubber band) — GTK defaults OFF, which silently broke
             // drag-based multi-selection attempts on the Active list.
@@ -1666,6 +1684,7 @@ namespace XDM.GtkUI
 
             finishedDownloadsStoreSorted = sortedStore;
             lvFinished = new TreeView(sortedStore);
+            lvFinished.HeadersVisible = false;
             lvFinished.Selection.Mode = SelectionMode.Multiple;
             // Drag-select (rubber band) — same as the Active list
             lvFinished.RubberBanding = true;
@@ -1806,10 +1825,6 @@ namespace XDM.GtkUI
         // resizes it natively and each caption follows its column. sort-column-id stays
         // -1 to detach GTK's built-in click sorting — clicks route through the app's
         // persisted sort state instead (SetDownloadSort is the single source of truth).
-        private const string HeaderNameClass = "list-header-name";
-        private const string HeaderSizeClass = "list-header-size";
-        // Gutter header button (the select-all tick) — themes enlarge its label
-        private const string HeaderGutterClass = "list-header-gutter";
         private void WireListColumnHeaders(TreeViewColumn gutterCol, TreeViewColumn nameCol, TreeViewColumn sizeCol, bool inprogress)
         {
             if (inprogress)
@@ -1823,28 +1838,65 @@ namespace XDM.GtkUI
                 finishedSizeCol = sizeCol;
             }
 
-            // Gutter caption is the select-all state (☐ / ▣ / ☑); it travels through
-            // the title so GTK rebuilds its own header button contents
-            gutterCol.Title = DownloadListHeaderPolicy.GlyphNone;
-            // Size caption sits over the right-aligned metadata it labels
+            // Size column keeps its right alignment for the metadata it labels
             sizeCol.Alignment = 1.0f;
-            // Caption insets (theme CSS) line each caption up with the text it labels
-            nameCol.Button?.StyleContext.AddClass(HeaderNameClass);
-            sizeCol.Button?.StyleContext.AddClass(HeaderSizeClass);
-            // The select-all tick must be clearly readable (it was 11.5px: too small)
-            gutterCol.Button?.StyleContext.AddClass(HeaderGutterClass);
-
-            // GTK only emits a column's ::clicked for a CLICKABLE column — without
-            // this the header select-all and the sort captions are dead.
-            gutterCol.Clickable = true;
-            nameCol.Clickable = true;
-            sizeCol.Clickable = true;
-            gutterCol.Clicked += (_, _) => ToggleSelectAll(inprogress);
-            nameCol.Clicked += (_, _) => CycleListSort("Name");
-            sizeCol.Clicked += (_, _) => CycleListSort("Size");
         }
 
-        // Gutter header button: select-all acts as a toggle over the current selection
+        // The list that owns the current selection, so one button serves both lists
+        private bool ActiveListIsFinished()
+        {
+            var finishedSelected = lvFinished?.Selection.CountSelectedRows() ?? 0;
+            var inprogressSelected = lvInprogress?.Selection.CountSelectedRows() ?? 0;
+            return finishedSelected > 0 && inprogressSelected == 0;
+        }
+
+        // The select-all tooltip reflects the toggle's next action, like GTK 4
+        private void SyncSelectAllTooltip()
+        {
+            if (btnSelectAll == null) return;
+            var view = ActiveListIsFinished() ? lvFinished : lvInprogress;
+            var selected = view?.Selection.CountSelectedRows() ?? 0;
+            var total = view?.Model?.IterNChildren() ?? 0;
+            btnSelectAll.TooltipText = selected == total && total > 0
+                ? "Deselect All (Ctrl+A)"
+                : "Select All (Ctrl+A)";
+        }
+
+        // Sort button caption: the active column and its direction
+        private string SortCaption()
+        {
+            var col = Config.Instance.DownloadSortColumn ?? "Date";
+            var caption = col switch
+            {
+                "Name" => TextResource.GetText("SORT_NAME") ?? "File name",
+                "Size" => TextResource.GetText("SORT_SIZE") ?? "Size",
+                _ => TextResource.GetText("SORT_DATE") ?? "Date",
+            };
+            var arrow = Config.Instance.DownloadSortDescending ? "↓" : "↑";
+            return caption + " " + arrow;
+        }
+
+        // The six sort entries GTK 4 offers, routed through the persisted sort state
+        private Menu BuildSortMenu()
+        {
+            var menu = new Menu();
+            void Add(string text, string column, bool descending)
+            {
+                var item = new MenuItem(text);
+                item.Activated += (_, _) => SetDownloadSort(column, descending);
+                menu.Append(item);
+            }
+            Add(TextResource.GetText("SORT_NAME_ASC") ?? "Name (A-Z)", "Name", false);
+            Add(TextResource.GetText("SORT_NAME_DESC") ?? "Name (Z-A)", "Name", true);
+            Add(TextResource.GetText("SORT_SIZE_ASC") ?? "Size (smallest first)", "Size", false);
+            Add(TextResource.GetText("SORT_SIZE_DESC") ?? "Size (largest first)", "Size", true);
+            Add(TextResource.GetText("SORT_DATE_DESC") ?? "Date (newest first)", "Date", true);
+            Add(TextResource.GetText("SORT_DATE_ASC") ?? "Date (oldest first)", "Date", false);
+            menu.ShowAll();
+            return menu;
+        }
+
+        // Select-all acts as a toggle over the current selection
         private void ToggleSelectAll(bool inprogress)
         {
             var view = inprogress ? lvInprogress : lvFinished;
@@ -1860,14 +1912,6 @@ namespace XDM.GtkUI
             }
         }
 
-        // Clicking File name/Size: switch column or flip direction if already active
-        private void CycleListSort(string column)
-        {
-            var (next, descending) = DownloadListHeaderPolicy.NextSort(
-                column, Config.Instance.DownloadSortColumn, Config.Instance.DownloadSortDescending);
-            SetDownloadSort(next, descending);
-        }
-
         // Mirrors the persisted sort state onto both lists' column headers. The active
         // column gets GTK's own direction arrow (GTK4 headerbar behaviour); every other
         // sortable column keeps a faint ↕ hint so the header still advertises sorting.
@@ -1878,43 +1922,19 @@ namespace XDM.GtkUI
                 var col = Config.Instance.DownloadSortColumn ?? "Date";
                 var order = Config.Instance.DownloadSortDescending
                     ? SortType.Descending : SortType.Ascending;
-                foreach (var (column, name) in SortableHeaderColumns())
+                if (btnSort != null)
                 {
-                    if (column == null) continue;
-                    var active = col == name;
-                    var caption = name == "Name"
-                        ? (TextResource.GetText("SORT_NAME") ?? "File name")
-                        : (TextResource.GetText("SORT_SIZE") ?? "Size");
-                    // Caption lives in the title so GTK rebuilds its header button
-                    column.Title = DownloadListHeaderPolicy.Caption(caption, active);
-                    column.SortIndicator = active;
-                    if (active) { column.SortOrder = order; }
+                    // The bottom-bar sort button carries the state the header used to
+                    btnSort.Label = SortCaption();
                 }
             }
             catch { }
         }
 
-        // Every (column, sort key) pair the header captions are drawn for, in both lists
-        private IEnumerable<(TreeViewColumn? Column, string Key)> SortableHeaderColumns()
-        {
-            yield return (inprogressNameCol, "Name");
-            yield return (inprogressSizeCol, "Size");
-            yield return (finishedNameCol, "Name");
-            yield return (finishedSizeCol, "Size");
-        }
-
-        // Mirrors row selection into the gutter header's select-all glyph (all/some/none)
+        // Row selection drives the bottom-bar select-all tooltip (all/some/none)
         private void SyncSelectAllHeader(bool inprogress)
         {
-            try
-            {
-                var view = inprogress ? lvInprogress : lvFinished;
-                var gutter = inprogress ? inprogressCheckCol : finishedCheckCol;
-                if (view == null || gutter == null) return;
-                var selected = view.Selection.CountSelectedRows();
-                gutter.Title = DownloadListHeaderPolicy.SelectAllGlyph(selected, view.Model.IterNChildren());
-            }
-            catch { }
+            SyncSelectAllTooltip();
         }
 
         // Runs BEFORE GTK's default TreeView press handler (ButtonPress is RUN_LAST):

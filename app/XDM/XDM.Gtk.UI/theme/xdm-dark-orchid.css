@@ -165,68 +165,7 @@ label.sidebar-heading {
   margin: 14px 20px 4px;
 }
 
-/* Column header band: a native flat strip on the header tone, not an accent
-   block. It must stay OPAQUE or the bar vanishes on a light surface. */
-treeview header {
-  background-color: #16131f;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-}
-
-treeview.unfinished header button,
-treeview.finished header button {
-  background-color: #16131f;
-  background-image: none;
-  color: #b4b4b4;
-  border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 0;
-  box-shadow: none;
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 14px 12px;
-}
-
-treeview.unfinished header button:hover,
-treeview.finished header button:hover {
-  background-color: #282530;
-  color: #f4f4f4;
-}
-
-treeview.unfinished header button:active,
-treeview.finished header button:active {
-  background-color: #14111c;
-  color: #f4f4f4;
-}
-
-treeview.unfinished header button:focus,
-treeview.finished header button:focus {
-  outline: none;
-}
-
-/* Caption insets: line each caption up with the row text it labels */
-treeview.unfinished header button.list-header-name,
-treeview.finished header button.list-header-name {
-  padding-left: 104px;
-}
-
-treeview.unfinished header button.list-header-size,
-treeview.finished header button.list-header-size {
-  padding-right: 18px;
-}
-
-treeview.unfinished header label,
-treeview.finished header label {
-  color: #f4f4f4;
-  font-size: 11.5px;
-  font-weight: bold;
-}
-
-/* Select-all tick: 17px, or it inherits the 11.5px caption and disappears */
-treeview.unfinished header button.list-header-gutter label,
-treeview.finished header button.list-header-gutter label {
-  font-size: 17px;
-}
+/* No column header, like GTK 4: select-all and sort live in the bottom bar */
 
 /* Scheme accent reaches the one widget with no accent API in GTK 3 */
 progressbar progress {

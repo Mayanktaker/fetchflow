@@ -18,30 +18,6 @@ namespace XDM.GtkUI
 
         // Clicking File name/Size: switch column, or flip direction when that column
         // is already the active sort (a new column always starts descending)
-        internal static (string Column, bool Descending) NextSort(
-            string clicked, string current, bool currentDescending)
-        {
-            return current == clicked
-                ? (clicked, !currentDescending)
-                : (clicked, true);
-        }
-
-        // Column header caption: plain text on the active sort column (GTK draws the
-        // direction arrow beside it), caption + hint on the idle sortable columns
-        internal static string Caption(string text, bool isActiveSort)
-        {
-            return isActiveSort ? text : $"{text} {SortableHint}";
-        }
-
-        // Gutter header glyph for the current selection (all / some / none)
-        internal static string SelectAllGlyph(int selected, int total)
-        {
-            if (selected <= 0) return GlyphNone;
-            return total > 0 && selected >= total ? GlyphAll : GlyphSome;
-        }
-
-        // Select-all acts as a toggle: it clears only when everything is already
-        // selected, otherwise it selects the rest (GTK4 list behaviour)
         internal static bool SelectAllShouldClear(int selected, int total)
         {
             return total > 0 && selected >= total;
