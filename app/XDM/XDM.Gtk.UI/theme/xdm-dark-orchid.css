@@ -165,6 +165,21 @@ label.sidebar-heading {
   margin: 14px 20px 4px;
 }
 
+/* Headline above the list: view name, count, select-all and sort (GTK 4 layout) */
+.content-toolbar {
+  padding: 14px 18px 8px;
+}
+
+.view-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.view-count {
+  font-size: 12px;
+  color: #b4b4b4;
+}
+
 /* No column header, like GTK 4: select-all and sort live in the bottom bar */
 
 /* Scheme accent reaches the one widget with no accent API in GTK 3 */

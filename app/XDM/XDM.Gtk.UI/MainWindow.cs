@@ -48,6 +48,8 @@ namespace XDM.GtkUI
         private CheckButton btnMonitoring;
         private Label lblExtensionStatus;
         private Label? lblTotalSpeed;
+        private Label? lblViewTitle, lblViewCount;
+        private Button? btnActivity;
         private readonly Dictionary<string, double> activeSpeeds = new();
         private readonly Dictionary<string, long> activeEtas = new();
         private bool isUpdateAvailable;
@@ -652,12 +654,18 @@ namespace XDM.GtkUI
                 return;
             }
             subtitleLabel.Text = HeaderSubtitleSeparator + viewName;
+            if (lblViewTitle != null)
+            {
+                lblViewTitle.Text = viewName ?? "";
+            }
+            UpdateViewHeading();
         }
 
         private Widget CreateMainPanel()
         {
             var vbMain = new VBox();
             vbMain.PackStart(CreateToolbar(), false, false, 0);
+            vbMain.PackStart(CreateContentToolbar(), false, false, 0);
             WireKeyboardShortcuts();
             vbMain.PackStart(CreateInProgressListView(), true, true, 0);
             vbMain.PackStart(CreateFinishedListView(), true, true, 0);
@@ -723,17 +731,6 @@ namespace XDM.GtkUI
             hbox.Margin = 4;
             hbox.MarginStart = 8;
             hbox.MarginEnd = 8;
-            // Select-all acts on the list that owns the current selection
-            // Labeled like GTK 4's control: icon-only left an empty hole when the
-            // named icon was missing from svg-icons
-            btnSelectAll = CreateButtonWithContent("checkbox-checked",
-                TextResource.GetText("LBL_SELECT_ALL") ?? "Select All",
-                DimR, DimG, DimB, TextResource.GetText("LBL_SELECT_ALL") ?? "Select All");
-            btnSelectAll.Clicked += (_, _) => ToggleSelectAll(ActiveListIsFinished());
-            btnSelectAll.StyleContext.AddClass("bottombar-button");
-            hbox.PackStart(btnSelectAll, false, false, 0);
-            SyncSelectAllTooltip();
-
             btnMonitoring = new CheckButton { MarginStart = 5 };
             btnMonitoring.Clicked += BtnMonitoring_Clicked;
             hbox.PackStart(btnMonitoring, false, false, 0);
@@ -746,9 +743,16 @@ namespace XDM.GtkUI
             hbox.PackStart(lblExtensionStatus, false, false, 0);
             UpdateExtensionStatus();
 
-            lblTotalSpeed = new Label { MarginStart = 15, Visible = false };
+            lblTotalSpeed = new Label { Visible = false };
             lblTotalSpeed.StyleContext.AddClass("total-speed-label");
-            hbox.PackStart(lblTotalSpeed, false, false, 0);
+            btnActivity = new Button();
+            btnActivity.Add(lblTotalSpeed);
+            btnActivity.StyleContext.AddClass("flat");
+            btnActivity.TooltipText = TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress";
+            btnActivity.Clicked += (_, _) => UIActions.ShowProgressWindow();
+            var activityBox = new HBox(false, 0) { MarginStart = 10 };
+            activityBox.Add(btnActivity);
+            hbox.PackStart(activityBox, false, false, 0);
 
             btnSpeedLimit = CreateButtonWithContent("time-line", null, DimR, DimG, DimB, TextResource.GetText("MENU_SPEED_LIMITER"));
             btnSpeedLimit.Clicked += BtnSpeedLimit_Clicked;
@@ -769,13 +773,6 @@ namespace XDM.GtkUI
             btnScheduler.StyleContext.AddClass("bottombar-button");
 
             hbox.PackEnd(btnScheduler, false, false, 0);
-
-            // Sort menu, the same six entries GTK 4 offers (Name/Size/Date, both ways)
-            btnSort = new MenuButton { TooltipText = "Sort downloads" };
-            btnSort.StyleContext.AddClass("bottombar-button");
-            btnSort.Label = SortCaption();
-            btnSort.Popup = BuildSortMenu();
-            hbox.PackEnd(btnSort, false, false, 0);
 
             // Container card for bottom statusbar matching the top action toolbar surface
             var bottombarCard = new EventBox
@@ -1784,6 +1781,54 @@ namespace XDM.GtkUI
             sizeCol.Alignment = 1.0f;
         }
 
+        // Headline above the list: view name, count, select-all and sort (GTK 4 layout)
+        private Widget CreateContentToolbar()
+        {
+            var bar = new HBox(false, 8);
+            bar.StyleContext.AddClass("content-toolbar");
+
+            lblViewTitle = new Label("");
+            lblViewTitle.StyleContext.AddClass("view-title");
+            bar.PackStart(lblViewTitle, false, false, 0);
+
+            lblViewCount = new Label("");
+            lblViewCount.StyleContext.AddClass("view-count");
+            bar.PackStart(lblViewCount, false, false, 0);
+
+            var spacer = new VBox();
+            bar.PackStart(spacer, true, true, 0);
+
+            // Labeled like GTK 4's control: icon-only left an empty hole when the
+            // named icon was missing from svg-icons
+            btnSelectAll = CreateButtonWithContent("checkbox-checked",
+                TextResource.GetText("LBL_SELECT_ALL") ?? "Select All",
+                DimR, DimG, DimB, TextResource.GetText("LBL_SELECT_ALL") ?? "Select All");
+            btnSelectAll.Clicked += (_, _) => ToggleSelectAll(ActiveListIsFinished());
+            bar.PackEnd(btnSelectAll, false, false, 0);
+
+            // Sort menu, the same six entries GTK 4 offers (Name/Size/Date, both ways)
+            btnSort = new MenuButton { TooltipText = "Sort downloads" };
+            btnSort.Label = SortCaption();
+            btnSort.Popup = BuildSortMenu();
+            bar.PackEnd(btnSort, false, false, 0);
+
+            SyncSelectAllTooltip();
+            bar.ShowAll();
+            return bar;
+        }
+
+        // Headline count: the selection while one exists, otherwise the row count
+        private void UpdateViewHeading()
+        {
+            if (lblViewCount == null) return;
+            var view = ActiveListIsFinished() ? lvFinished : lvInprogress;
+            var selected = view?.Selection.CountSelectedRows() ?? 0;
+            var total = view?.Model?.IterNChildren() ?? 0;
+            lblViewCount.Text = selected > 0
+                ? $"{selected} {TextResource.GetText("LBL_SELECTED") ?? "selected"}"
+                : $"{total} {TextResource.GetText("LBL_ITEMS") ?? "items"}";
+        }
+
         // The list that owns the current selection, so one button serves both lists
         private bool ActiveListIsFinished()
         {
@@ -1802,6 +1847,7 @@ namespace XDM.GtkUI
             btnSelectAll.TooltipText = selected == total && total > 0
                 ? "Deselect All (Ctrl+A)"
                 : "Select All (Ctrl+A)";
+            UpdateViewHeading();
         }
 
         // Sort button caption: the active column and its direction
