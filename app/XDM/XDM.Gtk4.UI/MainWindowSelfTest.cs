@@ -5,6 +5,7 @@
 // ticks and view switches, and the ThemeMode round-trip. Only run with --smoke
 // (scripts/run-gtk4-smoke.sh), so a normal launch never pays for it.
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using XDM.Core;
 using XDM.Core.Downloader;
@@ -93,25 +94,51 @@ namespace XDM.Gtk4UI
             Expect(!string.IsNullOrEmpty(about.GetIssueUrl()), "about issue url set");
             Expect(!string.IsNullOrEmpty(about.GetSupportUrl()), "about support url set");
 
-            // Footer parity guard: the light stylesheet once kept a stale
-            // .bottom-bar padding rule, making its footer bar 15px taller than the
-            // dark one. Both stylesheets must declare the same footer rules.
-            Expect(FooterRulesMatch(), "theme footer rules match");
+            // Theme stylesheets must be structurally identical: the light file once
+            // kept a stale .bottom-bar padding rule, making its footer 15px taller.
+            // Colors are scheme-driven, so they are normalised out of the comparison.
+            Expect(ThemeStructureMatches(), "theme stylesheets match structurally");
+
+            // Dialog chrome parity: the same pages must fit to the same heights in
+            // both themes, or a theme-only rule has smuggled in a size difference
+            var darkHeights = FittedHeights(dark: true);
+            var lightHeights = FittedHeights(dark: false);
+            Expect(darkHeights.SequenceEqual(lightHeights), "settings fit identical in both themes");
+            Expect(darkHeights.All(h => h is >= 380 and <= 700), "settings heights stay in bounds");
+            Gtk4Theme.ApplyFromConfig(Window);
 
             Console.WriteLine("[GTK4 SMOKE] list/theme self-test passed");
         }
 
 
-        // Collapses the .bottom-bar rule blocks of both stylesheets for comparison
-        private static bool FooterRulesMatch()
+        // Fits every settings page without presenting anything and records heights
+        private List<int> FittedHeights(bool dark)
         {
-            var light = FooterRules("gtk4-light.css");
-            var dark = FooterRules("gtk4-dark.css");
+            Gtk4Theme.ApplyMode(Window, dark ? Gtk4Theme.ModeDark : Gtk4Theme.ModeLight, persist: false);
+            var dialog = new Dialogs.SettingsDialog(Window, 0);
+            return new[]
+            {
+                dialog.FittedHeight("general"),
+                dialog.FittedHeight("categories"),
+                dialog.FittedHeight("network"),
+                dialog.FittedHeight("speed"),
+                dialog.FittedHeight("monitoring"),
+                dialog.FittedHeight("advanced")
+            }.ToList();
+        }
+
+        // Normalises both stylesheets (colors are scheme data, not structure) and
+        // requires the rules to match exactly
+        private static bool ThemeStructureMatches()
+        {
+            var light = NormalizeTheme("gtk4-light.css");
+            var dark = NormalizeTheme("gtk4-dark.css");
             return light.Length > 0 && light == dark;
         }
 
-        // Extracts and normalises every .bottom-bar declaration block in a stylesheet
-        private static string FooterRules(string fileName)
+        // Strips color values and the light/dark file header, keeping every
+        // structural declaration for comparison
+        private static string NormalizeTheme(string fileName)
         {
             try
             {
@@ -123,24 +150,11 @@ namespace XDM.Gtk4UI
                 }
 
                 var text = System.IO.File.ReadAllText(path);
-                var builder = new System.Text.StringBuilder();
-                var index = text.IndexOf(".bottom-bar", StringComparison.Ordinal);
-                while (index >= 0)
-                {
-                    var open = text.IndexOf('{', index);
-                    var close = open < 0 ? -1 : text.IndexOf('}', open);
-                    if (open < 0 || close < 0)
-                    {
-                        break;
-                    }
-                    var selector = text.Substring(index, open - index).Trim();
-                    var body = text.Substring(open + 1, close - open - 1);
-                    builder.Append(selector).Append('{')
-                        .Append(string.Join(" ", body.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)))
-                        .Append("}\n");
-                    index = text.IndexOf(".bottom-bar", close, StringComparison.Ordinal);
-                }
-                return builder.ToString();
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"#[0-9a-fA-F]{3,8}\b", "@C");
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"rgba?\([^)]*\)", "@C");
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"alpha\([^)]*\)", "@C");
+                text = text.Replace("light theme.", "theme.").Replace("dark theme.", "theme.");
+                return text;
             }
             catch (Exception)
             {

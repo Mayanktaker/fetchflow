@@ -394,8 +394,9 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   nothing would be captured — the GTK 3 badge behaves the same way; Browser Monitoring is a `Gtk.Switch`
   with a caption, then the bandwidth limiter and the queue window on the right. All
   footer controls render at 11px so the bar stays quieter than the content in both
-  themes, and `.bottom-bar` padding is defined once per stylesheet (a leftover
-  light-only padding rule used to make the light bar 15px taller), and the monitoring-off tooltip is translated like the badge label. The
+  themes (one identical `.bottom-bar` rule per stylesheet, guarded by the
+  `scripts/capture-screenshots.sh --parity` footer-band check), and the monitoring-off
+  tooltip is translated like the badge label. The
   activity summary takes the dimmed tone while monitoring is off (its numbers stay
   truthful — the engine runs regardless). Its buttons
   draw their icons from the active scheme accent and are re-tinted whenever the theme changes.
@@ -420,6 +421,8 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   (closing persists any typed field). The window measures the visible page
   (`FitToPage`) and sizes itself between 380 and 700 px, so a short page such as Advanced
   opens without empty space below its last card while long pages scroll. Deltas under
+  48 px are skipped (`FitStep`) so hopping between similar pages never flickers, and the
+  first fit happens before presenting so the dialog never flashes at a default size. Deltas under
   48 px are skipped (`FitStep`) so hopping between similar pages never flickers, and the
   first fit happens before presenting so the dialog never flashes at a default size.
 - **Media downloader:** `VideoDownloaderWindow` is a four-page `Gtk.Stack` view over the shared

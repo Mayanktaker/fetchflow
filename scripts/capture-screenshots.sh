@@ -9,6 +9,13 @@
 #
 # Re-run on every release that changes the main window, Settings, or themes.
 # Usage: scripts/capture-screenshots.sh [--out docs/screenshots] [--display :99] [--keep] [--parity]
+#
+# Parity notes: --parity asserts the footer band matches across themes (the one
+# place a drift actually shipped). Dialog chrome is NOT pixel-compared — colors
+# legitimately differ, so pixels can't distinguish drift from theme. Geometry is
+# guarded deterministically instead: the smoke self-test requires both stylesheets
+# to be structurally identical and every settings page to fit to the same height
+# in both themes. The settings shots below are saved for human review.
 #   --keep keeps the Xvfb display and throwaway HOME for inspection.
 set -euo pipefail
 
@@ -170,5 +177,21 @@ if dark[2] != light[2]:
     sys.exit(1)
 print("[screenshots] footer parity OK")
 PYEOF
+    log "Capturing settings dialog in both themes for review…"
+    for theme in dark light; do
+        raw="/tmp/shot-settings-$theme.png"
+        (
+            sleep 9; DISPLAY="$DISPLAY_NUM" import -window root "$raw"
+        ) &
+        importer=$!
+        code=0
+        timeout "$APP_TIMEOUT_SECS"s env FETCHFLOW_THEME_MODE="$theme" HOME="$FAKEHOME" DISPLAY="$DISPLAY_NUM" \
+            GDK_BACKEND=x11 FETCHFLOW_SKIP_SINGLE_INSTANCE=1 \
+            dbus-run-session -- env dotnet "$DLL" --shot=settings >/tmp/shot-settings-"$theme".log 2>&1 || code=$?
+        [ "$code" -ne 0 ] && [ "$code" -ne 124 ] && log "App exited with $code for settings/$theme."
+        wait "$importer" || log "Importer exited early for settings/$theme."
+        [ -s "$raw" ] || die "Settings capture failed for $theme."
+    done
+    log "Settings shots saved for review: /tmp/shot-settings-dark.png /tmp/shot-settings-light.png"
 fi
 rm -f /tmp/shot-parity-*.png

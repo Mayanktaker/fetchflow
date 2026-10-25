@@ -608,6 +608,14 @@ namespace XDM.Gtk4UI.Dialogs
             window.SetDefaultSize(900, height);
         }
 
+        // Fits one page and reports the applied height (used by the self-test
+        // parity check, which never presents the dialog)
+        internal int FittedHeight(string name)
+        {
+            SelectTab(name);
+            return lastFittedHeight;
+        }
+
         // Vertical page column with consistent width and margins
         private static Box Column()
         {
