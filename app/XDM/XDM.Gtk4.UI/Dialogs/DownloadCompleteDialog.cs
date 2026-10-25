@@ -180,10 +180,12 @@ namespace XDM.Gtk4UI.Dialogs
             };
         }
 
-        // Shows the completion dialog and plays the completion sound when enabled
+        // Shows the completion dialog, notifies, and plays the completion sound when enabled
         public void ShowDownloadCompleteDialog() => Post(() =>
         {
             window.Present();
+            // Rich "file ready" notification — parity with the GTK 3 dialog
+            DesktopNotificationHelper.ShowDownloadComplete(FileNameText, FolderText);
             if (Config.Instance.PlayCompletionSound)
             {
                 Gtk4SoundHelper.PlayDownloadCompleteSound();

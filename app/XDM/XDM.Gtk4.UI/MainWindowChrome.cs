@@ -245,6 +245,7 @@ namespace XDM.Gtk4UI
                         ? (TextResource.GetText("LBL_IDLE") ?? "Idle") + " — " +
                           (TextResource.GetText("MSG_EXT_DISABLED") ?? "Monitoring Off")
                         : TextResource.GetText("LBL_IDLE") ?? "Idle");
+                    trayManager?.UpdateSpeedStatus("");
                     btnActivity.TooltipText = TextResource.GetText("LBL_SHOW_PROGRESS") ?? "Show progress";
                     titlePulse.Visible = false;
                     windowTitle?.SetSubtitle(TextResource.GetText("LBL_DOWNLOADS") ?? "Downloads");
@@ -262,6 +263,10 @@ namespace XDM.Gtk4UI
                     : "";
 
                 lblActivity.SetText(activeText + queuedText + speedText);
+                // Mirror the summary into the tray menu's disabled status row
+                trayManager?.UpdateSpeedStatus(speed > 0
+                    ? $"{FormattingHelper.FormatSize(speed)}/s ({activeText}{queuedText})"
+                    : $"{activeText}{queuedText}");
                 // Numbers stay truthful (the engine runs regardless), but the tone
                 // drops while monitoring is off — capture, not downloads, is paused
                 if (!Config.Instance.IsBrowserMonitoringEnabled)

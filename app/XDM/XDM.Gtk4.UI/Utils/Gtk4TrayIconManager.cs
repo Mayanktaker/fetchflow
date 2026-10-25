@@ -258,6 +258,12 @@ namespace XDM.Gtk4UI.Utils
             return (w, h, argb);
         }
 
+        // Forwards the live transfer summary to the tray menu's status row
+        public void UpdateSpeedStatus(string? status)
+        {
+            try { dbusMenuServer?.UpdateSpeedStatus(status); } catch { }
+        }
+
         // Disposes D-Bus connection and cleans up tray registration
         public void Dispose()
         {

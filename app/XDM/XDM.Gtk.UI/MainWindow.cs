@@ -1159,7 +1159,8 @@ namespace XDM.GtkUI
                             break;
                         case Gdk.Key.c:
                         case Gdk.Key.C:
-                            if (ActiveListIsFinished()) UIActions.CopyURL2(); else UIActions.CopyURL1();
+                            // Copy the row's URL from the list the user is actually looking at
+                            if (IsInProgressView()) UIActions.CopyURL1(); else UIActions.CopyURL2();
                             args.RetVal = true;
                             break;
                         case Gdk.Key.r:
@@ -1535,6 +1536,9 @@ namespace XDM.GtkUI
                 }
             }
             catch { }
+            // The count and the select-all label describe the list now on screen
+            SyncSelectAllTooltip();
+            UpdateSelectionCount();
             UpdateEmptyStates();
         }
 
@@ -1709,7 +1713,7 @@ namespace XDM.GtkUI
             lvInprogress.Selection.Changed += (_, _) =>
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
-                SyncSelectAllHeader(true);
+                SyncSelectAllHeader();
                 UpdateSelectionCount();
                 // The gutter checkbox is drawn by a cell-data-func, so the row has to
                 // be re-rendered explicitly or the tick can stay stale.
@@ -1901,7 +1905,7 @@ namespace XDM.GtkUI
             lvFinished.Selection.Changed += (_, _) =>
             {
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
-                SyncSelectAllHeader(false);
+                SyncSelectAllHeader();
                 UpdateSelectionCount();
                 // See above: force the gutter checkbox to repaint with the new state
                 lvFinished.QueueDraw();
@@ -2138,7 +2142,7 @@ namespace XDM.GtkUI
         }
 
         // Row selection drives the bottom-bar select-all tooltip (all/some/none)
-        private void SyncSelectAllHeader(bool inprogress)
+        private void SyncSelectAllHeader()
         {
             SyncSelectAllTooltip();
         }

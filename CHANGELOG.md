@@ -20,6 +20,10 @@ For end users: what looks different, what's smoother, what no longer crashes.
 ### Bug fixes
 
 - **Select All now acts on the list you are looking at:** the toolbar button no longer selects rows in the hidden Active or Complete list
+- **The right link gets copied:** Ctrl+C copies the address of the download in the view you are looking at, even if rows in the other list are still highlighted
+- **The selection count keeps up when you switch views:** the "N selected" line and the Select All label refresh as soon as you move between Active, Complete and a category
+- **The tray shows what's downloading:** the menu's status line reports active and queued transfers with the live speed
+- **"File ready" notification in the modern interface:** finishing a download now raises the same desktop notification the classic interface always showed
 
 ---
 ## v9.1.17.0 (2026-10-23)
