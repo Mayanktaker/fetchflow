@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gtk;
+using Newtonsoft.Json;
 using Translations;
 using XDM.Core;
 using XDM.Core.BrowserMonitoring;
@@ -27,7 +28,7 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly Box tabs;
 
         // Page identifiers, in tab order
-        private static readonly string[] PageNames = { "general", "categories", "network", "speed", "monitoring", "advanced" };
+        private static readonly string[] PageNames = { "general", "categories", "network", "speed", "monitoring", "credentials", "advanced" };
         private static readonly (string Title, string Icon)[] PageMeta =
         {
             ("General settings", "settings-3-line"),
@@ -35,6 +36,7 @@ namespace XDM.Gtk4UI.Dialogs
             ("Network settings", "global-line"),
             ("Speed limiter", "time-line"),
             ("Browser Monitoring", "links-line"),
+            ("Credentials", "dialog-password"),
             ("Advanced settings", "function-line"),
         };
 
@@ -57,6 +59,9 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly Switch chkStartAuto;
         private readonly Switch chkTimestamp;
         private readonly Switch chkKeepAwake;
+        private readonly Switch chkOverwrite;
+        private readonly Switch chkAutoCat;
+        private readonly Label lblPaletteStatus;
 
         // Categories
         private readonly ListBox categoryList;
@@ -85,6 +90,13 @@ namespace XDM.Gtk4UI.Dialogs
         // Monitoring
         private readonly Switch chkMonitorClipboard;
         private readonly Label lblIpcStatus;
+
+        // Credentials (working copy, written back on Persist)
+        private readonly List<XDM.Core.PasswordEntry> workingCredentials;
+        private readonly ListBox credentialList;
+        private readonly Label lblCredentialEmpty;
+        private readonly Button btnCredentialEdit;
+        private readonly Button btnCredentialDelete;
 
         // Advanced
         private readonly Switch chkShutdownAll;
@@ -166,7 +178,7 @@ namespace XDM.Gtk4UI.Dialogs
             dropDoubleClick.Selected = Config.Instance.DoubleClickOpenFile ? 0u : 1u;
 
             dropTheme = DropDown.NewFromStrings(new[] { "Light Theme", "Dark Theme", "Follow System" });
-            dropTheme.Selected = (uint)Math.Clamp(Config.Instance.ThemeMode, 0, 2);
+            dropTheme.Selected = (uint)ThemeModes.Clamp(Config.Instance.ThemeMode);
 
             dropScheme = DropDown.NewFromStrings(ColorSchemeNames(Gtk4Theme.IsDarkActive));
             dropScheme.Selected = (uint)ColorSchemeTable.ClampSchemeIndex(Gtk4Theme.IsDarkActive, Config.Instance.ColorScheme);
@@ -187,6 +199,15 @@ namespace XDM.Gtk4UI.Dialogs
             chkTimestamp.Active = Config.Instance.FetchServerTimeStamp;
             chkKeepAwake = Toggle("MSG_AWAKE", "Prevent hibernate or sleep during downloads");
             chkKeepAwake.Active = Config.Instance.KeepPCAwake;
+            chkOverwrite = Toggle("LBL_OVERWRITE_EXISTING", "Overwrite existing files");
+            chkOverwrite.Active = Config.Instance.FileConflictResolution == FileConflictResolution.Overwrite;
+            chkAutoCat = Toggle("SETTINGS_ATUO_CAT", "Automatically select folder by category");
+            chkAutoCat.Active = Config.Instance.FolderSelectionMode == FolderSelectionMode.Auto;
+            lblPaletteStatus = Label.New("");
+            lblPaletteStatus.AddCssClass("caption");
+            lblPaletteStatus.AddCssClass("dim-label");
+            lblPaletteStatus.Halign = Align.Start;
+            lblPaletteStatus.Wrap = true;
 
             // Categories
             categoryList = ListBox.New();
@@ -267,6 +288,22 @@ namespace XDM.Gtk4UI.Dialogs
             txtAntiVirusCmd = TextEntry(Config.Instance.AntiVirusExecutable ?? "");
             txtAntiVirusArgs = TextEntry(Config.Instance.AntiVirusArgs ?? "[file]");
 
+            // Credentials working copy (GTK 3 loads LvPasswords the same way)
+            workingCredentials = new List<XDM.Core.PasswordEntry>(Config.Instance.UserCredentials ?? new List<XDM.Core.PasswordEntry>());
+            credentialList = ListBox.New();
+            credentialList.AddCssClass("boxed-list");
+            credentialList.SelectionMode = SelectionMode.Single;
+            lblCredentialEmpty = Label.New(TextResource.GetText("MSG_NO_CREDENTIALS") ?? "No saved credentials");
+            lblCredentialEmpty.AddCssClass("caption");
+            lblCredentialEmpty.AddCssClass("dim-label");
+            lblCredentialEmpty.Halign = Align.Start;
+            btnCredentialEdit = Button.NewWithLabel(TextResource.GetText("SETTINGS_CAT_EDIT") ?? "Edit");
+            btnCredentialEdit.OnClicked += (_, _) => OnEditCredential();
+            btnCredentialDelete = Button.NewWithLabel(TextResource.GetText("DESC_DEL") ?? "Delete");
+            btnCredentialDelete.OnClicked += (_, _) => OnDeleteCredential();
+            credentialList.OnRowSelected += (_, _) => UpdateCredentialButtons();
+            RefreshCredentialRows();
+
             // Build pages
             stack = Stack.New();
             stack.Vexpand = true;
@@ -276,7 +313,8 @@ namespace XDM.Gtk4UI.Dialogs
             stack.AddTitled(Page(BuildNetworkPage()), "network", PageMeta[2].Title);
             stack.AddTitled(Page(BuildSpeedPage()), "speed", PageMeta[3].Title);
             stack.AddTitled(Page(BuildMonitoringPage()), "monitoring", PageMeta[4].Title);
-            stack.AddTitled(Page(BuildAdvancedPage()), "advanced", PageMeta[5].Title);
+            stack.AddTitled(Page(BuildCredentialsPage()), "credentials", PageMeta[5].Title);
+            stack.AddTitled(Page(BuildAdvancedPage()), "advanced", PageMeta[6].Title);
 
             BuildTabs();
             var index = Math.Clamp(initialPage, 0, PageNames.Length - 1);
@@ -337,13 +375,22 @@ namespace XDM.Gtk4UI.Dialogs
             downloads.Append(SwitchRow(chkStartAuto));
             downloads.Append(SwitchRow(chkTimestamp));
             downloads.Append(SwitchRow(chkKeepAwake));
+            downloads.Append(SwitchRow(chkOverwrite));
+            downloads.Append(SwitchRow(chkAutoCat));
             box.Append(downloads);
 
             box.Append(Section(TextResource.GetText("SETTINGS_GROUP_APPEARANCE") ?? "Appearance"));
             var appearance = PrefGroup();
             appearance.Append(PrefRow(TextResource.GetText("SETTINGS_THEME") ?? "Theme", null, dropTheme));
             appearance.Append(PrefRow(TextResource.GetText("SETTINGS_COLOR_SCHEME") ?? "Colour scheme", null, dropScheme));
+            appearance.Append(PrefRow(TextResource.GetText("SETTINGS_EXPORT_PALETTES") ?? "Export palettes",
+                TextResource.GetText("SETTINGS_EXPORT_PALETTES_DESC") ?? "Save all colour schemes to a JSON file",
+                ButtonWithLabel(TextResource.GetText("SETTINGS_EXPORT") ?? "Export", () => ExportPalettes())));
+            appearance.Append(PrefRow(TextResource.GetText("SETTINGS_IMPORT_PALETTES") ?? "Import palettes",
+                TextResource.GetText("SETTINGS_IMPORT_PALETTES_DESC") ?? "Validate a palette JSON file",
+                ButtonWithLabel(TextResource.GetText("SETTINGS_IMPORT") ?? "Import", () => ImportPalette())));
             box.Append(appearance);
+            box.Append(lblPaletteStatus);
 
             box.Append(Section(TextResource.GetText("SETTINGS_GROUP_NOTIFICATIONS") ?? "Notifications"));
             var notifications = PrefGroup();
@@ -537,6 +584,135 @@ namespace XDM.Gtk4UI.Dialogs
             box.Append(ipc);
 
             return box;
+        }
+
+        // Credentials: saved site logins (host + user rows, editor dialog for add/edit)
+        private Widget BuildCredentialsPage()
+        {
+            var box = Column();
+
+            box.Append(Section(TextResource.GetText("SETTINGS_CRED") ?? "Saved credentials"));
+            box.Append(credentialList);
+            box.Append(lblCredentialEmpty);
+
+            var buttons = Box.New(Orientation.Horizontal, 8);
+            buttons.Halign = Align.Start;
+            buttons.MarginTop = 8;
+            var add = Button.NewWithLabel(TextResource.GetText("SETTINGS_CAT_ADD") ?? "Add");
+            add.OnClicked += (_, _) => OnAddCredential();
+            buttons.Append(add);
+            buttons.Append(btnCredentialEdit);
+            buttons.Append(btnCredentialDelete);
+            box.Append(buttons);
+
+            UpdateCredentialButtons();
+            return box;
+        }
+
+        // Rebuilds the credential rows from the working copy
+        private void RefreshCredentialRows()
+        {
+            var child = credentialList.GetFirstChild();
+            while (child != null)
+            {
+                var next = child.GetNextSibling();
+                credentialList.Remove(child);
+                child = next;
+            }
+            foreach (var entry in workingCredentials)
+            {
+                var text = Box.New(Orientation.Vertical, 1);
+                text.Hexpand = true;
+                text.Valign = Align.Center;
+                var host = Label.New(entry.Host);
+                host.Halign = Align.Start;
+                host.Xalign = 0;
+                host.Ellipsize = Pango.EllipsizeMode.End;
+                text.Append(host);
+                var user = Label.New(entry.User);
+                user.Halign = Align.Start;
+                user.Xalign = 0;
+                user.Ellipsize = Pango.EllipsizeMode.End;
+                user.AddCssClass("caption");
+                user.AddCssClass("dim-label");
+                text.Append(user);
+                var row = ListBoxRow.New();
+                row.SetChild(text);
+                credentialList.Append(row);
+            }
+            var hasItems = workingCredentials.Count > 0;
+            credentialList.Visible = hasItems;
+            lblCredentialEmpty.Visible = !hasItems;
+            UpdateCredentialButtons();
+        }
+
+        // Enables edit/delete only when a row is selected
+        private void UpdateCredentialButtons()
+        {
+            var hasSelection = credentialList.GetSelectedRow() != null && workingCredentials.Count > 0;
+            btnCredentialEdit.Sensitive = hasSelection;
+            btnCredentialDelete.Sensitive = hasSelection;
+        }
+
+        // Selected credential index, or -1 when nothing is selected
+        private int SelectedCredentialIndex()
+        {
+            var row = credentialList.GetSelectedRow();
+            if (row == null)
+            {
+                return -1;
+            }
+            var index = row.GetIndex();
+            return index >= 0 && index < workingCredentials.Count ? index : -1;
+        }
+
+        // Adds a new credential via the editor dialog
+        private void OnAddCredential()
+        {
+            var created = CredentialEditorDialog.Edit(window, null);
+            if (created.HasValue)
+            {
+                workingCredentials.Add(created.Value);
+                RefreshCredentialRows();
+                Persist();
+            }
+        }
+
+        // Edits the selected credential via the editor dialog
+        private void OnEditCredential()
+        {
+            var index = SelectedCredentialIndex();
+            if (index < 0)
+            {
+                return;
+            }
+            var updated = CredentialEditorDialog.Edit(window, workingCredentials[index]);
+            if (updated.HasValue)
+            {
+                workingCredentials[index] = updated.Value;
+                RefreshCredentialRows();
+                Persist();
+            }
+        }
+
+        // Deletes the selected credential after confirmation
+        private void OnDeleteCredential()
+        {
+            var index = SelectedCredentialIndex();
+            if (index < 0)
+            {
+                return;
+            }
+            var host = workingCredentials[index].Host;
+            var prompt = (TextResource.GetText("MSG_DELETE_CREDENTIAL") ?? "Delete saved credentials for \"{host}\"?")
+                .Replace("{host}", host);
+            if (!Gtk4DialogHelper.Confirm(window, prompt, TextResource.GetText("DESC_DEL") ?? "Delete"))
+            {
+                return;
+            }
+            workingCredentials.RemoveAt(index);
+            RefreshCredentialRows();
+            Persist();
         }
 
         // Advanced: post-download automation and antivirus
@@ -861,7 +1037,12 @@ namespace XDM.Gtk4UI.Dialogs
             Config.Instance.StartDownloadAutomatically = chkStartAuto.Active;
             Config.Instance.FetchServerTimeStamp = chkTimestamp.Active;
             Config.Instance.KeepPCAwake = chkKeepAwake.Active;
+            Config.Instance.FileConflictResolution =
+                chkOverwrite.Active ? FileConflictResolution.Overwrite : FileConflictResolution.AutoRename;
+            Config.Instance.FolderSelectionMode =
+                chkAutoCat.Active ? FolderSelectionMode.Auto : FolderSelectionMode.Manual;
             Config.Instance.MonitorClipboard = chkMonitorClipboard.Active;
+            Config.Instance.UserCredentials = new List<XDM.Core.PasswordEntry>(workingCredentials);
 
             var simOptions = new[] { 1, 2, 3, 4, 5, 8, 10 };
             if (dropMaxDownloads.Selected < (uint)simOptions.Length)
@@ -1037,6 +1218,148 @@ namespace XDM.Gtk4UI.Dialogs
                     return false;
                 });
             });
+        }
+
+        // Exports all colour schemes to a user-chosen JSON file (same shape as GTK 3)
+        private void ExportPalettes()
+        {
+            var dialog = FileDialog.New();
+            dialog.Title = TextResource.GetText("SETTINGS_EXPORT_PALETTES") ?? "Export palettes";
+            dialog.Modal = true;
+            dialog.SetInitialName("fetchflow-palettes.json");
+
+            dialog.SaveAsync(window).ContinueWith(t =>
+            {
+                if (!t.IsCompletedSuccessfully || t.Result == null)
+                {
+                    return;
+                }
+                var selected = t.Result.GetPath();
+                if (string.IsNullOrEmpty(selected))
+                {
+                    return;
+                }
+                string report;
+                try
+                {
+                    File.WriteAllText(selected, ExportPalettesJson());
+                    report = (TextResource.GetText("MSG_PALETTES_EXPORTED") ?? "Theme palettes successfully exported to:\n{file}")
+                        .Replace("{file}", selected);
+                }
+                catch (Exception ex)
+                {
+                    report = (TextResource.GetText("MSG_PALETTES_EXPORT_FAILED") ?? "Failed to export palettes: {error}")
+                        .Replace("{error}", ex.Message);
+                }
+                GLib.Functions.IdleAdd(0, () =>
+                {
+                    lblPaletteStatus.SetText(report);
+                    return false;
+                });
+            });
+        }
+
+        // Imports and validates a palette JSON file, reporting the result inline
+        private void ImportPalette()
+        {
+            var dialog = FileDialog.New();
+            dialog.Title = TextResource.GetText("SETTINGS_IMPORT_PALETTES") ?? "Import palettes";
+            dialog.Modal = true;
+
+            dialog.OpenAsync(window).ContinueWith(t =>
+            {
+                if (!t.IsCompletedSuccessfully || t.Result == null)
+                {
+                    return;
+                }
+                var selected = t.Result.GetPath();
+                if (string.IsNullOrEmpty(selected) || !File.Exists(selected))
+                {
+                    return;
+                }
+                string report;
+                try
+                {
+                    var json = File.ReadAllText(selected);
+                    var imported = ThemePaletteHelper.ImportPalettes(json);
+                    if (imported != null && imported.Count > 0)
+                    {
+                        report = (TextResource.GetText("MSG_PALETTES_IMPORTED") ?? "Successfully validated and loaded {count} custom theme palette(s) from:\n{file}")
+                            .Replace("{count}", imported.Count.ToString())
+                            .Replace("{file}", Path.GetFileName(selected));
+                    }
+                    else if (TryParseSinglePalette(json, out var displayName))
+                    {
+                        report = (TextResource.GetText("MSG_PALETTE_IMPORTED") ?? "Successfully validated custom theme palette:\n{name}")
+                            .Replace("{name}", displayName);
+                    }
+                    else
+                    {
+                        report = TextResource.GetText("MSG_PALETTE_INVALID") ?? "The selected file is not a valid FetchFlow palette JSON file.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    report = (TextResource.GetText("MSG_PALETTES_IMPORT_FAILED") ?? "Failed to import palette: {error}")
+                        .Replace("{error}", ex.Message);
+                }
+                GLib.Functions.IdleAdd(0, () =>
+                {
+                    lblPaletteStatus.SetText(report);
+                    return false;
+                });
+            });
+        }
+
+        // Serializes every scheme in the GTK 3 export shape (version + dark/light lists)
+        private static string ExportPalettesJson()
+        {
+            var data = new
+            {
+                Version = "1.0",
+                DarkSchemes = ColorSchemeTable.DarkSchemes.Select(DescribeScheme),
+                LightSchemes = ColorSchemeTable.LightSchemes.Select(DescribeScheme),
+            };
+            return JsonConvert.SerializeObject(data, Formatting.Indented);
+        }
+
+        // One scheme row of the palette export payload
+        private static object DescribeScheme(ColorSchemeDefinition scheme) => new
+        {
+            scheme.Id,
+            scheme.DisplayName,
+            scheme.CssFileName,
+            AccentR = scheme.AccentRgb.R,
+            AccentG = scheme.AccentRgb.G,
+            AccentB = scheme.AccentRgb.B,
+            scheme.AccentHex,
+            scheme.HoverBackgroundHex,
+            scheme.ActiveBackgroundHex,
+            scheme.AlternateBackgroundHex,
+            scheme.CardBackgroundHex,
+            scheme.BaseSurfaceHex,
+            scheme.SidebarHex,
+            scheme.HeaderBarHex,
+        };
+
+        // Single-palette fallback: a lone object with Id + DisplayName still counts
+        private static bool TryParseSinglePalette(string json, out string displayName)
+        {
+            displayName = "";
+            try
+            {
+                var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                if (dict != null && dict.ContainsKey("Id") && dict.ContainsKey("DisplayName"))
+                {
+                    displayName = dict["DisplayName"]?.ToString() ?? "Custom scheme";
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return false;
         }
 
         // Refreshes the IPC relay line from the running monitor

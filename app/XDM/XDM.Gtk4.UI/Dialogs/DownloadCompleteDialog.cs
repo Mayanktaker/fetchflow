@@ -180,8 +180,15 @@ namespace XDM.Gtk4UI.Dialogs
             };
         }
 
-        // Shows the completion dialog
-        public void ShowDownloadCompleteDialog() => Post(() => window.Present());
+        // Shows the completion dialog and plays the completion sound when enabled
+        public void ShowDownloadCompleteDialog() => Post(() =>
+        {
+            window.Present();
+            if (Config.Instance.PlayCompletionSound)
+            {
+                Gtk4SoundHelper.PlayDownloadCompleteSound();
+            }
+        });
 
         // Closes the dialog window safely
         private void Close() => Post(() =>

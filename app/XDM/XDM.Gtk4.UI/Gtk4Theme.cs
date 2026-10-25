@@ -17,10 +17,10 @@ namespace XDM.Gtk4UI
 {
     internal static class Gtk4Theme
     {
-        // Shared Config.ThemeMode codes (must match Config.cs and the WPF frontend)
-        public const int ModeLight = 0;
-        public const int ModeDark = 1;
-        public const int ModeFollowSystem = 2;
+        // Shared Config.ThemeMode codes (single source: XDM.Core/UI/ThemeModes.cs)
+        public const int ModeLight = ThemeModes.Light;
+        public const int ModeDark = ThemeModes.Dark;
+        public const int ModeFollowSystem = ThemeModes.FollowSystem;
 
         // Stylesheet directory relative to the executable
         private const string ThemeDir = "theme";
@@ -68,7 +68,7 @@ namespace XDM.Gtk4UI
         // Applies a mode, optionally persisting it, and re-applies on system changes
         public static void ApplyMode(Widget anchor, int mode, bool persist)
         {
-            ActiveMode = Math.Clamp(mode, ModeLight, ModeFollowSystem);
+            ActiveMode = ThemeModes.Clamp(mode);
             if (persist)
             {
                 Config.Instance.ThemeMode = ActiveMode;
