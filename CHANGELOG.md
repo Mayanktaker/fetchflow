@@ -5,10 +5,11 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
-## Unreleased
+## v9.1.18.0 (2026-10-27)
 
 ### What's new
 
+- **About now opens the project on GitHub:** the website link in the About window points straight at the repository, so releases, source and issues are one click away on every desktop and on Windows
 - **Keyboard shortcuts for the whole app:** flip the theme (Ctrl+T), open batch download (Ctrl+B) or the scheduler (Ctrl+Shift+Q), import/export (Ctrl+I), settings (Ctrl+,) and About (F1); act on the selection with open (Ctrl+O), copy link (Ctrl+C), restart (Ctrl+R) or save-as (Ctrl+S); Alt+Enter shows properties and Ctrl+Shift+V grabs video. Ctrl+F, Ctrl+N and Ctrl+Q keep working as before
 - **Empty lists explain themselves:** Active and Complete now show a friendly note with an Add download button when there is nothing to show, and say plainly when a search matched nothing, with a Clear search button to get back to the full list
 - **See what's selected:** the bottom bar counts your selection ("N selected") so multi-select actions are never a guess, and hides again once nothing is selected
@@ -16,6 +17,8 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - **The theme follows your system live:** with Follow System on, switching your desktop between light and dark repaints FetchFlow immediately instead of waiting for a restart
 - **The completion sound plays again:** with "Play sound when download finishes" turned on in Settings, a chime now rings as each download finishes on the modern Linux interface
 - **Saved logins, overwrite and palette tools in Settings:** the modern Linux interface now manages saved site credentials (add, edit and delete), offers "overwrite existing files" and "auto-select folder by category" switches, and can export all colour schemes to a JSON file or validate a palette file — all under the new Credentials tab and the Appearance card
+- **Checkboxes and Select All follow your colour scheme:** tick marks used to stay the same blue whatever accent you picked; they now match the rest of the interface
+- **The finished list reads calmer:** completed downloads sit on a quieter background in both light and dark mode, matching the classic interface
 
 ### Bug fixes
 
@@ -24,6 +27,8 @@ For end users: what looks different, what's smoother, what no longer crashes.
 - **The selection count keeps up when you switch views:** the "N selected" line and the Select All label refresh as soon as you move between Active, Complete and a category
 - **The tray shows what's downloading:** the menu's status line reports active and queued transfers with the live speed
 - **"File ready" notification in the modern interface:** finishing a download now raises the same desktop notification the classic interface always showed
+- **Small buttons and badges no longer shift by a pixel between states,** and every text size on the modern Linux interface comes from the same scale
+- **The waiting state pill now has its own styling** instead of borrowing the default look
 
 ---
 ## v9.1.17.0 (2026-10-23)

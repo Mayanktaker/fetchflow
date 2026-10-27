@@ -1,3 +1,4 @@
+<!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 <Window x:Class="XDM.Wpf.UI.Dialogs.About.AboutWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,7 +9,6 @@
         Title="{StaticResource MENU_ABOUT}" Height="540" Width="520" ShowInTaskbar="False" 
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="{StaticResource WindowBackground}" Foreground="{StaticResource ControlForecolor}">
-    <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
     <Grid Margin="24,20,24,20">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Stretch">
             <Image Name="AppLogo" Width="80" Height="80" HorizontalAlignment="Center" Margin="0,0,0,8"/>
@@ -26,7 +26,7 @@
             <Border Background="{StaticResource ListViewBackcolor}" BorderBrush="{StaticResource ControlBordercolor}" 
                     BorderThickness="1" CornerRadius="6" Padding="16,10" Margin="10,0,10,12">
                 <StackPanel>
-                    <TextBlock Name="BtnAppWebsite" Text="FetchFlow Official Website" Cursor="Hand" 
+                    <TextBlock Name="BtnAppWebsite" Text="FetchFlow on GitHub" Cursor="Hand" 
                                Foreground="{StaticResource HyperlinkForecolor}" Padding="4" HorizontalAlignment="Center" 
                                MouseDown="BtnAppWebsite_MouseDown"/>
                     <TextBlock Name="BtnDevWebsite" Text="Mayanktaker Computers &amp; Web Development" Cursor="Hand" 

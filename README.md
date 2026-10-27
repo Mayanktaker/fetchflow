@@ -84,6 +84,19 @@
 
 ---
 
+## ✨ What's New in 9.1.18.0 — Sharper Modern Interface
+
+**What's new**
+- **About now opens the project on GitHub:** the website link in the About window points straight at the repository, so releases, source and issues are one click away on every desktop and on Windows.
+- **Checkboxes and Select All follow your colour scheme:** tick marks used to stay the same blue whatever accent you picked; they now match the rest of the interface.
+- **The finished list reads calmer:** completed downloads sit on a quieter background in both light and dark mode, matching the classic interface.
+
+**Bug fixes**
+- Small buttons and badges no longer shift by a pixel between states, and every text size on the modern Linux interface comes from the same scale.
+- The waiting state pill now has its own styling instead of borrowing the default look.
+
+---
+
 ## ✨ What's New in 9.1.17.0 — GNOME-Native Redesign
 
 **What's new**
@@ -192,7 +205,7 @@ FetchFlow distributes self-contained binaries for **Windows 11 / 10** and **Linu
 ### Universal Installer (Recommended — CachyOS / Manjaro / Arch / Fedora / Debian / openSUSE)
 ```bash
 curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/install-fetchflow.sh | bash
-# Options: bash install-fetchflow.sh --version 9.1.17.0 --yes --check --uninstall
+# Options: bash install-fetchflow.sh --version 9.1.18.0 --yes --check --uninstall
 ```
 The script auto-detects your distro, installs system deps (`gtk4` + `libadwaita`, or `gtk3` on older systems, plus `ffmpeg`, `xdg-desktop-portal`), then installs the native package (`.pkg.tar.zst` on Arch-family, `.rpm` on Fedora, `.deb` on Debian/Ubuntu) with a portable `/opt/fetchflow` tarball fallback.
 
@@ -218,7 +231,7 @@ curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/ins
 # Or manually with the prebuilt package (download first:
 # direct-URL pacman needs a .sig we don't publish yet):
 sudo pacman -S --needed yt-dlp
-curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.17.0-1-x86_64.pkg.tar.zst -o /tmp/fetchflow.pkg.tar.zst
+curl -fsSL https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.18.0-1-x86_64.pkg.tar.zst -o /tmp/fetchflow.pkg.tar.zst
 sudo pacman -U /tmp/fetchflow.pkg.tar.zst
 ```
 Package signatures (`.sig`) ship once signing is configured — see [docs/signing.md](docs/signing.md).
@@ -229,16 +242,16 @@ Package signatures (`.sig`) ship once signing is configured — see [docs/signin
   winget install Mayanktaker.FetchFlow
   ```
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.17.0.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.18.0.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.17.0-1.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.18.0-1.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.17.0_amd64.deb
+sudo apt install ./fetchflow_9.1.18.0_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS (legacy manual PKGBUILD)
@@ -249,7 +262,7 @@ cd app/XDM/XDM.Linux.Installer && makepkg -si
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.17.0.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.18.0.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
@@ -266,12 +279,12 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 
 | Browser Family | Supported Browsers | Package | Features |
 |---|---|---|---|
-| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.17.0.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
-| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.17.0.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Chromium** | Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi | `fetchflow-chrome-extension-9.1.18.0.zip` | One-click takeover, context-menu download, in-page blob media capture, video bar, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
+| **Gecko** | Mozilla Firefox, Floorp, LibreWolf, Waterfox | [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/) · [Direct XPI](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.18.0.xpi) | Background streaming listener, seamless takeover, media sniffing, <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> shortcut |
 
 
 ### Installation
-- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.17.0.xpi).
+- **Firefox:** Install directly with 1 click from **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/fetchflow-browser-helper/)**, or download the standalone [.xpi release](https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-firefox-extension-9.1.18.0.xpi).
 - **Chrome / Chromium:** Open `chrome://extensions` &rarr; Toggle *Developer mode* &rarr; Click *Load unpacked* &rarr; Select `app/XDM/chrome-extension`.
 
 ---

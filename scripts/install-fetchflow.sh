@@ -11,7 +11,7 @@ REPO="Mayanktaker/fetchflow"
 APP_ID="com.mayanktaker.fetchflow"
 INSTALL_DIR="/opt/fetchflow"
 BIN_LINK="/usr/bin/fetchflow"
-VERSION_DEFAULT="9.1.17.0"
+VERSION_DEFAULT="9.1.18.0"
 VERSION="${FETCHFLOW_VERSION:-$VERSION_DEFAULT}"
 FETCHFLOW_GTK="${FETCHFLOW_GTK:-}"
 

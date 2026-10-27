@@ -1,4 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 <interface>
   <requires lib="gtk+" version="3.24" />
   <object class="GtkWindow" id="window">
@@ -79,8 +80,8 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
-                    <property name="label">FetchFlow Official Website</property>
-                    <property name="uri">https://mayanktaker.com/apps/fetchflow</property>
+                    <property name="label">FetchFlow on GitHub</property>
+                    <property name="uri">https://github.com/Mayanktaker/fetchflow</property>
                   </object>
                 </child>
                 <child>
@@ -98,7 +99,7 @@
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
                     <property name="label">Source Code &amp; Issue Tracker (GitHub)</property>
-                    <property name="uri">https://github.com/Mayanktaker/xdm</property>
+                    <property name="uri">https://github.com/Mayanktaker/fetchflow</property>
                   </object>
                 </child>
               </object>

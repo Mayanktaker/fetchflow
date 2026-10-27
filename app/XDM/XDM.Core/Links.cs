@@ -16,7 +16,7 @@ namespace XDM.Core
         public const string OperaExtensionUrl = "https://github.com/Mayanktaker/fetchflow";
         public const string EdgeExtensionUrl = "https://github.com/Mayanktaker/fetchflow";
         public const string VideoDownloadTutorialUrl = "https://github.com/Mayanktaker/fetchflow";
-        public const string HomePageUrl = "https://mayanktaker.com/apps/fetchflow";
+        public const string HomePageUrl = "https://github.com/Mayanktaker/fetchflow";
         public const string YtDlpReleaseGH = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
         public const string FFmpegCustomReleaseGH = "https://api.github.com/repos/subhra74/xdm-ffmpeg-update/releases/latest";
         public const string AppLatestReleaseGH = "https://api.github.com/repos/Mayanktaker/fetchflow/releases/latest";

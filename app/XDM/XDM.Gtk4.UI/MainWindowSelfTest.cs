@@ -93,6 +93,10 @@ namespace XDM.Gtk4UI
             Expect(about.GetDevelopers().All(d => !d.Contains('(')), "about developer names carry no bracketed url");
             Expect(!string.IsNullOrEmpty(about.GetIssueUrl()), "about issue url set");
             Expect(!string.IsNullOrEmpty(about.GetSupportUrl()), "about support url set");
+            // The About website row must lead to the GitHub repository
+            Expect(about.GetWebsite() == AppInfo.APP_HOMEPAGE_TEXT
+                && about.GetWebsite().Contains("github.com/Mayanktaker/fetchflow"),
+                "about website points at the GitHub repository");
 
             // Theme stylesheets must be structurally identical: the light file once
             // kept a stale .bottom-bar padding rule, making its footer 15px taller.
