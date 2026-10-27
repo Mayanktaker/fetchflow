@@ -36,6 +36,8 @@
     <!-- ThemeContrastTests: WCAG math behind accent ink / hover selection -->
     <Compile Include="..\XDM.Core\UI\ThemeContrast.cs" Link="UI\ThemeContrast.cs" />
     <Compile Include="..\XDM.Core\UI\DesignTokens.cs" Link="UI\DesignTokens.cs" />
+    <!-- SvgTintTests: fill + stroke icon tinting shared with the GTK 4 frontend -->
+    <Compile Include="..\XDM.Core\UI\SvgTint.cs" Link="UI\SvgTint.cs" />
     <Compile Include="..\XDM.Core\UI\ThemeModePolicy.cs" Link="UI\ThemeModePolicy.cs" />
     <Compile Include="..\XDM.Core\UI\ThemeModes.cs" Link="UI\ThemeModes.cs" />
     <Compile Include="..\XDM.Core\Category.cs" Link="Category.cs" />

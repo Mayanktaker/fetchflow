@@ -10,10 +10,12 @@ Spec: docs/superpowers/specs/2026-08-30-xdm-design-system-modernization-design.m
 
 | Token | Value | Used for |
 |---|---|---|
+| none | 0px | square corners |
 | sm | 4px | checkboxes, small chips, title buttons |
-| md | 6px | buttons, sidebar pills, icon tiles, row cards, linked outer corners |
+| md | 6px | buttons, sidebar pills, icon tiles, linked outer corners |
 | lg | 7px | menus, popovers, extension cards, status card container |
 | xl | 8px / 10px | dialog containers, card frames |
+| card | 12px | download-row cards |
 | badge | 17px | about-dialog logo badge |
 | pill | 999px | search entry, progress bars, switches, badges |
 
@@ -34,6 +36,9 @@ The scale is enforced, not advisory:
   `padding`, `margin` or `font-size` is off the grid.
 - `Gtk3DesignTokenTests.EveryGtk3Theme_UsesOnlyScaleSpacingAndType` fails the build
   on the same rule, so a hand-edited theme cannot slip past the generator.
+- `Gtk4DesignTokenTests.EveryGtk4Theme_UsesOnlyScaleSpacingTypeAndRadius` holds the
+  GTK 4 stylesheets to the spacing/type scale and the radius list, and fails on an
+  unused or mode-mismatched `@define-color` token.
 - `MainWindow`'s row and button metrics read the named steps
   (`DesignTokens.RowTogglePadding`, `DesignTokens.ButtonContentSpacing`, …) instead
   of carrying literals of their own.
@@ -249,12 +254,12 @@ only build gate, so treat WPF changes as CI-verified, not locally verified.
 |---|---|---|
 | window | #1d1d1d | #fcfcfc |
 | sidebar / main-toolbar | #161616 | #ececec |
-| view | #232323 | #ffffff |
-| view-finished | #2a2a2a | #f8f8f8 |
+| view | #232323 | #ececec |
+| view-finished | #1f1f1f | #f8f8f8 |
 | headerbar | #1a1a1a | #f0f0f0 |
 | entry | #282828 | #ffffff |
 | elevated | #2e2e2e | #ffffff |
-| border | #404040 | #cacaca |
+| border (extension surfaces) | #383838 | #cacaca |
 | text | #f4f4f4 | #222222 |
 | dim text | #b4b4b4 | #5f5f5f |
 | accent / hover / active | #3584e4 / #2f74c9 / #2864ad | same |
@@ -429,8 +434,10 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
   the saved mode at startup, follows the session preference live while in Follow
   System, and persists the Ctrl+T toggle. It never forces `gtk-theme-name`.
 - **Per-view surfaces:** the Active list uses `view` and the Complete list uses
-  `view-finished` (`#2a2a2a` dark / `#f8f8f8` light). The list widget carries an
-  `unfinished`/`finished` style class so the two views read apart, matching GTK 3.
+  `view-finished` (`#1f1f1f` dark / `#f8f8f8` light). Finished recedes in both
+  modes — darker in dark, lighter in light — matching GTK 3's completed view. The
+  list widget carries an `unfinished`/`finished` style class so the two views read
+  apart.
 - **Sidebar sections:** small `.sidebar-heading` captions ("Downloads", "Categories") group
   plain `navigation-sidebar` rows; there is no raised status card, so the sidebar reads as one
   calm column. Selected rows carry the scheme accent.

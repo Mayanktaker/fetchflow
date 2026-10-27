@@ -13,9 +13,8 @@
 @define-color row_bg #262626;
 @define-color row_hover #303030;
 @define-color view_bg #232323;
-@define-color view_finished_bg #2a2a2a;
+@define-color view_finished_bg #1f1f1f;
 @define-color meta_text #9a9a9a;
-@define-color border_color #404040;
 
 /* Active and Complete keep distinct surfaces so the two views read apart */
 listview.download-list {
@@ -197,10 +196,10 @@ list.navigation-sidebar > row:selected:hover,
 
 /* Per-row transfer state pill */
 .status-pill {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 99px;
+  border-radius: 999px;
   background-color: alpha(@meta_text, 0.14);
   color: @meta_text;
 }
@@ -208,6 +207,11 @@ list.navigation-sidebar > row:selected:hover,
 .status-pill.downloading {
   background-color: alpha(@accent, 0.16);
   color: @accent;
+}
+
+.status-pill.waiting {
+  background-color: alpha(@meta_text, 0.14);
+  color: @meta_text;
 }
 
 .status-pill.stopped {
@@ -229,7 +233,7 @@ list.navigation-sidebar > row:selected:hover,
 
 .title-pulse {
   color: @accent;
-  font-size: 10px;
+  font-size: 11px;
   margin-left: 2px;
   animation: fetchflow-pulse 1.8s ease-in-out infinite;
 }
@@ -262,7 +266,7 @@ list.navigation-sidebar > row:selected:hover,
 }
 
 .bottom-bar button {
-  padding: 3px 10px;
+  padding: 2px 10px;
   min-height: 0;
 }
 
@@ -309,12 +313,12 @@ list.navigation-sidebar > row:selected .sidebar-count {
 /* Thin, soft progress bar so the row reads as a card, not a table */
 progressbar.download-progress trough {
   min-height: 4px;
-  border-radius: 99px;
+  border-radius: 999px;
 }
 
 progressbar.download-progress progress {
   min-height: 4px;
-  border-radius: 99px;
+  border-radius: 999px;
 }
 
 /* License viewer: monospace body, readable at any window width */

@@ -16,6 +16,9 @@ namespace XDM.Core.UI
         // Type steps the UI paints, matching the typography table (no 10px, no 18px)
         public static readonly int[] TypeScale = { 11, 12, 13, 14, 15, 16, 17 };
 
+        // Every corner radius a stylesheet may use, smallest first (999 = pill)
+        public static readonly int[] Radius = { 0, 4, 6, 7, 8, 10, 12, 17, 999 };
+
         // Named spacing steps, so call sites read as intent rather than a number
         public const int Space2 = 2;
         public const int Space4 = 4;

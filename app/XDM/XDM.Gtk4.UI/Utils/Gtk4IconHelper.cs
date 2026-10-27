@@ -30,9 +30,9 @@ namespace XDM.Gtk4UI.Utils
                 ? name.Substring(0, name.Length - 4)
                 : name;
 
-            // v2: the tint pass now also handles fill-less icons, so keys from the
-            // previous pass (which cached some icons untinted) must not be reused
-            var cacheKey = $"{cleanName}_{r:X2}{g:X2}{b:X2}_v2";
+            // v3: the tint pass now also handles stroke-drawn icons, so keys from the
+            // previous pass (which cached checkbox icons untinted) must not be reused
+            var cacheKey = $"{cleanName}_{r:X2}{g:X2}{b:X2}_v3";
             if (TintedPaths.TryGetValue(cacheKey, out var existing) && File.Exists(existing))
             {
                 return existing;
@@ -59,30 +59,7 @@ namespace XDM.Gtk4UI.Utils
                 }
 
                 var text = File.ReadAllText(sourcePath);
-                var tintedText = System.Text.RegularExpressions.Regex.Replace(
-                    text,
-                    @"fill=""rgba\(\s*128\s*,\s*128\s*,\s*128\s*,\s*1\s*\)""",
-                    $"fill=\"rgb({r},{g},{b})\"");
-
-                if (tintedText == text)
-                {
-                    tintedText = System.Text.RegularExpressions.Regex.Replace(
-                        text,
-                        @"fill=""#[0-9a-fA-F]{3,6}""",
-                        $"fill=\"rgb({r},{g},{b})\"");
-                }
-
-                if (tintedText == text)
-                {
-                    // Some icons carry no fill attribute and inherit black: tint the
-                    // first unfilled path so every icon follows the active accent
-                    tintedText = System.Text.RegularExpressions.Regex.Replace(
-                        text,
-                        @"<path(?![^>]*fill=)",
-                        $"<path fill=\"rgb({r},{g},{b})\"",
-                        System.Text.RegularExpressions.RegexOptions.None,
-                        TimeSpan.FromSeconds(1));
-                }
+                var tintedText = SvgTint.Apply(text, r, g, b);
 
                 File.WriteAllText(targetPath, tintedText);
                 TintedPaths[cacheKey] = targetPath;

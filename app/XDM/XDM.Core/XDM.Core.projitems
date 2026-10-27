@@ -78,6 +78,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\ColorSchemeTable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ThemeContrast.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DesignTokens.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\SvgTint.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ThemeModePolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ThemeModes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\CommonUtils.cs" />
