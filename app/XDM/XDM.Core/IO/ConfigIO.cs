@@ -87,6 +87,12 @@ namespace XDM.Core.IO
                     case "ShowNotification":
                         instance.ShowNotification = r.ReadBoolean();
                         break;
+                    case "ShowMediaNotification":
+                        instance.ShowMediaNotification = r.ReadBoolean();
+                        break;
+                    case "MediaNotificationDebounceSeconds":
+                        instance.MediaNotificationDebounceSeconds = r.ReadInt32();
+                        break;
                     case "AfterCompletionCommand":
                         instance.AfterCompletionCommand = r.ReadString();
                         break;
@@ -444,6 +450,10 @@ namespace XDM.Core.IO
             WriteInt32(w, instance.NotificationTimeOut, "NotificationTimeOut");
             count++;
             WriteBoolean(w, instance.ShowNotification, "ShowNotification");
+            count++;
+            WriteBoolean(w, instance.ShowMediaNotification, "ShowMediaNotification");
+            count++;
+            WriteInt32(w, instance.MediaNotificationDebounceSeconds, "MediaNotificationDebounceSeconds");
             count++;
 
             WriteStringArray(w, instance.BlockedHosts, "BlockedHosts", instance.BlockedHosts.Length);

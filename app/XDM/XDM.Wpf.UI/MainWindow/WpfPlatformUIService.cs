@@ -228,12 +228,34 @@ namespace XDM.Wpf.UI
 
         public void ShowMediaNotification()
         {
+            if (!Config.Instance.ShowMediaNotification || !Config.Instance.ShowNotification) return;
             AppTrayIcon.ShowNotification();
         }
 
         public void ShowDesktopNotification(string message)
         {
             AppTrayIcon.ShowTextNotification(message);
+        }
+
+        // Displays desktop tray balloon notification for completed download
+        public void ShowDownloadCompleteNotification(string fileName, string filePath, string folderPath)
+        {
+            if (!Config.Instance.ShowNotification) return;
+            AppTrayIcon.ShowDownloadCompleteNotification(fileName, filePath, folderPath);
+        }
+
+        // Plays audible download completion feedback when enabled
+        public void PlayCompletionSound()
+        {
+            if (!Config.Instance.PlayCompletionSound) return;
+            try
+            {
+                System.Media.SystemSounds.Asterisk.Play();
+            }
+            catch (Exception ex)
+            {
+                TraceLog.Log.Debug(ex, "Failed to play completion sound: " + ex.Message);
+            }
         }
 
         public void CreateAndShowMediaGrabber()

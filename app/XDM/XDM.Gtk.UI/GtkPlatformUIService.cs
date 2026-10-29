@@ -206,7 +206,8 @@ namespace XDM.GtkUI
         // Media capture notice: same D-Bus transport as download-complete notifications
         public void ShowMediaNotification()
         {
-            DesktopNotificationHelper.Show("FetchFlow", TextResource.GetText("MSG_VID_CAP"));
+            if (!Config.Instance.ShowMediaNotification || !Config.Instance.ShowNotification) return;
+            DesktopNotificationHelper.ShowMediaDetected();
         }
 
         // Generic desktop notification, gated by the user's notification preference
@@ -214,6 +215,20 @@ namespace XDM.GtkUI
         {
             if (!Config.Instance.ShowNotification) return;
             DesktopNotificationHelper.Show("FetchFlow", message);
+        }
+
+        // Sends desktop notification with open actions for completed downloads
+        public void ShowDownloadCompleteNotification(string fileName, string filePath, string folderPath)
+        {
+            if (!Config.Instance.ShowNotification) return;
+            DesktopNotificationHelper.ShowDownloadComplete(fileName, filePath, folderPath);
+        }
+
+        // Plays audible download completion feedback when enabled
+        public void PlayCompletionSound()
+        {
+            if (!Config.Instance.PlayCompletionSound) return;
+            SoundHelper.PlayDownloadCompleteSound();
         }
 
         public void CreateAndShowMediaGrabber()

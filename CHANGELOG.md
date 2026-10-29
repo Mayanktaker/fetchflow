@@ -9,6 +9,10 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ### What's new
 
+- **Interactive download complete notifications:** every finished download (including queued, background, and batch transfers) now triggers a desktop notification banner with quick "Open" and "Open Folder" action buttons, plus clicking the banner opens the downloaded file directly, even when the download complete popup dialog is disabled in Settings
+- **Configurable notification duration:** you can now choose how long desktop notifications remain on screen (5s, 10s, 15s, or 30s) under Settings → Notifications
+- **Download completion audio for all transfers:** the completion chime now plays whenever any download finishes (including queued and background downloads), even when the download complete popup window is disabled
+- **Smart video detection notifications:** visiting media-heavy websites no longer floods your desktop with dozens of notification banners. Video detections are now coalesced into a single notification that updates in-place with the detected item count, clicking the banner or its "Media Grabber" action opens Media Grabber directly, a "Dismiss" action closes the active alert, and the batching delay (1s–5s) and notification toggle can be configured in Settings under Notifications
 - **About now opens the project on GitHub:** the website link in the About window points straight at the repository, so releases, source and issues are one click away on every desktop and on Windows
 - **Keyboard shortcuts for the whole app:** flip the theme (Ctrl+T), open batch download (Ctrl+B) or the scheduler (Ctrl+Shift+Q), import/export (Ctrl+I), settings (Ctrl+,) and About (F1); act on the selection with open (Ctrl+O), copy link (Ctrl+C), restart (Ctrl+R) or save-as (Ctrl+S); Alt+Enter shows properties and Ctrl+Shift+V grabs video. Ctrl+F, Ctrl+N and Ctrl+Q keep working as before
 - **Empty lists explain themselves:** Active and Complete now show a friendly note with an Add download button when there is nothing to show, and say plainly when a search matched nothing, with a Clear search button to get back to the full list
@@ -22,6 +26,8 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ### Bug fixes
 
+- **Missing download complete notifications:** fixed downloads finishing silently without any desktop alert when the download complete modal window was turned off or when downloads completed non-interactively in the background
+- **Video detection notification spam:** fixed multiple stacked desktop notification popups when loading websites containing dozens or hundreds of media items
 - **Select All now acts on the list you are looking at:** the toolbar button no longer selects rows in the hidden Active or Complete list
 - **The right link gets copied:** Ctrl+C copies the address of the download in the view you are looking at, even if rows in the other list are still highlighted
 - **The selection count keeps up when you switch views:** the "N selected" line and the Select All label refresh as soon as you move between Active, Complete and a category

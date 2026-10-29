@@ -1,4 +1,4 @@
-// © 2026 Mayanktaker | Based on XDM by subhra74 (https://github.com/subhra74/xdm)
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -160,6 +160,20 @@ namespace XDM.Core.BrowserMonitoring
                 // Notify the UI via Application.DownloadFinished — this marks the
                 // download as finished in the DB and adds it to the finished list view
                 ApplicationContext.Application.DownloadFinished(entryId, state.TotalSize, finalPath);
+
+                // Show desktop notification for completed blob downloads
+                if (Config.Instance.ShowNotification)
+                {
+                    var blobFileName = Path.GetFileName(finalPath);
+                    var blobFolder = Path.GetDirectoryName(finalPath) ?? string.Empty;
+                    ApplicationContext.PlatformUIService.ShowDownloadCompleteNotification(blobFileName, finalPath, blobFolder);
+                }
+
+                // Play completion audio feedback for completed blob downloads when enabled
+                if (Config.Instance.PlayCompletionSound)
+                {
+                    ApplicationContext.PlatformUIService.PlayCompletionSound();
+                }
 
                 Log.Debug($"Blob download finalized: {finalPath} (id={entryId})");
             }

@@ -51,8 +51,15 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly DropDown dropDoubleClick;
         private readonly DropDown dropTheme;
         private readonly DropDown dropScheme;
+        private readonly DropDown dropMediaDebounce;
+        private static readonly string[] DebounceLabels = new[] { "1 second", "2 seconds (Recommended)", "3 seconds", "5 seconds" };
+        private static readonly int[] DebounceValues = new[] { 1, 2, 3, 5 };
+        private readonly DropDown dropNotificationTimeout;
+        private static readonly string[] TimeoutLabels = new[] { "5 seconds", "10 seconds (Recommended)", "15 seconds", "30 seconds" };
+        private static readonly int[] TimeoutValues = new[] { 5000, 10000, 15000, 30000 };
         private readonly Switch chkAutoStart;
         private readonly Switch chkNotification;
+        private readonly Switch chkMediaNotification;
         private readonly Switch chkShowComplete;
         private readonly Switch chkShowProgress;
         private readonly Switch chkPlaySound;
@@ -187,6 +194,18 @@ namespace XDM.Gtk4UI.Dialogs
             chkAutoStart.Active = PlatformHelper.IsAutoStartEnabled();
             chkNotification = Toggle("SETTINGS_SHOW_NOTIFICATION", "Show desktop notifications on completion");
             chkNotification.Active = Config.Instance.ShowNotification;
+            chkMediaNotification = Toggle("MSG_SHOW_MEDIA_NOTIFICATION", "Show notification when video is detected");
+            chkMediaNotification.Active = Config.Instance.ShowMediaNotification;
+
+            dropMediaDebounce = DropDown.NewFromStrings(DebounceLabels);
+            var curDebounce = Config.Instance.MediaNotificationDebounceSeconds;
+            var dIdx = Array.IndexOf(DebounceValues, curDebounce);
+            dropMediaDebounce.Selected = (uint)(dIdx >= 0 ? dIdx : 1);
+
+            dropNotificationTimeout = DropDown.NewFromStrings(TimeoutLabels);
+            var curTimeout = Config.Instance.NotificationTimeOut > 0 ? Config.Instance.NotificationTimeOut : 10000;
+            var tIdx = Array.IndexOf(TimeoutValues, curTimeout);
+            dropNotificationTimeout.Selected = (uint)(tIdx >= 0 ? tIdx : 1);
             chkShowComplete = Toggle("SETTINGS_SHOW_COMPLETE", "Show download complete popup dialog");
             chkShowComplete.Active = Config.Instance.ShowDownloadCompleteWindow;
             chkShowProgress = Toggle("LBL_SHOW_PROGRESS", "Show download progress window");
@@ -395,6 +414,11 @@ namespace XDM.Gtk4UI.Dialogs
             box.Append(Section(TextResource.GetText("SETTINGS_GROUP_NOTIFICATIONS") ?? "Notifications"));
             var notifications = PrefGroup();
             notifications.Append(SwitchRow(chkNotification));
+            notifications.Append(SwitchRow(chkMediaNotification));
+            notifications.Append(PrefRow(TextResource.GetText("SETTINGS_MEDIA_NOTIFICATION_DEBOUNCE") ?? "Video detection alert delay",
+                TextResource.GetText("SETTINGS_MEDIA_NOTIFICATION_DEBOUNCE_DESC") ?? "Coalesce multiple video alerts within this window", dropMediaDebounce));
+            notifications.Append(PrefRow(TextResource.GetText("SETTINGS_NOTIFICATION_TIMEOUT") ?? "Notification display duration",
+                TextResource.GetText("SETTINGS_NOTIFICATION_TIMEOUT_DESC") ?? "How long desktop notifications remain visible", dropNotificationTimeout));
             notifications.Append(SwitchRow(chkShowComplete));
             notifications.Append(SwitchRow(chkShowProgress));
             notifications.Append(SwitchRow(chkPlaySound));
@@ -1031,6 +1055,11 @@ namespace XDM.Gtk4UI.Dialogs
             }
 
             Config.Instance.ShowNotification = chkNotification.Active;
+            Config.Instance.ShowMediaNotification = chkMediaNotification.Active;
+            var dSel = (int)dropMediaDebounce.Selected;
+            Config.Instance.MediaNotificationDebounceSeconds = (dSel >= 0 && dSel < DebounceValues.Length) ? DebounceValues[dSel] : 2;
+            var tSel = (int)dropNotificationTimeout.Selected;
+            Config.Instance.NotificationTimeOut = (tSel >= 0 && tSel < TimeoutValues.Length) ? TimeoutValues[tSel] : 10000;
             Config.Instance.ShowDownloadCompleteWindow = chkShowComplete.Active;
             Config.Instance.ShowProgressWindow = chkShowProgress.Active;
             Config.Instance.PlayCompletionSound = chkPlaySound.Active;

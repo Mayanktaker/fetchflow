@@ -56,9 +56,26 @@ namespace XDM.Gtk4UI
             DesktopNotificationHelper.Show("FetchFlow", message);
         }
 
+        // Sends desktop notification with open actions for completed downloads
+        public void ShowDownloadCompleteNotification(string fileName, string filePath, string folderPath)
+        {
+            if (!Config.Instance.ShowNotification) return;
+            DesktopNotificationHelper.ShowDownloadComplete(fileName, filePath, folderPath);
+        }
+
+        // Plays audible download completion feedback when enabled
+        public void PlayCompletionSound()
+        {
+            if (!Config.Instance.PlayCompletionSound) return;
+            Gtk4SoundHelper.PlayDownloadCompleteSound();
+        }
+
         // Sends media capture notification
-        public void ShowMediaNotification() =>
-            DesktopNotificationHelper.Show("FetchFlow", TextResource.GetText("MSG_VID_CAP") ?? "Video download captured");
+        public void ShowMediaNotification()
+        {
+            if (!Config.Instance.ShowMediaNotification || !Config.Instance.ShowNotification) return;
+            DesktopNotificationHelper.ShowMediaDetected();
+        }
 
         // Opens native GTK 4 / portal file save dialog synchronously
         public string? SaveFileDialog(string? initialPath, string? defaultExt, string? filter)

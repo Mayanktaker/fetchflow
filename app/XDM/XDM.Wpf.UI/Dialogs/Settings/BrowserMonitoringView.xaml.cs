@@ -61,7 +61,7 @@ namespace XDM.Wpf.UI.Dialogs.Settings
             CmbMinVidSize.SelectedItem = Config.Instance.MinVideoSize;
             ChkMonitorClipboard.IsChecked = Config.Instance.MonitorClipboard;
             ChkTimestamp.IsChecked = Config.Instance.FetchServerTimeStamp;
-            ChkShowMediaNotification.IsChecked = Config.Instance.ShowNotification;
+            ChkShowMediaNotification.IsChecked = Config.Instance.ShowMediaNotification;
             UpdateIpcStatus();
         }
 
@@ -74,7 +74,7 @@ namespace XDM.Wpf.UI.Dialogs.Settings
             Config.Instance.FetchServerTimeStamp = ChkTimestamp.IsChecked.HasValue ? ChkTimestamp.IsChecked.Value : false;
             Config.Instance.MonitorClipboard = ChkMonitorClipboard.IsChecked.HasValue ? ChkMonitorClipboard.IsChecked.Value : false;
             Config.Instance.MinVideoSize = (int)CmbMinVidSize.SelectedItem;
-            Config.Instance.ShowNotification = ChkShowMediaNotification.IsChecked.HasValue ? ChkShowMediaNotification.IsChecked.Value : false;
+            Config.Instance.ShowMediaNotification = ChkShowMediaNotification.IsChecked.HasValue ? ChkShowMediaNotification.IsChecked.Value : false;
         }
 
         // Refreshes the IPC server connectivity badge and port display

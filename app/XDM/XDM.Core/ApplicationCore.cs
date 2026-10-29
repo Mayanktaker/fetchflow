@@ -587,6 +587,19 @@ namespace XDM.Core
                     ApplicationContext.Application.ShowDownloadCompleteDialog(http.TargetFileName, Path.GetDirectoryName(http.TargetFile));
                 }
 
+                // Show desktop notification for all completed downloads when notifications are enabled
+                if (Config.Instance.ShowNotification)
+                {
+                    var targetDir = Path.GetDirectoryName(http.TargetFile) ?? string.Empty;
+                    ApplicationContext.PlatformUIService.ShowDownloadCompleteNotification(http.TargetFileName, http.TargetFile, targetDir);
+                }
+
+                // Play completion audio feedback for all completed downloads when enabled
+                if (Config.Instance.PlayCompletionSound)
+                {
+                    ApplicationContext.PlatformUIService.PlayCompletionSound();
+                }
+
                 if (Config.Instance.ScanWithAntiVirus)
                 {
                     PlatformHelper.RunAntivirus(Config.Instance.AntiVirusExecutable, Config.Instance.AntiVirusArgs, http.TargetFile);

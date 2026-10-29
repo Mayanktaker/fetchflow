@@ -51,15 +51,23 @@ namespace XDM.Core
         // Ports scanned above IpcPort for the relay bind and the instance-forwarding probe
         public const int IpcPortRangeSize = 7;
 
-        public static int DefaultNotificationTimeOut => 30000;
+        public static int DefaultNotificationTimeOut => 10000;
 
-        public int NotificationTimeOut { get; set; }
+        public int NotificationTimeOut { get; set; } = 10000;
 
         public bool IsBrowserMonitoringEnabled { get; set; } = true;
 
         public static bool DefaultShowNotification => true;
 
         public bool ShowNotification { get; set; } = true;
+
+        public static bool DefaultShowMediaNotification => true;
+
+        public bool ShowMediaNotification { get; set; } = true;
+
+        public static int DefaultMediaNotificationDebounceSeconds => 2;
+
+        public int MediaNotificationDebounceSeconds { get; set; } = 2;
 
         public static string DefaultFallbackUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36";
 

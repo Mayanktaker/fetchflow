@@ -202,18 +202,13 @@ namespace XDM.GtkUI.Dialogs.DownloadComplete
             Close();
         }
 
-        // Displays and presents dialog to user, sends desktop notification, plays sound, and starts auto-close timer
+        // Displays and presents dialog to user and starts auto-close timer
         public void ShowDownloadCompleteDialog()
         {
             SetDefaultSize(520, 200);
             ShowAll();
             Present();
             StartAutoCloseTimer();
-            DesktopNotificationHelper.ShowDownloadComplete(FileNameText, FolderText);
-            if (Config.Instance.PlayCompletionSound)
-            {
-                SoundHelper.PlayDownloadCompleteSound();
-            }
         }
 
         // Factory method to inflate dialog from glade definition

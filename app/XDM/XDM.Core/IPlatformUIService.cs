@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,6 +23,12 @@ namespace XDM.Core
 
         // Best-effort desktop notification (tray balloon / notify-send)
         void ShowDesktopNotification(string message);
+
+        // Interactive desktop notification for completed downloads with action buttons
+        void ShowDownloadCompleteNotification(string fileName, string filePath, string folderPath);
+
+        // Plays audible download completion feedback when enabled
+        void PlayCompletionSound();
 
         string? SaveFileDialog(string? initialPath, string? defaultExt, string? filter);
 
