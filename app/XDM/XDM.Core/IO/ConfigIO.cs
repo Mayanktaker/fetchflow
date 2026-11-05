@@ -245,6 +245,9 @@ namespace XDM.Core.IO
                     case "ColorScheme":
                         instance.ColorScheme = r.ReadInt32();
                         break;
+                    case "MatchSystemAccent":
+                        instance.MatchSystemAccent = r.ReadBoolean();
+                        break;
                     case "DoubleClickOpenFile":
                         instance.DoubleClickOpenFile = r.ReadBoolean();
                         break;
@@ -419,6 +422,9 @@ namespace XDM.Core.IO
             WriteInt32(w, instance.ThemeMode, "ThemeMode");
             count++;
             WriteInt32(w, instance.ColorScheme, "ColorScheme");
+            count++;
+            // A session accent (Plasma) survives restarts only if it is saved with the rest
+            WriteBoolean(w, instance.MatchSystemAccent, "MatchSystemAccent");
             count++;
             WriteBoolean(w, instance.DoubleClickOpenFile, "DoubleClickOpenFile");
             count++;

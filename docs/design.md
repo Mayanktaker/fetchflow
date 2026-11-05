@@ -405,6 +405,15 @@ Native GTK 4 stylesheets live in `app/XDM/XDM.Gtk4.UI/theme/` (`gtk4-dark.css` a
 - **Display-level CSS Provider:** Applied via `Gtk.CssProvider` per `Gdk.Display` (`Gtk.StyleContext.AddProviderForDisplay`) at priority `GTK_STYLE_PROVIDER_PRIORITY_APPLICATION` (600).
 - **Interface Color Scheme:** `Gtk4Theme.cs` sets the GTK 4 modern property `gtk-interface-color-scheme` to `prefer-dark` or `prefer-light`, avoiding the deprecated `gtk-application-prefer-dark-theme` warning (FF-UI-010) while maintaining a graceful fallback for earlier GTK 4 versions.
 - **System Theme Integrity:** `gtk-theme-name` is intentionally left untouched, preserving system-wide styling on desktop environments such as Breeze (KDE) and Mint-Y (Cinnamon).
+- **Desktop accent (Plasma):** with `Config.MatchSystemAccent` on (default), a Plasma session
+  (`XDG_CURRENT_DESKTOP` carries `KDE` or `plasma`) supplies the accent itself:
+  `XDM.Core/UI/DesktopAccent.cs` parses `AccentColor` from `$XDG_CONFIG_HOME/kdeglobals`
+  and falls back to `[Colors:Selection] BackgroundNormal` for Plasma 5, which has no accent
+  key. The rewrites stay in `Gtk4Theme.ApplyColorScheme`, so `ThemeContrast` still owns the
+  readable ink and the hover shade. Surfaces fall back to the neutral default scheme while
+  it is on — a Breeze accent on a rose palette reads as a bug — and Settings → Appearance
+  disables the scheme picker to say plainly that the desktop is in charge. The file is read
+  on each theme swap, so an accent change in System Settings lands on the next swap.
 - **List chrome:** the list is a header-less `Gtk.ListView` — one card per row (4x10px gaps,
   12px radius, subtle border, 6x8px inner padding) with no column header and no column
   resizing. Each row lays out icon | name+source+destination | size | progress itself, so the

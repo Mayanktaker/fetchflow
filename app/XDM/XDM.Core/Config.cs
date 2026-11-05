@@ -113,6 +113,9 @@ namespace XDM.Core
         // ColorScheme: -1 = unset (per-mode default: Charcoal Blue dark, Classic Blue light);
         // 0..6 = explicit user choice, persisted as-is.
         public int ColorScheme { get; set; } = -1;
+        // MatchSystemAccent: paint controls in the desktop's own accent (Plasma Breeze);
+        // a pinned colour scheme keeps its accent when this is off
+        public bool MatchSystemAccent { get; set; } = true;
 
         private Config()
         {

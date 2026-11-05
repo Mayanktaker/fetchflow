@@ -138,14 +138,29 @@ namespace XDM.Gtk4UI
             {
                 var index = ColorSchemeTable.ClampSchemeIndex(dark, previewScheme ?? Config.Instance.ColorScheme);
                 var scheme = ColorSchemeTable.GetScheme(dark, index);
-                if (string.IsNullOrWhiteSpace(scheme.AccentHex))
+
+                // A Plasma accent must not sit on a tinted palette (rose cards under a blue
+                // accent read as a bug), so matching the desktop also neutralises surfaces
+                var desktopAccent = Config.Instance.MatchSystemAccent ? ResolveDesktopAccent() : null;
+                if (desktopAccent != null)
+                {
+                    scheme = ColorSchemeTable.GetScheme(dark, ColorSchemeTable.DefaultSchemeIndex(dark));
+                }
+
+                var accentHex = string.IsNullOrWhiteSpace(scheme.AccentHex) ? null : scheme.AccentHex;
+                if (desktopAccent != null)
+                {
+                    accentHex = desktopAccent;
+                }
+
+                if (accentHex == null)
                 {
                     return css;
                 }
 
-                css = ReplaceToken(css, "accent", scheme.AccentHex);
-                css = ReplaceToken(css, "accent_hover", ThemeContrast.HoverFor(scheme.AccentHex));
-                css = ReplaceToken(css, "accent_foreground", ThemeContrast.InkFor(scheme.AccentHex));
+                css = ReplaceToken(css, "accent", accentHex);
+                css = ReplaceToken(css, "accent_hover", ThemeContrast.HoverFor(accentHex));
+                css = ReplaceToken(css, "accent_foreground", ThemeContrast.InkFor(accentHex));
                 css = ReplaceToken(css, "row_bg", scheme.CardBackgroundHex);
                 css = ReplaceToken(css, "row_hover", scheme.HoverBackgroundHex);
                 return css;
@@ -154,6 +169,35 @@ namespace XDM.Gtk4UI
             {
                 Console.Error.WriteLine("GTK 4 color scheme failed: " + ex.Message);
                 return css;
+            }
+        }
+
+        // The session accent, or null when this is not a Plasma desktop. Read on every
+        // theme swap so an accent change in System Settings is picked up on the next
+        // one instead of surviving the whole run.
+        private static string? ResolveDesktopAccent()
+        {
+            try
+            {
+                if (!DesktopAccent.IsPlasmaSession(Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP")))
+                {
+                    return null;
+                }
+
+                var configHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+                if (string.IsNullOrWhiteSpace(configHome))
+                {
+                    configHome = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config");
+                }
+
+                var path = Path.Combine(configHome!, "kdeglobals");
+                return File.Exists(path) ? DesktopAccent.FromKdeGlobals(File.ReadAllText(path)) : null;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("GTK 4 desktop accent unavailable: " + ex.Message);
+                return null;
             }
         }
 

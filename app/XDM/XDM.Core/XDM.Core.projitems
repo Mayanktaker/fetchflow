@@ -77,6 +77,8 @@
     <Compile Include="..\XDM.Core\UI\BatchDownloadUIController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ColorSchemeTable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ThemeContrast.cs" />
+    <!-- DesktopAccent: Plasma's accent colour, so a KDE session styles the app -->
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DesktopAccent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DesignTokens.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\SvgTint.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ThemeModePolicy.cs" />

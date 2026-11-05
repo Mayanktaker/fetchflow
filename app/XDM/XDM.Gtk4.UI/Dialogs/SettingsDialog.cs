@@ -68,6 +68,8 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly Switch chkKeepAwake;
         private readonly Switch chkOverwrite;
         private readonly Switch chkAutoCat;
+        // Desktop accent (KDE/Breeze) opt-in, next to the colour scheme picker
+        private readonly Switch chkDesktopAccent;
         private readonly Label lblPaletteStatus;
 
         // Categories
@@ -222,6 +224,10 @@ namespace XDM.Gtk4UI.Dialogs
             chkOverwrite.Active = Config.Instance.FileConflictResolution == FileConflictResolution.Overwrite;
             chkAutoCat = Toggle("SETTINGS_ATUO_CAT", "Automatically select folder by category");
             chkAutoCat.Active = Config.Instance.FolderSelectionMode == FolderSelectionMode.Auto;
+            chkDesktopAccent = Toggle("SETTINGS_MATCH_DESKTOP_ACCENT", "Use the desktop's accent colour (KDE Plasma)");
+            chkDesktopAccent.Active = Config.Instance.MatchSystemAccent;
+            // The scheme picker has nothing to say while the desktop supplies the accent
+            dropScheme.Sensitive = !chkDesktopAccent.Active;
             lblPaletteStatus = Label.New("");
             lblPaletteStatus.AddCssClass("caption");
             lblPaletteStatus.AddCssClass("dim-label");
@@ -366,6 +372,16 @@ namespace XDM.Gtk4UI.Dialogs
                     Persist();
                 }
             };
+            // The accent comes from the desktop, so the toggle must repaint at once
+            chkDesktopAccent.OnNotify += (_, args) =>
+            {
+                if (args.Pspec.GetName() == "active")
+                {
+                    Config.Instance.MatchSystemAccent = chkDesktopAccent.Active;
+                    dropScheme.Sensitive = !chkDesktopAccent.Active;
+                    ApplySchemePreview();
+                }
+            };
         }
 
         // ---------------- page builders ----------------
@@ -402,6 +418,7 @@ namespace XDM.Gtk4UI.Dialogs
             var appearance = PrefGroup();
             appearance.Append(PrefRow(TextResource.GetText("SETTINGS_THEME") ?? "Theme", null, dropTheme));
             appearance.Append(PrefRow(TextResource.GetText("SETTINGS_COLOR_SCHEME") ?? "Colour scheme", null, dropScheme));
+            appearance.Append(SwitchRow(chkDesktopAccent));
             appearance.Append(PrefRow(TextResource.GetText("SETTINGS_EXPORT_PALETTES") ?? "Export palettes",
                 TextResource.GetText("SETTINGS_EXPORT_PALETTES_DESC") ?? "Save all colour schemes to a JSON file",
                 ButtonWithLabel(TextResource.GetText("SETTINGS_EXPORT") ?? "Export", () => ExportPalettes())));
@@ -1070,6 +1087,7 @@ namespace XDM.Gtk4UI.Dialogs
                 chkOverwrite.Active ? FileConflictResolution.Overwrite : FileConflictResolution.AutoRename;
             Config.Instance.FolderSelectionMode =
                 chkAutoCat.Active ? FolderSelectionMode.Auto : FolderSelectionMode.Manual;
+            Config.Instance.MatchSystemAccent = chkDesktopAccent.Active;
             Config.Instance.MonitorClipboard = chkMonitorClipboard.Active;
             Config.Instance.UserCredentials = new List<XDM.Core.PasswordEntry>(workingCredentials);
 
