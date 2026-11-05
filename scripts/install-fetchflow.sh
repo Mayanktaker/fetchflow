@@ -95,6 +95,18 @@ has_libadwaita() {
     (command -v rpm >/dev/null 2>&1 && rpm -q libadwaita >/dev/null 2>&1)
 }
 
+# .NET 8 binds libssl.so.3; Fedora 44+ ships OpenSSL 4 only, and without the 3.x library
+# every HTTPS download aborts the process ("No usable version of libssl was found")
+ensure_libssl3() {
+    ldconfig -p 2>/dev/null | grep -q 'libssl\.so\.3' && return 0;
+    if command -v dnf >/dev/null 2>&1 && dnf install -y openssl3-libs >/dev/null 2>&1; then
+        log "Installed openssl3-libs (required by .NET for HTTPS).";
+        return 0;
+    fi
+    log "WARNING: libssl.so.3 is missing — HTTPS downloads will crash. Install 'openssl3-libs'.";
+    return 1;
+}
+
 # Detect installed GTK version (GTK 4 preferred; fallback to GTK 3 if only GTK 3 is installed)
 detect_gtk_version() {
     if [ -n "${FETCHFLOW_GTK:-}" ]; then
@@ -190,6 +202,7 @@ install_tarball() {
     tmp="$(mktemp -d)";
     # shellcheck disable=SC2064
     trap "rm -rf '$tmp'" EXIT;
+    ensure_libssl3;
     log "Downloading portable tarball v$ver…";
     fetch "https://github.com/$REPO/releases/download/v$ver/fetchflow-linux-x64-$ver.tar.gz" "$tmp/pkg.tar.gz";
     log "Extracting to $INSTALL_DIR…";
@@ -304,6 +317,7 @@ install_fedora() {
     tmp="$(mktemp -d)";
     # shellcheck disable=SC2064
     trap "rm -rf '$tmp'" EXIT;
+    ensure_libssl3;
     rpm="$(resolve_rpm_url)";
     [ -n "$rpm" ] || die "Could not resolve .rpm asset for v$ver (check version exists).";
     log "Downloading $rpm…";

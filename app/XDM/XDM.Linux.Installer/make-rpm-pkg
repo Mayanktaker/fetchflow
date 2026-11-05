@@ -179,12 +179,15 @@ Summary:    	FetchFlow Download Manager
 AutoReqProv: 	no
 Requires:   	${RPM_REQUIRES}
 Recommends: 	gtk4
+Recommends: 	openssl3-libs
 Recommends: 	(ffmpeg-free or ffmpeg)
 Recommends: 	xdg-desktop-portal
 Recommends: 	libnotify
 Recommends: 	yt-dlp
 
 Group:      	System Environment/Base
+# openssl3-libs above: .NET 8 binds libssl.so.3, and Fedora 44+ ships OpenSSL 4 only
+# (without it every HTTPS download aborts the process). Weak dep, ignored where unknown.
 License:    	GPL-2.0-only
 Source0:    	${SOURCE_NAME}.tar.gz
 

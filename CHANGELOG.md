@@ -5,6 +5,21 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
+## v9.1.20.0 (2026-11-05)
+
+### What's new
+
+- **Downloads finish in a blink:** the last step of a download used to copy the entire file a second time, which could leave a large transfer sitting at 100% for minutes. It is now a rename, so the file is ready the moment the progress bar hits the end
+- **Half the temporary disk:** every download now writes into a single temporary file instead of one file per chunk, so a large transfer no longer needs roughly twice its size in free space
+- **Fedora 44 and 45 download properly:** those releases ship a newer OpenSSL that the runtime behind FetchFlow cannot use on its own; the RPM package now brings the library it needs, so HTTPS downloads no longer abort
+
+### Bug fixes
+
+- **No more empty holes in a resumed file:** if the temporary data for a paused download has gone missing or is shorter than the saved progress, FetchFlow now says so instead of resuming and leaving blank space inside your file
+- **Saved progress matches the disk:** pausing a download can no longer record bytes that had not reached the disk yet, which used to make a resumed file shorter than it claimed to be
+
+---
+
 ## v9.1.19.0 (2026-10-29)
 
 ### What's new

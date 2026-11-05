@@ -84,6 +84,31 @@
 
 ---
 
+## ✨ What's New in 9.1.20.0 — Downloads Finish in a Blink
+
+**What's new**
+- **Downloads finish almost instantly:** the last step used to copy the whole file a second time; it is now a rename, so a 4 GB download no longer sits at 100% for minutes.
+- **Half the temporary disk:** every download now uses a single temporary file instead of one file per chunk, so a large transfer no longer needs roughly twice its size in free space.
+- **Fedora 44 and 45 download properly:** those releases ship OpenSSL 4, which .NET cannot use on its own; the RPM now brings the 3.x library it needs, so HTTPS downloads no longer abort.
+
+**Bug fixes**
+- A resumed download whose temporary data went missing is now reported instead of continuing and writing empty space into your file.
+- Progress saved during a pause can no longer claim bytes the disk has not written yet.
+
+---
+
+## ✨ What's New in 9.1.19.0 — Notifications That Do Something
+
+**What's new**
+- **Interactive completion banners:** every finished download now raises a desktop notification with Open and Open Folder buttons, even when the completion window is turned off.
+- **Notification duration setting:** choose how long banners stay on screen (5s, 10s, 15s or 30s) under Settings → Notifications.
+- **One banner per site, not fifty:** video detections are coalesced into a single updating notification.
+
+**Bug fixes**
+- Downloads finishing silently in the background now tell you they are done.
+
+---
+
 ## ✨ What's New in 9.1.18.0 — Sharper Modern Interface
 
 **What's new**
@@ -242,16 +267,16 @@ Package signatures (`.sig`) ship once signing is configured — see [docs/signin
   winget install Mayanktaker.FetchFlow
   ```
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.18.0.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.20.0.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.18.0-1.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.20.0-1.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.18.0_amd64.deb
+sudo apt install ./fetchflow_9.1.20.0_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS (legacy manual PKGBUILD)
@@ -262,7 +287,7 @@ cd app/XDM/XDM.Linux.Installer && makepkg -si
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.18.0.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.20.0.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
