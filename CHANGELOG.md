@@ -5,6 +5,19 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
+## v9.1.21.0 (2026-11-05)
+
+### What's new
+
+- **FetchFlow wears your KDE accent:** on Plasma the progress bars, checkboxes, switches and selected rows now use the accent colour you picked in System Settings, instead of a blue or rose of FetchFlow's own, so the window finally matches everything around it
+- **A switch for it:** Settings → Appearance has "Use the desktop's accent colour (KDE Plasma)". Turn it off and your own colour scheme comes back exactly as it was
+
+### Bug fixes
+
+- **No more clashing backgrounds under a desktop accent:** while the app matches your desktop, its list surfaces go neutral, so a blue accent never lands on a colour-tinted card
+
+---
+
 ## v9.1.20.0 (2026-11-05)
 
 ### What's new
