@@ -11,8 +11,9 @@ elif [ -d "$HOME/.dotnet8" ]; then
 fi
 export PATH=$DOTNET_ROOT:$PATH
 
-# User-local rpmbuild (extracted rpm-build package; see AGENTS.md)
-export PATH="$HOME/.local/rpm-build-root/usr/bin:$PATH"
+# Legacy user-local rpmbuild (extracted rpm-build package) — only when it actually exists;
+# Fedora installs rpm-build system-wide and must use its own %_rpmconfigdir
+[ -d "$HOME/.local/rpm-build-root/usr/bin" ] && export PATH="$HOME/.local/rpm-build-root/usr/bin:$PATH"
 
 # Fail fast when required tools are missing instead of producing an incomplete release
 for tool in dotnet zip tar; do
