@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -117,6 +118,15 @@ namespace XDM.Core.IO
                 }
             }
             catch { }
+            try
+            {
+                // Added later: a state saved before it used a piece file per chunk
+                if (r.BaseStream.Position < r.BaseStream.Length)
+                {
+                    state.SharedPartFile = r.ReadBoolean();
+                }
+            }
+            catch { }
             return state;
         }
 
@@ -157,6 +167,7 @@ namespace XDM.Core.IO
             }
             w.Write(state.ConvertToMp3);
             w.Write(state.AudioBitrate ?? string.Empty);
+            w.Write(state.SharedPartFile);
         }
 
         public static DualSourceHTTPDownloaderState LoadDualSourceHTTPDownloaderState(string id)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using XDM.Core;
 using XDM.Core.Clients.Http;
@@ -15,6 +16,8 @@ namespace XDM.Core.Downloader.Progressive
         public IHttpClient? GetSharedHttpClient(string pieceId);
         public void PieceConnected(string pieceId, ProbeResult? result);
         public string GetPieceFile(string pieceId);
+        // True when every piece writes into one part file at its absolute offset, instead of its own file
+        public bool SharesPieceFile { get; }
         public void UpdateDownloadedBytesCount(string pieceId, long bytes);
         public bool ContinueAdjacentPiece(string pieceId, long maxByteRange);
         public void PieceDownloadFailed(string pieceId, ErrorCode error, string? detail = null);

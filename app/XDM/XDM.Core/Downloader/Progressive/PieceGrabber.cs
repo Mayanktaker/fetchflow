@@ -232,10 +232,12 @@ namespace XDM.Core.Downloader.Progressive
             //#endif
             try
             {
+                // A shared part file takes every piece at its absolute offset; a piece file starts at 0
+                var shared = this.callback.SharesPieceFile;
                 using var targetStream = new FileStream(this.callback.GetPieceFile(this.pieceId), 
-                    FileMode.OpenOrCreate, FileAccess.Write);
+                    FileMode.OpenOrCreate, FileAccess.Write, shared ? FileShare.ReadWrite : FileShare.None);
                 this.fileWriterStream = targetStream;
-                targetStream.Seek(piece.Downloaded, SeekOrigin.Begin);
+                targetStream.Seek(shared ? piece.Offset + piece.Downloaded : piece.Downloaded, SeekOrigin.Begin);
                 if (piece.Length > 0)
                 {
                     CopyWithFixedLength(piece, sourceStream, targetStream);

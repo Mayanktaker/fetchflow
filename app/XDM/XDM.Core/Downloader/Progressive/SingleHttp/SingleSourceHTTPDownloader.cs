@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,13 +17,18 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
     {
         private SingleSourceHTTPDownloaderState? state;
         private bool init;
+        // Every piece writes into one part file at its absolute offset; assembly is then a move, not a copy
+        private bool sharedPartFile;
         public override Uri? PrimaryUrl => this.state?.Url;
+        public override bool SharesPieceFile => sharedPartFile;
+        private string PartFilePath => Path.Combine(state!.TempDir!, "part-" + Id);
 
         public SingleSourceHTTPDownloader(SingleSourceHTTPDownloadInfo info, IHttpClient? hc = null,
             AuthenticationInfo? authentication = null, ProxyInfo? proxy = null,
             BaseMediaProcessor mediaProcessor = null, bool convertToMp3 = false)
         {
             Id = Guid.NewGuid().ToString();
+            sharedPartFile = true;
 
             this.state = new SingleSourceHTTPDownloaderState
             {
@@ -34,7 +40,8 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                 Authentication = authentication,
                 Proxy = proxy,
                 ConvertToMp3 = convertToMp3,
-                AudioBitrate = info.AudioBitrate
+                AudioBitrate = info.AudioBitrate,
+                SharedPartFile = true
             };
 
             if (this.state.Headers == null)
@@ -81,6 +88,11 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                 throw new InvalidOperationException("Temp dir should not be null");
             }
             Directory.CreateDirectory(state.TempDir);
+            // No progress is loaded here: a part file left from an unusable state would publish a stale tail
+            if (sharedPartFile && File.Exists(PartFilePath))
+            {
+                File.Delete(PartFilePath);
+            }
             ticksAtDownloadStartOrResume = Helpers.TickCount();
             var chunk = new Piece
             {
@@ -119,6 +131,10 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                     Log.Debug("SingleSourceHTTPDownloader Resume");
                     RestoreState();
                     Directory.CreateDirectory(state.TempDir);
+                    if (SharedPartFileMissing())
+                    {
+                        throw new DownloadException(ErrorCode.DiskError, "Part file is missing: " + PartFilePath);
+                    }
                     if (pieces.Count != 0)
                     {
                         OnStarted();
@@ -135,6 +151,10 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                             this.http ??= HttpClientFactory.NewHttpClient(Config.Instance.Proxy);
                             http.Timeout = TimeSpan.FromSeconds(Config.Instance.NetworkTimeout);
                             init = true;
+                            if (sharedPartFile)
+                            {
+                                EnsureSharedPartFile(state.FileSize > 0 ? state.FileSize : null);
+                            }
                             CreatePiece();
                         }
                     }
@@ -152,12 +172,20 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
             }).Start();
         }
 
+        // A shared-layout download with progress but no part file has lost its bytes; resuming would publish holes
+        private bool SharedPartFileMissing()
+        {
+            if (!sharedPartFile || File.Exists(PartFilePath)) return false;
+            return pieces.Values.Any(p => p.Downloaded > 0);
+        }
+
         protected override void SaveChunkState()
         {
             try
             {
                 rwLock.EnterWriteLock();
                 if (pieces.Count == 0) return;
+                if (sharedPartFile) ForcePartFile();
                 TransactedIO.WriteStream("chunks.db", state!.TempDir!, base.ChunkStateToBytes);
             }
             finally
@@ -166,9 +194,25 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
             }
         }
 
+        // Fsyncs the part file first: progress saved next must never count bytes the disk does not hold
+        private void ForcePartFile()
+        {
+            if (!File.Exists(PartFilePath)) return;
+            try
+            {
+                using var fs = new FileStream(PartFilePath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite);
+                fs.Flush(true);
+            }
+            catch (IOException e)
+            {
+                Log.Debug(e, "Unable to flush part file");
+            }
+        }
+
         protected override void SaveState()
         {
-            DownloadStateIO.Save(state!);
+            state!.SharedPartFile = sharedPartFile;
+            DownloadStateIO.Save(state);
             //TransactedIO.WriteStream(Id + ".state", Config.DataDir, s => DownloadStateStore.StateToBytes(state!, s));
             //TransactedIO.WriteBytes(DownloadStateStore.StateToBytes(state), Id + ".state", Config.DataDir);
         }
@@ -176,6 +220,7 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
         public override void RestoreState()
         {
             state = DownloadStateIO.LoadSingleSourceHTTPDownloaderState(Id!);
+            sharedPartFile = state.SharedPartFile;
             //if (!TransactedIO.ReadStream(Id + ".state", Config.DataDir, s =>
             //{
             //    state = DownloadStateStore.SingleSourceHTTPDownloaderStateFromBytes(s);
@@ -227,6 +272,38 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
             return !init;
         }
 
+        // A shared part file takes every piece: its bytes are already at their absolute offsets
+        public override string GetPieceFile(string pieceId)
+        {
+            return sharedPartFile ? PartFilePath : base.GetPieceFile(pieceId);
+        }
+
+        // Creates the part file (sparse on NTFS) for a new download; an existing one is checked, never grown
+        private void EnsureSharedPartFile(long? size)
+        {
+            var exists = File.Exists(PartFilePath);
+            using var fs = new FileStream(PartFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
+            if (!exists)
+            {
+                if (!Win32NativeMethods.TryMarkSparse(fs))
+                {
+                    Log.Debug("Part file is not sparse");
+                }
+                if (size.HasValue && size.Value > 0)
+                {
+                    fs.SetLength(size.Value);
+                }
+                return;
+            }
+            // Growing a damaged file would hide the damage: the bytes recorded as downloaded would read as zeros
+            var recorded = pieces.Values.Select(p => p.Offset + p.Downloaded).DefaultIfEmpty(0).Max();
+            if (recorded > 0 && fs.Length < recorded)
+            {
+                throw new DownloadException(ErrorCode.DiskError,
+                    "Part file is shorter than its recorded progress: " + PartFilePath);
+            }
+        }
+
         public override void PieceConnected(string pieceId, ProbeResult? result)
         {
             if (this.cancelFlag.IsCancellationRequested) return;
@@ -239,6 +316,10 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                     state.LastModified = result.LastModified;
                     this.totalSize = result.ResourceSize ?? -1;
                     this.resumable = result.Resumable;
+                    if (sharedPartFile)
+                    {
+                        EnsureSharedPartFile(result.ResourceSize);
+                    }
                     var piece = this.pieces[pieceId];
                     piece.Length = result.ResourceSize ?? -1;
                     piece.Offset = 0;
@@ -316,17 +397,16 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
             {
                 this.TargetFileName = FileHelper.GetUniqueFileName(this.TargetFileName, this.TargetDir);
             }
-
-            //check if required disk space is available
-            if (Helpers.GetFreeSpace(this.TargetDir, out long freespace))
-            {
-                if (freespace < FileSize)
-                {
-                    throw new AssembleFailedException(ErrorCode.DiskError);
-                }
-            }
-
             return pieces;
+        }
+
+        // A copy needs room for the whole file next to the temporary data; a move needs none
+        private void EnsureFreeSpaceForCopy()
+        {
+            if (FileSize > 0 && Helpers.GetFreeSpace(this.TargetDir, out long freespace) && freespace < FileSize)
+            {
+                throw new AssembleFailedException(ErrorCode.DiskError);
+            }
         }
 
         protected override void AssemblePieces()
@@ -340,137 +420,12 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                     var pieces = SortAndValidatePieces();
                     if (this.cancelFlag.IsCancellationRequested) return;
 
-                    var totalBytes = 0L;
-
-#if NET35
-                    var buf = new byte[5 * 1024 * 1024];
-#else
-                    var buf = System.Buffers.ArrayPool<byte>.Shared.Rent(5 * 1024 * 1024);
-#endif
-
-
-                    var outFile = state!.ConvertToMp3 ? Path.Combine(this.GetState().TempDir!, Guid.NewGuid().ToString())
-                        : this.TargetFile;
-                    using var outfs = new FileStream(outFile!, FileMode.Create, FileAccess.Write);
-                    try
+                    if (sharedPartFile)
                     {
-                        foreach (var pc in pieces)
-                        {
-                            if (this.cancelFlag.IsCancellationRequested) return;
-                            using var infs = new FileStream(GetPieceFile(pc.Id), FileMode.Open, FileAccess.Read);
-                            var len = pc.Length;
-                            if (this.FileSize < 1)
-                            {
-                                while (!this.cancelFlag.IsCancellationRequested)
-                                {
-                                    var x = infs.Read(buf, 0, buf.Length);
-                                    if (x == 0)
-                                    {
-                                        break;
-                                    }
-                                    try
-                                    {
-                                        outfs.Write(buf, 0, x);
-                                    }
-                                    catch (IOException ioe)
-                                    {
-                                        Log.Debug(ioe, "AssemblePieces");
-                                        throw new AssembleFailedException(ErrorCode.DiskError, ioe);
-                                    }
-                                    totalBytes += x;
-                                }
-                            }
-                            else
-                            {
-                                while (len > 0)
-                                {
-                                    if (this.cancelFlag.IsCancellationRequested) return;
-                                    var x = infs.Read(buf, 0, (int)Math.Min(buf.Length, len));
-                                    if (x == 0)
-                                    {
-                                        Log.Debug("EOF :: File corrupted");
-                                        throw new Exception("EOF :: File corrupted");
-                                    }
-                                    try
-                                    {
-                                        outfs.Write(buf, 0, x);
-                                    }
-                                    catch (IOException ioe)
-                                    {
-                                        Log.Debug(ioe, "AssemblePieces");
-                                        throw new AssembleFailedException(ErrorCode.DiskError, ioe);
-                                    }
-                                    len -= x;
-                                    totalBytes += x;
-                                    var prg = (int)(totalBytes * 100 / FileSize);
-                                    if (state!.ConvertToMp3) prg /= 2;
-                                    this.OnAssembleProgressChanged(prg);
-                                }
-                            }
-                        }
-
-                        if (this.cancelFlag.IsCancellationRequested) return;
-
-                        if (state!.ConvertToMp3)
-                        {
-                            if (mediaProcessor != null)
-                            {
-                                mediaProcessor.ProgressChanged += (s, e) =>
-                                {
-                                    var prg = 50 + e.Progress / 2;
-                                    if (prg > 100) prg = 100;
-                                    this.OnAssembleProgressChanged(prg);
-                                };
-                                var res = mediaProcessor.ConvertToMp3Audio(outFile!, TargetFile!,
-                                    this.cancelFlag, out totalBytes, state!.AudioBitrate);
-                                if (res != MediaProcessingResult.Success)
-                                {
-                                    throw new AssembleFailedException(
-                                        res == MediaProcessingResult.AppNotFound ? ErrorCode.FFmpegNotFound :
-                                        ErrorCode.FFmpegError); //TODO: Add more info about error
-                                }
-
-                                if (Config.Instance.FetchServerTimeStamp)
-                                {
-                                    try
-                                    {
-                                        File.SetLastWriteTime(TargetFile, state.LastModified);
-                                    }
-                                    catch { }
-                                }
-                                this.totalSize = totalBytes;
-                            }
-                            else
-                            {
-                                throw new AssembleFailedException(ErrorCode.Generic); //TODO: Add more info about error
-                            }
-                        }
+                        AssembleSharedPartFile(pieces);
+                        return;
                     }
-                    finally
-                    {
-#if !NET35
-                        System.Buffers.ArrayPool<byte>.Shared.Return(buf);
-#endif
-                    }
-
-                    if (this.cancelFlag.IsCancellationRequested) return;
-
-                    //Console.WriteLine("Total bytes written: {0} total size: {1}", totalBytes, this.totalSize);
-                    if (this.totalSize < 1)
-                    {
-                        this.totalSize = totalBytes;
-                    }
-                    if (Config.Instance.FetchServerTimeStamp)
-                    {
-                        try
-                        {
-                            File.SetLastWriteTime(TargetFile, state.LastModified);
-                        }
-                        catch { }
-                    }
-                    if (this.cancelFlag.IsCancellationRequested) return;
-                    Log.Debug("Deleting file parts");
-                    DeleteFileParts();
+                    AssemblePieceFiles(pieces);
                 }
                 catch (Exception ex)
                 {
@@ -484,8 +439,235 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
             }
         }
 
-        public override HeaderData?
-            GetHeaderUrlAndCookies(string pieceId)
+        // True when the pieces cover the file exactly and each holds all its bytes
+        private bool PiecesMakeUpFile(List<Piece> pieces, out long totalBytes)
+        {
+            totalBytes = 0;
+            if (state!.FileSize <= 0)
+            {
+                foreach (var pc in pieces)
+                {
+                    totalBytes += pc.Downloaded;
+                }
+                var single = pieces.Count == 1 && pieces[0].Offset == 0;
+                return single;
+            }
+            var next = 0L;
+            foreach (var pc in pieces)
+            {
+                if (pc.Offset != next || pc.Downloaded < pc.Length) return false;
+                next += pc.Length;
+            }
+            totalBytes = next;
+            return next == state.FileSize;
+        }
+
+        // The part file already holds every byte at its offset: rename it into place, copy only across volumes
+        private void AssembleSharedPartFile(List<Piece> pieces)
+        {
+            if (!PiecesMakeUpFile(pieces, out var totalBytes))
+            {
+                Log.Debug("Part file pieces do not make up the file");
+                throw new AssembleFailedException(ErrorCode.Generic);
+            }
+            var partFile = PartFilePath;
+            if (!File.Exists(partFile) || new FileInfo(partFile).Length < totalBytes)
+            {
+                Log.Debug("Part file is missing or short: " + partFile);
+                throw new AssembleFailedException(ErrorCode.DiskError);
+            }
+            if (this.cancelFlag.IsCancellationRequested) return;
+
+            if (state!.ConvertToMp3)
+            {
+                EnsureFreeSpaceForCopy();
+                totalBytes = ConvertToMp3(partFile);
+            }
+            else
+            {
+                this.OnAssembleProgressChanged(100);
+                var targetFile = this.TargetFile!;
+                try
+                {
+                    if (File.Exists(targetFile)) File.Delete(targetFile);
+                    File.Move(partFile, targetFile);
+                }
+                catch (IOException moveError)
+                {
+                    // Temp folder on another volume (or a move the OS refused): copy the bytes instead
+                    Log.Debug(moveError, "Part file move failed, copying instead");
+                    EnsureFreeSpaceForCopy();
+                    CopyToTarget(partFile, targetFile, totalBytes);
+                    if (this.cancelFlag.IsCancellationRequested) return;
+                }
+            }
+            Log.Debug("Deleting file parts");
+            DeleteFileParts();
+            FinishAssembled(totalBytes);
+        }
+
+        // Converts a downloaded audio file to MP3, reporting progress in the upper half of the bar
+        private long ConvertToMp3(string source)
+        {
+            if (mediaProcessor == null) throw new AssembleFailedException(ErrorCode.Generic);
+            mediaProcessor.ProgressChanged += (s, e) =>
+            {
+                var prg = 50 + e.Progress / 2;
+                if (prg > 100) prg = 100;
+                this.OnAssembleProgressChanged(prg);
+            };
+            var res = mediaProcessor.ConvertToMp3Audio(source, TargetFile!, this.cancelFlag,
+                out long totalBytes, state!.AudioBitrate);
+            if (res != MediaProcessingResult.Success)
+            {
+                throw new AssembleFailedException(
+                    res == MediaProcessingResult.AppNotFound ? ErrorCode.FFmpegNotFound : ErrorCode.FFmpegError);
+            }
+            this.totalSize = totalBytes;
+            return totalBytes;
+        }
+
+        // Copies the part file to the target, reporting progress, then removes the temporary data
+        private void CopyToTarget(string partFile, string targetFile, long totalBytes)
+        {
+            var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(5 * 1024 * 1024);
+            var copied = 0L;
+            try
+            {
+                using var infs = new FileStream(partFile, FileMode.Open, FileAccess.Read);
+                using var outfs = new FileStream(targetFile, FileMode.Create, FileAccess.Write);
+                while (copied < totalBytes)
+                {
+                    if (this.cancelFlag.IsCancellationRequested) return;
+                    var x = infs.Read(buffer, 0, (int)Math.Min(buffer.Length, totalBytes - copied));
+                    if (x == 0)
+                    {
+                        Log.Debug("EOF :: File corrupted");
+                        throw new AssembleFailedException(ErrorCode.Generic);
+                    }
+                    try
+                    {
+                        outfs.Write(buffer, 0, x);
+                    }
+                    catch (IOException ioe)
+                    {
+                        Log.Debug(ioe, "CopyToTarget");
+                        throw new AssembleFailedException(ErrorCode.DiskError, ioe);
+                    }
+                    copied += x;
+                    this.OnAssembleProgressChanged((int)(copied * 100 / totalBytes));
+                }
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+
+        // The old layout: a file per piece, concatenated into the target in offset order
+        private void AssemblePieceFiles(List<Piece> pieces)
+        {
+            if (this.cancelFlag.IsCancellationRequested) return;
+            EnsureFreeSpaceForCopy();
+
+            var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(5 * 1024 * 1024);
+            var totalBytes = 0L;
+            var outFile = state!.ConvertToMp3 ? Path.Combine(this.GetState().TempDir!, Guid.NewGuid().ToString())
+                : this.TargetFile;
+            try
+            {
+                // Closed before the MP3 conversion reads it or DeleteFileParts removes it (Windows)
+                using (var outfs = new FileStream(outFile!, FileMode.Create, FileAccess.Write))
+                {
+                    foreach (var pc in pieces)
+                    {
+                        if (this.cancelFlag.IsCancellationRequested) return;
+                        using var infs = new FileStream(GetPieceFile(pc.Id), FileMode.Open, FileAccess.Read);
+                        var len = pc.Length;
+                        if (this.FileSize < 1)
+                        {
+                            while (!this.cancelFlag.IsCancellationRequested)
+                            {
+                                var x = infs.Read(buffer, 0, buffer.Length);
+                                if (x == 0)
+                                {
+                                    break;
+                                }
+                                try
+                                {
+                                    outfs.Write(buffer, 0, x);
+                                }
+                                catch (IOException ioe)
+                                {
+                                    Log.Debug(ioe, "AssemblePieces");
+                                    throw new AssembleFailedException(ErrorCode.DiskError, ioe);
+                                }
+                                totalBytes += x;
+                            }
+                        }
+                        else
+                        {
+                            while (len > 0)
+                            {
+                                if (this.cancelFlag.IsCancellationRequested) return;
+                                var x = infs.Read(buffer, 0, (int)Math.Min(buffer.Length, len));
+                                if (x == 0)
+                                {
+                                    Log.Debug("EOF :: File corrupted");
+                                    throw new Exception("EOF :: File corrupted");
+                                }
+                                try
+                                {
+                                    outfs.Write(buffer, 0, x);
+                                }
+                                catch (IOException ioe)
+                                {
+                                    Log.Debug(ioe, "AssemblePieces");
+                                    throw new AssembleFailedException(ErrorCode.DiskError, ioe);
+                                }
+                                len -= x;
+                                totalBytes += x;
+                                var prg = (int)(totalBytes * 100 / FileSize);
+                                if (state!.ConvertToMp3) prg /= 2;
+                                this.OnAssembleProgressChanged(prg);
+                            }
+                        }
+                    }
+                }
+
+                if (this.cancelFlag.IsCancellationRequested) return;
+                if (state!.ConvertToMp3)
+                {
+                    totalBytes = ConvertToMp3(outFile!);
+                }
+                Log.Debug("Deleting file parts");
+                DeleteFileParts();
+                FinishAssembled(totalBytes);
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+
+        // Sets the timestamp and size after the bytes are in the target
+        private void FinishAssembled(long totalBytes)
+        {
+            if (this.totalSize < 1)
+            {
+                this.totalSize = totalBytes;
+            }
+            if (Config.Instance.FetchServerTimeStamp)
+            {
+                try
+                {
+                    File.SetLastWriteTime(TargetFile, state.LastModified);
+                }
+                catch { }
+            }
+        }
+
+        public override HeaderData? GetHeaderUrlAndCookies(string pieceId)
         {
             if (this.grabberDict.ContainsKey(pieceId) && pieces.ContainsKey(pieceId))
             {
@@ -539,5 +721,7 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
         public string Cookies;
         public bool ConvertToMp3;
         public string? AudioBitrate;
+        // Progress lives in one part file written at absolute offsets; false for downloads from older versions
+        public bool SharedPartFile;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -223,6 +224,9 @@ namespace XDM.Core.Downloader.Progressive
         {
             return Path.Combine(this.GetState().TempDir, pieceId);
         }
+
+        // False: each piece writes its own file, copied into the target when the download ends
+        public virtual bool SharesPieceFile => false;
 
         public virtual IHttpClient? GetSharedHttpClient(string pieceId)
         {
