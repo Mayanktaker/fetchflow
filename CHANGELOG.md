@@ -5,7 +5,7 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
-## Unreleased
+## v9.1.22.0 (2026-11-06)
 
 ### Bug fixes
 

@@ -84,6 +84,14 @@
 
 ---
 
+## ✨ What's New in 9.1.22.0 — Downloads That Arrive Whole
+
+**Bug fixes**
+- **Large downloads no longer save a broken file:** a transfer could reach 100% while the last stretch was still missing, which is why a freshly downloaded RPM kept refusing to install. FetchFlow now finishes the file at its real size, and if a download ever ends short it tells you instead of handing over a damaged file.
+- **The New Download window finally shows the file size:** it used to sit at "---" for anything you typed or pasted, because only the browser ever passed a size along. The window now asks the server itself, so you see how big a download is before you start it.
+
+---
+
 ## ✨ What's New in 9.1.21.0 — Your Desktop's Colour
 
 **What's new**
@@ -278,16 +286,16 @@ Package signatures (`.sig`) ship once signing is configured — see [docs/signin
   winget install Mayanktaker.FetchFlow
   ```
 - **Standalone Setup Wizard:** Download [`fetchflow-windows-x64-setup.exe`](https://github.com/Mayanktaker/fetchflow/releases/latest) from Releases for complete desktop integration, start menu shortcuts, and auto-start persistence.
-- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.21.0.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
+- **Portable ZIP:** Download [`fetchflow-windows-x64-portable-9.1.22.0.zip`](https://github.com/Mayanktaker/fetchflow/releases/latest), extract to any folder, and run `fetchflow.exe` with zero installation required.
 
 ### Fedora / RHEL / CentOS / openSUSE (RPM)
 ```bash
-sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.21.0-1.x86_64.rpm
+sudo dnf install https://github.com/Mayanktaker/fetchflow/releases/latest/download/fetchflow-9.1.22.0-1.x86_64.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!_OS (DEB)
 ```bash
-sudo apt install ./fetchflow_9.1.21.0_amd64.deb
+sudo apt install ./fetchflow_9.1.22.0_amd64.deb
 ```
 
 ### Arch Linux / Manjaro / EndeavourOS (legacy manual PKGBUILD)
@@ -298,7 +306,7 @@ cd app/XDM/XDM.Linux.Installer && makepkg -si
 
 ### Universal Portable Tarball
 ```bash
-tar -xzf fetchflow-linux-x64-9.1.21.0.tar.gz -C /opt/
+tar -xzf fetchflow-linux-x64-9.1.22.0.tar.gz -C /opt/
 /opt/fetchflow/fetchflow
 ```
 
