@@ -31,9 +31,10 @@ namespace XDM.Core.Clients.Http
         public string? ContentDispositionFileName => GetContentDisposition();
 
         // The encoded body length is not the file size: report unknown so callers never plan against it
-        public long ContentLength => Compressed
-            ? -1
-            : Response?.Content?.Headers?.ContentLength ?? Response?.Content?.Headers?.ContentRange?.Length ?? -1;
+        public long ContentLength => EntityLengthPolicy.ResolveBodyLength(
+            Response?.Content?.Headers?.ContentLength ?? -1,
+            Response?.Content?.Headers?.ContentRange?.Length ?? -1,
+            Compressed);
 
         public DateTime LastModified => Response!.Content?.Headers?.LastModified?.Date ?? DateTime.Now;
 

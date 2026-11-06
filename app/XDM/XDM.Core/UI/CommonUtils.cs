@@ -97,8 +97,8 @@ namespace XDM.Core.UI
                 // A one-byte range carries the total in Content-Range and moves no body
                 request.AddRange(0, 0);
                 using var response = http.Send(request);
-                var size = response.ContentRangeLength;
-                if (size < 1) size = response.ContentLength;
+                var size = EntityLengthPolicy.ResolveFileSize(
+                    response.ContentRangeLength, response.ContentLength, response.Compressed);
                 Log.Debug($"Size probe: {url} -> {size}");
                 return size > 0 ? size : 0;
             }

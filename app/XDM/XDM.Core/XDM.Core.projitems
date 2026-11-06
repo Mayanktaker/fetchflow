@@ -98,6 +98,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Interop.WinHttp\Interop.winhttp_types.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\DotNetHttpClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\DotNetHttpSession.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\EntityLengthPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\HttpClientFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\HttpRequest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\HttpResponse.cs" />
