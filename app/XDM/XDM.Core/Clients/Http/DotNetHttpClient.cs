@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 #if NET5_0_OR_GREATER
 using System;
 using System.Collections.Generic;
@@ -49,7 +50,11 @@ namespace XDM.Core.Clients.Http
                 {
                     var handler = new HttpClientHandler
                     {
-                        AutomaticDecompression = DecompressionMethods.All,
+                        // A download manager must read the wire entity: byte ranges and Content-Length
+                        // describe the encoded body, so transparent decompression corrupts both sizes
+                        // and offsets (a gzip'd 150 MB download came out 52 KB short and was still
+                        // marked finished). Compression is re-applied locally in DotNetHttpSession.
+                        AutomaticDecompression = DecompressionMethods.None,
                         PreAuthenticate = true,
                         UseDefaultCredentials = true,
                         MaxConnectionsPerServer = 100
@@ -90,6 +95,9 @@ namespace XDM.Core.Clients.Http
             {
                 SetHeader(http, "Cookie", cookies);
             }
+            // A caller may forward a browser's gzip header; ranges and lengths only hold on identity
+            http.Headers.AcceptEncoding.Clear();
+            http.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("identity"));
             return http;
         }
 

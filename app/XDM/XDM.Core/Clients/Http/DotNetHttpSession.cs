@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 #if NET5_0_OR_GREATER
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,10 @@ namespace XDM.Core.Clients.Http
 
         public string? ContentDispositionFileName => GetContentDisposition();
 
-        public long ContentLength => Response?.Content?.Headers?.ContentLength ?? Response?.Content?.Headers?.ContentRange?.Length ?? -1;
+        // The encoded body length is not the file size: report unknown so callers never plan against it
+        public long ContentLength => Compressed
+            ? -1
+            : Response?.Content?.Headers?.ContentLength ?? Response?.Content?.Headers?.ContentRange?.Length ?? -1;
 
         public DateTime LastModified => Response!.Content?.Headers?.LastModified?.Date ?? DateTime.Now;
 
@@ -66,7 +70,22 @@ namespace XDM.Core.Clients.Http
         public Stream GetResponseStream()
         {
             if (Response?.Content == null) return Stream.Null;
-            return Response.Content.ReadAsStreamAsync(this.CancellationToken).Result;
+            return Decode(Response.Content.ReadAsStreamAsync(this.CancellationToken).Result);
+        }
+
+        // A server that ignores identity still yields readable bytes, as the old transparent mode did
+        private Stream Decode(Stream stream)
+        {
+            var encoding = Response!.Content.Headers.ContentEncoding.FirstOrDefault();
+            if (string.IsNullOrEmpty(encoding)) return stream;
+            encoding = encoding.ToLowerInvariant();
+            if (encoding.Contains("gzip"))
+                return new System.IO.Compression.GZipStream(stream, System.IO.Compression.CompressionMode.Decompress);
+            if (encoding.Contains("deflate"))
+                return new System.IO.Compression.DeflateStream(stream, System.IO.Compression.CompressionMode.Decompress);
+            if (encoding.Contains("br"))
+                return new System.IO.Compression.BrotliStream(stream, System.IO.Compression.CompressionMode.Decompress);
+            return stream;
         }
 
         public string? ReadAsString(CancelFlag cancellationToken)

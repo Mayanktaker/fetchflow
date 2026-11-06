@@ -653,6 +653,12 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
         // Sets the timestamp and size after the bytes are in the target
         private void FinishAssembled(long totalBytes)
         {
+            // A short file must never leave as a successful download (an MP3 conversion changes the size)
+            if (state!.FileSize > 0 && !state.ConvertToMp3 && totalBytes != state.FileSize)
+            {
+                Log.Debug("Assembled size mismatch: expected " + state.FileSize + ", got " + totalBytes);
+                throw new AssembleFailedException(ErrorCode.InvalidResponse);
+            }
             if (this.totalSize < 1)
             {
                 this.totalSize = totalBytes;

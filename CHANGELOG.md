@@ -5,6 +5,14 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
+## Unreleased
+
+### Bug fixes
+
+- **Large downloads no longer save broken files:** a transfer could reach 100% and still be a few kilobytes short, which is why a freshly downloaded RPM kept refusing to install. FetchFlow now finishes the file at its true size, and if a transfer ever ends short it tells you instead of handing over a damaged file
+
+---
+
 ## v9.1.21.0 (2026-11-05)
 
 ### What's new

@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -36,7 +37,9 @@ namespace XDM.Core.Clients.Http
             }
             http.Timeout = http.ReadWriteTimeout = (int)Timeout.TotalMilliseconds;
             http.UseDefaultCredentials = true;
-            http.AutomaticDecompression =  DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            http.AutomaticDecompression = DecompressionMethods.None;
+            // Same rule as the .NET 5+ client: ranges and Content-Length describe the wire entity
+            http.Headers[HttpRequestHeader.AcceptEncoding] = "identity";
             http.AllowAutoRedirect = true;
 
             http.ConnectionGroupName = this.connectionGroupName;
@@ -230,6 +233,8 @@ namespace XDM.Core.Clients.Http
                     break;
                 case "range":
                 case "content-length":
+                case "accept-encoding":
+                    // A browser-forwarded value must not undo the identity-only rule set above
                     break;
                 default:
                     request.Headers.Add(key, value);

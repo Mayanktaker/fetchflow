@@ -19,7 +19,8 @@ namespace XDM.Core.BrowserMonitoring
     {
         private NanoServer server;
         private static string[] blockedHeaders = { "accept", "if", "authorization", "proxy", "connection", "expect", "TE",
-            "upgrade", "range", "cookie", "transfer-encoding", "content-type", "content-length","content-encoding" };
+            "upgrade", "range", "cookie", "transfer-encoding", "content-type", "content-length","content-encoding",
+            "accept-encoding" };
 
         public static IpcHttpMessageProcessor? Instance { get; private set; }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -60,7 +61,15 @@ namespace XDM.Core.Clients.Http
 
         public Stream GetResponseStream()
         {
-            return Response!.GetResponseStream();
+            var stream = Response!.GetResponseStream();
+            var encoding = Response.ContentEncoding;
+            if (string.IsNullOrEmpty(encoding)) return stream;
+            encoding = encoding.ToLowerInvariant();
+            if (encoding.Contains("gzip"))
+                return new System.IO.Compression.GZipStream(stream, System.IO.Compression.CompressionMode.Decompress);
+            if (encoding.Contains("deflate"))
+                return new System.IO.Compression.DeflateStream(stream, System.IO.Compression.CompressionMode.Decompress);
+            return stream;
         }
 
         public string ReadAsString(CancelFlag cancellationToken)
