@@ -10,6 +10,7 @@ For end users: what looks different, what's smoother, what no longer crashes.
 ### Bug fixes
 
 - **Large downloads no longer save broken files:** a transfer could reach 100% and still be a few kilobytes short, which is why a freshly downloaded RPM kept refusing to install. FetchFlow now finishes the file at its true size, and if a transfer ever ends short it tells you instead of handing over a damaged file
+- **The New Download window finally tells you the file size:** it used to show "File size: ---" for anything you typed or pasted, because only the browser ever passed a size along. The window now asks the server itself, so you see how big the download is before you start it
 
 ---
 

@@ -1,7 +1,11 @@
-﻿using System.IO;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
+using System.Collections.Generic;
+using System.IO;
 using TraceLog;
 using Translations;
 using XDM.Core;
+using XDM.Core.Clients.Http;
 using XDM.Core.UI;
 using XDM.Core.Util;
 
@@ -77,6 +81,32 @@ namespace XDM.Core.UI
             }
             return Config.Instance.RecentFolders.Count > 0 ? Config.Instance.RecentFolders[index - 2] :
                 Config.Instance.DefaultDownloadFolder;
+        }
+
+        // Asks the server for the entity size without downloading it; 0 when it will not say.
+        // The client requests identity, so a compressed body length is never mistaken for the size.
+        internal static long ProbeFileSize(string? url,
+            Dictionary<string, List<string>>? headers, string? cookies, AuthenticationInfo? authentication)
+        {
+            if (string.IsNullOrEmpty(url) || !Helpers.IsUriValid(url)) return 0;
+            try
+            {
+                using var http = HttpClientFactory.NewHttpClient(Config.Instance.Proxy);
+                http.Timeout = TimeSpan.FromSeconds(Math.Max(5, Math.Min(Config.Instance.NetworkTimeout, 15)));
+                var request = http.CreateGetRequest(new Uri(url), headers, cookies, authentication);
+                // A one-byte range carries the total in Content-Range and moves no body
+                request.AddRange(0, 0);
+                using var response = http.Send(request);
+                var size = response.ContentRangeLength;
+                if (size < 1) size = response.ContentLength;
+                Log.Debug($"Size probe: {url} -> {size}");
+                return size > 0 ? size : 0;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Size probe failed: " + url);
+                return 0;
+            }
         }
     }
 }

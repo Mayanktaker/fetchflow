@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Translations;
@@ -15,6 +16,23 @@ namespace XDM.Core.UI
             Action? destroyCallback = null)
         {
             window.DestroyEvent += (_, _) => destroyCallback?.Invoke();
+
+            // A size is only known once a server answers, so a typed or header-less URL is probed
+            // after a short pause instead of leaving "---" on screen forever
+            var probeUrl = string.Empty;
+            var probeTimer = new System.Threading.Timer(_ =>
+            {
+                var size = CommonUtils.ProbeFileSize(probeUrl, message?.RequestHeaders, message?.Cookies, null);
+                window.SetFileSizeText(size > 0 ? FormattingHelper.FormatSize(size) : "---");
+            }, null, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+            window.DestroyEvent += (_, _) => probeTimer.Dispose();
+
+            void ScheduleSizeProbe(int delayMs)
+            {
+                probeUrl = window.Url;
+                probeTimer.Change(delayMs, System.Threading.Timeout.Infinite);
+            }
+
             window.SetFolderValues(CommonUtils.GetFolderValues());
             if (Config.Instance.FolderSelectionMode == FolderSelectionMode.Auto)
             {
@@ -53,6 +71,7 @@ namespace XDM.Core.UI
                     catch { }
                 }
                 window.SetFileSizeText(contentLength > 0 ? FormattingHelper.FormatSize(contentLength) : "---");
+                if (contentLength <= 0) ScheduleSizeProbe(0);
             }
             else
             {
@@ -61,6 +80,7 @@ namespace XDM.Core.UI
                 {
                     window.Url = url;
                     window.SelectedFileName = FileHelper.SanitizeFileName(FileHelper.GetFileName(new Uri(url)));
+                    ScheduleSizeProbe(0);
                 }
                 window.UrlChangedEvent += (sender, args) =>
                 {
@@ -71,6 +91,8 @@ namespace XDM.Core.UI
                     }
                 };
             }
+
+            window.UrlChangedEvent += (_, _) => ScheduleSizeProbe(600);
 
             window.FileBrowsedEvent += CommonUtils.OnFileBrowsed;
             window.DropdownSelectionChangedEvent += CommonUtils.OnDropdownSelectionChanged;
