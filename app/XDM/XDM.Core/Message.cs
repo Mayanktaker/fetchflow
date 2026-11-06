@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using XDM.Core.Util;
 
@@ -15,6 +16,8 @@ namespace XDM.Core
         public Dictionary<string, List<string>> RequestHeaders { get; set; }
         public Dictionary<string, List<string>> ResponseHeaders { get; set; }
         public string? Cookies { get; set; }
+        // Optional expected digest supplied by the caller or the command line
+        public string? Checksum { get; set; }
         public string RequestMethod { get; set; }
         public string RequestBody { get; set; }
         public string MediaSourceUrl { get; set; }

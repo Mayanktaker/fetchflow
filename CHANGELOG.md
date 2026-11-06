@@ -5,6 +5,15 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ---
 
+## Unreleased
+
+### What's new
+
+- **Verify a download while it downloads:** the New Download window takes an optional checksum — paste the SHA-256, MD5, SHA-1 or SHA-512 the site publishes and FetchFlow checks the finished file against it. A mismatch marks the download failed with the reason instead of quietly handing you a file that looks fine
+- **`--checksum` on the command line:** `fetchflow --url <link> --checksum <hash>` does the same for scripted downloads
+
+---
+
 ## v9.1.22.0 (2026-11-06)
 
 ### Bug fixes

@@ -127,6 +127,16 @@ namespace XDM.Core.IO
                 }
             }
             catch { }
+            try
+            {
+                // Added later: an expected digest the user supplied
+                if (r.BaseStream.Position < r.BaseStream.Length)
+                {
+                    var sum = XDM.Messaging.StreamHelper.ReadString(r);
+                    state.Checksum = string.IsNullOrWhiteSpace(sum) ? null : sum;
+                }
+            }
+            catch { }
             return state;
         }
 
@@ -168,6 +178,7 @@ namespace XDM.Core.IO
             w.Write(state.ConvertToMp3);
             w.Write(state.AudioBitrate ?? string.Empty);
             w.Write(state.SharedPartFile);
+            w.Write(state.Checksum ?? string.Empty);
         }
 
         public static DualSourceHTTPDownloaderState LoadDualSourceHTTPDownloaderState(string id)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System.Collections.Generic;
 using XDM.Core;
 
 #if !NET5_0_OR_GREATER
@@ -23,7 +24,8 @@ namespace XDM.Core
                 [errPrefix + ErrorCode.FFmpegNotFound] = "FFmpeg not found",
                 [errPrefix + ErrorCode.FFmpegError] = "FFmpeg error",
                 [errPrefix + ErrorCode.DiskError] = "Disk is either full or readonly",
-                [errPrefix + ErrorCode.SessionExpired] = "Session expired"
+                [errPrefix + ErrorCode.SessionExpired] = "Session expired",
+                [errPrefix + ErrorCode.ChecksumMismatch] = "Checksum does not match the downloaded file"
             };
         }
 

@@ -269,7 +269,8 @@ namespace XDM.Core
                         Uri = url,
                         File = file,
                         Headers = message?.RequestHeaders,
-                        Cookies = message?.Cookies
+                        Cookies = message?.Cookies,
+                        Checksum = message?.Checksum
                     },
                     file,
                     FileNameFetchMode.FileNameAndExtension,

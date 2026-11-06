@@ -72,6 +72,10 @@ namespace XDM.Core.UI
                 }
                 window.SetFileSizeText(contentLength > 0 ? FormattingHelper.FormatSize(contentLength) : "---");
                 if (contentLength <= 0) ScheduleSizeProbe(0);
+                if (!string.IsNullOrWhiteSpace(message.Checksum))
+                {
+                    window.Checksum = message.Checksum;
+                }
             }
             else
             {
@@ -200,7 +204,8 @@ namespace XDM.Core.UI
                     Uri = window.Url,
                     Headers = message?.RequestHeaders,
                     Cookies = message?.Cookies,
-                    ContentLength = contentLength
+                    ContentLength = contentLength,
+                    Checksum = window.Checksum
                 },
                 FileHelper.SanitizeFileName(window.SelectedFileName),
                 window.SelectedFileName != fileName ? FileNameFetchMode.None : FileNameFetchMode.FileNameAndExtension,

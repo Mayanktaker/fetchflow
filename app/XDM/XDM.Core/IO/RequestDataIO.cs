@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,6 +30,7 @@ namespace XDM.Core.IO
             StreamHelper.WriteStateCookies(info.Cookies, w);
             w.Write(info.ConvertToMp3);
             WriteStringSafe(info.AudioBitrate, w);
+            WriteStringSafe(info.Checksum, w);
             //File.WriteAllText(Path.Combine(Config.DataDir, id + ".info"), JsonConvert.SerializeObject(downloadInfo));
         }
 
@@ -115,6 +117,11 @@ namespace XDM.Core.IO
                 {
                     var br = StreamHelper.ReadString(r);
                     info.AudioBitrate = string.IsNullOrWhiteSpace(br) ? null : br;
+                }
+                if (r.BaseStream.Position < r.BaseStream.Length)
+                {
+                    var sum = StreamHelper.ReadString(r);
+                    info.Checksum = string.IsNullOrWhiteSpace(sum) ? null : sum;
                 }
                 return info;
             }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -33,6 +34,11 @@ namespace XDM.Wpf.UI.Dialogs.NewDownload
 
         public bool IsEmpty { get => !TxtUrl.IsReadOnly; set => TxtUrl.IsReadOnly = !value; }
         public string Url { get => TxtUrl.Text; set => TxtUrl.Text = value; }
+        public string? Checksum
+        {
+            get => string.IsNullOrWhiteSpace(TxtChecksum.Text) ? null : TxtChecksum.Text.Trim();
+            set => TxtChecksum.Text = value ?? string.Empty;
+        }
         public AuthenticationInfo? Authentication { get => authentication; set => authentication = value; }
         public ProxyInfo? Proxy { get => proxy; set => proxy = value; }
         public int SpeedLimit { get => speedLimit; set => speedLimit = value; }

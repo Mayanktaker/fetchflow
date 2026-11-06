@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -69,6 +70,10 @@ namespace XDM.Core
                     if (args.ContainsKey("--known-file-size"))
                     {
                         message.ResponseHeaders["Content-Length"] = args["--known-file-size"];
+                    }
+                    if (args.ContainsKey("--checksum"))
+                    {
+                        message.Checksum = args["--checksum"][0];
                     }
                     if (args.ContainsKey("--known-mime-type"))
                     {

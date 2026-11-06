@@ -77,6 +77,13 @@ namespace Translations
             return key ?? string.Empty;
         }
 
+        // Language files may not carry a new key yet; show plain English instead of the raw key
+        public static string GetTextOrDefault(string key, string englishDefault)
+        {
+            var text = GetText(key);
+            return string.IsNullOrWhiteSpace(text) || text == key ? englishDefault : text;
+        }
+
         // Parses key-value pairs from text file into string dictionary
         private static void LoadTexts(string path, bool overwrite)
         {

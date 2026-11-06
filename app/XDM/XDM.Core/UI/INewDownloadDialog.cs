@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,8 @@ namespace XDM.Core.UI
         void ShowWindow();
         void ShowMessageBox(string message);
         string Url { get; set; }
+        // Expected digest the user can paste; empty means no verification
+        string? Checksum { get; set; }
         AuthenticationInfo? Authentication { get; set; }
         ProxyInfo? Proxy { get; set; }
         int SpeedLimit { get; set; }

@@ -1,3 +1,4 @@
+// © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,11 +30,13 @@ namespace XDM.GtkUI.Dialogs.NewDownload
 
         [UI] private Entry TxtUrl;
         [UI] private Entry TxtFile;
+        [UI] private Entry TxtChecksum;
         [UI] private ComboBox CmbLocation;
         [UI] private Label lblFileSize;
         [UI] private Label lblAddress;
         [UI] private Label lblFile;
         [UI] private Label lblSaveIn;
+        [UI] private Label lblChecksum;
         [UI] private LinkButton lblIgnoreLabel;
         [UI] private MenuButton btnDownloadLater;
         [UI] private Button btnDownloadNow;
@@ -89,6 +92,7 @@ namespace XDM.GtkUI.Dialogs.NewDownload
             lblAddress.Text = TextResource.GetText("ND_ADDRESS");
             lblFile.Text = TextResource.GetText("ND_FILE");
             lblSaveIn.Text = TextResource.GetText("LBL_SAVE_IN");
+            lblChecksum.Text = TextResource.GetTextOrDefault("ND_CHECKSUM", "Checksum (optional)");
             btnDownloadNow.Label = TextResource.GetText("ND_DOWNLOAD_NOW");
             btnDownloadLater.Label = TextResource.GetText("ND_DOWNLOAD_LATER");
             btnMore.Label = TextResource.GetText("ND_MORE");
@@ -123,6 +127,7 @@ namespace XDM.GtkUI.Dialogs.NewDownload
 
         public bool IsEmpty { get => TxtUrl.IsEditable; set => TxtUrl.IsEditable = value; }
         public string Url { get => TxtUrl.Text; set => TxtUrl.Text = value; }
+        public string? Checksum { get => TxtChecksum.Text; set => TxtChecksum.Text = value ?? string.Empty; }
         public AuthenticationInfo? Authentication { get => authentication; set => authentication = value; }
         public ProxyInfo? Proxy { get => proxy; set => proxy = value; }
         public int SpeedLimit { get => speedLimit; set => speedLimit = value; }

@@ -92,7 +92,7 @@ namespace XDM.Core.UI
             try
             {
                 using var http = HttpClientFactory.NewHttpClient(Config.Instance.Proxy);
-                http.Timeout = TimeSpan.FromSeconds(Math.Max(5, Math.Min(Config.Instance.NetworkTimeout, 15)));
+                http.Timeout = TimeSpan.FromSeconds(Math.Max(5, Config.Instance.NetworkTimeout));
                 var request = http.CreateGetRequest(new Uri(url), headers, cookies, authentication);
                 // A one-byte range carries the total in Content-Range and moves no body
                 request.AddRange(0, 0);

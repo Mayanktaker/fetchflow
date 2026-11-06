@@ -41,6 +41,7 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                 Proxy = proxy,
                 ConvertToMp3 = convertToMp3,
                 AudioBitrate = info.AudioBitrate,
+                Checksum = info.Checksum,
                 SharedPartFile = true
             };
 
@@ -659,6 +660,11 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                 Log.Debug("Assembled size mismatch: expected " + state.FileSize + ", got " + totalBytes);
                 throw new AssembleFailedException(ErrorCode.InvalidResponse);
             }
+            // A digest the user supplied is the only proof the bytes are right
+            if (!string.IsNullOrWhiteSpace(state.Checksum))
+            {
+                VerifyChecksum(state.Checksum!);
+            }
             if (this.totalSize < 1)
             {
                 this.totalSize = totalBytes;
@@ -670,6 +676,29 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
                     File.SetLastWriteTime(TargetFile, state.LastModified);
                 }
                 catch { }
+            }
+        }
+
+        // Fails the download when the assembled file does not match the expected digest
+        private void VerifyChecksum(string expected)
+        {
+            try
+            {
+                var computed = ChecksumHelper.ComputeHashesAsync(TargetFile!).GetAwaiter().GetResult();
+                var match = ChecksumHelper.CompareHash(expected, computed);
+                Log.Debug($"Checksum {match.Status} ({match.MatchedAlgorithm}) for {TargetFile}");
+                if (match.Status == ChecksumMatchStatus.Mismatch)
+                {
+                    // The bytes stay on disk on purpose: a mistyped hash must not delete a good file
+                    throw new AssembleFailedException(ErrorCode.ChecksumMismatch,
+                        "Checksum mismatch: expected " + expected);
+                }
+            }
+            catch (AssembleFailedException) { throw; }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Checksum could not be verified");
+                throw new AssembleFailedException(ErrorCode.ChecksumMismatch, ex);
             }
         }
 
@@ -729,5 +758,7 @@ namespace XDM.Core.Downloader.Progressive.SingleHttp
         public string? AudioBitrate;
         // Progress lives in one part file written at absolute offsets; false for downloads from older versions
         public bool SharedPartFile;
+        // Optional expected digest, checked once the file is assembled
+        public string? Checksum;
     }
 }

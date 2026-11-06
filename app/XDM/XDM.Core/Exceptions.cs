@@ -1,4 +1,5 @@
-﻿using System;
+﻿// © Mayanktaker Computers & Web Development | https://mayanktaker.com
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -40,6 +41,7 @@ namespace XDM.Core
     {
         public AssembleFailedException(ErrorCode errorCode) : base(errorCode) { }
         public AssembleFailedException(ErrorCode errorCode, Exception e) : base(errorCode, e.Message) { }
+        public AssembleFailedException(ErrorCode errorCode, string message) : base(errorCode, message) { }
     }
 
     public class HttpException : Exception

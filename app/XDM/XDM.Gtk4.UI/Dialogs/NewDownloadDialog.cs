@@ -21,6 +21,7 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly int uiThreadId;
         private readonly Entry urlEntry = Entry.New();
         private readonly Entry fileEntry = Entry.New();
+        private readonly Entry checksumEntry = Entry.New();
         private readonly Label sizeLabel = Label.New("---");
         private readonly DropDown folderDropDown;
         private readonly Button browseButton;
@@ -50,6 +51,13 @@ namespace XDM.Gtk4UI.Dialogs
         {
             get => fileEntry.GetText() ?? string.Empty;
             set => fileEntry.SetText(value);
+        }
+
+        // Expected digest the user can paste; empty means no verification
+        public string? Checksum
+        {
+            get => string.IsNullOrWhiteSpace(checksumEntry.GetText()) ? null : checksumEntry.GetText()!.Trim();
+            set => checksumEntry.SetText(value ?? string.Empty);
         }
 
         public int SeletedFolderIndex
@@ -154,6 +162,12 @@ namespace XDM.Gtk4UI.Dialogs
             sizeLabel.AddCssClass("dim-label");
             sizeBox.Append(sizeLabel);
             formBox.Append(BuildLabeledRow(TextResource.GetText("ND_FILE_SIZE") ?? "File size:", sizeBox));
+
+            checksumEntry.Hexpand = true;
+            checksumEntry.PlaceholderText = TextResource.GetTextOrDefault("ND_CHECKSUM", "Checksum (optional)");
+            checksumEntry.TooltipText = TextResource.GetTextOrDefault("ND_CHECKSUM_HINT",
+                "Paste the published SHA-256, MD5, SHA-1 or SHA-512 to verify the file");
+            formBox.Append(BuildLabeledRow(TextResource.GetTextOrDefault("ND_CHECKSUM", "Checksum (optional)"), checksumEntry));
 
             var buttonBox = Box.New(Orientation.Horizontal, 10);
             buttonBox.Halign = Align.End;
