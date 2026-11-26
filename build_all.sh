@@ -98,8 +98,9 @@ cd ../../..
 echo "Packaging Firefox Extension..."
 cd app/XDM/firefox-amo
 if [ -n "$MOZ_API_KEY" ] && [ -n "$MOZ_API_SECRET" ]; then
-    echo "Signing Firefox extension with web-ext..."
-    npx -y web-ext sign --api-key="$MOZ_API_KEY" --api-secret="$MOZ_API_SECRET" --channel=unlisted --artifacts-dir=web-ext-artifacts
+    echo "Signing Firefox extension with web-ext (listed: publishes to the AMO listing)..."
+    # A version already uploaded to AMO fails here by design — bump version.env instead
+    npx -y web-ext sign --api-key="$MOZ_API_KEY" --api-secret="$MOZ_API_SECRET" --channel=listed --artifacts-dir=web-ext-artifacts
     cp web-ext-artifacts/*.xpi "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi"
 else
     echo "No Mozilla API keys provided, creating unsigned XPI..."

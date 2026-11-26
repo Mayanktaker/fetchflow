@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup .NET SDK 8.0
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: '8.0.x'
 
@@ -77,7 +77,9 @@ jobs:
 
           cd app/XDM/firefox-amo
           if [ -n "$MOZ_API_KEY" ] && [ -n "$MOZ_API_SECRET" ]; then
-            npx -y web-ext sign --api-key="$MOZ_API_KEY" --api-secret="$MOZ_API_SECRET" --channel=unlisted --artifacts-dir=web-ext-artifacts
+            # listed: publishes the version to the public AMO listing (review still applies).
+            # A re-tag of an already-uploaded version fails here by design — bump the version.
+            npx -y web-ext sign --api-key="$MOZ_API_KEY" --api-secret="$MOZ_API_SECRET" --channel=listed --artifacts-dir=web-ext-artifacts
             cp web-ext-artifacts/*.xpi "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi"
           else
             zip -r "$OUT_DIR/fetchflow-firefox-extension-${VERSION}.xpi" . -x ".*"
@@ -140,7 +142,7 @@ jobs:
           ls -lh "$OUT_DIR"
 
       - name: Upload Linux Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux-artifacts
           path: |
@@ -161,10 +163,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download Linux tarball
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: linux-artifacts
           path: fetchflow-release
@@ -189,7 +191,7 @@ jobs:
           ls -lh fetchflow-release
 
       - name: Upload Arch Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: arch-artifacts
           path: |
@@ -203,10 +205,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup .NET SDK 8.0
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: '8.0.x'
 
@@ -260,7 +262,7 @@ jobs:
           Write-Host "Generated Windows Setup Installer: fetchflow-release\fetchflow-windows-x64-$env:VERSION-setup.exe"
 
       - name: Upload Windows Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-artifacts
           path: |
@@ -273,22 +275,22 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download Linux artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: linux-artifacts
           path: fetchflow-release
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: windows-artifacts
           path: fetchflow-release
 
       - name: Download Arch artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: arch-artifacts
           path: fetchflow-release
@@ -334,7 +336,7 @@ jobs:
           cat SHA256SUMS.txt
 
       - name: Upload Complete Release Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: fetchflow-complete-release
           path: fetchflow-release/*
@@ -368,7 +370,7 @@ jobs:
           fi
 
       - name: Create GitHub Release and Upload Assets
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
