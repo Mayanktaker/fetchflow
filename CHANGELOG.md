@@ -7,10 +7,24 @@ For end users: what looks different, what's smoother, what no longer crashes.
 
 ## Unreleased
 
+(nothing yet)
+
+---
+
+## v9.1.23.0 (2026-11-26)
+
 ### What's new
 
 - **Verify a download while it downloads:** the New Download window takes an optional checksum — paste the SHA-256, MD5, SHA-1 or SHA-512 the site publishes and FetchFlow checks the finished file against it. A mismatch marks the download failed with the reason instead of quietly handing you a file that looks fine
 - **`--checksum` on the command line:** `fetchflow --url <link> --checksum <hash>` does the same for scripted downloads
+- **Test Capture reaches the Chrome extension:** the popup's end-to-end self-test — start a real download, watch FetchFlow take it over — is now in Chrome as well as Firefox
+
+### Bug fixes
+
+- **The update banner stops crying wolf:** the update check compared releases against a version string that never changed, so every start announced a newer version. It now compares against the version you actually installed
+- **One close button per window:** the Media Grabber, License and Download Complete windows no longer carry a second "Close" button beside the titlebar's ✕
+- **The Firefox right-click menu works again:** the extension requested the wrong permission name for its menus, so "Download with FetchFlow" could fail to appear. Menu entries are also created once per install instead of on every background wake
+- **Quieter, leaner extension packages:** both extensions drop their unused permissions and dead pages, and the AMO validator now reports zero errors and zero warnings
 
 ---
 
