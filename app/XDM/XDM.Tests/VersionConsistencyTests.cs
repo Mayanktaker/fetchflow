@@ -1,6 +1,8 @@
 // © Mayanktaker Computers & Web Development | https://mayanktaker.com
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using XDM.Core;
@@ -74,6 +76,30 @@ namespace XDM.Tests
         public void AppVersionRoundTripsTheString()
         {
             Assert.AreEqual(AppInfo.APP_VERSION, AppInfo.AppVersion.ToString());
+        }
+
+        // User-facing download examples must name the release that actually ships
+        [TestMethod]
+        public void DocAssetNamesNameTheCurrentRelease()
+        {
+            var root = RepoRoot();
+            var expected = EnvVersion(root);
+            var docs = new List<string> { Path.Combine(root, "README.md") };
+            docs.AddRange(Directory.GetFiles(Path.Combine(root, "docs"), "*.md"));
+
+            var assetWithVersion = new Regex(@"fetchflow[-_][A-Za-z0-9._-]*?(\d+\.\d+\.\d+(?:\.\d+)?)");
+            var stale = new List<string>();
+            foreach (var path in docs)
+            {
+                foreach (Match m in assetWithVersion.Matches(File.ReadAllText(path)))
+                {
+                    if (m.Groups[1].Value != expected)
+                        stale.Add($"{Path.GetFileName(path)}: {m.Value} (expected {expected})");
+                }
+            }
+
+            Assert.IsTrue(stale.Count == 0,
+                "doc asset names drift from version.env:\n  " + string.Join("\n  ", stale));
         }
     }
 }
