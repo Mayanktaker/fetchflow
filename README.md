@@ -337,18 +337,25 @@ FetchFlow includes native Manifest V3 browser extensions with zero cloud telemet
 
 ```
 Browser Extension (Chrome / Firefox MV3)
-    │
-    │ (WebSocket / HTTP Loopback IPC @ 127.0.0.1:8597)
+    │  POST /download, /media, /tab-update, /vid, /link, /blob-upload, /sync, /args
+    │  HTTP + WebSocket loopback on 127.0.0.1:8597..8603
     ▼
-IpcHttpMessageProcessor.cs
-    ├── VideoUrlHelper.cs  (yt-dlp media extraction & format caching)
-    ├── NetworkHelper.cs   (Header parsing, referer injection, checksums)
-    └── DownloadEngine.cs  (Parallel socket chunking & multi-part assembler)
+XDM.Core/BrowserMonitoring/IpcHttpMessageProcessor.cs   (on XDM.Core/HttpServer/NanoServer.cs)
+    ├── ApplicationCore.cs              start/stop/resume, queues, scheduler, DB rows
+    ├── VideoUrlHelper.cs / YDLWrapper/  yt-dlp format extraction
+    ├── MediaParser/                     HLS (.m3u8), DASH (.mpd), YouTube
+    └── Downloader/
+          Progressive/SingleHttp   one URL -> parallel range pieces
+          Progressive/DualHttp     separate audio + video -> FFmpeg mux
+          Adaptive/Hls, Adaptive/Dash   segmented streams -> FFmpeg assembly
             ▼
-GTK3 Modern Shell (XDM.Gtk.UI)
-    ├── Modern CSD HeaderBar & Responsive Paned Sidebar
-    ├── StatusNotifierItem (D-Bus Tray Client for KDE/GNOME/Waybar)
-    └── SQLite Storage Engine (~/.fetchflow-app-data/downloads.db)
+Frontends (each imports XDM.Core.projitems as shared source)
+    ├── XDM.Gtk4.UI   primary Linux shell (GirCore GTK4 + libadwaita)
+    ├── XDM.Gtk.UI    GTK 3 compatibility shell (GtkSharp + Glade XML)
+    └── XDM.Wpf.UI    Windows shell (.NET Framework 4.7.2)
+            ▼
+Storage: downloads.db (SQLite) + queues.db (binary) + <id>.state (resume)
+         under ~/.fetchflow-app-data/
 ```
 
 ---
