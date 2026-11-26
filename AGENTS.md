@@ -20,7 +20,7 @@ Operating map for AI agents. User docs: [README.md](README.md). Design tokens: [
 
 ## Docs (don't duplicate, point here)
 
-`README.md` (user/install) · `CHANGELOG.md` (end-user changelog) · `CHROMEWEBSTORE.md` (CWS listing + Limited Use) · `FIREFOXWEBSTORE.md` (AMO listing + permission/data-collection declarations) · `docs/privacy.html` (zero-telemetry policy) · `docs/signing.md` (GPG setup/verify) · `.github/workflows/release.yml` + `sync-gh-pages.yml` + `xdm-wpf-build.yml` + `lint.yml` (CI/release) · `docs/design.md` (UI tokens) · `docs/audit/` (GNOME/KDE support matrix, findings register, GTK 3→4 coupling inventory) · `fetchflow-gnome-kde-gtk4-ui-audit.md` (GTK 4 roadmap + current status)
+`README.md` (user/install) · `CHANGELOG.md` (end-user changelog) · `CHROMEWEBSTORE.md` (CWS listing + Limited Use) · `FIREFOXWEBSTORE.md` (AMO listing + permission/data-collection declarations) · `docs/privacy.html` (zero-telemetry policy) · `docs/signing.md` (GPG setup/verify) · `.github/workflows/release.yml` + `sync-gh-pages.yml` + `xdm-wpf-build.yml` + `lint.yml` (CI/release) · `.github/dependabot.yml` (weekly grouped bump of the SHA-pinned actions — never hand-unpin them) · `docs/design.md` (UI tokens) · `docs/audit/` (GNOME/KDE support matrix, findings register, GTK 3→4 coupling inventory) · `fetchflow-gnome-kde-gtk4-ui-audit.md` (GTK 4 roadmap + current status)
 
 ## Commands
 

@@ -1,0 +1,38 @@
+# © Mayanktaker Computers & Web Development | https://mayanktaker.com
+# Keeps the SHA-pinned GitHub Actions in .github/workflows current.
+# Dependabot updates a pinned `uses: owner/repo@<sha> # vX.Y.Z` reference by moving
+# BOTH the SHA and the trailing version comment, so the pins stay pinned — which is
+# why Renovate's `pinDigests: true` is not needed here (nothing is tag-referenced).
+# Renovate equivalent, if you ever install that app instead:
+#   { "packageRules": [{ "matchManagers": ["github-actions"], "pinDigests": true }] }
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    # "/" is the workflow root: Dependabot reads every file under .github/workflows
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Asia/Kolkata"
+    # One PR at a time keeps the review honest; a stuck PR must not pile up more
+    open-pull-requests-limit: 2
+    # Skip a release that is younger than a week: an action that gets yanked or
+    # re-tagged right after publishing never reaches master
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      # 24 pins, one PR: a node20-style deprecation is noticed and fixed in a single
+      # review cycle instead of six
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
