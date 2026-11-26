@@ -56,8 +56,9 @@ jobs:
         run: |
           # Vertical slice + secondary dialogs, and the CoreService.AppVersion wiring
           # assertion: a stale version literal fails here before any artifact is built.
-          # The script opens its own session bus; xvfb-run supplies the display.
-          xvfb-run -a bash scripts/run-gtk4-smoke.sh --no-xvfb
+          # The script opens its own session bus; xvfb-run supplies the display, and the
+          # timeout turns a wedged smoke into a 5-minute failure instead of a hung job.
+          timeout 300 xvfb-run -a bash scripts/run-gtk4-smoke.sh --no-xvfb
 
       - name: Build and package Linux release artifacts
         env:
