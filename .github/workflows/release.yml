@@ -30,6 +30,11 @@ jobs:
           # librsvg2-common = gdk-pixbuf SVG loader: without it the checkbox
           # pixel tests throw "Couldn't recognize the image file format"
           sudo apt-get install -y rpm dpkg-dev zip tar libgtk-3-0 xvfb librsvg2-common
+          # GTK 4 smoke gate loads the real GTK 4 + libadwaita runtime. Each name is
+          # best-effort (libadwaita renames to *-t64 on newer images); the smoke step
+          # is the check, and it fails loudly if either library is still missing.
+          sudo apt-get install -y libgtk-4-1 || true
+          sudo apt-get install -y libadwaita-1-0 || sudo apt-get install -y libadwaita-1-0t64 || true
 
       # Split gate: pure tests first, GTK (xvfb) tests second — isolates which
       # batch takes the testhost down instead of one opaque 126/134 crash.
@@ -44,6 +49,15 @@ jobs:
         run: |
           # --blame: if the test host crashes, VSTest names the test responsible
           xvfb-run bash scripts/run-gtk-smoke.sh --no-xvfb -- dotnet test app/XDM/XDM.Tests/XDM.Tests.csproj -c Release --blame --filter "TestCategory=GtkSmoke"
+
+      - name: Run GTK 4 smoke (xvfb)
+        env:
+          NO_AT_BRIDGE: "1"
+        run: |
+          # Vertical slice + secondary dialogs, and the CoreService.AppVersion wiring
+          # assertion: a stale version literal fails here before any artifact is built.
+          # The script opens its own session bus; xvfb-run supplies the display.
+          xvfb-run -a bash scripts/run-gtk4-smoke.sh --no-xvfb
 
       - name: Build and package Linux release artifacts
         env:

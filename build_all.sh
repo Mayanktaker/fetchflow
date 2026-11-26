@@ -62,6 +62,18 @@ dotnet build app/XDM/XDM.Tests/XDM.Tests.csproj -c Release
 }
 echo "=== Pre-release tests passed successfully ==="
 
+# GTK 4 smoke gate: exercises the real object graph, incl. the version wiring assertion
+if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    echo "=== Running GTK 4 smoke gate ==="
+    bash scripts/run-gtk4-smoke.sh --no-xvfb || {
+        echo "ERROR: GTK 4 smoke gate failed. Aborting release build." >&2
+        exit 1
+    }
+    echo "=== GTK 4 smoke gate passed ==="
+else
+    echo "WARNING: no DISPLAY/WAYLAND_DISPLAY — skipping GTK 4 smoke gate." >&2
+fi
+
 # Extension parity gate: junk-URL lists must match across chrome/firefox/core
 echo "=== Running extension noise-filter parity test ==="
 if command -v node >/dev/null 2>&1; then
