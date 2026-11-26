@@ -1,7 +1,8 @@
 <!-- © Mayanktaker Computers & Web Development | https://mayanktaker.com -->
 # Chrome Web Store Listing — FetchFlow Browser Helper
 
-> Last Updated: 2026-09-01
+> Last Updated: 2026-11-26
+> Firefox counterpart with its own permission names: [`FIREFOXWEBSTORE.md`](FIREFOXWEBSTORE.md).
 
 ## Store Listing
 
@@ -33,7 +34,7 @@ Privacy & Data Use:
 FetchFlow Browser Helper operates 100% locally. No browsing data, download URLs, cookies, or personal information is transmitted to external servers or third parties. Data is passed exclusively over local loopback (127.0.0.1) to your local FetchFlow desktop client.
 
 Support & Source Code:
-FetchFlow is open-source software under the GNU GPL-3.0 license.
+FetchFlow is open-source software under the GNU GPL v2.0 license.
 Website: https://mayanktaker.com
 Source code & Issues: https://github.com/mayanktaker/fetchflow
 
@@ -119,7 +120,8 @@ https://mayanktaker.com
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
-| 9.1.5 | 2026-09-01 | MV3 compliance, chunked blob support, 2026 data privacy updates | Ready |
+| 9.1.23.0 | 2026-11-26 | Adds the popup Test Capture self-test; menu items are created once per install instead of on every service-worker start; popup no longer assigns saved HTML to innerHTML (clears the AMO-style XSS warning class) | Ready |
+| 9.1.5 | 2026-09-01 | MV3 compliance, chunked blob support, 2026 data privacy updates | Published |
 
 ## Review Notes
 
