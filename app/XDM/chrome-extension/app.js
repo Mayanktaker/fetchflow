@@ -603,6 +603,31 @@ export default class App {
             this.connector.reconnectNow();
             sendResponse({ health: this.connector.getHealthInfo() });
         }
+        else if (request.type === "capture-test") {
+            // End-to-end diagnostics: start a REAL browser download of a tiny file.
+            // If interception works, this download is cancelled and FetchFlow takes
+            // it over — exercising downloads.onDeterminingFilename -> shouldTakeOver
+            // -> /download.
+            if (!this.isMonitoringEnabled()) {
+                sendResponse({ error: "Monitoring is disabled — enable it first" });
+                return;
+            }
+            if (!this.connector.isConnected()) {
+                sendResponse({ error: "FetchFlow app is not connected — open it first" });
+                return;
+            }
+            chrome.downloads.download(
+                { url: "https://speed.hetzner.de/100KB.bin", saveAs: false },
+                (downloadId) => {
+                    if (chrome.runtime.lastError || downloadId === undefined) {
+                        sendResponse({ error: "Browser refused the test download: " + (chrome.runtime.lastError?.message || "unknown") });
+                        return;
+                    }
+                    sendResponse({ ok: true });
+                }
+            );
+            return true; // async sendResponse
+        }
         else if (request.type === "cmd") {
             this.userDisabled = request.enabled === false;
             this.logger.log("request.enabled:" + request.enabled);
@@ -721,6 +746,16 @@ export default class App {
     }
 
     attachContextMenu() {
+        // Click handling is registered per wake; the menu items themselves persist in the
+        // browser, so creating them again on every service-worker start only logs
+        // "duplicate id" errors. Chrome's documented pattern is install time.
+        chrome.contextMenus.onClicked.addListener(this.onMenuClicked.bind(this));
+        chrome.runtime.onInstalled.addListener(() => {
+            chrome.contextMenus.removeAll(() => this.createContextMenus());
+        });
+    }
+
+    createContextMenus() {
         chrome.contextMenus.create({
             id: 'download-any-link',
             title: "Download with FetchFlow",
@@ -738,8 +773,6 @@ export default class App {
             title: "Download Blob Media with FetchFlow",
             contexts: ["video", "audio", "image", "link"]
         });
-
-        chrome.contextMenus.onClicked.addListener(this.onMenuClicked.bind(this));
     }
 
     onTabActivated(activeInfo) {

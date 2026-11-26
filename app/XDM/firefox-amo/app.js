@@ -806,6 +806,16 @@ class App {
     }
 
     attachContextMenu() {
+        // Click handling is registered per wake; the menu items themselves persist in the
+        // browser, so creating them again on every event-page start only logs
+        // "duplicate id" errors. Firefox's documented pattern is install time.
+        browser.menus.onClicked.addListener(this.onMenuClicked.bind(this));
+        browser.runtime.onInstalled.addListener(() => {
+            browser.menus.removeAll(() => this.createContextMenus());
+        });
+    }
+
+    createContextMenus() {
         browser.menus.create({
             id: 'download-any-link',
             title: "Download with FetchFlow",
@@ -823,8 +833,6 @@ class App {
             title: "Download Blob Media with FetchFlow",
             contexts: ["video", "audio", "image", "link"]
         });
-
-        browser.menus.onClicked.addListener(this.onMenuClicked.bind(this));
     }
 
     onTabActivated(activeInfo) {

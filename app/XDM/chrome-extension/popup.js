@@ -569,12 +569,16 @@ class VideoPopup {
         const downloadAllBtn = document.getElementById("downloadAll");
         if (downloadAllBtn) {
             downloadAllBtn.disabled = this.displayedGroups.length === 0;
+            // Static icon markup only; the count is appended as a text node so no
+            // user-influenced value ever reaches an HTML sink
             downloadAllBtn.innerHTML = `
                 <svg class="btn-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                 </svg>
-                ${this.displayedGroups.length > 0 ? `Download All (${this.displayedGroups.length})` : 'Download All'}
             `;
+            downloadAllBtn.append(this.displayedGroups.length > 0
+                ? `Download All (${this.displayedGroups.length})`
+                : 'Download All');
         }
 
         this.renderGroups(this.displayedGroups);
@@ -646,17 +650,21 @@ class VideoPopup {
 
         // Reassuring button confirmation state
         if (triggerBtn) {
-            const originalHtml = triggerBtn.innerHTML;
-            triggerBtn.classList.add('btn-queued');
-            triggerBtn.innerHTML = `
+            // Keep the live child nodes instead of re-parsing saved HTML: the queued
+            // state swaps them for a static template and restores the originals after
+            const originalChildren = Array.from(triggerBtn.childNodes);
+            const queued = document.createElement('template');
+            queued.innerHTML = `
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 <span>Queued</span>
             `;
+            triggerBtn.classList.add('btn-queued');
+            triggerBtn.replaceChildren(...queued.content.childNodes);
             setTimeout(() => {
                 triggerBtn.classList.remove('btn-queued');
-                triggerBtn.innerHTML = originalHtml;
+                triggerBtn.replaceChildren(...originalChildren);
             }, 1400);
         }
 

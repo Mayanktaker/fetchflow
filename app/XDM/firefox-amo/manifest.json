@@ -1,7 +1,7 @@
 {
     "name": "FetchFlow Browser Helper",
     "manifest_version": 3,
-    "version": "9.1.22.0",
+    "version": "9.1.23.0",
     "description": "Download files and capture videos with FetchFlow Download Manager",
     "action": {
         "default_popup": "popup.html",
@@ -26,30 +26,28 @@
     ],
     "permissions": [
         "tabs",
-        "activeTab",
         "webRequest",
         "webRequestBlocking",
         "webNavigation",
         "downloads",
         "storage",
-        "contextMenus",
-        "scripting",
+        "menus",
         "cookies",
         "alarms"
     ],
-  "background": {
-    "scripts": [
-      "noise-filter.js",
-      "logger.js",
-      "connector.js",
-      "request-watcher.js",
-      "app.js",
-      "main.js"
-    ]
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self';"
-  },
+    "background": {
+        "scripts": [
+            "noise-filter.js",
+            "logger.js",
+            "connector.js",
+            "request-watcher.js",
+            "app.js",
+            "main.js"
+        ]
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self';"
+    },
     "content_scripts": [
         {
             "matches": ["http://*/*", "https://*/*"],
@@ -66,10 +64,13 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "fetchflow-browser-helper@mayanktaker.com",
-            "strict_min_version": "128.0",
+            "strict_min_version": "140.0",
             "data_collection_permissions": {
                 "required": ["none"]
             }
+        },
+        "gecko_android": {
+            "strict_min_version": "142.0"
         }
     }
 }
