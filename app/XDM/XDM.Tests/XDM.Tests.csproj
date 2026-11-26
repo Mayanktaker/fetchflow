@@ -43,6 +43,8 @@
     <Compile Include="..\XDM.Core\UI\ThemeModePolicy.cs" Link="UI\ThemeModePolicy.cs" />
     <Compile Include="..\XDM.Core\UI\ThemeModes.cs" Link="UI\ThemeModes.cs" />
     <Compile Include="..\XDM.Core\Category.cs" Link="Category.cs" />
+    <!-- VersionConsistencyTests: APP_VERSION + Version.Parse guard -->
+    <Compile Include="..\XDM.Core\AppInfo.cs" Link="AppInfo.cs" />
     <Compile Include="..\XDM.Core\UI\CategoryIconPalette.cs" Link="UI\CategoryIconPalette.cs" />
     <Compile Include="..\XDM.Core\Util\MimeTypes.cs" Link="Util\MimeTypes.cs" />
     <Compile Include="..\XDM.Core\Clients\Http\EntityLengthPolicy.cs" Link="Clients\Http\EntityLengthPolicy.cs" />

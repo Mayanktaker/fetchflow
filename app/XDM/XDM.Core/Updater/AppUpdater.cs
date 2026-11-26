@@ -17,7 +17,7 @@ namespace XDM.Core.Updater
         public static bool IsComponentUpdateAvailable => Updates?.Any(u => u.IsExternal) ?? false;
         public static string ComponentUpdateText => GetUpdateText();
         public static string UpdatePage =>
-            $"{Links.AppUpdateCheckerUrl}?v={ApplicationContext.CoreService.AppVerion}&p={ApplicationContext.CoreService.AppPlatform}";
+            $"{Links.AppUpdateCheckerUrl}?v={ApplicationContext.CoreService.AppVersion}&p={ApplicationContext.CoreService.AppPlatform}";
 
         public static void QueryNewVersion()
         {
@@ -33,7 +33,7 @@ namespace XDM.Core.Updater
             try
             {
                 Log.Debug("Checking for updates...");
-                if (UpdateChecker.GetAppUpdates(ApplicationContext.CoreService.AppVerion, out IList<UpdateInfo> upd, out bool firstUpdate))
+                if (UpdateChecker.GetAppUpdates(ApplicationContext.CoreService.AppVersion, out IList<UpdateInfo> upd, out bool firstUpdate))
                 {
                     Updates = upd;
                     if (upd != null && upd.Count > 0)

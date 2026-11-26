@@ -170,6 +170,10 @@ namespace XDM.Gtk4UI
                 throw new InvalidOperationException("PlatformUIService not registered in ApplicationContext");
             if (ApplicationContext.CoreService == null)
                 throw new InvalidOperationException("CoreService not registered in ApplicationContext");
+            // Version wiring guard: CoreService must report AppInfo's version, not a literal
+            if (ApplicationContext.CoreService.AppVersion != AppInfo.AppVersion)
+                throw new InvalidOperationException(
+                    $"CoreService.AppVersion {ApplicationContext.CoreService.AppVersion} != AppInfo.AppVersion {AppInfo.AppVersion}");
 
             var testInProgress = new InProgressDownloadItem
             {
