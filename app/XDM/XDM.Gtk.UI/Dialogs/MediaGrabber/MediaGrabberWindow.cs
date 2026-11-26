@@ -21,7 +21,6 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
         [UI] private TreeView LvVideos;
         [UI] private Button BtnClear;
         [UI] private Button BtnDownload;
-        [UI] private Button BtnClose;
         [UI] private LinkButton HowToLink;
 #pragma warning restore IDE0044 // Add readonly modifier
         private ListStore store;
@@ -80,7 +79,6 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
 
             BtnClear!.Clicked += BtnClear_Clicked;
             BtnDownload!.Clicked += BtnDownload_Clicked;
-            BtnClose!.Clicked += BtnClose_Clicked;
             ChkTopMost!.Toggled += ChkTopMost_Toggled;
 
             var list = ApplicationContext.VideoTracker.GetVideoList();
@@ -98,11 +96,6 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
         private void ChkTopMost_Toggled(object? sender, EventArgs e)
         {
             KeepAbove = ChkTopMost.Active;
-        }
-
-        private void BtnClose_Clicked(object? sender, EventArgs e)
-        {
-            Dispose();
         }
 
         private void BtnDownload_Clicked(object? sender, EventArgs e)
@@ -176,7 +169,6 @@ namespace XDM.GtkUI.Dialogs.MediaGrabber
             ChkTopMost.Label = TextResource.GetText("MSG_ALWAYS_ON_TOP");
             HowToLink.Label = TextResource.GetText("MSG_HOW_TO_USE_MG");
             BtnClear.Label = TextResource.GetText("MSG_CLEAR");
-            BtnClose.Label = TextResource.GetText("MSG_CLOSE");
             BtnDownload.Label = TextResource.GetText("MSG_DOWNLOAD");
         }
 

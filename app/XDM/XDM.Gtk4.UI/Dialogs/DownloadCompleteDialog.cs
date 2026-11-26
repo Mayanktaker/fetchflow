@@ -24,7 +24,6 @@ namespace XDM.Gtk4UI.Dialogs
         private readonly CheckButton dontShowCheck;
         private readonly Button openFileButton;
         private readonly Button openFolderButton;
-        private readonly Button closeButton;
         private string fileName = string.Empty;
         private string folderPath = string.Empty;
         private bool isDisposed;
@@ -76,9 +75,6 @@ namespace XDM.Gtk4UI.Dialogs
             openFolderButton = Button.New();
             Gtk4IconHelper.ConfigureButton(openFolderButton, "folder-shared-line", TextResource.GetText("CTX_OPEN_FOLDER") ?? "Open Folder", "Open destination folder", null, 16);
 
-            closeButton = Button.New();
-            Gtk4IconHelper.ConfigureButton(closeButton, "check-line", TextResource.GetText("BTN_CLOSE") ?? "Close", "Close dialog", null, 14);
-
             dontShowCheck = CheckButton.NewWithLabel(TextResource.GetText("MSG_DONT_SHOW_AGAIN") ?? "Don't show this dialog again");
 
             fileNameLabel.Halign = Align.Start;
@@ -92,7 +88,7 @@ namespace XDM.Gtk4UI.Dialogs
             WireEvents();
         }
 
-        // Packs header bar with dialog title and close button
+        // Packs the header bar with the dialog title; the titlebar ✕ is the only close
         private Widget BuildHeaderBar()
         {
             var header = HeaderBar.New();
@@ -105,7 +101,6 @@ namespace XDM.Gtk4UI.Dialogs
             titleBox.Append(icon);
             titleBox.Append(title);
             header.TitleWidget = titleBox;
-            header.PackEnd(closeButton);
             return header;
         }
 
@@ -163,7 +158,6 @@ namespace XDM.Gtk4UI.Dialogs
                 Close();
             };
 
-            closeButton.OnClicked += (_, _) => Close();
 
             dontShowCheck.OnNotify += (sender, args) =>
             {

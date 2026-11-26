@@ -35,11 +35,9 @@ namespace XDM.Gtk4UI.Dialogs
                 window.SetTransientFor(parent);
             }
 
+            // Titlebar close (✕) is the only close affordance — no packed Close button
             var header = HeaderBar.New();
             header.TitleWidget = Label.New(window.Title);
-            var closeBtn = Button.NewWithLabel(TextResource.GetText("MSG_CLOSE") ?? "Close");
-            closeBtn.OnClicked += (_, _) => window.Close();
-            header.PackEnd(closeBtn);
             window.SetTitlebar(header);
 
             var box = Box.New(Orientation.Vertical, 8);

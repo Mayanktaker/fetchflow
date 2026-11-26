@@ -40,10 +40,6 @@ namespace XDM.Gtk4UI.Dialogs
                 });
             };
             header.PackEnd(copy);
-
-            var close = Button.NewWithLabel(TextResource.GetText("BTN_CLOSE") ?? "Close");
-            close.OnClicked += (_, _) => window.Close();
-            header.PackEnd(close);
             window.SetTitlebar(header);
 
             // Monospace, word-wrapped, non-editable text view
