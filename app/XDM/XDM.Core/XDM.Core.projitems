@@ -12,10 +12,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)AppInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\Browser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\ExtensionData.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\NativeMessagingHostConfigurer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\Utils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Util\ExtensionRegistrationHelper.cs" />
-    <Compile Include="..\XDM.Core\Ipc\IpcServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SingleInstance.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SingleInstancePolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ResumeSelectionPolicy.cs" />
@@ -44,14 +42,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)LinkRefresher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Links.cs" />
     <Compile Include="..\XDM.Core\ApplicationContext.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\IpcPipeMessageProcessor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\BrowserMonitor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\IpcHttpMessageProcessor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\BlobUploadReceiver.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\JsonMessageParser.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\NativeMessagingConfigurer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\PipeChannel.cs" />
-    <Compile Include="..\XDM.Core\BrowserMonitoring\IpcPipe.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\VideoUrlHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BrowserMonitoring\NetworkHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpServer\HttpParser.cs" />
@@ -113,7 +107,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\WinHttpClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\WinHttpResponseStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\WinHttpSession.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\WinInetClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Clients\Http\WinInetProxyHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ArgsProcessor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AuthenticationInfo.cs" />
@@ -142,7 +135,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Message.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PasswordEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyInfo.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ProxyInfoSerializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ShortState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StreamingVideoDisplayInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\TransactedIO.cs" />

@@ -326,7 +326,7 @@ namespace XDM.Core.Downloader.Progressive.DualHttp
 
         protected override void SaveState()
         {
-            DownloadStateIO.Save(state);// TransactedIO.WriteBytes(DownloadStateStore.Save(state), Id + ".state", Config.DataDir);
+            DownloadStateIO.Save(state);
         }
 
         public override void RestoreState()
